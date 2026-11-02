@@ -22,8 +22,9 @@ enum DemoLaunch {
     }
 }
 
-/// Seeds two free-form sessions, then a 4-week block on the first template with week 1 fully logged
-/// and week 2 day 1 under way. Everything runs through the planner so the demo shows real prescriptions.
+/// Seeds two free-form sessions, then a 4-week block on the first template with week 1 fully logged,
+/// week 2 day 1 under way, and week 2's last day skipped. Everything runs through the planner so the demo
+/// shows real prescriptions.
 @MainActor
 enum DemoSeed {
     private static let day: TimeInterval = 86_400
@@ -91,6 +92,9 @@ enum DemoSeed {
             for exercise in current.exercises(for: first) {
                 logAllSets(of: exercise, beatTargetBy: 0, unit: unit)
             }
+        }
+        if let lastDay = meso.days.indices.last, lastDay > 0 {
+            meso.skip(SessionKey(week: 1, dayIndex: lastDay), in: context)
         }
         try? context.save()
     }

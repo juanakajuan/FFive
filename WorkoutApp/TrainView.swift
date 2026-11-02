@@ -151,6 +151,7 @@ struct MesoDashboard: View {
 
     @Environment(\.modelContext) private var context
     @State private var confirmEnd = false
+    @State private var trainAfterAll: SessionKey?
 
     var body: some View {
         let next = meso.nextUp
@@ -192,9 +193,9 @@ struct MesoDashboard: View {
     private func nextCard(_ key: SessionKey) -> some View {
         let days = meso.sortedDays
         let day = days.indices.contains(key.dayIndex) ? days[key.dayIndex] : nil
-        let workout = meso.workout(at: key)
+        let workout: Workout? = if case .inProgress(let workout) = meso.status(at: key) { workout } else { nil }
         let names = workout?.sortedExercises.map(\.name) ?? day?.sortedSlots.map(\.exerciseName) ?? []
-        let inProgress = workout != nil && workout?.isFinished == false
+        let inProgress = workout != nil
         return Button { onOpen(key) } label: {
             VStack(alignment: .leading, spacing: 8) {
                 HStack {
@@ -222,13 +223,27 @@ struct MesoDashboard: View {
             .background(Color.accentColor, in: RoundedRectangle(cornerRadius: 20))
         }
         .buttonStyle(.plain)
+        .overlay(alignment: .bottomTrailing) {
+            if meso.canSkip(key) {
+                Button { skip(key) } label: {
+                    Label("Skip", systemImage: "forward.fill")
+                        .font(.subheadline.bold())
+                        .foregroundStyle(.black.opacity(0.75))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(.black.opacity(0.12), in: Capsule())
+                }
+                .buttonStyle(.plain)
+                .padding(18)
+            }
+        }
     }
 
     private var completeCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             Label("Block complete", systemImage: "flag.checkered")
                 .font(.title3.bold())
-            Text("Every session is logged, deload included. End this mesocycle to plan the next one.")
+            Text("Every session is done or skipped, deload included. End this mesocycle to plan the next one.")
                 .foregroundStyle(.secondary)
             Button { confirmEnd = true } label: {
                 Text("End Mesocycle").font(.headline).frame(maxWidth: .infinity).padding(.vertical, 6)
@@ -264,37 +279,60 @@ struct MesoDashboard: View {
                     }
                 }
             }
-            Text("Tap a day in the current week to train it, or a finished day to review it.")
+            Text("Tap a day in the current week to train it, or a finished day to review it. Long-press a day to skip it.")
                 .font(.caption)
                 .foregroundStyle(.secondary)
         }
         .padding(16)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
+        .confirmationDialog("Train this day after all?",
+                            isPresented: Binding(get: { trainAfterAll != nil }, set: { if !$0 { trainAfterAll = nil } }),
+                            titleVisibility: .visible, presenting: trainAfterAll) { key in
+            Button("Train Day \(key.dayIndex + 1)") {
+                meso.unskip(key)
+                onOpen(key)
+            }
+        }
     }
 
     @ViewBuilder
     private func cell(_ key: SessionKey, next: SessionKey?) -> some View {
-        let workout = meso.workout(at: key)
+        let status = meso.status(at: key)
         let isCurrentWeek = key.week == next?.week
-        if let workout, workout.isFinished {
+        switch status {
+        case .finished(let workout):
             NavigationLink(value: workout) {
                 cellIcon("checkmark.circle.fill", Color.green)
             }
             .buttonStyle(.plain)
-        } else if isCurrentWeek {
-            Button { onOpen(key) } label: {
-                if workout != nil {
-                    cellIcon("circle.lefthalf.filled", Color.accentColor)
-                } else if key == next {
-                    cellIcon("play.circle.fill", Color.accentColor)
-                } else {
-                    cellIcon("circle", Color.secondary)
-                }
+        case .skipped:
+            if isCurrentWeek {
+                Button { trainAfterAll = key } label: { cellIcon("forward.circle", Color.secondary) }
+                    .buttonStyle(.plain)
+            } else {
+                cellIcon("forward.circle", Color.secondary)
             }
-            .buttonStyle(.plain)
-        } else {
-            cellIcon("circle", Color(.quaternaryLabel))
+        case .upcoming, .inProgress:
+            if isCurrentWeek {
+                Button { onOpen(key) } label: {
+                    if case .inProgress = status {
+                        cellIcon("circle.lefthalf.filled", Color.accentColor)
+                    } else if key == next {
+                        cellIcon("play.circle.fill", Color.accentColor)
+                    } else {
+                        cellIcon("circle", Color.secondary)
+                    }
+                }
+                .buttonStyle(.plain)
+                .contextMenu {
+                    if meso.canSkip(key) {
+                        Button("Skip Day", systemImage: "forward") { skip(key) }
+                    }
+                }
+            } else {
+                cellIcon("circle", Color(.quaternaryLabel))
+            }
         }
     }
 
@@ -322,6 +360,11 @@ struct MesoDashboard: View {
         }
         .padding(16)
         .background(Color(.secondarySystemGroupedBackground), in: RoundedRectangle(cornerRadius: 20))
+    }
+
+    private func skip(_ key: SessionKey) {
+        withAnimation { meso.skip(key, in: context) }
+        try? context.save()
     }
 
     private func endMeso() {
