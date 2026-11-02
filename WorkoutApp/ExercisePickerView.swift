@@ -58,6 +58,7 @@ struct ExercisePickerView: View {
                                         Text(entry.detail).font(.caption).foregroundStyle(.secondary)
                                     }
                                 }
+                                .tint(.primary)
                             }
                         }
                     }

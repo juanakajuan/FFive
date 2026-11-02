@@ -186,7 +186,7 @@ enum MesoPlanner {
         let descriptor = FetchDescriptor<Exercise>(predicate: #Predicate { $0.name == name })
         let matches = (try? context.fetch(descriptor)) ?? []
         return matches
-            .compactMap { exercise in exercise.bestEstimatedOneRepMax.map { (date: exercise.workout?.startDate ?? .distantPast, value: $0) } }
+            .compactMap { exercise in exercise.strongestSet.map { (date: exercise.workout?.startDate ?? .distantPast, value: $0.oneRepMax) } }
             .max { $0.date < $1.date }?
             .value
     }

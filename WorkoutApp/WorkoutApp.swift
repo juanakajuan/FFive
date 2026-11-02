@@ -3,11 +3,16 @@ import SwiftData
 
 @main
 struct WorkoutApp: App {
-    let container = AppStore.makeContainer(inMemory: false)
+    let container: ModelContainer
+
+    init() {
+        container = AppStore.makeContainer(inMemory: DemoLaunch.isEnabled)
+        if DemoLaunch.isEnabled { DemoSeed.seed(container.mainContext) }
+    }
 
     var body: some Scene {
         WindowGroup {
-            HomeView()
+            RootView()
                 .preferredColorScheme(.dark)
         }
         .modelContainer(container)

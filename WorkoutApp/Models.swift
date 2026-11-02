@@ -124,12 +124,12 @@ final class Exercise {
         ExerciseCatalog.increment(for: name, unit: unit)
     }
 
-    /// Best estimated 1RM across the done, loaded sets, or nil when none say anything about strength.
-    var bestEstimatedOneRepMax: Double? {
+    /// The done, loaded set with the highest estimated 1RM, or nil when no set says anything about strength.
+    var strongestSet: (entry: SetEntry, oneRepMax: Double)? {
         guard let rir = workout?.effortRIR else { return nil }
         return sets.filter { $0.isDone && $0.weight > 0 && $0.reps > 0 }
-            .map { Progression.estimatedOneRepMax(weight: $0.weight, reps: $0.reps, rir: rir) }
-            .max()
+            .map { ($0, Progression.estimatedOneRepMax(weight: $0.weight, reps: $0.reps, rir: rir)) }
+            .max { $0.1 < $1.1 }
     }
 }
 
