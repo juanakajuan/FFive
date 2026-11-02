@@ -15,6 +15,7 @@ struct TrainView: View {
     @State private var activeWorkout: Workout?
     @State private var pendingEnd: (workout: Workout, action: SessionEnd)?
     @State private var showingBuilder = false
+    @State private var showingSettings = false
 
     private var openQuickWorkout: Workout? { openWorkouts.first { $0.mesocycle == nil } }
 
@@ -30,8 +31,18 @@ struct TrainView: View {
             .background(Color(.systemGroupedBackground))
             .navigationTitle("Train")
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
+            .navigationDestination(isPresented: $showingSettings) { SettingsView() }
             .toolbar {
-                ToolbarItem(placement: .topBarTrailing) { settingsMenu }
+                if !activeMesos.isEmpty {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(openQuickWorkout == nil ? "Quick Workout" : "Resume Quick Workout",
+                               systemImage: openQuickWorkout == nil ? "bolt.fill" : "play.fill",
+                               action: startQuickWorkout)
+                    }
+                }
+                ToolbarItem(placement: .topBarTrailing) {
+                    Button("Settings", systemImage: "gearshape") { showingSettings = true }
+                }
             }
             .fullScreenCover(item: $activeWorkout, onDismiss: applyPendingEnd) { workout in
                 ActiveWorkoutView(workout: workout) { action in
@@ -87,20 +98,6 @@ struct TrainView: View {
                 StatsRow(history: finishedWorkouts).padding(.top, 8)
             }
             .padding()
-        }
-    }
-
-    private var settingsMenu: some View {
-        Menu {
-            if !activeMesos.isEmpty {
-                Button(openQuickWorkout == nil ? "Quick Workout" : "Resume Quick Workout", systemImage: "bolt.fill",
-                       action: startQuickWorkout)
-            }
-            Picker("Units", selection: $unit) {
-                ForEach(WeightUnit.allCases) { Text($0.rawValue).tag($0) }
-            }
-        } label: {
-            Image(systemName: "gearshape")
         }
     }
 

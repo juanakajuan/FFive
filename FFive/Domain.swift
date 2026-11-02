@@ -5,6 +5,12 @@ import Foundation
 enum WeightUnit: String, CaseIterable, Identifiable {
     case lb, kg
     var id: String { rawValue }
+    var label: String {
+        switch self {
+        case .lb: "Pounds"
+        case .kg: "Kilograms"
+        }
+    }
 }
 
 /// Weekly working-set landmarks for one muscle.
