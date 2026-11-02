@@ -149,6 +149,7 @@ struct PlannerChecks {
         expect("next up is nil once the deload is done", meso.nextUp, nil)
 
         skipChecks()
+        storeChecks()
 
         print("\(count - failures)/\(count) checks passed")
         exit(failures == 0 ? 0 : 1)
@@ -234,6 +235,32 @@ extension PlannerChecks {
         for remaining in meso.allKeys { meso.skip(remaining, in: context) }
         expect("skip: skipping every remaining session completes the block", meso.nextUp, nil)
         expect("skip: finished sessions survive skipping the rest", meso.workouts.filter(\.isFinished).count, 3)
+    }
+}
+
+extension PlannerChecks {
+    @MainActor
+    static func storeChecks() {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("planner-\(UUID().uuidString).store")
+        defer { try? FileManager.default.removeItem(at: url) }
+        func open() -> ModelContext {
+            ModelContext(try! ModelContainer(for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url)))
+        }
+
+        let writer = open()
+        var draft = MesoDraft(template: nil)
+        draft.days = [.init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest)]),
+                      .init(name: "B", slots: [.init(exercise: "Barbell Row", muscle: .back)])]
+        let meso = MesoPlanner.start(draft, in: writer)
+        meso.skip(SessionKey(week: 0, dayIndex: 1), in: writer)
+        meso.skip(SessionKey(week: 1, dayIndex: 0), in: writer)
+        try! writer.save()
+
+        let reopened = (try? open().fetch(FetchDescriptor<Mesocycle>())) ?? []
+        expect("store: skipped sessions survive a save and reopen on disk",
+               reopened.first?.skippedSessions, [SessionKey(week: 0, dayIndex: 1), SessionKey(week: 1, dayIndex: 0)])
+        expect("store: a reopened block reads the skip as its status",
+               reopened.first?.status(at: SessionKey(week: 0, dayIndex: 1)), .skipped)
     }
 }
 

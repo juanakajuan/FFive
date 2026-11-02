@@ -19,6 +19,7 @@ Goal: turn a plain set logger into a training app that plans mesocycles and prog
 | 4 | The set change is a lookup table (soreness x workload), nudged by pump and capped by joint pain and weekly MRV. | An if-chain. | One table is easy to read, test, and show to the lifter in Learn. The values are a heuristic, and Learn says so. |
 | 5 | Load progression holds weight and adds reps until the rep range top, then adds the smallest increment. | Percentage load jumps each week. | Reps are the most sensitive signal at a fixed load. Small load jumps keep the RIR target honest. |
 | 6 | All new SwiftData fields are optional or defaulted, and all new entities are additive. | A versioned schema with a custom migration plan. | Automatic lightweight migration covers additive changes. Verified against a store written by the old build (predicate 3). |
+| 8 | A skipped day is a `SessionKey` in `Mesocycle.skippedSessions` with no workout row. One `SessionStatus` (upcoming, inProgress, finished, skipped) drives next-up, the grid, and volume. | A `Workout` row flagged as skipped. | With no row, the latest-session lookup, history, stats, and e1RM ignore skips with no extra filtering. The next week builds from the last real session, and the engine already adds reps for the bigger RIR drop. Only weekly volume and MRV room needed to treat a skip as 0 sets. |
 | 7 | Domain and Progression are Foundation-only. | Put the logic on the SwiftData models. | `swiftc` can compile and run the engine checks on macOS with no simulator, so the check is a one-line script. |
 
 ## Run log
@@ -43,8 +44,9 @@ Goal: turn a plain set logger into a training app that plans mesocycles and prog
 | 3. The old store opens in the new build | VERIFIED. The store gained 4 tables. "Legacy Push Day", its 3 exercises, and the in-progress workout survived. The Train screen shows Resume Quick Workout and All Time 1. |
 | 4. Seeded meso screens | VERIFIED by screenshot. Train shows the week grid and RIR badge. The session shows "Target 185 × 7" and the feedback card. Progress shows sets against landmarks. Strength shows the e1RM trend. The builder shows the live RIR countdown. Learn opens an article. |
 
+| Skip day (`faf8957`, `63a2d3c`) | VERIFIED. The planner checks pass 47/47, including 17 skip checks and 2 on-disk store checks. The store check fails if the save is removed. The old store migrates and gains `ZSKIPPEDSESSIONS`. A simulator walkthrough skipped a day, unskipped it, and skipped through to "Block complete". |
+
 ## Open
 
-- A missed day holds the block in that week. The next workout stays on the first unfinished day, and there is no skip action yet.
 - Changing units mid-block does not convert stored loads.
 - Timed holds such as Plank log seconds as reps.
