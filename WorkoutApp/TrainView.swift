@@ -11,7 +11,6 @@ struct TrainView: View {
     private var finishedWorkouts: [Workout]
 
     @AppStorage("weightUnit") private var unit: WeightUnit = .lb
-    @AppStorage("restSeconds") private var restSeconds = 90
 
     @State private var activeWorkout: Workout?
     @State private var pendingEnd: (workout: Workout, action: SessionEnd)?
@@ -99,9 +98,6 @@ struct TrainView: View {
             }
             Picker("Units", selection: $unit) {
                 ForEach(WeightUnit.allCases) { Text($0.rawValue).tag($0) }
-            }
-            Picker("Rest Timer", selection: $restSeconds) {
-                ForEach([60, 90, 120, 180], id: \.self) { Text("\($0)s rest").tag($0) }
             }
         } label: {
             Image(systemName: "gearshape")

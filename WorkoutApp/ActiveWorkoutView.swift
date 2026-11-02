@@ -10,13 +10,10 @@ struct ActiveWorkoutView: View {
     @Environment(\.modelContext) private var context
     @Environment(\.dismiss) private var dismiss
     @AppStorage("weightUnit") private var unit: WeightUnit = .lb
-    @AppStorage("restSeconds") private var restSeconds = 90
 
     @State private var picker: PickerRequest?
     @State private var confirmDiscard = false
-    @State private var restEnd: Date?
     @State private var setsCompleted = 0
-    @State private var restsFinished = 0
 
     private enum PickerRequest: Identifiable {
         case add
@@ -73,7 +70,7 @@ struct ActiveWorkoutView: View {
                     ExerciseSection(exercise: exercise,
                                     unit: unit,
                                     phase: workout.phase,
-                                    onSetCompleted: startRest,
+                                    onSetCompleted: { setsCompleted += 1 },
                                     onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) }) {
                         workout.exercises.removeAll { $0 === exercise }
                         context.delete(exercise)
@@ -121,23 +118,7 @@ struct ActiveWorkoutView: View {
                     }
                 }
             }
-            .safeAreaInset(edge: .bottom) {
-                if let end = restEnd {
-                    RestBar(end: end,
-                            onAdd: { restEnd = end.addingTimeInterval(15) },
-                            onSkip: { restEnd = nil })
-                }
-            }
-            .animation(.snappy, value: restEnd)
-            .task(id: restEnd) {
-                guard let end = restEnd else { return }
-                try? await Task.sleep(for: .seconds(max(0, end.timeIntervalSinceNow)))
-                guard !Task.isCancelled else { return }
-                restEnd = nil
-                restsFinished += 1
-            }
             .sensoryFeedback(.success, trigger: setsCompleted)
-            .sensoryFeedback(.warning, trigger: restsFinished)
             .sheet(item: $picker) { request in
                 switch request {
                 case .add:
@@ -152,11 +133,6 @@ struct ActiveWorkoutView: View {
                 Button("Discard", role: .destructive) { onEnd(.discard) }
             }
         }
-    }
-
-    private func startRest() {
-        setsCompleted += 1
-        restEnd = .now.addingTimeInterval(TimeInterval(restSeconds))
     }
 
     private func addExercise(_ name: String, muscle: Muscle) {
@@ -396,32 +372,5 @@ struct NumberFieldStyle: ViewModifier {
             .frame(width: 60)
             .padding(.vertical, 6)
             .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 8))
-    }
-}
-
-struct RestBar: View {
-    let end: Date
-    var onAdd: () -> Void
-    var onSkip: () -> Void
-
-    var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: "hourglass").foregroundStyle(.tint)
-            VStack(alignment: .leading, spacing: 0) {
-                Text("Rest").font(.caption).foregroundStyle(.secondary)
-                Text(timerInterval: Date.now...max(end, .now), countsDown: true)
-                    .font(.title3.bold())
-                    .monospacedDigit()
-            }
-            Spacer()
-            Button("+15s", action: onAdd).buttonStyle(.bordered)
-            Button("Skip", action: onSkip)
-                .buttonStyle(.borderedProminent)
-                .foregroundStyle(.black)
-        }
-        .padding()
-        .background(.ultraThinMaterial, in: RoundedRectangle(cornerRadius: 20))
-        .padding(.horizontal)
-        .transition(.move(edge: .bottom).combined(with: .opacity))
     }
 }
