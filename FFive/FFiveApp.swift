@@ -2,7 +2,7 @@ import SwiftUI
 import SwiftData
 
 @main
-struct WorkoutApp: App {
+struct FFiveApp: App {
     let container: ModelContainer
 
     init() {
