@@ -1,0 +1,20 @@
+# train-session (seeded): resume the demo block's in-progress session, give feedback, answer soreness.
+launch -seedDemo
+wait button "~In progress, Week 2 · Day 1" timeout=20
+tap button "~In progress, Week 2 · Day 1"
+wait nav "Full Body, 3 Days"
+wait text "Target 185 × 7"
+wait text "How did quads feel today?"
+scrollto button "A lot"
+tap button "Great"
+tap button "Pretty good"
+tap button "None"
+wait image "checkmark.circle.fill"
+shot 01-quads-feedback
+scrollto text "How did your chest recover?"
+wait text "Target 150 × 8"
+shot 02-soreness-asked
+tap button "Healed just in time"
+absent text "How did your chest recover?"
+tree 03-soreness-answered
+shot 03-soreness-answered

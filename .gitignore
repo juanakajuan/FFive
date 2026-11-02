@@ -3,3 +3,6 @@ build/
 xcuserdata/
 *.xcuserstate
 DerivedData/
+
+# verify-ffive skill: simulator state, build cache, and evidence
+.verify/

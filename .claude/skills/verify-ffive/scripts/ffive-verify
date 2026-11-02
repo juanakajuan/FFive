@@ -1,0 +1,206 @@
+#!/bin/bash
+# Drives FFive on a dedicated, throwaway iOS simulator. See ../SKILL.md for the workflow.
+set -euo pipefail
+
+here="$(cd "$(dirname "$0")" && pwd)"
+skill="$(dirname "$here")"
+root="$(git -C "$here" rev-parse --show-toplevel)"
+work="$root/.verify"
+state="$work/state.env"
+artifacts="$work/artifacts"
+app_build="$work/build"
+driver_build="$work/build-driver"
+bundle_id="com.juanix.FFive"
+device_type="${FFIVE_DEVICE_TYPE:-com.apple.CoreSimulator.SimDeviceType.iPhone-18-Pro}"
+# One simulator per checkout, so worktrees never share a device or its data.
+device_name="FFive Verify $(printf '%s' "$root" | shasum | cut -c1-8)"
+
+die() { echo "ffive-verify: $*" >&2; exit 1; }
+log() { echo "ffive-verify: $*" >&2; }
+
+load_state() {
+    [[ -f "$state" ]] || die "no instance; run: $0 launch"
+    # shellcheck disable=SC1090
+    source "$state"
+}
+
+device_state() {
+    xcrun simctl list devices -j | /usr/bin/python3 -c '
+import json, sys
+udid = sys.argv[1]
+for runtime in json.load(sys.stdin)["devices"].values():
+    for device in runtime:
+        if device["udid"] == udid:
+            print(device["state"], device["name"], sep="\t")
+' "$1"
+}
+
+source_stamp() {
+    # HEAD plus a hash of uncommitted app changes, so doctor can tell a stale install from a current one.
+    local head dirty
+    head="$(git -C "$root" rev-parse --short HEAD)"
+    dirty="$(git -C "$root" diff HEAD -- FFive FFive.xcodeproj | shasum | cut -c1-8)"
+    [[ -z "$(git -C "$root" status --porcelain -- FFive FFive.xcodeproj)" ]] && echo "$head" || echo "$head+dirty.$dirty"
+}
+
+latest_runtime() {
+    xcrun simctl list runtimes -j | /usr/bin/python3 -c '
+import json, sys
+ios = [r for r in json.load(sys.stdin)["runtimes"] if r["platform"] == "iOS" and r["isAvailable"]]
+if not ios: sys.exit("no available iOS runtime")
+print(sorted(ios, key=lambda r: [int(p) for p in r["version"].split(".")])[-1]["identifier"])'
+}
+
+build_and_install() {
+    local udid="$1"
+    log "building FFive (log: $work/build-app.log)"
+    xcodebuild -project "$root/FFive.xcodeproj" -scheme FFive -destination "id=$udid" \
+        -derivedDataPath "$app_build" build >"$work/build-app.log" 2>&1 \
+        || { tail -30 "$work/build-app.log" >&2; die "app build failed"; }
+    log "building driver (log: $work/build-driver.log)"
+    xcodebuild build-for-testing -project "$skill/harness/FFiveDriver.xcodeproj" -scheme FFiveDriver \
+        -destination "id=$udid" -derivedDataPath "$driver_build" >"$work/build-driver.log" 2>&1 \
+        || { tail -30 "$work/build-driver.log" >&2; die "driver build failed"; }
+    xcrun simctl install "$udid" "$app_build/Build/Products/Debug-iphonesimulator/FFive.app"
+}
+
+cmd_launch() {
+    mkdir -p "$work" "$artifacts"
+    local udid=""
+    if [[ -f "$state" ]]; then
+        source "$state"
+        udid="$UDID"
+    fi
+    if [[ -z "$udid" || -z "$(device_state "$udid")" ]]; then
+        log "creating simulator \"$device_name\""
+        udid="$(xcrun simctl create "$device_name" "$device_type" "$(latest_runtime)")"
+    fi
+    if [[ "$(device_state "$udid" | cut -f1)" != "Booted" ]]; then
+        xcrun simctl boot "$udid"
+    fi
+    xcrun simctl bootstatus "$udid" -b >/dev/null
+    printf 'UDID=%s\nDEVICE_NAME=%q\nSTAMP=%s\n' "$udid" "$device_name" "$(source_stamp)" >"$state"
+    build_and_install "$udid"
+    log "smoke drive"
+    local smoke
+    smoke="$(mktemp "$work/smoke.XXXXXX")"
+    printf '%s\n' 'launch -seedDemo' 'wait tab "Train" timeout=20' 'wait nav "Train"' 'shot ready' >"$smoke"
+    cmd_drive "$smoke" --name launch-smoke
+    rm -f "$smoke"
+    echo "READY udid=$udid stamp=$(source_stamp)"
+}
+
+cmd_doctor() {
+    local ok=1
+    check() { if eval "$2"; then echo "ok    $1"; else echo "FAIL  $1"; ok=0; fi; }
+    [[ -f "$state" ]] || { echo "FAIL  no instance (no $state); run launch"; exit 1; }
+    source "$state"
+    local dev; dev="$(device_state "$UDID")"
+    check "simulator $UDID exists" '[[ -n "$dev" ]]'
+    check "simulator is ours (\"$DEVICE_NAME\")" '[[ "$(cut -f2 <<<"$dev")" == "$DEVICE_NAME" ]]'
+    check "simulator booted" '[[ "$(cut -f1 <<<"$dev")" == "Booted" ]]'
+    check "$bundle_id installed" 'xcrun simctl get_app_container "$UDID" "$bundle_id" app >/dev/null 2>&1'
+    check "driver built" '[[ -n "$(ls "$driver_build"/Build/Products/*.xctestrun 2>/dev/null)" ]]'
+    check "install matches source (installed $STAMP, source $(source_stamp))" '[[ "$STAMP" == "$(source_stamp)" ]]'
+    if [[ -d "$work/drive.lock" ]]; then echo "WARN  a drive holds $work/drive.lock (pid $(cat "$work/drive.lock/pid" 2>/dev/null))"; fi
+    [[ $ok == 1 ]] && echo "HEALTHY udid=$UDID" || { echo "UNHEALTHY: run launch (rebuilds and reinstalls) or cleanup"; exit 1; }
+}
+
+cmd_drive() {
+    local steps="" name="drive"
+    while [[ $# -gt 0 ]]; do
+        case "$1" in
+            --name) name="$2"; shift 2 ;;
+            -) steps="$(mktemp "$work/stdin.XXXXXX")"; cat >"$steps"; shift ;;
+            *) steps="$1"; shift ;;
+        esac
+    done
+    [[ -n "$steps" && -f "$steps" ]] || die "usage: drive <steps-file|-> [--name <label>]"
+    load_state
+    mkdir -p "$work"
+    mkdir "$work/drive.lock" 2>/dev/null || die "another drive is running (pid $(cat "$work/drive.lock/pid" 2>/dev/null)); never double-drive one simulator"
+    echo $$ >"$work/drive.lock/pid"
+    trap 'rm -rf "$work/drive.lock"' RETURN EXIT
+    local run="$artifacts/$(date +%Y%m%d-%H%M%S)-$name"
+    mkdir -p "$run"
+    cp "$steps" "$run/steps.txt"
+    local status=0
+    TEST_RUNNER_FFIVE_STEPS="$run/steps.txt" TEST_RUNNER_FFIVE_OUT="$run" \
+        xcodebuild test-without-building -project "$skill/harness/FFiveDriver.xcodeproj" -scheme FFiveDriver \
+        -destination "id=$UDID" -derivedDataPath "$driver_build" -resultBundlePath "$run/result.xcresult" \
+        >"$run/xcodebuild.log" 2>&1 || status=$?
+    cat "$run/steps.log" 2>/dev/null || { tail -20 "$run/xcodebuild.log"; }
+    if [[ $status == 0 ]]; then echo "PASS $run"; else echo "FAIL $run (see failure.png, failure.tree.txt, xcodebuild.log)"; fi
+    return $status
+}
+
+store_path() {
+    local data; data="$(xcrun simctl get_app_container "$UDID" "$bundle_id" data)"
+    echo "$data/Library/Application Support/default.store"
+}
+
+cmd_store() {
+    load_state
+    local db; db="$(store_path)"
+    [[ -f "$db" ]] || die "no on-disk store yet ($db). -seedDemo launches are in-memory; launch without it and save something first"
+    if [[ $# -eq 0 ]]; then
+        sqlite3 -readonly "$db" "select name from sqlite_master where type='table' and name like 'Z%' and name not like 'Z\_%' escape '\\' order by name" \
+            | while read -r t; do printf '%-28s %s\n' "$t" "$(sqlite3 -readonly "$db" "select count(*) from $t")"; done
+    else
+        sqlite3 -readonly -header -column "$db" "$*"
+    fi
+}
+
+cmd_defaults() {
+    load_state
+    local plist; plist="$(xcrun simctl get_app_container "$UDID" "$bundle_id" data)/Library/Preferences/$bundle_id.plist"
+    [[ -f "$plist" ]] && plutil -p "$plist" || echo "{} (no preferences written yet)"
+}
+
+cmd_shot() {
+    load_state
+    local name="${1:-screen}" run
+    run="$(ls -dt "$artifacts"/*/ 2>/dev/null | head -1)"
+    [[ -n "$run" ]] || { run="$artifacts/$(date +%Y%m%d-%H%M%S)-manual"; mkdir -p "$run"; }
+    xcrun simctl io "$UDID" screenshot "${run%/}/$name.png" >/dev/null 2>&1
+    echo "${run%/}/$name.png"
+}
+
+cmd_reset_data() {
+    load_state
+    xcrun simctl terminate "$UDID" "$bundle_id" 2>/dev/null || true
+    xcrun simctl uninstall "$UDID" "$bundle_id"
+    xcrun simctl install "$UDID" "$app_build/Build/Products/Debug-iphonesimulator/FFive.app"
+    echo "reinstalled $bundle_id with an empty store and default settings"
+}
+
+cmd_cleanup() {
+    local purge=0; [[ "${1:-}" == "--purge" ]] && purge=1
+    if [[ -f "$state" ]]; then
+        source "$state"
+        local dev; dev="$(device_state "$UDID")"
+        if [[ -n "$dev" && "$(cut -f2 <<<"$dev")" == "$DEVICE_NAME" && "$DEVICE_NAME" == "FFive Verify "* ]]; then
+            xcrun simctl shutdown "$UDID" 2>/dev/null || true
+            xcrun simctl delete "$UDID"
+            log "deleted simulator $UDID"
+        elif [[ -n "$dev" ]]; then
+            log "refusing to delete $UDID: it is \"$(cut -f2 <<<"$dev")\", not \"$DEVICE_NAME\""
+        fi
+        rm -f "$state"
+    fi
+    rm -rf "$work/drive.lock" "$work"/smoke.* "$work"/stdin.*
+    [[ $purge == 1 ]] && rm -rf "$app_build" "$driver_build" "$work"/build-*.log
+    echo "cleaned; evidence kept in $artifacts"
+}
+
+case "${1:-}" in
+    launch) shift; cmd_launch "$@" ;;
+    doctor) shift; cmd_doctor "$@" ;;
+    drive) shift; cmd_drive "$@" ;;
+    store) shift; cmd_store "$@" ;;
+    defaults) shift; cmd_defaults "$@" ;;
+    shot) shift; cmd_shot "$@" ;;
+    reset-data) shift; cmd_reset_data "$@" ;;
+    cleanup) shift; cmd_cleanup "$@" ;;
+    *) echo "usage: $0 {launch|doctor|drive <steps|-> [--name n]|store [sql]|defaults|shot [name]|reset-data|cleanup [--purge]}" >&2; exit 2 ;;
+esac

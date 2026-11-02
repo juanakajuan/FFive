@@ -1,0 +1,22 @@
+# progress: volume, strength, and history panes on the seeded demo.
+launch -seedDemo
+tap tab "Progress" timeout=20
+wait nav "Progress"
+selected button "Volume"
+wait text "Sets per muscle · Week 2"
+wait any "~Quads 4 of"
+tap button "W1"
+wait text "Sets per muscle · Week 1"
+shot 01-volume-w1
+tap button "Strength"
+wait text "Estimated 1RM"
+tap button "~Leg Press, Quads"
+wait nav "Leg Press"
+shot 02-strength-trend
+tap button "Progress"
+tap button "History"
+wait text "All Time"
+tap button "~Morning Workout"
+wait nav "Morning Workout"
+wait text "Bench Press"
+shot 03-history-detail

@@ -1,0 +1,18 @@
+# skip-day: skip Day 2 from the Next up card and Day 4 from the schedule grid, on-disk.
+# Before: train-session.steps ran on this store (Week 1 · Day 2 next up, 4-day block).
+# After: ffive-verify store "select ZNAME, cast(ZSKIPPEDSESSIONS as text) as skipped from ZMESOCYCLE"
+#        lists {"week":0,"dayIndex":1} and {"week":0,"dayIndex":3}; then run unskip-day.steps.
+launch
+wait button "~Next up, Week 1 · Day 2" timeout=20
+shot 01-before-skip
+tap button "Skip"
+wait button "~Next up, Week 1 · Day 3"
+count button "forward.circle" "1"
+shot 02-skipped-from-card
+longpress button "circle"
+tap button "Skip Day"
+count button "forward.circle" "2"
+shot 03-skipped-from-grid
+launch
+wait button "~Next up, Week 1 · Day 3" timeout=20
+count button "forward.circle" "2"
