@@ -1,0 +1,19 @@
+# settings: switch the weight unit to kilograms, see it in a session, then switch back.
+# The unit lives in UserDefaults, which -seedDemo does not isolate: this journey always ends on Pounds.
+# Check between switches with: ffive-verify defaults
+launch -seedDemo
+tap button "Settings" timeout=20
+wait nav "Settings"
+wait text "~Version, "
+tap button "Kilograms (kg)"
+selected button "Kilograms (kg)"
+shot 01-kilograms
+launch -seedDemo -demoRoute session
+wait nav "Full Body, 3 Days" timeout=20
+wait text "kg"
+absent text "lb"
+shot 02-session-in-kg
+launch -seedDemo
+tap button "Settings" timeout=20
+tap button "Pounds (lb)"
+selected button "Pounds (lb)"

@@ -1,0 +1,34 @@
+# Progress
+
+The Progress tab shows three panes. Volume is weekly sets per muscle against its landmarks, per block and week. Strength is the estimated 1RM per exercise, with a trend page. History lists finished workouts, each opening a read-only detail.
+
+## Sub-features
+
+- `progress-volume` shows the `Sets per muscle · Week <n>` chart for the active block, with a week picker (`W1`… `DL`) and a block picker when there are several blocks.
+- `progress-strength` lists exercises with e1RM (`<name>, <muscle>, <n> session(s), <e1RM> <unit>`) and opens an exercise trend page.
+- `progress-history` shows stats tiles plus finished workouts, and opens a WorkoutDetail with its exercises and sets.
+- `progress-empty` shows the "No mesocycle yet" empty state on the Volume pane with no block. Not yet driven.
+
+## How to get to it (user POV)
+
+- The `Progress` tab, then the segmented `Volume` / `Strength` / `History` control.
+- History detail is also reachable from a finished cell on the Train schedule grid.
+
+## Driving it with ffive-verify
+
+Preconditions:
+
+- Demo baseline (`launch -seedDemo`).
+- Journey: `journeys/progress.steps`.
+
+- **Volume.** Steps: `tap tab "Progress" timeout=20`, `wait nav "Progress"`, `selected button "Volume"`, `wait text "Sets per muscle · Week 2"`, `wait any "~Quads 4 of"`, `tap button "W1"`, `wait text "Sets per muscle · Week 1"`.
+- **Strength.** Steps: `tap button "Strength"`, `wait text "Estimated 1RM"`, `tap button "~Leg Press, Quads"`, `wait nav "Leg Press"`.
+- **History.** Steps: `tap button "Progress"` (back), `tap button "History"`, `wait text "All Time"`, `tap button "~Morning Workout"`, `wait nav "Morning Workout"`, `wait text "Bench Press"`.
+- **Proof.** Keep shots `01-volume-w1`, `02-strength-trend`, and `03-history-detail`. For a change to how numbers are computed, compare the chart's accessibility label (`any "~<Muscle> <done> of <planned> sets"`) with the planner's expectations in `scripts/check-planner.sh`.
+
+## Gotchas
+
+- The pane control's segments are plain `button`s (`Volume`, `Strength`, `History`), and the selected one carries the selected trait.
+- The back button on pushed pages is labeled with the previous title (`button "Progress"`).
+- `-seedDemo -demoRoute strength` opens the richest trend page directly. It is a shortcut, not proof of navigation.
+- Demo dates are relative to now, so History's dates and the "This Week" tile change from day to day. Assert names and counts, not dates.
