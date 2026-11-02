@@ -155,6 +155,7 @@ enum MesoPlanner {
     /// Using this week's built days, not only last week's total, keeps two days from both spending the same room.
     private static func projectedSets(of muscle: Muscle, in meso: Mesocycle, week: Int, excludingDay: Int) -> Int {
         meso.days.indices.filter { $0 != excludingDay }.reduce(0) { total, day in
+            if meso.status(at: SessionKey(week: week, dayIndex: day)) == .skipped { return total }
             if let workout = meso.workout(at: SessionKey(week: week, dayIndex: day)) ?? meso.latestWorkout(dayIndex: day, before: week) {
                 return total + workout.setCount(for: muscle)
             }
@@ -269,19 +270,23 @@ enum MesoPlanner {
 
     // MARK: - Volume
 
-    /// Done and planned sets per muscle for one week. Days not built yet count at what they would prescribe.
+    /// Done and planned sets per muscle for one week. Days not built yet count at what they would prescribe,
+    /// skipped days count nothing.
     static func weeklyVolume(_ meso: Mesocycle, week: Int, unit: WeightUnit, context: ModelContext) -> [MuscleVolume] {
         var done: [Muscle: Int] = [:]
         var planned: [Muscle: Int] = [:]
         for day in meso.days.indices {
             let key = SessionKey(week: week, dayIndex: day)
-            if let workout = meso.workout(at: key) {
+            switch meso.status(at: key) {
+            case .skipped:
+                continue
+            case .inProgress(let workout), .finished(let workout):
                 for exercise in workout.exercises {
                     guard let muscle = exercise.muscle else { continue }
                     planned[muscle, default: 0] += exercise.sets.count
                     done[muscle, default: 0] += exercise.sets.filter(\.isDone).count
                 }
-            } else {
+            case .upcoming:
                 for exercise in plan(meso, at: key, unit: unit, context: context) {
                     guard let muscle = exercise.muscle else { continue }
                     planned[muscle, default: 0] += exercise.targets.count

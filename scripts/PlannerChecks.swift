@@ -148,8 +148,92 @@ struct PlannerChecks {
         lastDay.finish(in: context)
         expect("next up is nil once the deload is done", meso.nextUp, nil)
 
+        skipChecks()
+
         print("\(count - failures)/\(count) checks passed")
         exit(failures == 0 ? 0 : 1)
+    }
+}
+
+extension PlannerChecks {
+    @MainActor
+    static func skipChecks() {
+        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        var draft = MesoDraft(template: nil)
+        draft.days = [
+            .init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest), .init(exercise: "Lat Pulldown", muscle: .back)]),
+            .init(name: "B", slots: [.init(exercise: "Incline Dumbbell Press", muscle: .chest), .init(exercise: "Barbell Row", muscle: .back)]),
+        ]
+        let meso = MesoPlanner.start(draft, in: context)
+        let loads: [String: (Double, Int)] = [
+            "Bench Press": (100, 6), "Lat Pulldown": (120, 8), "Incline Dumbbell Press": (40, 10), "Barbell Row": (150, 8),
+        ]
+        func key(_ week: Int, _ dayIndex: Int) -> SessionKey { SessionKey(week: week, dayIndex: dayIndex) }
+        func session(_ week: Int, _ dayIndex: Int) -> Workout {
+            MesoPlanner.workout(for: meso, at: key(week, dayIndex), unit: .lb, in: context)
+        }
+        func log(_ workout: Workout) {
+            for exercise in workout.exercises {
+                for set in exercise.sets {
+                    (set.weight, set.reps) = set.targetWeight.map { ($0, set.targetReps ?? 0) } ?? loads[exercise.name]!
+                    set.isDone = true
+                }
+            }
+        }
+        func planned(_ week: Int, _ dayIndex: Int, _ name: String) -> Int? {
+            MesoPlanner.plan(meso, at: key(week, dayIndex), unit: .lb, context: context).first { $0.name == name }?.targets.count
+        }
+        func targets(_ workout: Workout, _ name: String) -> Set<SetTarget> {
+            Set(workout.sortedExercises.first { $0.name == name }!.sortedSets.map(\.target))
+        }
+
+        let w0a = session(0, 0)
+        let bench = w0a.sortedExercises.first { $0.name == "Bench Press" }!
+        for _ in 0..<10 { bench.sets.append(SetEntry(reps: 0, weight: 0, order: bench.sets.count)) }
+        log(w0a)
+        w0a.finish(in: context)
+        let w0b = session(0, 1)
+        log(w0b)
+        w0b.updateFeedback(for: .chest) { $0 = MuscleFeedback(soreness: .never, pump: .moderate, workload: .easy, jointPain: JointPain.none) }
+        w0b.finish(in: context)
+        expect("skip: week 2 day 1 is next once week 1 is done", meso.nextUp, key(1, 0))
+        expect("skip: day 1's 15 chest sets cap day 2's +3 at MRV (22 - 15 - 5 = 2)", planned(1, 1, "Incline Dumbbell Press"), 7)
+
+        let w1a = session(1, 0)
+        meso.skip(key(1, 0), in: context)
+        expect("skip: skipping advances next up", meso.nextUp, key(1, 1))
+        expect("skip: skipping an untouched in-progress session deletes its workout", meso.workout(at: key(1, 0)) == nil && w1a.isDeleted, true)
+        expect("skip: the skipped key reads as skipped", meso.status(at: key(1, 0)), .skipped)
+        meso.skip(key(1, 0), in: context)
+        expect("skip: skipping twice records the key once", meso.skippedSessions, [key(1, 0)])
+        expect("skip: the skipped day frees its MRV room (+3 in full)", planned(1, 1, "Incline Dumbbell Press"), 8)
+        let chest = MesoPlanner.weeklyVolume(meso, week: 1, unit: .lb, context: context).first { $0.muscle == .chest }
+        expect("skip: weekly volume counts the skipped day as 0 sets", chest.map { [$0.planned, $0.done] }, [8, 0])
+
+        let w1b = session(1, 1)
+        w1b.sortedExercises[0].sortedSets[0].isDone = true
+        meso.skip(key(1, 1), in: context)
+        expect("skip: refused once a set is done", meso.status(at: key(1, 1)), .inProgress(w1b))
+        meso.skip(key(0, 0), in: context)
+        expect("skip: refused for a finished session", meso.status(at: key(0, 0)), .finished(w0a))
+        expect("skip: refusals record nothing", meso.skippedSessions, [key(1, 0)])
+
+        meso.unskip(key(1, 0))
+        expect("skip: unskip restores the key as upcoming", meso.status(at: key(1, 0)), .upcoming)
+        expect("skip: an unskipped earlier day is next up again", meso.nextUp, key(1, 0))
+        meso.skip(key(1, 0), in: context)
+        log(w1b)
+        w1b.finish(in: context)
+
+        let w2a = session(2, 0)
+        expect("skip: the day after a skip builds from the last real session, 3 -> 1 RIR adds 2 reps (100x6 -> 100x8)",
+               targets(w2a, "Bench Press"), [SetTarget(weight: 100, reps: 8)])
+        expect("skip: the same two-week drop on a second lift (120x8 -> 120x10)",
+               targets(w2a, "Lat Pulldown"), [SetTarget(weight: 120, reps: 10)])
+
+        for remaining in meso.allKeys { meso.skip(remaining, in: context) }
+        expect("skip: skipping every remaining session completes the block", meso.nextUp, nil)
+        expect("skip: finished sessions survive skipping the rest", meso.workouts.filter(\.isFinished).count, 3)
     }
 }
 

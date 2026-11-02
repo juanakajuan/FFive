@@ -170,6 +170,7 @@ final class Mesocycle {
     var days: [MesoDay] = []
     @Relationship(deleteRule: .nullify, inverse: \Workout.mesocycle)
     var workouts: [Workout] = []
+    var skippedSessions: [SessionKey] = []
 
     init(name: String, accumulationWeeks: Int, startDate: Date = .now) {
         self.name = name
@@ -200,9 +201,53 @@ final class Mesocycle {
             .max { ($0.week ?? 0) < ($1.week ?? 0) }
     }
 
-    /// The first session in plan order that is not finished, or nil when the block is done.
+    func status(at key: SessionKey) -> SessionStatus {
+        if let workout = workout(at: key) {
+            return workout.isFinished ? .finished(workout) : .inProgress(workout)
+        }
+        return skippedSessions.contains(key) ? .skipped : .upcoming
+    }
+
+    /// The first session in plan order still to train, or nil when every session is done or skipped.
     var nextUp: SessionKey? {
-        allKeys.first { workout(at: $0)?.isFinished != true }
+        allKeys.first { status(at: $0).isOpen }
+    }
+
+    func canSkip(_ key: SessionKey) -> Bool {
+        switch status(at: key) {
+        case .upcoming, .skipped: true
+        case .inProgress(let workout): workout.completedSets == 0
+        case .finished: false
+        }
+    }
+
+    /// Drops an untouched session from the block so the plan moves on. Next week's same day builds from
+    /// the last session actually trained, so a skipped day has no workout row.
+    func skip(_ key: SessionKey, in context: ModelContext) {
+        guard canSkip(key) else { return }
+        if case .inProgress(let workout) = status(at: key) {
+            workouts.removeAll { $0 === workout }
+            context.delete(workout)
+        }
+        if !skippedSessions.contains(key) { skippedSessions.append(key) }
+    }
+
+    func unskip(_ key: SessionKey) {
+        skippedSessions.removeAll { $0 == key }
+    }
+}
+
+enum SessionStatus: Equatable {
+    case upcoming
+    case inProgress(Workout)
+    case finished(Workout)
+    case skipped
+
+    var isOpen: Bool {
+        switch self {
+        case .upcoming, .inProgress: true
+        case .finished, .skipped: false
+        }
     }
 }
 
@@ -269,7 +314,7 @@ final class MuscleFeedbackRecord {
     }
 }
 
-struct SessionKey: Hashable, Comparable {
+struct SessionKey: Hashable, Comparable, Codable {
     let week: Int
     let dayIndex: Int
 
