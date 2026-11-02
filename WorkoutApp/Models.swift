@@ -60,8 +60,22 @@ final class Workout {
         exercises(for: muscle).reduce(0) { $0 + $1.sets.count }
     }
 
+    /// Whether any set for `muscle` was actually done, as opposed to only prescribed.
+    func trained(_ muscle: Muscle) -> Bool {
+        exercises(for: muscle).contains { $0.sets.contains(where: \.isDone) }
+    }
+
     func feedbackRecord(for muscle: Muscle) -> MuscleFeedbackRecord? {
         feedback.first { $0.muscleRaw == muscle.rawValue }
+    }
+
+    func updateFeedback(for muscle: Muscle, _ change: (inout MuscleFeedback) -> Void) {
+        let record = feedbackRecord(for: muscle) ?? {
+            let record = MuscleFeedbackRecord(muscle: muscle)
+            feedback.append(record)
+            return record
+        }()
+        change(&record.value)
     }
 
     /// Free-form sessions drop what was never done. Mesocycle sessions keep the full prescription,
@@ -104,10 +118,10 @@ final class Exercise {
         set { muscleRaw = newValue?.rawValue }
     }
 
-    var repRange: ClosedRange<Int> { info?.repRange ?? 8...12 }
+    var repRange: ClosedRange<Int> { ExerciseCatalog.repRange(for: name) }
 
     func increment(_ unit: WeightUnit) -> Double {
-        (info?.equipment ?? .machine).increment(unit)
+        ExerciseCatalog.increment(for: name, unit: unit)
     }
 
     /// Best estimated 1RM across the done, loaded sets, or nil when none say anything about strength.
