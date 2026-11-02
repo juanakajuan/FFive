@@ -102,8 +102,8 @@ struct ActiveWorkoutView: View {
         restEnd = .now.addingTimeInterval(TimeInterval(restSeconds))
     }
 
-    private func addExercise(_ name: String) {
-        let exercise = Exercise(name: name, order: (workout.exercises.map(\.order).max() ?? -1) + 1)
+    private func addExercise(_ name: String, muscle: Muscle) {
+        let exercise = Exercise(name: name, order: (workout.exercises.map(\.order).max() ?? -1) + 1, muscle: muscle)
         workout.exercises.append(exercise)
 
         // Pre-fill with what you did last time for this exercise, or a single empty set.

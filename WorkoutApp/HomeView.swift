@@ -98,14 +98,7 @@ struct HomeView: View {
         case .discard:
             context.delete(workout)
         case .finish:
-            for exercise in workout.exercises {
-                if !exercise.sets.contains(where: \.isDone) {
-                    context.delete(exercise)
-                } else {
-                    for set in exercise.sets where !set.isDone { context.delete(set) }
-                }
-            }
-            workout.endDate = .now
+            workout.finish(in: context)
         }
         try? context.save()
     }
@@ -185,6 +178,6 @@ struct HistoryRow: View {
 
 #Preview {
     HomeView()
-        .modelContainer(for: Workout.self, inMemory: true)
+        .modelContainer(AppStore.makeContainer(inMemory: true))
         .preferredColorScheme(.dark)
 }

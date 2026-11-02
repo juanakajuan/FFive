@@ -3,11 +3,13 @@ import SwiftData
 
 @main
 struct WorkoutApp: App {
+    let container = AppStore.makeContainer(inMemory: false)
+
     var body: some Scene {
         WindowGroup {
             HomeView()
                 .preferredColorScheme(.dark)
         }
-        .modelContainer(for: Workout.self)
+        .modelContainer(container)
     }
 }
