@@ -53,11 +53,6 @@ final class SetEntry {
     }
 }
 
-enum WeightUnit: String, CaseIterable, Identifiable {
-    case lb, kg
-    var id: String { rawValue }
-}
-
 enum ExerciseLibrary {
     static let groups: [(name: String, exercises: [String])] = [
         ("Chest", ["Bench Press", "Incline Bench Press", "Dumbbell Press", "Push-Up", "Cable Fly", "Dip"]),
