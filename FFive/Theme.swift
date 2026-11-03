@@ -31,10 +31,9 @@ enum Theme {
     static let tag = Font.system(size: 12, weight: .semibold)
     static let caption = Font.system(size: 12)
 
-    /// Bar appearances are UIKit-wide, so they are set once at launch.
-    static func applyBarAppearance() {
+    /// The navigation bar appearance is UIKit-wide, so it is set once at launch.
+    static func applyNavigationBarAppearance() {
         let text = UIColor(Theme.text)
-        let secondary = UIColor(Theme.secondary)
 
         let nav = UINavigationBarAppearance()
         nav.configureWithOpaqueBackground()
@@ -52,19 +51,6 @@ enum Theme {
         edge.largeTitleTextAttributes = nav.largeTitleTextAttributes
         UINavigationBar.appearance().scrollEdgeAppearance = edge
         UINavigationBar.appearance().compactAppearance = nav
-
-        let tab = UITabBarAppearance()
-        tab.configureWithOpaqueBackground()
-        tab.backgroundColor = UIColor(Theme.surface)
-        tab.shadowColor = UIColor(Theme.hairline)
-        for item in [tab.stackedLayoutAppearance, tab.inlineLayoutAppearance, tab.compactInlineLayoutAppearance] {
-            item.normal.iconColor = secondary
-            item.normal.titleTextAttributes = [.foregroundColor: secondary, .font: UIFont.systemFont(ofSize: 10.5)]
-            item.selected.iconColor = text
-            item.selected.titleTextAttributes = [.foregroundColor: text, .font: UIFont.systemFont(ofSize: 10.5)]
-        }
-        UITabBar.appearance().standardAppearance = tab
-        UITabBar.appearance().scrollEdgeAppearance = tab
     }
 }
 

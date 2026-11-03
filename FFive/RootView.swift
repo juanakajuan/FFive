@@ -1,7 +1,29 @@
 import SwiftUI
 import Observation
 
-enum AppTab: Hashable { case workout, mesos, templates, exercises, more }
+enum AppTab: CaseIterable, Hashable {
+    case workout, mesos, templates, exercises, more
+
+    var title: String {
+        switch self {
+        case .workout: "Workout"
+        case .mesos: "Mesos"
+        case .templates: "Templates"
+        case .exercises: "Exercises"
+        case .more: "More"
+        }
+    }
+
+    func icon(selected: Bool) -> String {
+        switch self {
+        case .workout: selected ? "calendar.circle.fill" : "calendar"
+        case .mesos: selected ? "folder.fill" : "folder"
+        case .templates: selected ? "square.grid.2x2.fill" : "square.grid.2x2"
+        case .exercises: "dumbbell"
+        case .more: selected ? "ellipsis.circle.fill" : "ellipsis.circle"
+        }
+    }
+}
 
 /// Cross-tab navigation: another tab can send the lifter to a session on the Workout tab.
 @Observable
@@ -20,24 +42,55 @@ struct RootView: View {
     @State private var router = AppRouter()
 
     var body: some View {
-        TabView(selection: $router.tab) {
-            TrainView()
-                .tabItem { Label("Workout", systemImage: router.tab == .workout ? "calendar.circle.fill" : "calendar") }
-                .tag(AppTab.workout)
-            MesosView()
-                .tabItem { Label("Mesos", systemImage: router.tab == .mesos ? "folder.fill" : "folder") }
-                .tag(AppTab.mesos)
-            TemplatesView()
-                .tabItem { Label("Templates", systemImage: router.tab == .templates ? "square.grid.2x2.fill" : "square.grid.2x2") }
-                .tag(AppTab.templates)
-            ExercisesView()
-                .tabItem { Label("Exercises", systemImage: "dumbbell") }
-                .tag(AppTab.exercises)
-            MoreView()
-                .tabItem { Label("More", systemImage: router.tab == .more ? "ellipsis.circle.fill" : "ellipsis.circle") }
-                .tag(AppTab.more)
+        // The system TabView draws a floating glass bar on recent iOS; the design calls for a flat,
+        // full-width bar, so the tabs are stacked and kept alive here instead.
+        ZStack {
+            tab(.workout) { TrainView() }
+            tab(.mesos) { MesosView() }
+            tab(.templates) { TemplatesView() }
+            tab(.exercises) { ExercisesView() }
+            tab(.more) { MoreView() }
         }
+        .safeAreaInset(edge: .bottom, spacing: 0) { TabBar(selection: $router.tab) }
         .environment(router)
         .tint(Theme.text)
+    }
+
+    private func tab(_ tab: AppTab, @ViewBuilder content: () -> some View) -> some View {
+        let selected = router.tab == tab
+        return content()
+            .opacity(selected ? 1 : 0)
+            .allowsHitTesting(selected)
+            .accessibilityHidden(!selected)
+    }
+}
+
+private struct TabBar: View {
+    @Binding var selection: AppTab
+
+    var body: some View {
+        HStack(spacing: 0) {
+            ForEach(AppTab.allCases, id: \.self) { tab in
+                let selected = tab == selection
+                Button { selection = tab } label: {
+                    VStack(spacing: 3) {
+                        Image(systemName: tab.icon(selected: selected))
+                            .font(.system(size: 22))
+                            .frame(height: 26)
+                        Text(tab.title).font(.system(size: 10.5))
+                    }
+                    .foregroundStyle(selected ? Theme.text : Theme.secondary)
+                    .frame(maxWidth: .infinity)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(tab.title)
+                .accessibilityAddTraits(selected ? .isSelected : [])
+            }
+        }
+        .padding(.top, 6)
+        .padding(.bottom, 2)
+        .background(Theme.surface.ignoresSafeArea(edges: .bottom))
+        .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
     }
 }
