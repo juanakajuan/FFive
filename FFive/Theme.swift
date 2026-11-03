@@ -82,6 +82,7 @@ struct MuscleTag: View {
                 .font(.system(size: 11, weight: .bold))
                 .rotationEffect(.degrees(90))
                 .foregroundStyle(muscle.tint)
+                .accessibilityHidden(true)
             Text(muscle.displayName)
                 .font(Theme.tag)
                 .textCase(.uppercase)
@@ -167,7 +168,7 @@ struct Callout: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            Image(systemName: systemImage).font(.system(size: 15))
+            Image(systemName: systemImage).font(.system(size: 15)).accessibilityHidden(true)
             Text(text).font(style == .info ? Theme.caption : Theme.detail)
             Spacer(minLength: 0)
         }

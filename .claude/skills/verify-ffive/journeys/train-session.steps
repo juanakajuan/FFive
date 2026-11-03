@@ -1,21 +1,21 @@
 # train-session: log a planned session of the on-disk block.
-# Before: plan-mesocycle.steps ran on this store (block "Verify Block", Week 1 · Day 1 next up).
+# Before: plan-mesocycle.steps ran on this store (block "Verify Block", Week 1 · Day 1 showing).
 # After: ffive-verify store "select w.ZWEEK, w.ZDAYINDEX, w.ZENDDATE is not null as finished, s.ZWEIGHT, s.ZREPS, s.ZISDONE from ZWORKOUT w join ZEXERCISE e on e.ZWORKOUT = w.Z_PK join ZSETENTRY s on s.ZEXERCISE = e.Z_PK where w.ZMESOCYCLE is not null and s.ZISDONE = 1"
 launch
-wait button "~Next up, Week 1 · Day 1" timeout=20
-tap button "~Next up, Week 1 · Day 1"
-wait nav "Verify Block"
+wait text "WEEK 1 DAY 1" timeout=20
 wait text "Bench Press"
 wait text "~Calibrate"
 tree 01-session-open
-replace field "0" #0 "135"
-replace field "0" #1 "9"
-value field "0" #0 "135"
-value field "0" #1 "9"
+replace field "Set 1 weight" "135"
+replace field "Set 1 reps" "9"
+value field "Set 1 weight" "135"
+value field "Set 1 reps" "9"
 tap button "Done"
-tap button "circle"
+tap button "Log set 1"
+selected button "Log set 1"
 shot 02-first-set-done
-tap button "Finish"
-wait button "~Next up, Week 1 · Day 2" timeout=10
-tree 03-dashboard-after-finish
-shot 03-dashboard-after-finish
+scrollto button "Finish Workout"
+tap button "Finish Workout"
+wait text "WEEK 1 DAY 2" timeout=10
+tree 03-next-day
+shot 03-next-day
