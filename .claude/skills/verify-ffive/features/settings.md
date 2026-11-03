@@ -6,11 +6,11 @@ Settings, pushed from the More tab, holds the weight unit (Pounds or Kilograms) 
 
 - `settings-open` opens Settings from More and shows `Version, <short> (<build>)`.
 - `settings-unit` switches between `Pounds (lb)` and `Kilograms (kg)`, stored as the `weightUnit` UserDefault. The chosen row carries the Selected trait.
-- `settings-unit-effect` makes sessions label loads in the chosen unit (the weight fields' placeholder), with new targets in that unit's increments.
+- `settings-unit-effect` labels loads in the chosen unit (the weight fields' placeholder, the History sheet, Progress, and workout details), with new targets in that unit's increments. Logged numbers are relabeled, not converted.
 
 ## How to get to it (user POV)
 
-- More tab, then the `Settings` row. It is a pushed page; back is `button "More"`.
+- More tab, then the `Settings` row. It is a pushed page; back is labeled `More`, the same as the tab bar's `More` button.
 
 ## Driving it with ffive-verify
 
@@ -21,7 +21,7 @@ Preconditions:
 
 - **Open.** Steps: `launch -seedDemo`, `tap button "More" timeout=20`, `tap button "Settings"`, `wait nav "Settings"`, `wait text "~Version, "`.
 - **Switch to kg.** Steps: `tap button "Kilograms (kg)"`, `selected button "Kilograms (kg)"`. The journey then flips to Pounds and back to prove both rows switch. `ffive-verify defaults` shows `"weightUnit" => "kg"`. Stop the journey here, or run that check from a separate drive, if you need the kg state on record.
-- **Effect.** Steps: `launch -seedDemo`, `wait text "WEEK 2 DAY 1" timeout=20`, `wait field "kg"`, `absent field "lb"`. The demo seed reads the unit, so the in-progress session's loads come out in kg.
+- **Effect.** Steps: `launch -seedDemo`, `wait text "WEEK 2 DAY 1" timeout=20`, `wait field "kg"`, `absent field "lb"`, `tap button "History"`, `wait text "~ kg × "`. The demo seed reads the unit, so the in-progress session's loads come out in kg. The field match is on the accessibility placeholder, which is not on screen while the fields hold numbers, so the History sheet is the visible proof.
 - **Restore.** Steps: `launch -seedDemo`, `tap button "More" timeout=20`, `tap button "Settings"`, `tap button "Pounds (lb)"`, `selected button "Pounds (lb)"`. Then `ffive-verify defaults` shows `"weightUnit" => "lb"`.
 
 ## Gotchas

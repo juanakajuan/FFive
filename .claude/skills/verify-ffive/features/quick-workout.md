@@ -8,8 +8,8 @@ A lifter logs a free-form session outside any block. They add exercises from the
 - `quick-add` adds a catalog exercise through the searchable picker, opened with `Workout menu`, then `Add Exercise`. The new exercise gets one empty set, or last time's sets when it has history.
 - `quick-custom` creates a custom exercise with `Create “<query>”` and a muscle. Not yet driven.
 - `quick-log` edits `Set n weight` and `Set n reps` and ticks `Log set n`, which carries the Selected trait while logged.
-- `quick-finish` finishes the workout with `Finish Workout`, pinned above the tab bar and shown only once every set is logged. Finishing updates the stats row (This Week, Time, All Time) and History.
-- `quick-resume` returns to an open quick workout with `Workout menu`, then `Resume Quick Workout`, while a block day is showing. Not yet driven.
+- `quick-finish` finishes the workout with `Finish Workout`, pinned above the tab bar and shown only once the workout has an exercise, every exercise has a set, and every set is logged. Finishing updates the stats row (This Week, Time, All Time) and History.
+- `quick-resume` returns to an open quick workout with `Workout menu`, then `Resume Quick Workout`, while a block day picked from `Schedule` is showing. Driven on the demo seed, which proves the UI only: `Workout menu`, `Quick Workout`, `wait text "QUICK WORKOUT"`, `tap button "Schedule"`, `tap button "circle.lefthalf.filled"`, `wait text "WEEK 2 DAY 1"`, `Workout menu`, `Resume Quick Workout`, `absent text "WEEK 2 DAY 1"`.
 - `quick-rename` renames the workout with `Workout menu`, then `Rename`. Not yet driven.
 - `quick-discard` uses `Workout menu`, then `Discard Workout`, and confirms with `Discard Workout`. Not yet driven.
 
@@ -23,7 +23,7 @@ A lifter logs a free-form session outside any block. They add exercises from the
 
 Preconditions:
 
-- On-disk baseline right after `ffive-verify reset-data` (no block, stats all `0`).
+- On-disk baseline right after `ffive-verify reset-data` (no block; This Week and All Time `0`, Time `0m`).
 - Journey: `journeys/quick-workout.steps`.
 
 - **Start.** Steps: `launch`, `wait button "Quick Workout" timeout=20`, `tap button "Quick Workout"`, `wait text "QUICK WORKOUT"`.

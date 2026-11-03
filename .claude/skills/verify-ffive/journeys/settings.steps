@@ -17,6 +17,8 @@ launch -seedDemo
 wait text "WEEK 2 DAY 1" timeout=20
 wait field "kg"
 absent field "lb"
+tap button "History"
+wait text "~ kg × "
 shot 02-session-in-kg
 launch -seedDemo
 tap button "More" timeout=20

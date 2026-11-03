@@ -33,11 +33,11 @@ Preconditions:
 - **Finish.** Steps: `wait button "Finish Workout"`, `tap button "Finish Workout"`, `wait text "WEEK 1 DAY 2" timeout=10`. In the `Schedule` sheet, the W1 D1 cell becomes `checkmark.circle.fill`.
 - **Proof (on disk).** Run `ffive-verify store "select w.ZWEEK, w.ZDAYINDEX, w.ZENDDATE is not null as finished, s.ZWEIGHT, s.ZREPS, s.ZISDONE from ZWORKOUT w join ZEXERCISE e on e.ZWORKOUT = w.Z_PK join ZSETENTRY s on s.ZEXERCISE = e.Z_PK where w.ZMESOCYCLE is not null and s.ZISDONE = 1"`. It returns `0 | 0 | 1 | 135.0 | 9 | 1`.
 - **Targets and feedback (demo).** The in-progress session is already on the Workout tab. Steps: `wait text "WEEK 2 DAY 1" timeout=20`, `wait text "Target 185 × 7"`, `wait text "How did quads feel today?"`, `scrollto button "Pretty good"`, `tap button "Great"`, `tap button "Pretty good"`, `scrollto text "~Next week's sets for quads"`, `tap button "None"`, `selected button "None"`, `wait image "checkmark.circle.fill"`. The feedback header shows its checkmark.
-- **Soreness (demo).** Scroll to the chest question and answer it. Steps: `scrollto text "How did your chest recover?"`, `wait text "Target 150 × 8"`, `tap button "Healed just in time"`, `absent text "How did your chest recover?"`. The card disappears and Bench Press targets are re-planned.
+- **Soreness (demo).** Scroll to the chest question and answer it. Steps: `scrollto text "How did your chest recover?"`, `wait text "Target 150 × 8"`, `tap button "Healed just in time"`, `absent text "How did your chest recover?"`. The card disappears. The answer re-plans that muscle's sets only when the soreness belongs to this day's session last week and the muscle has no logged set yet (`MesoPlanner.recordSoreness`). In the demo, Bench Press still shows `Target 150 × 8` after the answer (`03-soreness-answered` tree).
 
 ## Gotchas
 
-- An empty set field shows its placeholder: the unit for weight, `<n> RIR` for reps. A zero weight reads as empty. Assert typed values with `value field "Set n weight"`, not by matching the field's text.
+- An empty set field shows its placeholder: the unit for weight, `<n> RIR` for reps (`reps` in a deload). A zero weight or zero reps reads as empty. Assert typed values with `value field "Set n weight"`, not by matching the field's text.
 - The session is a lazy stack, so cards below the fold are not in the tree. Scroll before asserting on them.
 - `scrollto` swipes a long way and can leave its target under the tab bar. Scroll to the element just below a row before tapping it, as the seeded journey does for `Great` and `None`.
 - Feedback chips carry the Selected trait. The header checkmark proves all three questions are answered.
@@ -45,5 +45,5 @@ Preconditions:
 - The decimal pad covers the lower part of the list and hides the tab bar. Tap `button "Done"` before tapping anything it might cover.
 - `Finish Workout` is absent from the tree until every set is logged, so a `wait` or `tap` on it times out while any set is open.
 - Remove Bench's other exercises while one Bench set is still unlogged. A fully logged Bench adds the chest feedback card, which pushes the next card's `Exercise menu` off screen.
-- The tab builds a block day as soon as it shows it, so an open `ZWORKOUT` row is no proof that training started. Logging the day's first set resets its start time.
+- The tab builds a block day as soon as it shows it, so an open `ZWORKOUT` row is no proof that training started. Until a set is logged, the day's start time resets each time the tab shows it.
 - The `Workout menu` items do not appear in `tree` dumps, but tapping them by label works.

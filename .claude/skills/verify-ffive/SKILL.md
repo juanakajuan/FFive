@@ -30,7 +30,7 @@ V=.claude/skills/verify-ffive/scripts/ffive-verify
 $V launch
 ```
 
-This creates the simulator if needed (latest iOS runtime, iPhone 18 Pro, override with `FFIVE_DEVICE_TYPE`) and boots it. It builds the app and the driver into `.verify/build*`, installs the app, then runs a smoke drive: launch with `-seedDemo` and wait for the Workout tab and its `Workout menu`. It is ready when the last line is `READY udid=<UDID> stamp=<git sha>`. A cold first run takes about 3 minutes. Later runs rebuild incrementally in under a minute.
+This creates the simulator if needed (latest iOS runtime, iPhone 18 Pro, override with `FFIVE_DEVICE_TYPE`) and boots it. It builds the app and the driver into `.verify/build*`, installs the app, then runs a smoke drive: launch with `-seedDemo` and wait for the Workout tab and its `Workout menu`. It is ready when the last line is `READY udid=<UDID> stamp=<git sha>`. A cold first run takes about 3 minutes. With build caches in place, a launch that has to boot a shut-down simulator took about 100 seconds; one on a booted simulator rebuilds incrementally in under a minute.
 
 Run `launch` again after every app or driver code change, because `drive` does not rebuild. `launch` is idempotent and reuses the same simulator.
 
@@ -61,13 +61,13 @@ tree learn
 EOF
 ```
 
-Each drive runs one XCUITest (`xcodebuild test-without-building`, about 20 to 40 seconds of overhead). It prints one `ok`/`FAIL` line per step, then `PASS <run dir>` or `FAIL <run dir>`, and exits non-zero on failure. On failure the run dir also holds `failure.png` and `failure.tree.txt`, the screen and UI tree at the failing step.
+Each drive runs one XCUITest (`xcodebuild test-without-building`). It prints one `ok`/`FAIL` line per step, then `PASS <run dir> (<n>s)` or `FAIL <run dir> (<n>s)` with the drive's wall time, and exits non-zero on failure. On failure the run dir also holds `failure.png` and `failure.tree.txt`, the screen and UI tree at the failing step.
 
 Step language: one step per line, `#` starts a comment line, and arguments with spaces go in double quotes. An element is `<kind> "<label>"`:
 
 - `kind` is one of `button`, `text` (static text), `field` (text field), `search` (search field), `cell`, `tab` (tab bar buttons only), `switch`, `image`, `nav` (navigation bar, matched by title), `alert`, or `any`.
 - `"<label>"` matches the accessibility label, identifier, or placeholder exactly. A `~` prefix (`"~Upper A • Verify"`) matches a substring. The first substring match wins, so make it unique.
-- Optional `#n` picks the n-th match. For actions, n counts only on-screen (hittable) matches.
+- Optional `#n` picks a match by 0-based index: `#0` is the first, `#1` the second. For actions, n counts only on-screen (hittable) matches.
 - Optional `timeout=<seconds>` changes the default 5 s wait.
 
 | Step | Effect |
@@ -92,11 +92,11 @@ Find handles by dumping a tree (`tree x`) and grepping it, not by reading SwiftU
 
 - Tab bar: a custom bar of plain buttons, so use `button "Workout"`, `button "Mesos"`, `button "Templates"`, `button "Exercises"`, `button "More"` (the selected one carries Selected). The `tab` kind matches nothing. Only the selected tab is rendered, and a tab resets each time it is opened.
 - Tab roots draw their title in the page, not in a navigation bar: `text "Mesocycles"`, `text "Templates"`, `text "Exercises"`, `text "More"`. Pushed screens keep navigation titles: `nav "Progress"`, `nav "Learn"`, `nav "Settings"`, `nav "New Mesocycle"`, `nav "Customize"`, `nav "Add Exercise"`, a workout's name on its detail page.
-- Workout tab header: `text "WEEK 2 DAY 1"` (or `DELOAD DAY n`, `QUICK WORKOUT`) and a subtitle such as `text "~Full Body A • Full Body, 3 Days"`. Buttons `Schedule` (sheet with the grid and the week's volume) and `Workout menu` (Add Exercise, Skip Day, Quick Workout or Resume Quick Workout, Rename, Discard Workout, End Mesocycle). Menu items don't appear in `tree` dumps, but `tap button "Skip Day"` works once the menu is open.
+- Workout tab header: `text "WEEK 2 DAY 1"` (or `DELOAD DAY n`, `QUICK WORKOUT`) and a subtitle such as `text "~Full Body A • Full Body, 3 Days"`. Buttons `Schedule` (sheet with the grid and the week's volume) and `Workout menu` (Add Exercise, Skip Day, Quick Workout or Resume Quick Workout, Rename, Discard Workout, End Mesocycle). Skip Day shows only while the day has no logged set, Rename only on a quick workout, and Quick Workout only on a block day. Menu items don't appear in `tree` dumps, but `tap button "Skip Day"` works once the menu is open.
 - Empty Workout tab (no active block): `button "Plan a Mesocycle"`, `button "Quick Workout"`, and the stats row (`This Week`, `Time`, `All Time`).
 - Exercise cards: `button "Technique cue"`, `button "History"`, `button "Exercise menu"`, and the target strip, e.g. `text "Target 185 × 7"` or `text "~Calibrate"`. The header stays pinned at the top while the cards scroll. `button "Finish Workout"` is pinned above the tab bar and exists only once every exercise has at least one set and all its sets are logged, so `absent` proves the gate and no `scrollto` is needed. Add exercises through `Workout menu`, then `Add Exercise`.
-- Set rows: `field "Set 1 weight"`, `field "Set 1 reps"` (placeholders are the unit and `<n> RIR`, so `field "kg"` matches every weight field in kilograms), `button "Set 1 menu"`, and the checkbox `button "Log set 1"`, which carries Selected once logged.
-- Schedule grid cells have no labels of their own. Their identifiers are SF Symbol names: `checkmark.circle.fill` (finished), `play.circle.fill` (next), `circle.lefthalf.filled` (in progress), `forward.circle` (skipped), `circle` (upcoming). Only current-week cells of an unfinished block are buttons.
+- Set rows: `field "Set 1 weight"`, `field "Set 1 reps"` (placeholders are the unit and `<n> RIR`, or `reps` with no RIR in a deload or quick workout; they show only on empty fields, but `field "kg"` still matches every weight field in kilograms), `button "Set 1 menu"`, and the checkbox `button "Log set 1"`, which carries Selected once logged.
+- Schedule grid cells have no labels of their own. Their identifiers are SF Symbol names: `checkmark.circle.fill` (finished), `circle.lefthalf.filled` (built, open), `play.circle.fill` (next, not built yet, rare because the tab builds the day it shows), `forward.circle` (skipped), `circle` (upcoming). Finished cells are always buttons that open the read-only workout. Skipped, open, and upcoming cells are buttons only in the current week of an unfinished block.
 - Mesos rows: `button "~Full Body, 3 Days"` opens the detail; `button "<name> menu"` holds End Mesocycle. The header `button "New Mesocycle"` is disabled while a block is active.
 - Feedback chips (`Great`, `Pretty good`, `None`, …) carry Selected when chosen.
 
@@ -150,6 +150,7 @@ Cleanup deletes only the simulator whose UDID is recorded in `state.env`, and on
 
 ## Gotchas
 
+- A drive can stall on XCUITest's idle wait: `steps.log` stops growing and `xcodebuild.log` repeats "App animations complete notification not received" about 60 seconds apart, once per step. It happened once in train-session.steps after typing into `Set 1 weight` on a fresh store, and three narrower probes and a re-drive did not reproduce it. `drive` has no overall timeout. Stop it with `kill <pid>` for the pid in `.verify/drive.lock/pid` and its `xcodebuild test-without-building` child, run `doctor`, then drive again.
 - `drive` runs the build `launch` last installed. After editing Swift, run `launch` first, or `doctor` will report a stale install.
 - SwiftUI lists are lazy, so rows below the fold are absent from the tree, not just hidden. `scrollto` them before `wait`/`tap`.
 - Screens under a sheet or full-screen cover stay in the tree. `wait` can match them, `tap` cannot. Assert on the presented screen's `nav` title first.

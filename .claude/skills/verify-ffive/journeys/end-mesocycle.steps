@@ -1,4 +1,4 @@
-# end-mesocycle (seeded): end the demo block from inside its in-progress session; the logged session reaches history.
+# end-mesocycle (demo): end the demo block from inside its in-progress session; the logged session reaches history.
 launch -seedDemo
 wait text "WEEK 2 DAY 1" timeout=20
 tap button "Workout menu"
@@ -9,7 +9,8 @@ shot 01-empty-after-end
 tap button "More"
 tap button "Progress"
 tap button "History"
-wait button "~Full Body A"
+# Week 1 Full Body A is already in history; the ended Week 2 session makes it two.
+count button "~Full Body A" "2"
 shot 02-history-has-session
 tap button "Mesos"
 wait any "Finished"
