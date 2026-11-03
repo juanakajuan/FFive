@@ -1,11 +1,11 @@
 ---
 name: verify-ffive
-description: Drive the FFive iOS app (SwiftUI, SwiftData) on a throwaway iOS simulator to prove user-facing behavior. It launches the app, runs scripted XCUITest step files against real accessibility labels, captures screenshots and UI trees, and reads the on-disk store and settings. Use it whenever a change to FFive's Train, session, mesocycle builder, skip, quick workout, Progress, or Settings screens has to be shown working in the real app, not just in scripts/check-*.sh.
+description: Drive the FFive iOS app (SwiftUI, SwiftData) on a throwaway iOS simulator to prove user-facing behavior. It launches the app, runs scripted XCUITest step files against real accessibility labels, captures screenshots and UI trees, and reads the on-disk store and settings. Use it whenever a change to FFive's Workout tab (session, skip, quick workout), Mesos, Templates, Exercises, mesocycle builder, Progress, or Settings screens has to be shown working in the real app, not just in scripts/check-*.sh.
 ---
 
 # Verify FFive
 
-FFive is an iPhone app (`com.juanix.FFive`, iOS 17+, one SwiftUI target in `FFive.xcodeproj`). The user touches only the app UI: three tabs (Train, Progress, Learn) plus sheets and full-screen covers. There is no server, CLI, or URL scheme. `scripts/check-engine.sh` and `scripts/check-planner.sh` test the engine without UI. This skill covers the UI.
+FFive is an iPhone app (`com.juanix.FFive`, iOS 17+, one SwiftUI target in `FFive.xcodeproj`). The user touches only the app UI: five tabs (Workout, Mesos, Templates, Exercises, More, with Progress, Learn, and Settings pushed from More) plus sheets. There is no server, CLI, or URL scheme. `scripts/check-engine.sh` and `scripts/check-planner.sh` test the engine without UI. This skill covers the UI.
 
 The harness has two parts:
 
@@ -30,7 +30,7 @@ V=.claude/skills/verify-ffive/scripts/ffive-verify
 $V launch
 ```
 
-This creates the simulator if needed (latest iOS runtime, iPhone 18 Pro, override with `FFIVE_DEVICE_TYPE`) and boots it. It builds the app and the driver into `.verify/build*`, installs the app, then runs a smoke drive: launch with `-seedDemo` and wait for the Train tab. It is ready when the last line is `READY udid=<UDID> stamp=<git sha>`. A cold first run takes about 3 minutes. Later runs rebuild incrementally in under a minute.
+This creates the simulator if needed (latest iOS runtime, iPhone 18 Pro, override with `FFIVE_DEVICE_TYPE`) and boots it. It builds the app and the driver into `.verify/build*`, installs the app, then runs a smoke drive: launch with `-seedDemo` and wait for the Workout tab and its `Workout menu`. It is ready when the last line is `READY udid=<UDID> stamp=<git sha>`. A cold first run takes about 3 minutes. Later runs rebuild incrementally in under a minute.
 
 Run `launch` again after every app or driver code change, because `drive` does not rebuild. `launch` is idempotent and reuses the same simulator.
 
@@ -55,7 +55,8 @@ This check is read-only. It confirms that the simulator recorded in `.verify/sta
 $V drive .claude/skills/verify-ffive/journeys/plan-mesocycle.steps --name plan-mesocycle
 $V drive - --name scratch <<'EOF'
 launch -seedDemo
-tap tab "Learn" timeout=20
+tap button "More" timeout=20
+tap button "Learn"
 tree learn
 EOF
 ```
@@ -65,7 +66,7 @@ Each drive runs one XCUITest (`xcodebuild test-without-building`, about 20 to 40
 Step language: one step per line, `#` starts a comment line, and arguments with spaces go in double quotes. An element is `<kind> "<label>"`:
 
 - `kind` is one of `button`, `text` (static text), `field` (text field), `search` (search field), `cell`, `tab` (tab bar buttons only), `switch`, `image`, `nav` (navigation bar, matched by title), `alert`, or `any`.
-- `"<label>"` matches the accessibility label, identifier, or placeholder exactly. A `~` prefix (`"~Next up, Week 1"`) matches a substring. The first substring match wins, so make it unique.
+- `"<label>"` matches the accessibility label, identifier, or placeholder exactly. A `~` prefix (`"~Upper A • Verify"`) matches a substring. The first substring match wins, so make it unique.
 - Optional `#n` picks the n-th match. For actions, n counts only on-screen (hittable) matches.
 - Optional `timeout=<seconds>` changes the default 5 s wait.
 
@@ -89,12 +90,20 @@ Step language: one step per line, `#` starts a comment line, and arguments with 
 
 Find handles by dumping a tree (`tree x`) and grepping it, not by reading SwiftUI source. Stable handles in this app:
 
-- Tab bar: `tab "Train"`, `tab "Progress"`, `tab "Learn"`.
-- Navigation titles: `nav "Train"`, `nav "Progress"`, `nav "Learn"`, `nav "Settings"`, `nav "New Mesocycle"`, `nav "Customize"`, `nav "Add Exercise"`. A session's title is the block name (`nav "Full Body, 3 Days"`), or `nav "Workout"` for a quick workout.
-- Train toolbar: `button "Settings"`, and `button "Quick Workout"` or `button "Resume Quick Workout"`.
-- The Next up card is one button whose label combines its texts, such as `Next up, Week 1 · Day 1, Upper A, Bench Press · …, Start Workout`. Match it with `~Next up, Week 1 · Day 1` or `~In progress, Week 2 · Day 1`.
-- Schedule grid cells have no labels of their own. Their identifiers are SF Symbol names: `checkmark.circle.fill` (finished), `play.circle.fill` (next), `circle.lefthalf.filled` (in progress), `forward.circle` (skipped), `circle` (upcoming).
-- Set rows: weight and reps fields have no labels, only the placeholder `0`. On-screen order is weight, then reps, per set, so the first set is `field "0" #0` (weight) and `field "0" #1` (reps). The done toggle is `button "circle"` when open and `button "checkmark.circle.fill"` when done.
+- Tab bar: a custom bar of plain buttons, so use `button "Workout"`, `button "Mesos"`, `button "Templates"`, `button "Exercises"`, `button "More"` (the selected one carries Selected). The `tab` kind matches nothing. Only the selected tab is rendered, and a tab resets each time it is opened.
+- Tab roots draw their title in the page, not in a navigation bar: `text "Mesocycles"`, `text "Templates"`, `text "Exercises"`, `text "More"`. Pushed screens keep navigation titles: `nav "Progress"`, `nav "Learn"`, `nav "Settings"`, `nav "New Mesocycle"`, `nav "Customize"`, `nav "Add Exercise"`, a workout's name on its detail page.
+- Workout tab header: `text "WEEK 2 DAY 1"` (or `DELOAD DAY n`, `QUICK WORKOUT`) and a subtitle such as `text "~Full Body A • Full Body, 3 Days"`. Buttons `Schedule` (sheet with the grid and the week's volume) and `Workout menu` (Add Exercise, Skip Day, Quick Workout or Resume Quick Workout, Rename, Discard Workout, End Mesocycle). Menu items don't appear in `tree` dumps, but `tap button "Skip Day"` works once the menu is open.
+- Empty Workout tab (no active block): `button "Plan a Mesocycle"`, `button "Quick Workout"`, and the stats row (`This Week`, `Time`, `All Time`).
+- Exercise cards: `button "Technique cue"`, `button "History"`, `button "Exercise menu"`, and the target strip, e.g. `text "Target 185 × 7"` or `text "~Calibrate"`. The bottom of the stream has `button "Add Exercise"` and `button "Finish Workout"`.
+- Set rows: `field "Set 1 weight"`, `field "Set 1 reps"` (placeholders are the unit and `<n> RIR`, so `field "kg"` matches every weight field in kilograms), `button "Set 1 menu"`, and the checkbox `button "Log set 1"`, which carries Selected once logged.
+- Schedule grid cells have no labels of their own. Their identifiers are SF Symbol names: `checkmark.circle.fill` (finished), `play.circle.fill` (next), `circle.lefthalf.filled` (in progress), `forward.circle` (skipped), `circle` (upcoming). Only current-week cells of an unfinished block are buttons.
+- Mesos rows: `button "~Full Body, 3 Days"` opens the detail; `button "<name> menu"` holds End Mesocycle. The header `button "New Mesocycle"` is disabled while a block is active.
+- Feedback chips (`Great`, `Pretty good`, `None`, …) carry Selected when chosen.
+
+Gotchas:
+
+- `~Workout` matches the Workout tab button before any history row; use `~Workout,` or the full workout name.
+- `scrollto` swipes a long way and stops as soon as its target is on screen, which can leave it under the tab bar. Scroll to the element just below a row, then tap the row.
 
 To watch a drive live, open the simulator panel (iOS Simulator `attach` with the simulator's UDID) or `open -a Simulator`. Do not tap while a drive runs.
 

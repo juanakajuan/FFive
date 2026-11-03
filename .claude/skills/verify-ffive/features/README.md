@@ -6,16 +6,19 @@ This directory is the maintained source for verifying FFive's user-facing behavi
 
 - `ffive-verify` means `.claude/skills/verify-ffive/scripts/ffive-verify`, run from the repo root.
 - `ffive-verify launch` printed `READY`, and `ffive-verify doctor` prints `HEALTHY` with an install stamp that matches the source.
-- **Demo baseline** (read-only journeys): every drive starts with `launch -seedDemo`. The block "Full Body, 3 Days" is at Week 2 of 5. Week 1 is finished, Week 2 · Day 1 is in progress with Squat logged, and Week 2 · Day 3 is skipped. "Morning Workout" and "Evening Workout" are free-form history.
-- **On-disk baseline** (write journeys): `ffive-verify reset-data`, then a bare `launch`. The Train tab shows `Plan a Mesocycle` and `Quick Workout`.
+- **Demo baseline** (read-only journeys): every drive starts with `launch -seedDemo`. The block "Full Body, 3 Days" is at Week 2 of 5. Week 1 is finished, Week 2 · Day 1 is in progress with Squat logged, and Week 2 · Day 3 is skipped. The Workout tab opens on `WEEK 2 DAY 1`. "Morning Workout" and "Evening Workout" are free-form history.
+- **On-disk baseline** (write journeys): `ffive-verify reset-data`, then a bare `launch`. The Workout tab shows `Plan a Mesocycle` and `Quick Workout`.
 - The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day. Each one's `Before:` header names the state it needs.
 - Never drive a simulator that `ffive-verify launch` did not create in this checkout.
 
 ## Driving conventions
 
-- Prefer navigation titles, button labels, and placeholders over indexes. Use `#n` only where the app gives no label (set fields, grid cells), and say so in the recipe.
-- Treat every step as literal. Labels include their punctuation: `·`, `×`, curly quotes.
-- Wait for the new screen's `nav` title or a state-specific label after every navigation, not a fixed `sleep`.
+- The tabs are Workout, Mesos, Templates, Exercises, and More. The tab bar is a row of plain buttons, so match `button "Workout"`, never `tab "Workout"`. Settings, Progress, and Learn are pushed from More.
+- Only the selected tab is rendered, and a tab starts over at its root each time it is reopened. Re-enter pushed pages after every tab switch.
+- Prefer navigation titles, button labels, and placeholders over indexes. Set fields carry labels (`Set n weight`, `Set n reps`), so `#n` is rarely needed. Say so in the recipe where it is.
+- Treat every step as literal. Labels include their punctuation: `·`, `•`, `×`, curly quotes.
+- Wait for the new screen's `nav` title or a state-specific label after every navigation, not a fixed `sleep`. The Workout tab has no navigation bar. Wait for its header text (`WEEK n DAY m`, `DELOAD DAY m`, or `QUICK WORKOUT`).
+- While the keyboard is up the tab bar is hidden. Tap `button "Done"` before tapping a tab.
 - Put durable writes on the on-disk path. `-seedDemo` is in-memory and resets on every `launch`, but it shares the real UserDefaults, so restore `weightUnit` to `lb`.
 
 ## Proof and skip reporting
@@ -36,11 +39,11 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 
 ## Features
 
-- [Plan a mesocycle](./plan-mesocycle.md): pick a template, customize name and length, and start the block (on disk).
-- [Train a planned session](./train-session.md): open the next session, log sets against targets, give feedback and soreness, and finish (on disk and demo).
-- [Skip a day](./skip-day.md): skip from the Next up card or the schedule grid, then train it after all (on disk).
+- [Plan a mesocycle](./plan-mesocycle.md): pick a template, customize name and length, start the block, and see it on the Mesos tab (on disk).
+- [Train a planned session](./train-session.md): the block's session shows on the Workout tab; log sets against targets, give feedback and soreness, and finish (on disk and demo).
+- [Skip a day](./skip-day.md): skip from the workout menu or the schedule grid, then train it after all (on disk).
 - [Quick workout](./quick-workout.md): a free-form session with exercises from the picker (on disk).
-- [Progress](./progress.md): volume against landmarks, the strength trend, and history (demo).
-- [Settings](./settings.md): weight unit and app version (demo plus UserDefaults).
+- [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
+- [Settings](./settings.md): weight unit and app version, pushed from More (demo plus UserDefaults).
 
-Not mapped yet: Learn (article list and article pages), ending a mesocycle, swapping or removing exercises, and discarding a workout.
+Not mapped yet: the Templates and Exercises tabs, a block's detail page on the Mesos tab, Learn, ending a mesocycle, swapping or removing exercises, renaming a quick workout, and discarding a workout.
