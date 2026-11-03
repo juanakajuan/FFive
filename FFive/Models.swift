@@ -25,6 +25,11 @@ final class Workout {
     var sortedExercises: [Exercise] { exercises.sorted { $0.order < $1.order } }
     var duration: TimeInterval { (endDate ?? .now).timeIntervalSince(startDate) }
     var completedSets: Int { exercises.reduce(0) { $0 + $1.sets.filter(\.isDone).count } }
+    /// The share of planned sets logged, from 0 to 1.
+    var setProgress: Double {
+        let total = exercises.reduce(0) { $0 + $1.sets.count }
+        return total == 0 ? 0 : Double(completedSets) / Double(total)
+    }
     var isFullyLogged: Bool { !exercises.isEmpty && exercises.allSatisfy(\.isLogged) }
     var totalVolume: Double {
         exercises.flatMap(\.sets).filter(\.isDone).reduce(0) { $0 + Double($1.reps) * $1.weight }
