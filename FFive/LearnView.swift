@@ -2,32 +2,41 @@ import SwiftUI
 
 struct LearnView: View {
     var body: some View {
-        NavigationStack {
-            List {
-                Section {
-                    Text("The app picks your sets, reps, and weights from a few training ideas. Each short read explains one of them, so you know why a number changed.")
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
-                }
-                ForEach(Learn.Category.allCases) { category in
-                    Section(category.rawValue) {
-                        ForEach(Learn.articles.filter { $0.category == category }) { article in
-                            NavigationLink {
-                                Learn.ArticleView(article: article)
-                            } label: {
-                                Learn.ArticleRow(article: article)
-                            }
-                        }
+        List {
+            Text("The app picks your sets, reps, and weights from a few training ideas. Each short read explains one of them, so you know why a number changed.")
+                .font(Theme.detail)
+                .foregroundStyle(Theme.secondary)
+                .themedRow()
+                .listRowSeparator(.hidden)
+            ForEach(Learn.Category.allCases) { category in
+                SectionHeading(text: category.rawValue)
+                    .accessibilityAddTraits(.isHeader)
+                    .themedRow(vertical: 8)
+                    .padding(.top, 12)
+                    .listRowSeparator(.hidden)
+                ForEach(Learn.articles.filter { $0.category == category }) { article in
+                    NavigationLink {
+                        Learn.ArticleView(article: article)
+                    } label: {
+                        Learn.ArticleRow(article: article)
                     }
-                }
-                Section {
-                } footer: {
-                    Text("Volume landmarks, the stimulus-to-fatigue ratio, and adjusting sets from session feedback come from Renaissance Periodization (Mike Israetel and colleagues). This app is not affiliated with RP.")
+                    .themedRow()
                 }
             }
-            .navigationTitle("Learn")
+            Text("Volume landmarks, the stimulus-to-fatigue ratio, and adjusting sets from session feedback come from Renaissance Periodization (Mike Israetel and colleagues). This app is not affiliated with RP.")
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondary)
+                .themedRow(vertical: 20)
+                .listRowSeparator(.hidden)
         }
+        .themedList()
+        .navigationTitle("Learn")
     }
+}
+
+#Preview {
+    NavigationStack { LearnView() }
+        .preferredColorScheme(.dark)
 }
 
 // MARK: - Article list and page
@@ -44,18 +53,18 @@ extension Learn {
         var body: some View {
             HStack(spacing: 14) {
                 Image(systemName: article.symbol)
-                    .font(.title3)
-                    .foregroundStyle(.tint)
-                    .frame(width: 30)
+                    .font(.system(size: 22))
+                    .foregroundStyle(Theme.text)
+                    .frame(width: 28)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(article.title)
-                        .font(.headline)
+                        .font(Theme.body.weight(.semibold))
+                        .foregroundStyle(Theme.text)
                     Text(article.summary)
-                        .font(.subheadline)
-                        .foregroundStyle(.secondary)
+                        .font(Theme.detail)
+                        .foregroundStyle(Theme.secondary)
                 }
             }
-            .padding(.vertical, 4)
         }
     }
 
@@ -66,18 +75,22 @@ extension Learn {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(article.summary)
-                        .font(.title3)
-                        .foregroundStyle(.secondary)
+                        .font(.system(size: 18))
+                        .foregroundStyle(Theme.secondary)
                     TakeawaysCard(takeaways: article.takeaways)
                     ForEach(Array(article.blocks.enumerated()), id: \.offset) { _, block in
                         BlockView(block: block)
                     }
                     EvidenceList(citations: article.evidence)
                 }
-                .padding()
+                .font(Theme.body)
+                .foregroundStyle(Theme.text)
+                .tint(Theme.infoText)
+                .padding(Theme.gutter)
                 .frame(maxWidth: 680, alignment: .leading)
                 .frame(maxWidth: .infinity)
             }
+            .background(Theme.surface)
             .navigationTitle(article.title)
             .navigationBarTitleDisplayMode(.large)
         }
@@ -90,7 +103,7 @@ extension Learn {
             switch block {
             case .heading(let text):
                 Text(text)
-                    .font(.title3.weight(.semibold))
+                    .font(Theme.cardTitle)
                     .padding(.top, 8)
                     .accessibilityAddTraits(.isHeader)
             case .paragraph(let text):
@@ -100,7 +113,7 @@ extension Learn {
                     ForEach(items, id: \.self) { item in
                         HStack(alignment: .firstTextBaseline, spacing: 10) {
                             Text(verbatim: "\u{2022}")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.secondary)
                             Text(Learn.inline(item))
                         }
                     }
@@ -108,14 +121,14 @@ extension Learn {
             case .caveat(let text):
                 VStack(alignment: .leading, spacing: 6) {
                     Label("A note on the evidence", systemImage: "info.circle")
-                        .font(.subheadline.weight(.semibold))
-                        .foregroundStyle(.orange)
+                        .font(Theme.detail.weight(.semibold))
                     Text(Learn.inline(text))
-                        .font(.callout)
+                        .font(Theme.detail)
                 }
-                .padding(14)
+                .foregroundStyle(Theme.text)
+                .padding(12)
                 .frame(maxWidth: .infinity, alignment: .leading)
-                .background(Color.orange.opacity(0.12), in: RoundedRectangle(cornerRadius: 12, style: .continuous))
+                .background(Theme.noteFill, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             case .landmarksChart:
                 LandmarksChart()
             case .rirCountdown:
@@ -133,22 +146,23 @@ extension Learn {
 
         var body: some View {
             VStack(alignment: .leading, spacing: 12) {
-                Label("Key takeaways", systemImage: "lightbulb.fill")
-                    .font(.headline)
-                    .foregroundStyle(.tint)
+                Label("Key takeaways", systemImage: "lightbulb")
+                    .font(Theme.body.weight(.semibold))
+                    .foregroundStyle(Theme.infoText)
                 ForEach(takeaways, id: \.self) { item in
                     HStack(alignment: .firstTextBaseline, spacing: 10) {
                         Image(systemName: "checkmark")
-                            .font(.footnote.weight(.bold))
-                            .foregroundStyle(.tint)
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundStyle(Theme.infoText)
                         Text(Learn.inline(item))
-                            .font(.callout)
+                            .font(Theme.detail)
+                            .foregroundStyle(Theme.text)
                     }
                 }
             }
-            .padding(16)
+            .padding(12)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.accentColor.opacity(0.14), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Theme.infoFill.opacity(0.6), in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
         }
     }
 
@@ -157,28 +171,28 @@ extension Learn {
 
         var body: some View {
             VStack(alignment: .leading, spacing: 14) {
-                Divider()
+                Rectangle().fill(Theme.hairline).frame(height: 1)
                 Text("Evidence")
-                    .font(.title3.weight(.semibold))
+                    .font(Theme.cardTitle)
                     .accessibilityAddTraits(.isHeader)
                 ForEach(citations) { citation in
                     VStack(alignment: .leading, spacing: 3) {
                         Text(verbatim: "\(citation.authors) (\(citation.year))")
-                            .font(.footnote.weight(.semibold))
+                            .font(Theme.detail.weight(.semibold))
                         if let url = citation.url {
                             Link(destination: url) {
                                 Text("\(citation.title) \(Image(systemName: "arrow.up.right.square"))")
                                     .multilineTextAlignment(.leading)
                             }
-                            .font(.footnote)
+                            .font(Theme.detail)
                         } else {
                             Text(citation.title)
-                                .font(.footnote)
+                                .font(Theme.detail)
                         }
                         Text(citation.source)
-                            .font(.caption)
+                            .font(Theme.caption)
                             .italic()
-                            .foregroundStyle(.secondary)
+                            .foregroundStyle(Theme.secondary)
                     }
                 }
             }
@@ -206,10 +220,10 @@ extension Learn {
 
         var color: Color {
             switch self {
-            case .belowMEV: Color.primary.opacity(0.22)
-            case .towardMAV: Color.accentColor.opacity(0.55)
-            case .mav: .green
-            case .towardMRV: .orange
+            case .belowMEV: Theme.text.opacity(0.22)
+            case .towardMAV: Theme.infoText.opacity(0.6)
+            case .mav: Theme.success
+            case .towardMRV: Theme.danger.opacity(0.75)
             }
         }
 
@@ -237,20 +251,20 @@ extension Learn {
                         }
                     }
                     HStack(spacing: 6) {
-                        Rectangle().fill(Color.primary).frame(width: 2, height: 12).frame(width: 14)
+                        Rectangle().fill(Theme.text).frame(width: 2, height: 12).frame(width: 14)
                         Text("MV")
                     }
                 }
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondary)
 
                 ForEach(Muscle.allCases) { muscle in
                     row(muscle)
                 }
 
                 Text(verbatim: "Hard sets per week. Every bar uses the same scale, 0 to \(scale) sets.")
-                    .font(.caption)
-                    .foregroundStyle(.secondary)
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondary)
             }
             .learnPanel()
         }
@@ -260,11 +274,11 @@ extension Learn {
             return VStack(alignment: .leading, spacing: 5) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(muscle.displayName)
-                        .font(.subheadline.weight(.medium))
+                        .font(Theme.detail.weight(.medium))
                     Spacer(minLength: 8)
                     Text(verbatim: "MV \(landmarks.mv)  MEV \(landmarks.mev)  MAV \(landmarks.mav.lowerBound)-\(landmarks.mav.upperBound)  MRV \(landmarks.mrv)")
-                        .font(.caption.monospacedDigit())
-                        .foregroundStyle(.secondary)
+                        .font(Theme.caption.monospacedDigit())
+                        .foregroundStyle(Theme.secondary)
                         .lineLimit(1)
                         .minimumScaleFactor(0.75)
                 }
@@ -284,7 +298,7 @@ extension Learn {
             GeometryReader { geometry in
                 let unit = geometry.size.width / CGFloat(max(scale, 1))
                 ZStack(alignment: .leading) {
-                    Capsule().fill(Color.primary.opacity(0.06))
+                    Capsule().fill(Theme.raised)
                     ZStack(alignment: .leading) {
                         ForEach(LandmarkZone.allCases) { zone in
                             let span = zone.span(landmarks)
@@ -298,7 +312,7 @@ extension Learn {
                     .clipShape(Capsule())
                     if landmarks.mv > 0 {
                         Rectangle()
-                            .fill(Color.primary)
+                            .fill(Theme.text)
                             .frame(width: 2, height: geometry.size.height + 6)
                             .offset(x: CGFloat(landmarks.mv) * unit - 1)
                     }
@@ -314,31 +328,26 @@ extension Learn {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Weeks before the deload")
-                        .font(.subheadline.weight(.semibold))
-                    Picker("Weeks before the deload", selection: $weeks) {
-                        ForEach(Array(Learn.accumulationWeekOptions), id: \.self) { count in
-                            Text(verbatim: "\(count)").tag(count)
-                        }
-                    }
-                    .pickerStyle(.segmented)
+                        .font(Theme.detail.weight(.semibold))
+                    SegmentedButtons(options: Array(Learn.accumulationWeekOptions), selection: $weeks) { "\($0)" }
                 }
 
                 HStack(spacing: 6) {
                     ForEach(0..<weeks, id: \.self) { week in
                         let rir = Learn.rir(week: week, accumulationWeeks: weeks)
                         WeekChip(caption: "Wk \(week + 1)", value: "\(rir)", unit: "RIR",
-                                 fill: Color.accentColor.opacity(0.25 + 0.2 * Double(3 - rir)),
+                                 fill: Theme.infoText.opacity(0.2 + 0.18 * Double(3 - rir)),
                                  spoken: "Week \(week + 1), \(rir) reps in reserve")
                     }
                     WeekChip(caption: "Deload", value: "\u{00BD}", unit: "sets",
-                             fill: Color.primary.opacity(0.1),
+                             fill: Theme.field,
                              spoken: "Deload week, half the sets")
                 }
                 .animation(.snappy, value: weeks)
 
                 Text(verbatim: summary)
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondary)
             }
             .learnPanel()
         }
@@ -359,19 +368,19 @@ extension Learn {
         var body: some View {
             VStack(spacing: 2) {
                 Text(caption)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.secondary)
                 Text(value)
-                    .font(.title3.weight(.bold).monospacedDigit())
+                    .font(.system(size: 20, weight: .bold).monospacedDigit())
                 Text(unit)
-                    .font(.caption2)
-                    .foregroundStyle(.secondary)
+                    .font(.system(size: 11))
+                    .foregroundStyle(Theme.secondary)
             }
             .lineLimit(1)
             .minimumScaleFactor(0.6)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 8)
-            .background(fill, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .background(fill, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             .accessibilityElement(children: .ignore)
             .accessibilityLabel(Text(verbatim: spoken))
         }
@@ -386,8 +395,8 @@ extension Learn {
         var body: some View {
             VStack(alignment: .leading, spacing: 14) {
                 Text("Rows are soreness and columns are workload. Each cell is next week's change in sets for that muscle in that session.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondary)
 
                 // Grid sizes these columns from each label's one-line width and overflows a phone, so the rows are HStacks.
                 VStack(spacing: 4) {
@@ -396,8 +405,8 @@ extension Learn {
                             .frame(width: rowLabelWidth, height: 1)
                         ForEach(Workload.allCases, id: \.self) { workload in
                             Text(workload.label)
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.secondary)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(Theme.secondary)
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity)
                         }
@@ -405,8 +414,8 @@ extension Learn {
                     ForEach(Soreness.allCases, id: \.self) { soreness in
                         HStack(spacing: 4) {
                             Text(soreness.label)
-                                .font(.caption2.weight(.semibold))
-                                .foregroundStyle(.secondary)
+                                .font(.system(size: 11, weight: .semibold))
+                                .foregroundStyle(Theme.secondary)
                                 .frame(width: rowLabelWidth, alignment: .leading)
                             ForEach(Workload.allCases, id: \.self) { workload in
                                 cell(soreness, workload)
@@ -417,19 +426,17 @@ extension Learn {
 
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Pump")
-                        .font(.subheadline.weight(.semibold))
-                    Picker("Pump", selection: $pump) {
-                        ForEach(Pump.allCases, id: \.self) { Text($0.label).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
+                        .font(Theme.detail.weight(.semibold))
+                    SegmentedButtons(options: Pump.allCases, selection: $pump, label: \.label)
                 }
 
                 Toggle("Moderate or worse joint pain", isOn: $jointPain)
-                    .font(.subheadline.weight(.semibold))
+                    .font(Theme.detail.weight(.semibold))
+                    .tint(Theme.success)
 
                 Text(adjusted ? "Outlined cells changed because of pump or joint pain." : "A moderate pump and little or no joint pain leave the table as it is.")
-                    .font(.footnote)
-                    .foregroundStyle(.secondary)
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondary)
             }
             .learnPanel()
             .animation(.snappy, value: pump)
@@ -451,12 +458,12 @@ extension Learn {
         private func cell(_ soreness: Soreness, _ workload: Workload) -> some View {
             let value = change(soreness, workload)
             let changed = value != Learn.FeedbackRule.baseChange(soreness, workload)
-            let shape = RoundedRectangle(cornerRadius: 8, style: .continuous)
+            let shape = RoundedRectangle(cornerRadius: Theme.cornerRadius)
             return Text(verbatim: value > 0 ? "+\(value)" : "\(value)")
-                .font(.callout.weight(.semibold).monospacedDigit())
+                .font(Theme.body.weight(.semibold).monospacedDigit())
                 .frame(maxWidth: .infinity, minHeight: 38)
                 .background(color(for: value), in: shape)
-                .overlay { shape.strokeBorder(Color.primary.opacity(changed ? 0.85 : 0), lineWidth: 1.5) }
+                .overlay { shape.strokeBorder(Theme.text.opacity(changed ? 0.85 : 0), lineWidth: 1.5) }
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(Text(verbatim: "\(soreness.label), \(workload.label): \(spoken(value))"))
         }
@@ -471,9 +478,9 @@ extension Learn {
 
         private func color(for value: Int) -> Color {
             switch value {
-            case ..<0: Color.red.opacity(0.45)
-            case 0: Color.primary.opacity(0.08)
-            default: Color.green.opacity(0.2 + 0.18 * Double(value))
+            case ..<0: Theme.danger.opacity(0.45)
+            case 0: Theme.field
+            default: Theme.success.opacity(0.3 + 0.2 * Double(value))
             }
         }
     }
@@ -486,9 +493,10 @@ extension Learn {
                     Text(verbatim: "lb")
                     Text(verbatim: "kg")
                 }
-                .font(.caption.weight(.semibold))
-                .foregroundStyle(.secondary)
-                Divider()
+                .font(Theme.columnHeader)
+                .textCase(.uppercase)
+                .foregroundStyle(Theme.secondary)
+                Rectangle().fill(Theme.hairline).frame(height: 1)
                     .gridCellUnsizedAxes(.horizontal)
                 ForEach(Equipment.allCases, id: \.self) { equipment in
                     GridRow {
@@ -500,13 +508,13 @@ extension Learn {
                                 .monospacedDigit()
                         } else {
                             Text("Reps only")
-                                .foregroundStyle(.secondary)
+                                .foregroundStyle(Theme.secondary)
                                 .gridCellColumns(2)
                         }
                     }
                 }
             }
-            .font(.subheadline)
+            .font(Theme.detail)
             .learnPanel()
         }
     }
@@ -516,6 +524,6 @@ extension View {
     fileprivate func learnPanel() -> some View {
         padding(16)
             .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Color.primary.opacity(0.06), in: RoundedRectangle(cornerRadius: 14, style: .continuous))
+            .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
     }
 }
