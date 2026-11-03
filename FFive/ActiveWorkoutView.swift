@@ -179,9 +179,6 @@ struct ActiveWorkoutView: View {
 
     private func setCompleted() {
         setsCompleted += 1
-        // A block day is built as soon as the tab shows it, which can be well before training starts,
-        // so its clock starts at the first logged set.
-        if workout.mesocycle != nil, workout.completedSets == 1 { workout.startDate = .now }
     }
 
     private func finish() {

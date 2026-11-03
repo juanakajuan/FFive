@@ -10,9 +10,11 @@ enum WorkoutTabContent: Equatable {
     case blockComplete(Mesocycle)
     case empty
 
-    static func resolve(meso: Mesocycle?, focus: SessionKey?, quickWorkout: Workout?) -> WorkoutTabContent {
+    static func resolve(meso: Mesocycle?, focus: SessionFocus?, quickWorkout: Workout?) -> WorkoutTabContent {
         guard let meso else { return quickWorkout.map(Self.session) ?? .empty }
-        if let focus, meso.allKeys.contains(focus), meso.status(at: focus).isOpen { return day(focus, of: meso) }
+        if let focus, focus.meso == meso.persistentModelID, meso.allKeys.contains(focus.key), meso.status(at: focus.key).isOpen {
+            return day(focus.key, of: meso)
+        }
         if let quickWorkout { return .session(quickWorkout) }
         if let next = meso.nextUp { return day(next, of: meso) }
         return .blockComplete(meso)
@@ -67,9 +69,17 @@ struct TrainView: View {
                 if DemoLaunch.take(.builder) { showingBuilder = true }
             }
             .task(id: content) {
-                guard case .unbuilt(let meso, let key) = content else { return }
-                _ = MesoPlanner.workout(for: meso, at: key, unit: unit, in: context)
-                try? context.save()
+                switch content {
+                case .unbuilt(let meso, let key):
+                    _ = MesoPlanner.workout(for: meso, at: key, unit: unit, in: context)
+                    try? context.save()
+                case .session(let workout) where workout.mesocycle != nil && workout.completedSets == 0:
+                    // A block day is built as soon as the tab shows it. Until a set is logged its clock restarts
+                    // each time it is shown, so duration and the soreness lookback count from when training began.
+                    workout.startDate = .now
+                default:
+                    break
+                }
             }
         }
     }
@@ -150,7 +160,7 @@ enum WorkoutTabActions {
     }
 
     static func end(_ meso: Mesocycle, router: AppRouter, in context: ModelContext) {
-        meso.finishedDate = .now
+        meso.end(in: context)
         try? context.save()
         router.focus = nil
     }
@@ -178,7 +188,7 @@ struct ScheduleSheet: View {
             ScrollView {
                 VStack(spacing: 16) {
                     MesoScheduleGrid(meso: meso) { key in
-                        router.focus = key
+                        router.openSession(key, in: meso)
                         dismiss()
                     }
                     WeekVolumeCard(meso: meso, week: week, unit: unit)

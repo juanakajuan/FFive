@@ -235,6 +235,20 @@ final class Mesocycle {
     func unskip(_ key: SessionKey) {
         skippedSessions.removeAll { $0 == key }
     }
+
+    /// Ends the block. Open sessions with logged sets are finished so they reach history; untouched ones,
+    /// such as a day built only because it was shown, are dropped.
+    func end(in context: ModelContext) {
+        for workout in workouts where !workout.isFinished {
+            if workout.completedSets > 0 {
+                workout.finish(in: context)
+            } else {
+                workouts.removeAll { $0 === workout }
+                context.delete(workout)
+            }
+        }
+        finishedDate = .now
+    }
 }
 
 enum SessionStatus: Equatable {

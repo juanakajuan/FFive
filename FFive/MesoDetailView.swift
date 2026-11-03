@@ -19,7 +19,7 @@ struct MesoDetailView: View {
                 header(week: week)
                 // Only the active block trains from the Workout tab, so a finished block's days don't open anything.
                 MesoScheduleGrid(meso: meso) { key in
-                    if isActive { router.openSession(key) }
+                    if isActive { router.openSession(key, in: meso) }
                 }
                 WeekVolumeCard(meso: meso, week: week, unit: unit)
                 if isActive {
@@ -64,7 +64,7 @@ struct MesoDetailView: View {
     }
 
     private func end() {
-        meso.finishedDate = .now
+        meso.end(in: context)
         try? context.save()
     }
 }

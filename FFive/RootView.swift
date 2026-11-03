@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 import Observation
 
 enum AppTab: CaseIterable, Hashable {
@@ -25,15 +26,21 @@ enum AppTab: CaseIterable, Hashable {
     }
 }
 
+struct SessionFocus: Equatable {
+    let meso: PersistentIdentifier
+    let key: SessionKey
+}
+
 /// Cross-tab navigation: another tab can send the lifter to a session on the Workout tab.
 @Observable
 final class AppRouter {
     var tab: AppTab = [.progress, .strength].contains(DemoLaunch.route) ? .more : .workout
-    /// A day of the active block the Workout tab should show instead of the next session.
-    var focus: SessionKey?
+    /// A day the Workout tab should show instead of the next session. It names its block, so a pick made in
+    /// one block never carries into the next.
+    var focus: SessionFocus?
 
-    func openSession(_ key: SessionKey) {
-        focus = key
+    func openSession(_ key: SessionKey, in meso: Mesocycle) {
+        focus = SessionFocus(meso: meso.persistentModelID, key: key)
         tab = .workout
     }
 }

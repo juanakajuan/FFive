@@ -20,6 +20,11 @@ enum DemoLaunch {
         guard route == candidate else { return false }
         return taken.insert(candidate).inserted
     }
+
+    /// True while the route is still waiting for its screen, without claiming it.
+    static func isPending(_ candidate: DemoRoute) -> Bool {
+        route == candidate && !taken.contains(candidate)
+    }
 }
 
 /// Seeds two free-form sessions, then a 4-week block on the first template with week 1 fully logged,

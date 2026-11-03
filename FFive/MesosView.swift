@@ -110,7 +110,7 @@ struct MesosView: View {
     }
 
     private func end(_ meso: Mesocycle) {
-        meso.finishedDate = .now
+        meso.end(in: context)
         try? context.save()
     }
 }

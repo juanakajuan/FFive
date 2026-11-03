@@ -150,6 +150,7 @@ struct PlannerChecks {
 
         skipChecks()
         storeChecks()
+        endChecks()
 
         print("\(count - failures)/\(count) checks passed")
         exit(failures == 0 ? 0 : 1)
@@ -261,6 +262,26 @@ extension PlannerChecks {
                reopened.first?.skippedSessions, [SessionKey(week: 0, dayIndex: 1), SessionKey(week: 1, dayIndex: 0)])
         expect("store: a reopened block reads the skip as its status",
                reopened.first?.status(at: SessionKey(week: 0, dayIndex: 1)), .skipped)
+    }
+}
+
+extension PlannerChecks {
+    @MainActor
+    static func endChecks() {
+        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        var draft = MesoDraft(template: nil)
+        draft.days = [.init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest)]),
+                      .init(name: "B", slots: [.init(exercise: "Barbell Row", muscle: .back)])]
+        let meso = MesoPlanner.start(draft, in: context)
+        let started = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb, in: context)
+        started.sortedExercises[0].sortedSets[0].isDone = true
+        let untouched = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: 1), unit: .lb, in: context)
+
+        meso.end(in: context)
+        expect("end: the block gets a finished date", meso.finishedDate != nil, true)
+        expect("end: an open session with a logged set is finished so it reaches history", started.isFinished, true)
+        expect("end: its logged set is kept", started.completedSets, 1)
+        expect("end: an untouched open session is dropped", untouched.isDeleted && meso.workout(at: SessionKey(week: 0, dayIndex: 1)) == nil, true)
     }
 }
 

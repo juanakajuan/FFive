@@ -39,6 +39,7 @@ struct SettingsView: View {
         }
         .background(Theme.surface)
         .navigationTitle("Settings")
+        .sensoryFeedback(.selection, trigger: unit)
     }
 
     private var divider: some View {
@@ -67,7 +68,6 @@ struct SettingsView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .accessibilityAddTraits(selected ? .isSelected : [])
-        .sensoryFeedback(.selection, trigger: unit)
     }
 }
 
