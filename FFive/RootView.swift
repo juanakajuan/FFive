@@ -44,13 +44,15 @@ struct RootView: View {
 
     var body: some View {
         // The system TabView draws a floating glass bar on recent iOS; the design calls for a flat,
-        // full-width bar, so the tabs are stacked and kept alive here instead.
-        ZStack {
-            tab(.workout) { TrainView() }
-            tab(.mesos) { MesosView() }
-            tab(.templates) { TemplatesView() }
-            tab(.exercises) { ExercisesView() }
-            tab(.more) { MoreView() }
+        // full-width bar. Like the design's pages, a tab starts fresh each time it is opened.
+        Group {
+            switch router.tab {
+            case .workout: TrainView()
+            case .mesos: MesosView()
+            case .templates: TemplatesView()
+            case .exercises: ExercisesView()
+            case .more: MoreView()
+            }
         }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if !keyboardShown { TabBar(selection: $router.tab) }
@@ -59,14 +61,6 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardShown = false }
         .environment(router)
         .tint(Theme.text)
-    }
-
-    private func tab(_ tab: AppTab, @ViewBuilder content: () -> some View) -> some View {
-        let selected = router.tab == tab
-        return content()
-            .opacity(selected ? 1 : 0)
-            .allowsHitTesting(selected)
-            .accessibilityHidden(!selected)
     }
 }
 
