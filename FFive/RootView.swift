@@ -52,16 +52,19 @@ struct RootView: View {
     var body: some View {
         // The system TabView draws a floating glass bar on recent iOS; the design calls for a flat,
         // full-width bar. Like the design's pages, a tab starts fresh each time it is opened.
-        Group {
-            switch router.tab {
-            case .workout: TrainView()
-            case .mesos: MesosView()
-            case .templates: TemplatesView()
-            case .exercises: ExercisesView()
-            case .more: MoreView()
+        // Stacked, not a bottom safe-area inset: the inset's height never reached views inside each tab's
+        // NavigationStack, so anything they pinned to their bottom edge sat under the bar.
+        VStack(spacing: 0) {
+            Group {
+                switch router.tab {
+                case .workout: TrainView()
+                case .mesos: MesosView()
+                case .templates: TemplatesView()
+                case .exercises: ExercisesView()
+                case .more: MoreView()
+                }
             }
-        }
-        .safeAreaInset(edge: .bottom, spacing: 0) {
+            .frame(maxHeight: .infinity)
             if !keyboardShown { TabBar(selection: $router.tab) }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardShown = true }

@@ -5,6 +5,7 @@ launch
 wait button "Quick Workout" timeout=20
 tap button "Quick Workout"
 wait text "QUICK WORKOUT"
+tap button "Workout menu"
 tap button "Add Exercise"
 wait nav "Add Exercise"
 type search "Search or create exercise" "Lateral"
@@ -15,19 +16,21 @@ replace field "Set 1 reps" "12"
 value field "Set 1 weight" "25"
 value field "Set 1 reps" "12"
 tap button "Done"
+absent button "Finish Workout"
+shot 01-finish-hidden-until-logged
 tap button "Log set 1"
 selected button "Log set 1"
-shot 01-logged-set
-scrollto button "Finish Workout"
+wait button "Finish Workout"
+shot 02-logged-set
 tap button "Finish Workout"
 wait text "All Time" timeout=10
 wait button "Quick Workout"
-tree 02-workout-after-finish
-shot 02-workout-after-finish
+tree 03-workout-after-finish
+shot 03-workout-after-finish
 tap button "More"
 tap button "Progress"
 tap button "History"
 # A bare "~Workout" would match the Workout tab button first.
 tap button "~Workout,"
 wait text "Lateral Raise"
-shot 03-history-detail
+shot 04-history-detail

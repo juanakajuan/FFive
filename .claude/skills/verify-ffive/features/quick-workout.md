@@ -1,14 +1,14 @@
 # Quick workout
 
-A lifter logs a free-form session outside any block. They add exercises from the catalog picker (or create a custom one with its muscle), log sets, and finish. The session lands in History, and in the Workout tab's stats row when no block is active.
+A lifter logs a free-form session outside any block. They add exercises from the catalog picker (or create a custom one with its muscle), log sets, and finish once every set is logged. The session lands in History, and in the Workout tab's stats row when no block is active.
 
 ## Sub-features
 
 - `quick-start` starts a free-form workout named after the time of day (Morning, Afternoon, or Evening Workout). The Workout tab shows it headed `QUICK WORKOUT` with the subtitle `<name> • <timer>`.
-- `quick-add` adds a catalog exercise through the searchable picker. The new exercise gets one empty set, or last time's sets when it has history.
+- `quick-add` adds a catalog exercise through the searchable picker, opened with `Workout menu`, then `Add Exercise`. The new exercise gets one empty set, or last time's sets when it has history.
 - `quick-custom` creates a custom exercise with `Create “<query>”` and a muscle. Not yet driven.
 - `quick-log` edits `Set n weight` and `Set n reps` and ticks `Log set n`, which carries the Selected trait while logged.
-- `quick-finish` finishes the workout with `Finish Workout`, which updates the stats row (This Week, Time, All Time) and History.
+- `quick-finish` finishes the workout with `Finish Workout`, pinned above the tab bar and shown only once every set is logged. Finishing updates the stats row (This Week, Time, All Time) and History.
 - `quick-resume` returns to an open quick workout with `Workout menu`, then `Resume Quick Workout`, while a block day is showing. Not yet driven.
 - `quick-rename` renames the workout with `Workout menu`, then `Rename`. Not yet driven.
 - `quick-discard` uses `Workout menu`, then `Discard Workout`, and confirms with `Discard Workout`. Not yet driven.
@@ -27,9 +27,9 @@ Preconditions:
 - Journey: `journeys/quick-workout.steps`.
 
 - **Start.** Steps: `launch`, `wait button "Quick Workout" timeout=20`, `tap button "Quick Workout"`, `wait text "QUICK WORKOUT"`.
-- **Add exercise.** Steps: `tap button "Add Exercise"`, `wait nav "Add Exercise"`, `type search "Search or create exercise" "Lateral"`, `tap button "Lateral Raise, Dumbbell"`, `wait text "Lateral Raise"`.
-- **Log.** Steps: `replace field "Set 1 weight" "25"`, `replace field "Set 1 reps" "12"`, `value field "Set 1 weight" "25"`, `value field "Set 1 reps" "12"`, `tap button "Done"`, `tap button "Log set 1"`, `selected button "Log set 1"`.
-- **Finish.** Steps: `scrollto button "Finish Workout"`, `tap button "Finish Workout"`, `wait text "All Time" timeout=10`, `wait button "Quick Workout"`. The tab is back on its empty state, and the `02-workout-after-finish` tree shows This Week and All Time at `1`.
+- **Add exercise.** Steps: `tap button "Workout menu"`, `tap button "Add Exercise"`, `wait nav "Add Exercise"`, `type search "Search or create exercise" "Lateral"`, `tap button "Lateral Raise, Dumbbell"`, `wait text "Lateral Raise"`.
+- **Log.** Steps: `replace field "Set 1 weight" "25"`, `replace field "Set 1 reps" "12"`, `value field "Set 1 weight" "25"`, `value field "Set 1 reps" "12"`, `tap button "Done"`, `absent button "Finish Workout"`, `tap button "Log set 1"`, `selected button "Log set 1"`, `wait button "Finish Workout"`.
+- **Finish.** Steps: `tap button "Finish Workout"`, `wait text "All Time" timeout=10`, `wait button "Quick Workout"`. The tab is back on its empty state, and the `03-workout-after-finish` tree shows This Week and All Time at `1`.
 - **History.** Steps: `tap button "More"`, `tap button "Progress"`, `tap button "History"`, `tap button "~Workout,"`, `wait text "Lateral Raise"`.
 - **Proof.** Run `ffive-verify store "select w.ZNAME, w.ZENDDATE is not null as finished, e.ZNAME, s.ZWEIGHT, s.ZREPS, s.ZISDONE from ZWORKOUT w join ZEXERCISE e on e.ZWORKOUT = w.Z_PK join ZSETENTRY s on s.ZEXERCISE = e.Z_PK where w.ZMESOCYCLE is null"`. It returns `<time> Workout | 1 | Lateral Raise | 25.0 | 12 | 1`.
 

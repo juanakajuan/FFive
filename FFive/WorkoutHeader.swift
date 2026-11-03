@@ -45,7 +45,7 @@ struct ActionIcon: View {
     }
 }
 
-/// Full-width buttons at the bottom of the workout stream and in its empty states.
+/// Full-width buttons: the workout's Finish button and the Workout tab's empty states.
 struct WideButtonStyle: ButtonStyle {
     enum Kind { case filled, outlined }
 

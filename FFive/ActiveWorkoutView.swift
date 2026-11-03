@@ -1,7 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// The open workout as a stream of cards on the Workout tab: header, exercises with their feedback, then finish.
+/// The open workout on the Workout tab: a pinned header over a stream of exercise cards with their feedback,
+/// and a pinned Finish button once every set is logged.
 struct ActiveWorkoutView: View {
     @Bindable var workout: Workout
     /// The block in progress, also when the session shown is a quick workout.
@@ -36,8 +37,6 @@ struct ActiveWorkoutView: View {
         let pendingSoreness = MesoPlanner.pendingSoreness(for: workout)
         ScrollView {
             LazyVStack(spacing: 16) {
-                header
-
                 ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
                     let muscle = exercise.muscle
                     if let muscle, let record = pendingSoreness[muscle],
@@ -60,26 +59,32 @@ struct ActiveWorkoutView: View {
 
                     if let muscle, workout.mesocycle != nil,
                        exercises.lastIndex(where: { $0.muscle == muscle }) == index,
-                       !exercise.sets.isEmpty, exercise.sets.allSatisfy(\.isDone) {
+                       exercise.isLogged {
                         FeedbackCard(muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()) { change in
                             workout.updateFeedback(for: muscle, change)
                         }
                     }
                 }
-
-                VStack(spacing: 12) {
-                    Button("Add Exercise") { picker = .add }
-                        .buttonStyle(.wideOutlined)
-                    Button("Finish Workout", action: finish)
-                        .buttonStyle(.wideFilled)
-                        .disabled(workout.completedSets == 0)
-                }
-                .padding(.horizontal, Theme.gutter)
-                .padding(.vertical, 8)
             }
+            .padding(.bottom, 16)
         }
         .scrollDismissesKeyboard(.interactively)
-        .animation(.snappy, value: exercises.map { $0.sets.allSatisfy(\.isDone) })
+        .safeAreaInset(edge: .top, spacing: 0) {
+            header
+                .padding(.bottom, 16)
+                .background(Theme.page)
+        }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if workout.isFullyLogged {
+                Button("Finish Workout", action: finish)
+                    .buttonStyle(.wideFilled)
+                    .padding(.horizontal, Theme.gutter)
+                    .padding(.vertical, 12)
+                    .background(Theme.page)
+                    .transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy, value: exercises.map(\.isLogged))
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()

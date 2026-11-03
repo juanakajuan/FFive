@@ -13,9 +13,39 @@ value field "Set 1 reps" "9"
 tap button "Done"
 tap button "Log set 1"
 selected button "Log set 1"
+absent button "Finish Workout"
 shot 02-first-set-done
-scrollto button "Finish Workout"
+# Finish appears only once every set is logged, so a lifter stopping early deletes what they skipped.
+# One unlogged Bench set stays until the other cards are gone: a fully logged Bench adds the chest feedback
+# card, which would push the next card's menu off screen.
+tap button "Set 2 menu"
+tap button "Delete Set"
+tap button "Set 2 menu"
+tap button "Delete Set"
+tap button "Set 2 menu"
+tap button "Delete Set"
+tap button "Exercise menu" #1
+tap button "Remove Exercise"
+absent text "Pull-Up"
+tap button "Exercise menu" #1
+tap button "Remove Exercise"
+absent text "Seated Cable Row"
+tap button "Exercise menu" #1
+tap button "Remove Exercise"
+absent text "Lateral Raise"
+tap button "Exercise menu" #1
+tap button "Remove Exercise"
+absent text "EZ-Bar Curl"
+tap button "Exercise menu" #1
+tap button "Remove Exercise"
+absent text "Skull Crusher"
+absent button "Finish Workout"
+tap button "Set 2 menu"
+tap button "Delete Set"
+absent field "Set 2 weight"
+wait button "Finish Workout"
+shot 03-finish-shown
 tap button "Finish Workout"
 wait text "WEEK 1 DAY 2" timeout=10
-tree 03-next-day
-shot 03-next-day
+tree 04-next-day
+shot 04-next-day
