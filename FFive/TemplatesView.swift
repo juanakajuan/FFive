@@ -53,13 +53,10 @@ struct TemplatesView: View {
                 .padding(.bottom, Theme.gutter)
             }
             .background(Theme.surface)
-            .navigationTitle("Templates")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    // Starting a block doesn't end the current one, so creation waits until it is ended.
-                    Button("New Mesocycle", systemImage: "plus") { builder = .blank }
-                        .disabled(!activeMesos.isEmpty)
-                }
+            .screenHeader("Templates") {
+                // Starting a block doesn't end the current one, so creation waits until it is ended.
+                HeaderAddButton(label: "New Mesocycle") { builder = .blank }
+                    .disabled(!activeMesos.isEmpty)
             }
             .sheet(item: $builder) { MesoBuilderView(startAt: $0) }
         }

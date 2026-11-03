@@ -27,13 +27,10 @@ struct MesosView: View {
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.surface)
-            .navigationTitle("Mesocycles")
-            .toolbar {
-                ToolbarItem(placement: .topBarTrailing) {
-                    // Starting a block doesn't end the current one, so creation waits until it is ended.
-                    Button("New Mesocycle", systemImage: "plus") { showingBuilder = true }
-                        .disabled(current != nil)
-                }
+            .screenHeader("Mesocycles") {
+                // Starting a block doesn't end the current one, so creation waits until it is ended.
+                HeaderAddButton(label: "New Mesocycle") { showingBuilder = true }
+                    .disabled(current != nil)
             }
             .navigationDestination(for: Mesocycle.self) { MesoDetailView(meso: $0) }
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }

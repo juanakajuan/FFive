@@ -63,7 +63,7 @@ struct ExercisesView: View {
                 }
             }
             .background(Theme.surface)
-            .navigationTitle("Exercises")
+            .screenHeader("Exercises")
             .navigationDestination(for: ExerciseListing.self) { ExerciseDetailView(listing: $0) }
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
         }

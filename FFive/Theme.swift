@@ -272,3 +272,56 @@ struct SectionHeading: View {
             .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
+
+/// A tab root's title row, drawn in the page like the design instead of as a navigation bar large title.
+struct ScreenHeader<Trailing: View>: ViewModifier {
+    let title: String
+    @ViewBuilder var trailing: () -> Trailing
+
+    func body(content: Content) -> some View {
+        content
+            .navigationTitle(title)
+            .toolbar(.hidden, for: .navigationBar)
+            .safeAreaInset(edge: .top, spacing: 0) {
+                HStack {
+                    Text(title)
+                        .font(Theme.screenTitle)
+                        .foregroundStyle(Theme.text)
+                        .accessibilityAddTraits(.isHeader)
+                    Spacer()
+                    trailing()
+                }
+                .padding(.horizontal, Theme.gutter)
+                .padding(.top, 8)
+                .padding(.bottom, 12)
+                .background(Theme.surface)
+            }
+    }
+}
+
+/// The plain "+" in a screen header.
+struct HeaderAddButton: View {
+    let label: String
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: "plus")
+                .font(.system(size: 24, weight: .light))
+                .foregroundStyle(Theme.text)
+                .frame(width: 32, height: 32)
+                .contentShape(Rectangle())
+        }
+        .accessibilityLabel(label)
+    }
+}
+
+extension View {
+    func screenHeader(_ title: String, @ViewBuilder trailing: @escaping () -> some View) -> some View {
+        modifier(ScreenHeader(title: title, trailing: trailing))
+    }
+
+    func screenHeader(_ title: String) -> some View {
+        modifier(ScreenHeader(title: title) { EmptyView() })
+    }
+}

@@ -40,6 +40,7 @@ final class AppRouter {
 
 struct RootView: View {
     @State private var router = AppRouter()
+    @State private var keyboardShown = false
 
     var body: some View {
         // The system TabView draws a floating glass bar on recent iOS; the design calls for a flat,
@@ -51,7 +52,11 @@ struct RootView: View {
             tab(.exercises) { ExercisesView() }
             tab(.more) { MoreView() }
         }
-        .safeAreaInset(edge: .bottom, spacing: 0) { TabBar(selection: $router.tab) }
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !keyboardShown { TabBar(selection: $router.tab) }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardShown = true }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardShown = false }
         .environment(router)
         .tint(Theme.text)
     }

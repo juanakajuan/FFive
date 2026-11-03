@@ -35,7 +35,7 @@ struct MoreView: View {
                 .padding(.bottom, Theme.gutter)
             }
             .background(Theme.surface)
-            .navigationTitle("More")
+            .screenHeader("More")
             .navigationDestination(for: Destination.self) { destination in
                 switch destination {
                 case .progress: ProgressScreen()
