@@ -8,6 +8,7 @@ struct FFiveApp: App {
     init() {
         container = AppStore.makeContainer(inMemory: DemoLaunch.isEnabled)
         if DemoLaunch.isEnabled { DemoSeed.seed(container.mainContext) }
+        Theme.applyBarAppearance()
     }
 
     var body: some Scene {
