@@ -1,6 +1,6 @@
 # Plan a mesocycle
 
-A lifter with no active block plans one from a program template. They rename it, set 3 to 6 training weeks plus a deload, and start it. The Workout tab then shows Week 1 · Day 1 inline, headed `WEEK 1 DAY 1` with the subtitle `<day> • <block> • 3 RIR`. The Mesos tab lists the block with a `Current` badge. The block persists across launches.
+A lifter with no active block plans one from a program template. They rename it, set 3 to 6 training weeks plus a deload, and start it. The Workout tab then shows Week 1 · Day 1 inline, headed `WEEK 1 DAY 1` with the subtitle `<day> · <block> · 3 RIR`. The Mesos tab lists the block with a `Current` badge. The block persists across launches.
 
 ## Sub-features
 
@@ -30,7 +30,7 @@ Preconditions:
 - **Open builder.** Tap `Plan a Mesocycle`. Steps: `wait button "Plan a Mesocycle" timeout=20`, `tap button "Plan a Mesocycle"`, `wait nav "New Mesocycle"`. The template sheet appears.
 - **Pick template.** Tap the Upper/Lower 4-day row. Steps: `tap button "~Upper/Lower, 4 Days"`, `wait nav "Customize"`. The name field holds `Upper/Lower, 4 Days`.
 - **Customize.** Rename the block and add a week. Steps: `replace field "Mesocycle name" "Verify Block"`, `tap button "~Increment"`, `wait text "5 training weeks"`.
-- **Start.** Tap `Start Mesocycle`. Steps: `tap button "Start Mesocycle"`, `wait text "WEEK 1 DAY 1" timeout=10`, `wait text "~Upper A • Verify Block"`. The subtitle ends in `• 3 RIR`.
+- **Start.** Tap `Start Mesocycle`. Steps: `tap button "Start Mesocycle"`, `wait text "WEEK 1 DAY 1" timeout=10`, `wait text "~Upper A · Verify Block"`. The subtitle ends in `· 3 RIR`.
 - **Mesos.** Steps: `tap button "Mesos"`, `wait text "Verify Block"`, `wait text "~6 WEEKS - 4 DAYS/WEEK"`.
 - **Persist.** Relaunch, which opens on the Workout tab. Steps: `launch`, `wait text "WEEK 1 DAY 1" timeout=20`, `wait text "~Verify Block"`.
 - **Proof.** Run `ffive-verify store "select ZNAME, ZACCUMULATIONWEEKS, ZFINISHEDDATE from ZMESOCYCLE"`. It returns one row, `Verify Block | 5 | (null)`, and `ffive-verify store` shows `ZMESODAY 4`. Keep shots `02-customized`, `03-session`, `04-mesos`, and `05-after-relaunch`.

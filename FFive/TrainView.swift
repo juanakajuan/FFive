@@ -56,12 +56,12 @@ struct TrainView: View {
                 case .blockComplete(let meso):
                     blockCompleteView(meso)
                 case .empty:
-                    noMesoView
+                    // With the navigation bar hidden, cards would otherwise scroll visibly under the status bar.
+                    // The other screens pin a header whose fill covers it.
+                    noMesoView.clipped()
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // With the navigation bar hidden, cards would otherwise scroll visibly under the status bar.
-            .clipped()
             .background(Theme.page)
             .toolbar(.hidden, for: .navigationBar)
             .sheet(isPresented: $showingBuilder) { MesoBuilderView() }
@@ -115,27 +115,28 @@ struct TrainView: View {
 
     private func blockCompleteView(_ meso: Mesocycle) -> some View {
         ScrollView {
-            VStack(spacing: 16) {
-                WorkoutHeader(title: Text("Block complete"), subtitle: Text(meso.name)) {
-                    Button { showingSchedule = true } label: { ActionIcon(systemName: "calendar") }
-                        .accessibilityLabel("Schedule")
-                }
-                VStack(alignment: .leading, spacing: 12) {
-                    Label("Every session is done", systemImage: "flag.checkered")
-                        .font(Theme.cardTitle)
-                        .foregroundStyle(Theme.text)
-                    Text("Every session is done or skipped, deload included. End this mesocycle to plan the next one.")
-                        .font(Theme.detail)
-                        .foregroundStyle(Theme.secondary)
-                    Button("End Mesocycle") { confirmEnd = true }
-                        .buttonStyle(.wideFilled)
-                        .padding(.top, 4)
-                    Button("Quick Workout") { WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, in: context) }
-                        .buttonStyle(.wideOutlined)
-                }
-                .padding(.horizontal, Theme.gutter)
-                .padding(.bottom, 8)
-                .surfaceCard()
+            VStack(alignment: .leading, spacing: 12) {
+                Label("Every session is done", systemImage: "flag.checkered")
+                    .font(Theme.cardTitle)
+                    .foregroundStyle(Theme.text)
+                Text("Every session is done or skipped, deload included. End this mesocycle to plan the next one.")
+                    .font(Theme.detail)
+                    .foregroundStyle(Theme.secondary)
+                Button("End Mesocycle") { confirmEnd = true }
+                    .buttonStyle(.wideFilled)
+                    .padding(.top, 4)
+                Button("Quick Workout") { WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, in: context) }
+                    .buttonStyle(.wideOutlined)
+            }
+            .padding(.horizontal, Theme.gutter)
+            .padding(.bottom, 8)
+            .surfaceCard()
+            .padding(.vertical, 16)
+        }
+        .safeAreaInset(edge: .top, spacing: 0) {
+            WorkoutHeader(title: Text("Block complete"), subtitle: Text(meso.name), progress: 1) {
+                Button { showingSchedule = true } label: { ActionIcon.calendar }
+                    .accessibilityLabel("Schedule")
             }
         }
         .sheet(isPresented: $showingSchedule) { ScheduleSheet(meso: meso, week: meso.accumulationWeeks) }

@@ -4,7 +4,7 @@ A lifter logs a free-form session outside any block. They add exercises from the
 
 ## Sub-features
 
-- `quick-start` starts a free-form workout named after the time of day (Morning, Afternoon, or Evening Workout). The Workout tab shows it headed `QUICK WORKOUT` with the subtitle `<name> • <timer>`.
+- `quick-start` starts a free-form workout named after the time of day (Morning, Afternoon, or Evening Workout). The Workout tab shows it headed `QUICK WORKOUT` with the subtitle `<name> · <timer>`.
 - `quick-add` adds a catalog exercise through the searchable picker, opened with `Workout menu`, then `Add Exercise`. The new exercise gets one empty set, or last time's sets when it has history.
 - `quick-custom` creates a custom exercise with `Create “<query>”` and a muscle. Not yet driven.
 - `quick-log` edits `Set n weight` and `Set n reps` and ticks `Log set n`, which carries the Selected trait while logged.
