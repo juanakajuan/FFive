@@ -10,7 +10,7 @@
 set -eu
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-team=TGC3395YKR
+team="$(sed -n 's/.*DEVELOPMENT_TEAM = \(.*\);/\1/p' "$root/FFive.xcodeproj/project.pbxproj" | head -1)"
 
 destination=upload
 case "${1:-}" in
