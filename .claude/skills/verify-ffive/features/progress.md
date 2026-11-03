@@ -31,5 +31,5 @@ Preconditions:
 - The pane control's segments are plain `button`s (`Volume`, `Strength`, `History`), and the selected one carries the selected trait.
 - The back button on pushed pages is labeled with the previous title: `button "Progress"` from a trend page or detail, `button "More"` from Progress.
 - Switching tabs resets More to its root. Re-enter with `tap button "Progress"` after any tab switch.
-- `-seedDemo -demoRoute strength` opens More, Progress, and the richest trend page directly. It is a shortcut, not proof of navigation.
+- `-seedDemo -demoRoute progress` opens More and Progress directly. `-seedDemo -demoRoute strength` opens the richest trend page (Bench Press) on top of it. It is a shortcut, not proof of navigation.
 - Demo dates are relative to now, so History's dates and the "This Week" tile change from day to day. Assert names and counts, not dates.

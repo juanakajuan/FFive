@@ -107,11 +107,11 @@ cmd_doctor() {
 }
 
 cmd_drive() {
-    local steps="" name="drive"
+    local steps="" name="drive" piped=""
     while [[ $# -gt 0 ]]; do
         case "$1" in
             --name) name="$2"; shift 2 ;;
-            -) steps="$(mktemp "$work/stdin.XXXXXX")"; cat >"$steps"; shift ;;
+            -) steps="$(mktemp "$work/stdin.XXXXXX")"; piped="$steps"; cat >"$steps"; shift ;;
             *) steps="$1"; shift ;;
         esac
     done
@@ -120,17 +120,18 @@ cmd_drive() {
     mkdir -p "$work"
     mkdir "$work/drive.lock" 2>/dev/null || die "another drive is running (pid $(cat "$work/drive.lock/pid" 2>/dev/null)); never double-drive one simulator"
     echo $$ >"$work/drive.lock/pid"
-    trap 'rm -rf "$work/drive.lock"' RETURN EXIT
+    trap 'rm -rf "$work/drive.lock" ${piped:+"$piped"}' RETURN EXIT
     local run="$artifacts/$(date +%Y%m%d-%H%M%S)-$name"
     mkdir -p "$run"
     cp "$steps" "$run/steps.txt"
-    local status=0
+    local status=0 started=$SECONDS
     TEST_RUNNER_FFIVE_STEPS="$run/steps.txt" TEST_RUNNER_FFIVE_OUT="$run" \
         xcodebuild test-without-building -project "$skill/harness/FFiveDriver.xcodeproj" -scheme FFiveDriver \
         -destination "id=$UDID" -derivedDataPath "$driver_build" -resultBundlePath "$run/result.xcresult" \
         >"$run/xcodebuild.log" 2>&1 || status=$?
     cat "$run/steps.log" 2>/dev/null || { tail -20 "$run/xcodebuild.log"; }
-    if [[ $status == 0 ]]; then echo "PASS $run"; else echo "FAIL $run (see failure.png, failure.tree.txt, xcodebuild.log)"; fi
+    local took="$((SECONDS - started))s"
+    if [[ $status == 0 ]]; then echo "PASS $run ($took)"; else echo "FAIL $run ($took; see failure.png, failure.tree.txt, xcodebuild.log)"; fi
     return $status
 }
 

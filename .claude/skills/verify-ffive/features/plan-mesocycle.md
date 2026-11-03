@@ -15,7 +15,7 @@ A lifter with no active block plans one from a program template. They rename it,
 ## How to get to it (user POV)
 
 - Workout tab with no active block: choose `Plan a Mesocycle`.
-- Mesos tab: `Plan a Mesocycle` in the empty state, or the `New Mesocycle` "+" in the header.
+- Mesos tab: `Plan a Mesocycle` in the empty state (only when no block has ever existed), or the `New Mesocycle` "+" in the header.
 - Templates tab: tap a template row to open the builder straight on Customize, or the `New Mesocycle` "+" for a blank one.
 - The builder sheet: choose a template row, or `Build from scratch`.
 - While a block is active, both "+" buttons are disabled, and a builder opened from a Templates row shows "End <name> before starting a new mesocycle." with `Start Mesocycle` disabled. The lifter must end the block first (`End Mesocycle` in the `Workout menu`, the Mesos row's `<name> menu`, or the block's detail page).
@@ -24,13 +24,13 @@ A lifter with no active block plans one from a program template. They rename it,
 
 Preconditions:
 
-- On-disk baseline: `ffive-verify reset-data`, or at least no active block. Workout shows `button "Plan a Mesocycle"`.
+- On-disk baseline: `ffive-verify reset-data`, or at least no active block and no open quick workout (an open one replaces the empty state). Workout shows `button "Plan a Mesocycle"`.
 - Journey: `ffive-verify drive .claude/skills/verify-ffive/journeys/plan-mesocycle.steps --name plan-mesocycle`.
 
 - **Open builder.** Tap `Plan a Mesocycle`. Steps: `wait button "Plan a Mesocycle" timeout=20`, `tap button "Plan a Mesocycle"`, `wait nav "New Mesocycle"`. The template sheet appears.
 - **Pick template.** Tap the Upper/Lower 4-day row. Steps: `tap button "~Upper/Lower, 4 Days"`, `wait nav "Customize"`. The name field holds `Upper/Lower, 4 Days`.
 - **Customize.** Rename the block and add a week. Steps: `replace field "Mesocycle name" "Verify Block"`, `tap button "~Increment"`, `wait text "5 training weeks"`.
-- **Start.** Tap `Start Mesocycle`. Steps: `tap button "Start Mesocycle"`, `wait text "WEEK 1 DAY 1" timeout=10`, `wait text "~Upper A · Verify Block"`. The subtitle ends in `· 3 RIR`.
+- **Start.** Tap `Start Mesocycle`. Steps: `tap button "Start Mesocycle"`, `wait text "WEEK 1 DAY 1" timeout=10`, `wait text "~Upper A · Verify Block"`. The subtitle ends in `• 3 RIR` (Week 1 is `min(3, training weeks - 1)` RIR, so a 3-week block starts at `2 RIR`).
 - **Mesos.** Steps: `tap button "Mesos"`, `wait text "Verify Block"`, `wait text "~6 WEEKS - 4 DAYS/WEEK"`.
 - **Persist.** Relaunch, which opens on the Workout tab. Steps: `launch`, `wait text "WEEK 1 DAY 1" timeout=20`, `wait text "~Verify Block"`.
 - **Proof.** Run `ffive-verify store "select ZNAME, ZACCUMULATIONWEEKS, ZFINISHEDDATE from ZMESOCYCLE"`. It returns one row, `Verify Block | 5 | (null)`, and `ffive-verify store` shows `ZMESODAY 4`. Keep shots `02-customized`, `03-session`, `04-mesos`, and `05-after-relaunch`.
