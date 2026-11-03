@@ -43,7 +43,14 @@ enum Theme {
         nav.titleTextAttributes = [.foregroundColor: text, .font: UIFont.systemFont(ofSize: 17, weight: .semibold)]
         nav.largeTitleTextAttributes = [.foregroundColor: text, .font: UIFont.systemFont(ofSize: 26, weight: .bold)]
         UINavigationBar.appearance().standardAppearance = nav
-        UINavigationBar.appearance().scrollEdgeAppearance = nav
+        // An opaque scroll-edge appearance hides large titles over scrolling content, so the edge state is
+        // transparent over the same color.
+        let edge = UINavigationBarAppearance()
+        edge.configureWithTransparentBackground()
+        edge.backgroundColor = UIColor(Theme.surface)
+        edge.titleTextAttributes = nav.titleTextAttributes
+        edge.largeTitleTextAttributes = nav.largeTitleTextAttributes
+        UINavigationBar.appearance().scrollEdgeAppearance = edge
         UINavigationBar.appearance().compactAppearance = nav
 
         let tab = UITabBarAppearance()

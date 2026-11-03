@@ -52,7 +52,8 @@ struct MesoScheduleGrid: View {
     @ViewBuilder
     private func cell(_ key: SessionKey, next: SessionKey?) -> some View {
         let status = meso.status(at: key)
-        let isCurrentWeek = key.week == next?.week
+        // An ended block is history: its days can be reviewed but not trained or skipped.
+        let isCurrentWeek = meso.finishedDate == nil && key.week == next?.week
         switch status {
         case .finished(let workout):
             NavigationLink(value: workout) {
