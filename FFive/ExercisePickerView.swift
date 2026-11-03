@@ -38,32 +38,46 @@ struct ExercisePickerView: View {
     var body: some View {
         let entries = entries
         NavigationStack {
-            List {
-                if !query.isEmpty && !entries.contains(where: { $0.name.caseInsensitiveCompare(query) == .orderedSame }) {
-                    Section {
+            VStack(spacing: 0) {
+                SearchBox(prompt: "Search or create exercise", text: $search)
+                    .accessibilityAddTraits(.isSearchField)
+                    .padding(.horizontal, Theme.gutter)
+                    .padding(.bottom, 12)
+                List {
+                    if !query.isEmpty && !entries.contains(where: { $0.name.caseInsensitiveCompare(query) == .orderedSame }) {
                         createRow
-                    } footer: {
+                            .themedRow()
                         Text("Custom exercises need the muscle they train so volume and progression can count them.")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondary)
+                            .themedRow(vertical: 8)
+                            .listRowSeparator(.hidden)
                     }
-                }
-                ForEach(muscle.map { [$0] } ?? Muscle.allCases) { group in
-                    let rows = entries.filter { $0.muscle == group }
-                    if !rows.isEmpty {
-                        Section(group.displayName) {
-                            ForEach(rows) { entry in
-                                Button { pick(entry.name, entry.muscle) } label: {
-                                    HStack {
-                                        Text(entry.name).foregroundStyle(.primary)
-                                        Spacer()
-                                        Text(entry.detail).font(.caption).foregroundStyle(.secondary)
-                                    }
+                    ForEach(muscle.map { [$0] } ?? Muscle.allCases) { group in
+                        let rows = entries.filter { $0.muscle == group }
+                        if !rows.isEmpty {
+                            Section {
+                                ForEach(rows) { entry in
+                                    row(entry).themedRow()
                                 }
-                                .tint(.primary)
+                            } header: {
+                                Text(group.displayName)
+                                    .font(Theme.tag)
+                                    .textCase(.uppercase)
+                                    .foregroundStyle(Theme.secondary)
+                                    .padding(.horizontal, Theme.gutter)
+                                    .padding(.vertical, 6)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                    .background(Theme.raised)
+                                    .listRowInsets(EdgeInsets())
                             }
                         }
                     }
                 }
+                .themedList()
+                .scrollDismissesKeyboard(.immediately)
             }
+            .background(Theme.surface)
             .overlay {
                 if entries.isEmpty && query.isEmpty {
                     ContentUnavailableView("Search to add an exercise",
@@ -71,9 +85,6 @@ struct ExercisePickerView: View {
                                            description: Text("Type a name to create your own, then choose the muscle it trains."))
                 }
             }
-            .searchable(text: $search,
-                        placement: .navigationBarDrawer(displayMode: .always),
-                        prompt: "Search or create exercise")
             .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -84,11 +95,47 @@ struct ExercisePickerView: View {
         }
     }
 
+    private func row(_ entry: Entry) -> some View {
+        Button { pick(entry.name, entry.muscle) } label: {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(entry.name)
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.text)
+                    HStack(spacing: 4) {
+                        MuscleDotLabel(muscle: entry.muscle)
+                        Text("\u{2022} \(entry.detail)")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondary)
+                    }
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "plus")
+                    .font(.system(size: 18))
+                    .foregroundStyle(Theme.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel("\(entry.name), \(entry.detail)")
+        .accessibilityValue(entry.muscle.displayName)
+    }
+
     @ViewBuilder
     private var createRow: some View {
-        let label = Label("Create \u{201C}\(query)\u{201D}", systemImage: "plus.circle.fill")
+        let label = HStack(spacing: 10) {
+            Image(systemName: "plus.circle.fill")
+                .font(.system(size: 20))
+                .foregroundStyle(Theme.infoText)
+            Text("Create \u{201C}\(query)\u{201D}")
+                .font(Theme.body)
+                .foregroundStyle(Theme.text)
+            Spacer(minLength: 0)
+        }
+        .contentShape(Rectangle())
         if let muscle {
             Button { pick(query, muscle) } label: { label }
+                .buttonStyle(.plain)
         } else {
             Menu {
                 Section("Which muscle does it train?") {
