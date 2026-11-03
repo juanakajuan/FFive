@@ -4,7 +4,7 @@ The Workout tab shows the block's next session inline. The lifter sees per-set t
 
 ## Sub-features
 
-- `session-open` shows the next open session of the block, headed `WEEK n DAY m` (`DELOAD DAY m` in the deload) with the subtitle `<day> • <block> • <n> RIR`. A day picked from the schedule grid shows instead.
+- `session-open` shows the next open session of the block, headed `WEEK n DAY m` (`DELOAD DAY m` in the deload) with the subtitle `<day> · <block> · <n> RIR`. A day picked from the schedule grid shows instead.
 - `session-targets` shows `Target <w> × <r>` from last week's logs, or `Calibrate · <range> reps at <n> RIR` in week 1, in the callout under the exercise name.
 - `session-log` edits `Set n weight` and `Set n reps` and ticks `Log set n`, which carries the Selected trait while logged.
 - `session-feedback` shows the "How did <muscle> feel today?" card once all of that muscle's sets are done, and records Pump, Workload, and Joint pain.

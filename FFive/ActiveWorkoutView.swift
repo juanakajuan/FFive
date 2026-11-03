@@ -66,14 +66,10 @@ struct ActiveWorkoutView: View {
                     }
                 }
             }
-            .padding(.bottom, 16)
+            .padding(.vertical, 16)
         }
         .scrollDismissesKeyboard(.interactively)
-        .safeAreaInset(edge: .top, spacing: 0) {
-            header
-                .padding(.bottom, 16)
-                .background(Theme.page)
-        }
+        .safeAreaInset(edge: .top, spacing: 0) { header }
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if workout.isFullyLogged {
                 Button("Finish Workout", action: finish)
@@ -133,9 +129,9 @@ struct ActiveWorkoutView: View {
     }
 
     private var header: some View {
-        WorkoutHeader(title: headerTitle, subtitle: headerSubtitle) {
+        WorkoutHeader(title: headerTitle, subtitle: headerSubtitle, progress: workout.setProgress) {
             if activeMeso != nil {
-                Button { showingSchedule = true } label: { ActionIcon(systemName: "calendar") }
+                Button { showingSchedule = true } label: { ActionIcon.calendar }
                     .accessibilityLabel("Schedule")
             }
             Menu {
@@ -155,10 +151,10 @@ struct ActiveWorkoutView: View {
 
     private var headerSubtitle: Text {
         if let meso = workout.mesocycle {
-            let effort = workout.phase.map { " • \($0.badgeText)" } ?? ""
-            return Text("\(workout.name) • \(meso.name)\(effort)")
+            let effort = workout.phase.map { " · \($0.badgeText)" } ?? ""
+            return Text("\(workout.name) · \(meso.name)\(effort)")
         }
-        return Text("\(workout.name) • ") + Text(workout.startDate, style: .timer).monospacedDigit()
+        return Text("\(workout.name) · ") + Text(workout.startDate, style: .timer).monospacedDigit()
     }
 
     @ViewBuilder

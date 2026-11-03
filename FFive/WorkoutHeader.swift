@@ -1,30 +1,56 @@
 import SwiftUI
 
-/// The card at the top of the Workout tab, standing in for a navigation bar.
+/// The flat bar pinned to the top of the Workout tab, standing in for a navigation bar. Its fill runs up under
+/// the status bar, and its bottom edge doubles as the session's progress line.
 struct WorkoutHeader<Trailing: View>: View {
     let title: Text
     let subtitle: Text
+    /// The share of the session's sets logged, from 0 to 1; nil draws only the hairline.
+    var progress: Double?
     @ViewBuilder var trailing: () -> Trailing
 
     var body: some View {
-        HStack(alignment: .top, spacing: 12) {
+        HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 title
-                    .font(.system(size: 22, weight: .bold))
+                    .font(Theme.screenTitle)
                     .foregroundStyle(Theme.text)
                     .textCase(.uppercase)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.8)
                 subtitle
-                    .font(Theme.detail)
+                    .font(Theme.body)
                     .foregroundStyle(Theme.secondary)
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
-            HStack(spacing: 16, content: trailing)
-                .padding(.top, 2)
+            HStack(spacing: 20, content: trailing)
         }
         .padding(.horizontal, Theme.gutter)
-        .padding(.bottom, 8)
-        .surfaceCard()
+        .padding(.top, 8)
+        .padding(.bottom, 16)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(Theme.surface.ignoresSafeArea(edges: .top))
+        .overlay(alignment: .bottom) { ProgressLine(progress: progress) }
+    }
+}
+
+private struct ProgressLine: View {
+    let progress: Double?
+
+    var body: some View {
+        GeometryReader { proxy in
+            Rectangle()
+                .fill(Theme.success)
+                .frame(width: proxy.size.width * min(max(progress ?? 0, 0), 1))
+        }
+        .frame(height: 2)
+        .background(Theme.hairline)
+        .animation(.snappy, value: progress)
+        .accessibilityElement()
+        .accessibilityLabel("Workout progress")
+        .accessibilityValue(Text((progress ?? 0).formatted(.percent.precision(.fractionLength(0)))))
+        .accessibilityHidden(progress == nil)
     }
 }
 
@@ -35,9 +61,17 @@ struct ActionIcon: View {
 
     static let verticalEllipsis = ActionIcon(systemName: "ellipsis", rotated: true)
 
+    /// A calendar showing today's day of the month, where the system has those glyphs.
+    static var calendar: ActionIcon {
+        if #available(iOS 26, *) {
+            return ActionIcon(systemName: "\(Calendar.current.component(.day, from: .now)).calendar")
+        }
+        return ActionIcon(systemName: "calendar")
+    }
+
     var body: some View {
         Image(systemName: systemName)
-            .font(.system(size: 20))
+            .font(.system(size: 22))
             .rotationEffect(.degrees(rotated ? 90 : 0))
             .foregroundStyle(Theme.text)
             .frame(width: 28, height: 28)
