@@ -25,6 +25,7 @@ final class Workout {
     var sortedExercises: [Exercise] { exercises.sorted { $0.order < $1.order } }
     var duration: TimeInterval { (endDate ?? .now).timeIntervalSince(startDate) }
     var completedSets: Int { exercises.reduce(0) { $0 + $1.sets.filter(\.isDone).count } }
+    var isFullyLogged: Bool { !exercises.isEmpty && exercises.allSatisfy(\.isLogged) }
     var totalVolume: Double {
         exercises.flatMap(\.sets).filter(\.isDone).reduce(0) { $0 + Double($1.reps) * $1.weight }
     }
@@ -110,6 +111,7 @@ final class Exercise {
     }
 
     var sortedSets: [SetEntry] { sets.sorted { $0.order < $1.order } }
+    var isLogged: Bool { !sets.isEmpty && sets.allSatisfy(\.isDone) }
     var info: ExerciseInfo? { ExerciseCatalog.info(named: name) }
 
     /// Rows logged before muscles were stored resolve through the catalog.
@@ -234,6 +236,20 @@ final class Mesocycle {
 
     func unskip(_ key: SessionKey) {
         skippedSessions.removeAll { $0 == key }
+    }
+
+    /// Ends the block. Open sessions with logged sets are finished so they reach history; untouched ones,
+    /// such as a day built only because it was shown, are dropped.
+    func end(in context: ModelContext) {
+        for workout in workouts where !workout.isFinished {
+            if workout.completedSets > 0 {
+                workout.finish(in: context)
+            } else {
+                workouts.removeAll { $0 === workout }
+                context.delete(workout)
+            }
+        }
+        finishedDate = .now
     }
 }
 

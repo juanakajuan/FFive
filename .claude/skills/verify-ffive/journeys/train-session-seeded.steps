@@ -1,14 +1,16 @@
-# train-session (seeded): resume the demo block's in-progress session, give feedback, answer soreness.
+# train-session (seeded): the demo block's in-progress session shows on the Workout tab; give feedback, answer soreness.
 launch -seedDemo
-wait button "~In progress, Week 2 · Day 1" timeout=20
-tap button "~In progress, Week 2 · Day 1"
-wait nav "Full Body, 3 Days"
+wait text "WEEK 2 DAY 1" timeout=20
 wait text "Target 185 × 7"
 wait text "How did quads feel today?"
-scrollto button "A lot"
+# scrollto swipes a long way and can leave its target under the tab bar, so each row is brought on screen
+# by scrolling to the element just below it.
+scrollto button "Pretty good"
 tap button "Great"
 tap button "Pretty good"
+scrollto text "~Next week's sets for quads"
 tap button "None"
+selected button "None"
 wait image "checkmark.circle.fill"
 shot 01-quads-feedback
 scrollto text "How did your chest recover?"

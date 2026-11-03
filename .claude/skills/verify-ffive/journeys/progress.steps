@@ -1,6 +1,7 @@
-# progress: volume, strength, and history panes on the seeded demo.
+# progress: volume, strength, and history panes on the seeded demo, reached from the More tab.
 launch -seedDemo
-tap tab "Progress" timeout=20
+tap button "More" timeout=20
+tap button "Progress"
 wait nav "Progress"
 selected button "Volume"
 wait text "Sets per muscle · Week 2"

@@ -1,31 +1,36 @@
 # quick-workout: log a free-form session with no mesocycle, on-disk.
-# Before: ffive-verify reset-data (no active mesocycle, so the stats row is visible).
+# Before: ffive-verify reset-data (no active mesocycle, so the Workout tab shows its empty state).
 # After: ffive-verify store "select w.ZNAME, w.ZENDDATE is not null as finished, e.ZNAME as exercise, s.ZWEIGHT, s.ZREPS, s.ZISDONE from ZWORKOUT w join ZEXERCISE e on e.ZWORKOUT = w.Z_PK join ZSETENTRY s on s.ZEXERCISE = e.Z_PK where w.ZMESOCYCLE is null"
 launch
 wait button "Quick Workout" timeout=20
 tap button "Quick Workout"
-wait nav "Workout"
+wait text "QUICK WORKOUT"
+tap button "Workout menu"
 tap button "Add Exercise"
 wait nav "Add Exercise"
 type search "Search or create exercise" "Lateral"
 tap button "Lateral Raise, Dumbbell"
 wait text "Lateral Raise"
-replace field "0" #0 "25"
-replace field "0" #1 "12"
-value field "0" #0 "25"
-value field "0" #1 "12"
+replace field "Set 1 weight" "25"
+replace field "Set 1 reps" "12"
+value field "Set 1 weight" "25"
+value field "Set 1 reps" "12"
 tap button "Done"
-tap button "circle"
-wait text "1 set done"
-shot 01-logged-set
-tap button "Finish"
+absent button "Finish Workout"
+shot 01-finish-hidden-until-logged
+tap button "Log set 1"
+selected button "Log set 1"
+wait button "Finish Workout"
+shot 02-logged-set
+tap button "Finish Workout"
 wait text "All Time" timeout=10
 wait button "Quick Workout"
-count text "1" "2"
-tree 02-train-after-finish
-shot 02-train-after-finish
-tap tab "Progress"
+tree 03-workout-after-finish
+shot 03-workout-after-finish
+tap button "More"
+tap button "Progress"
 tap button "History"
-tap button "~Workout"
+# A bare "~Workout" would match the Workout tab button first.
+tap button "~Workout,"
 wait text "Lateral Raise"
-shot 03-history-detail
+shot 04-history-detail

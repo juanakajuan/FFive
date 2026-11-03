@@ -15,36 +15,54 @@ struct ProgressScreen: View {
     @AppStorage("weightUnit") private var unit: WeightUnit = .lb
 
     @State private var pane: Pane = DemoLaunch.route == .strength ? .strength : .volume
-    @State private var path = NavigationPath()
+    @State private var demoSeries: StrengthSeries?
     @State private var selectedMeso: PersistentIdentifier?
     @State private var selectedWeek: Int?
 
     var body: some View {
-        NavigationStack(path: $path) {
+        VStack(spacing: 0) {
+            SegmentedButtons(options: Pane.allCases, selection: $pane, label: \.rawValue)
+                .padding(.horizontal, Theme.gutter)
+                .padding(.bottom, 12)
             List {
-                Section {
-                    Picker("View", selection: $pane) {
-                        ForEach(Pane.allCases) { Text($0.rawValue).tag($0) }
-                    }
-                    .pickerStyle(.segmented)
-                    .listRowInsets(EdgeInsets())
-                    .listRowBackground(Color.clear)
-                }
                 switch pane {
                 case .volume: volume
                 case .strength: strength
                 case .history: historyList
                 }
             }
-            .navigationTitle("Progress")
-            .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
-            .navigationDestination(for: StrengthSeries.self) { ExerciseTrendView(series: $0, unit: unit) }
-            .task {
-                if DemoLaunch.take(.strength), let richest = StrengthSeries.all(from: history).max(by: { $0.points.count < $1.points.count }) {
-                    path.append(richest)
-                }
+            .themedList()
+        }
+        .background(Theme.surface)
+        .navigationTitle("Progress")
+        .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
+        .navigationDestination(for: StrengthSeries.self) { ExerciseTrendView(series: $0, unit: unit) }
+        .navigationDestination(item: $demoSeries) { ExerciseTrendView(series: $0, unit: unit) }
+        .task {
+            if DemoLaunch.take(.strength) {
+                demoSeries = StrengthSeries.all(from: history).max { $0.points.count < $1.points.count }
             }
         }
+    }
+
+    private func heading(_ text: String) -> some View {
+        SectionHeading(text: text)
+            .themedRow(vertical: 8)
+            .listRowSeparator(.hidden)
+    }
+
+    private func note(_ text: String) -> some View {
+        Text(text)
+            .font(Theme.caption)
+            .foregroundStyle(Theme.secondary)
+            .themedRow()
+            .listRowSeparator(.hidden)
+    }
+
+    private func empty(_ title: String, systemImage: String, description: String) -> some View {
+        ContentUnavailableView(title, systemImage: systemImage, description: Text(description))
+            .themedRow()
+            .listRowSeparator(.hidden)
     }
 
     // MARK: Volume
@@ -54,31 +72,31 @@ struct ProgressScreen: View {
         if let meso = mesos.first(where: { $0.persistentModelID == selectedMeso }) ?? mesos.first(where: { $0.finishedDate == nil }) ?? mesos.first {
             let week = min(selectedWeek ?? meso.nextUp?.week ?? meso.accumulationWeeks, meso.accumulationWeeks)
             let volumes = MesoPlanner.weeklyVolume(meso, week: week, unit: unit, context: context)
-            Section {
+            heading("Sets per muscle · \(meso.phase(week: week) == .deload ? "Deload" : "Week \(week + 1)")")
+            VStack(alignment: .leading, spacing: 14) {
                 if mesos.count > 1 {
-                    Picker("Mesocycle", selection: Binding(get: { meso.persistentModelID }, set: { selectedMeso = $0; selectedWeek = nil })) {
-                        ForEach(mesos) { Text($0.name).tag($0.persistentModelID) }
+                    HStack {
+                        Text("Mesocycle").font(Theme.detail).foregroundStyle(Theme.secondary)
+                        Spacer()
+                        Picker("Mesocycle", selection: Binding(get: { meso.persistentModelID }, set: { selectedMeso = $0; selectedWeek = nil })) {
+                            ForEach(mesos) { Text($0.name).tag($0.persistentModelID) }
+                        }
+                        .pickerStyle(.menu)
+                        .tint(Theme.text)
                     }
                 }
-                Picker("Week", selection: Binding(get: { week }, set: { selectedWeek = $0 })) {
-                    ForEach(0..<meso.totalWeeks, id: \.self) { index in
-                        Text(index == meso.accumulationWeeks ? "DL" : "W\(index + 1)").tag(index)
-                    }
-                }
-                .pickerStyle(.segmented)
+                SegmentedButtons(options: Array(0..<meso.totalWeeks),
+                                 selection: Binding(get: { week }, set: { selectedWeek = $0 }),
+                                 label: { $0 == meso.accumulationWeeks ? "DL" : "W\($0 + 1)" })
                 VolumeChart(volumes: volumes)
-                    .padding(.vertical, 8)
                 VolumeLegend(includesMaximum: true)
-            } header: {
-                Text("Sets per muscle · \(meso.phase(week: week) == .deload ? "Deload" : "Week \(week + 1)")")
-            } footer: {
-                Text("Aim to finish most weeks inside the green range. The red tick is the most a muscle usually recovers from; feedback keeps you below it.")
             }
+            .themedRow(vertical: 4)
+            .listRowSeparator(.hidden)
+            note("Aim to finish most weeks inside the green range. The red tick is the most a muscle usually recovers from; feedback keeps you below it.")
         } else {
-            ContentUnavailableView("No mesocycle yet",
-                                   systemImage: "chart.bar.xaxis",
-                                   description: Text("Plan a mesocycle on the Train tab to see weekly sets against each muscle's landmarks."))
-                .listRowBackground(Color.clear)
+            empty("No mesocycle yet", systemImage: "chart.bar.xaxis",
+                  description: "Plan a mesocycle on the Train tab to see weekly sets against each muscle's landmarks.")
         }
     }
 
@@ -88,42 +106,43 @@ struct ProgressScreen: View {
     private var strength: some View {
         let series = StrengthSeries.all(from: history)
         if series.isEmpty {
-            ContentUnavailableView("No loaded sets yet",
-                                   systemImage: "chart.line.uptrend.xyaxis",
-                                   description: Text("Finish a session with weighted sets to start tracking estimated 1RM."))
-                .listRowBackground(Color.clear)
+            empty("No loaded sets yet", systemImage: "chart.line.uptrend.xyaxis",
+                  description: "Finish a session with weighted sets to start tracking estimated 1RM.")
         } else {
-            Section {
-                ForEach(series) { item in
-                    NavigationLink(value: item) {
-                        HStack {
-                            VStack(alignment: .leading, spacing: 4) {
-                                Text(item.name).font(.headline)
-                                HStack(spacing: 6) {
-                                    if let muscle = item.muscle { MuscleChip(muscle: muscle) }
-                                    Text("\(item.points.count) \(item.points.count == 1 ? "session" : "sessions")")
-                                        .font(.caption)
-                                        .foregroundStyle(.secondary)
+            heading("Estimated 1RM")
+            ForEach(series) { item in
+                NavigationLink(value: item) {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(item.name)
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.text)
+                            HStack(spacing: 4) {
+                                if let muscle = item.muscle {
+                                    MuscleDotLabel(muscle: muscle)
+                                    Text(verbatim: "\u{2022}").accessibilityHidden(true)
                                 }
+                                Text("\(item.points.count) \(item.points.count == 1 ? "session" : "sessions")")
                             }
-                            Spacer()
-                            VStack(alignment: .trailing, spacing: 2) {
-                                Text("\(formatWeight(item.latest.rounded())) \(unit.rawValue)")
-                                    .font(.headline.monospacedDigit())
-                                if item.points.count > 1 {
-                                    Text(item.change >= 0 ? "+\(formatWeight(item.change.rounded()))" : formatWeight(item.change.rounded()))
-                                        .font(.caption.monospacedDigit())
-                                        .foregroundStyle(item.change >= 0 ? Color.green : Color.orange)
-                                }
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondary)
+                        }
+                        Spacer()
+                        VStack(alignment: .trailing, spacing: 2) {
+                            Text("\(formatWeight(item.latest.rounded())) \(unit.rawValue)")
+                                .font(Theme.body.weight(.semibold).monospacedDigit())
+                                .foregroundStyle(Theme.text)
+                            if item.points.count > 1 {
+                                Text(item.change >= 0 ? "+\(formatWeight(item.change.rounded()))" : formatWeight(item.change.rounded()))
+                                    .font(Theme.caption.monospacedDigit())
+                                    .foregroundStyle(item.change >= 0 ? Theme.success : Theme.danger)
                             }
                         }
                     }
                 }
-            } header: {
-                Text("Estimated 1RM")
-            } footer: {
-                Text("Estimated from your best set each session, counting the reps you left in reserve.")
+                .themedRow()
             }
+            note("Estimated from your best set each session, counting the reps you left in reserve.")
         }
     }
 
@@ -131,26 +150,38 @@ struct ProgressScreen: View {
 
     @ViewBuilder
     private var historyList: some View {
-        Section {
-            StatsRow(history: history)
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
+        HistoryStats(history: history)
+            .themedRow(vertical: 4)
+            .listRowSeparator(.hidden)
+        heading("History")
+            .padding(.top, 8)
+        if history.isEmpty {
+            empty("No workouts yet", systemImage: "dumbbell", description: "Finished sessions show up here.")
         }
-        Section("History") {
-            if history.isEmpty {
-                ContentUnavailableView("No workouts yet",
-                                       systemImage: "dumbbell",
-                                       description: Text("Finished sessions show up here."))
+        ForEach(history) { workout in
+            NavigationLink(value: workout) {
+                HistoryRow(workout: workout)
             }
-            ForEach(history) { workout in
-                NavigationLink(value: workout) {
-                    HistoryRow(workout: workout)
-                }
-            }
-            .onDelete { offsets in
-                for index in offsets { context.delete(history[index]) }
-            }
+            .themedRow()
         }
+        .onDelete { offsets in
+            for index in offsets { context.delete(history[index]) }
+        }
+    }
+}
+
+private struct HistoryStats: View {
+    let history: [Workout]
+
+    var body: some View {
+        let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
+        let thisWeek = history.filter { $0.startDate >= weekStart }
+        HStack(spacing: 8) {
+            StatTile(title: "This Week", value: "\(thisWeek.count)", icon: "flame")
+            StatTile(title: "Time", value: formatDuration(thisWeek.reduce(0) { $0 + $1.duration }), icon: "clock")
+            StatTile(title: "All Time", value: "\(history.count)", icon: "trophy")
+        }
+        .fixedSize(horizontal: false, vertical: true)
     }
 }
 
@@ -199,38 +230,42 @@ struct VolumeChart: View {
                          xEnd: .value("Productive to", landmarks.mav.upperBound),
                          y: .value("Muscle", name))
                     .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .foregroundStyle(Color.green)
+                    .foregroundStyle(Theme.success)
                     .offset(y: 10)
                 BarMark(xStart: .value("Start", 0), xEnd: .value("Planned", volume.planned),
                         y: .value("Muscle", name), height: .fixed(12))
-                    .foregroundStyle(Color.accentColor.opacity(0.35))
-                    .cornerRadius(3)
+                    .foregroundStyle(Theme.infoFill)
+                    .cornerRadius(2)
                     .annotation(position: .top, alignment: .leading, spacing: 4) {
-                        Text("\(name)  \(volume.done)/\(volume.planned)")
-                            .font(.caption)
-                            .foregroundStyle(.secondary)
-                            .fixedSize()
+                        HStack(spacing: 6) {
+                            Text(name).foregroundStyle(Theme.text)
+                            Text("\(volume.done)/\(volume.planned)").foregroundStyle(Theme.secondary).monospacedDigit()
+                        }
+                        .font(Theme.caption)
+                        .fixedSize()
                     }
                 BarMark(xStart: .value("Start", 0), xEnd: .value("Done", volume.done),
                         y: .value("Muscle", name), height: .fixed(12))
-                    .foregroundStyle(Color.accentColor)
-                    .cornerRadius(3)
+                    .foregroundStyle(Theme.infoText)
+                    .cornerRadius(2)
                 RectangleMark(x: .value("Minimum effective", landmarks.mev), y: .value("Muscle", name),
                               width: 2, height: .fixed(14))
-                    .foregroundStyle(Color.primary.opacity(0.7))
+                    .foregroundStyle(Theme.text.opacity(0.7))
                 RectangleMark(x: .value("Maximum recoverable", landmarks.mrv), y: .value("Muscle", name),
                               width: 2, height: .fixed(14))
-                    .foregroundStyle(Color.red)
+                    .foregroundStyle(Theme.danger)
             }
         }
         .chartXAxis {
             AxisMarks(values: .stride(by: 5)) {
-                AxisGridLine().foregroundStyle(Color(.separator))
-                AxisValueLabel()
+                AxisGridLine().foregroundStyle(Theme.hairline)
+                AxisValueLabel().foregroundStyle(Theme.secondary)
             }
         }
         .chartYAxis(.hidden)
-        .chartXAxisLabel("Sets in the week")
+        .chartXAxisLabel {
+            Text("Sets in the week").font(Theme.caption).foregroundStyle(Theme.secondary)
+        }
         .frame(height: CGFloat(volumes.count) * 44 + 40)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(volumes.map { "\($0.muscle.displayName) \($0.done) of \($0.planned) sets" }.joined(separator: ", "))
@@ -249,77 +284,107 @@ struct ExerciseTrendView: View {
     }
 
     var body: some View {
-        List {
-            Section {
-                HStack(spacing: 12) {
-                    StatTile(title: "Current (\(unit.rawValue))", value: formatWeight(series.latest.rounded()), icon: "scalemass.fill")
+        ScrollView {
+            VStack(alignment: .leading, spacing: 12) {
+                HStack(spacing: 8) {
+                    StatTile(title: "Current (\(unit.rawValue))", value: formatWeight(series.latest.rounded()), icon: "scalemass")
                     StatTile(title: "Since first", value: (series.change >= 0 ? "+" : "") + formatWeight(series.change.rounded()),
                              icon: "chart.line.uptrend.xyaxis")
                     StatTile(title: "Sessions", value: "\(series.points.count)", icon: "calendar")
                 }
                 .fixedSize(horizontal: false, vertical: true)
-                .listRowInsets(EdgeInsets())
-                .listRowBackground(Color.clear)
-            }
 
-            Section {
-                Chart {
-                    ForEach(series.points) { point in
-                        LineMark(x: .value("Date", point.date), y: .value("Estimated 1RM", point.value))
-                            .interpolationMethod(.monotone)
-                            .lineStyle(StrokeStyle(lineWidth: 2))
-                            .foregroundStyle(Color.accentColor)
-                        PointMark(x: .value("Date", point.date), y: .value("Estimated 1RM", point.value))
-                            .symbolSize(60)
-                            .foregroundStyle(Color.accentColor)
-                    }
-                    if let selected {
-                        RuleMark(x: .value("Selected", selected.date))
-                            .foregroundStyle(Color.secondary.opacity(0.5))
-                            .annotation(position: .top, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
-                                VStack(spacing: 2) {
-                                    Text("\(formatWeight(selected.value.rounded())) \(unit.rawValue)").font(.caption.bold())
-                                    Text(selected.bestSet).font(.caption2).foregroundStyle(.secondary)
-                                }
-                                .padding(6)
-                                .background(Color(.tertiarySystemBackground), in: RoundedRectangle(cornerRadius: 8))
-                            }
-                    }
-                }
-                .chartXSelection(value: $selectedDate)
-                .chartYScale(domain: .automatic(includesZero: false))
-                .chartXAxis {
-                    AxisMarks(values: .automatic(desiredCount: 4)) {
-                        AxisGridLine().foregroundStyle(Color(.separator))
-                        AxisValueLabel(format: .dateTime.month(.abbreviated).day())
-                    }
-                }
-                .frame(height: 240)
-                .padding(.top, 36)
-                .padding(.bottom, 8)
-            } header: {
-                Text("Estimated 1RM over time")
-            } footer: {
+                SectionHeading(text: "Estimated 1RM over time")
+                    .padding(.top, 12)
+                chart
                 Text("Touch and drag the chart to read a session.")
-            }
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondary)
 
-            Section("Sessions") {
-                ForEach(series.points.reversed()) { point in
-                    HStack {
-                        Text(point.date, format: .dateTime.month(.abbreviated).day())
-                            .foregroundStyle(.secondary)
-                        Spacer()
-                        Text(point.bestSet).monospacedDigit()
-                        Text("\(formatWeight(point.value.rounded()))")
-                            .font(.subheadline.monospacedDigit())
-                            .foregroundStyle(.secondary)
-                            .frame(width: 52, alignment: .trailing)
-                    }
-                }
+                SectionHeading(text: "Sessions")
+                    .padding(.top, 12)
+                sessions
             }
+            .padding(Theme.gutter)
         }
+        .background(Theme.surface)
         .navigationTitle(series.name)
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private var chart: some View {
+        Chart {
+            ForEach(series.points) { point in
+                LineMark(x: .value("Date", point.date), y: .value("Estimated 1RM", point.value))
+                    .interpolationMethod(.monotone)
+                    .lineStyle(StrokeStyle(lineWidth: 2))
+                    .foregroundStyle(Theme.infoText)
+                PointMark(x: .value("Date", point.date), y: .value("Estimated 1RM", point.value))
+                    .symbolSize(60)
+                    .foregroundStyle(Theme.infoText)
+            }
+            if let selected {
+                RuleMark(x: .value("Selected", selected.date))
+                    .foregroundStyle(Theme.secondary)
+                    .annotation(position: .top, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                        VStack(spacing: 2) {
+                            Text("\(formatWeight(selected.value.rounded())) \(unit.rawValue)")
+                                .font(Theme.caption.bold())
+                                .foregroundStyle(Theme.text)
+                            Text(selected.bestSet).font(.system(size: 11)).foregroundStyle(Theme.secondary)
+                        }
+                        .padding(6)
+                        .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                    }
+            }
+        }
+        .chartXSelection(value: $selectedDate)
+        .chartYScale(domain: .automatic(includesZero: false))
+        .chartXAxis {
+            AxisMarks(values: .automatic(desiredCount: 4)) {
+                AxisGridLine().foregroundStyle(Theme.hairline)
+                AxisValueLabel(format: .dateTime.month(.abbreviated).day()).foregroundStyle(Theme.secondary)
+            }
+        }
+        .chartYAxis {
+            AxisMarks {
+                AxisGridLine().foregroundStyle(Theme.hairline)
+                AxisValueLabel().foregroundStyle(Theme.secondary)
+            }
+        }
+        .frame(height: 240)
+        .padding(.top, 36)
+    }
+
+    private var sessions: some View {
+        VStack(spacing: 0) {
+            HStack {
+                Text("Date")
+                Spacer()
+                Text("Best set")
+                Text("e1RM").frame(width: 60, alignment: .trailing)
+            }
+            .font(Theme.columnHeader)
+            .textCase(.uppercase)
+            .foregroundStyle(Theme.secondary)
+            .padding(.bottom, 8)
+            .accessibilityHidden(true)
+            ForEach(series.points.reversed()) { point in
+                Rectangle().fill(Theme.hairline).frame(height: 1)
+                HStack {
+                    Text(point.date, format: .dateTime.month(.abbreviated).day())
+                        .foregroundStyle(Theme.secondary)
+                    Spacer()
+                    Text(point.bestSet).foregroundStyle(Theme.text)
+                    Text("\(formatWeight(point.value.rounded()))")
+                        .foregroundStyle(Theme.secondary)
+                        .frame(width: 60, alignment: .trailing)
+                }
+                .font(Theme.body.monospacedDigit())
+                .frame(minHeight: 44)
+                .accessibilityElement(children: .combine)
+            }
+        }
     }
 }
 
@@ -329,30 +394,44 @@ struct HistoryRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
-                Text(workout.name).font(.headline)
+                Text(workout.name)
+                    .font(Theme.body.weight(.semibold))
+                    .foregroundStyle(Theme.text)
                 Spacer()
                 Text(workout.startDate, format: .dateTime.month(.abbreviated).day())
-                    .font(.subheadline)
-                    .foregroundStyle(.secondary)
+                    .font(Theme.detail)
+                    .foregroundStyle(Theme.secondary)
             }
             HStack(spacing: 12) {
                 if let meso = workout.mesocycle, let week = workout.week {
-                    Label("\(meso.name) · \(workout.phase == .deload ? "Deload" : "W\(week + 1)")", systemImage: "calendar")
+                    meta("\(meso.name) · \(workout.phase == .deload ? "Deload" : "W\(week + 1)")", systemImage: "calendar")
                         .lineLimit(1)
                 }
-                Label(formatDuration(workout.duration), systemImage: "clock")
-                Label("\(workout.completedSets) \(workout.completedSets == 1 ? "set" : "sets")", systemImage: "checkmark.circle")
+                meta(formatDuration(workout.duration), systemImage: "clock")
+                meta("\(workout.completedSets) \(workout.completedSets == 1 ? "set" : "sets")", systemImage: "checkmark.circle")
             }
-            .font(.caption)
-            .foregroundStyle(.secondary)
+            .font(Theme.caption)
+            .foregroundStyle(Theme.secondary)
             let names = workout.sortedExercises.filter { $0.sets.contains(where: \.isDone) }.map(\.name)
             if !names.isEmpty {
                 Text(names.joined(separator: " · "))
-                    .font(.caption)
-                    .foregroundStyle(.tertiary)
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.text.opacity(0.35))
                     .lineLimit(1)
             }
         }
-        .padding(.vertical, 2)
     }
+
+    private func meta(_ text: String, systemImage: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemImage)
+            Text(text)
+        }
+    }
+}
+
+#Preview {
+    NavigationStack { ProgressScreen() }
+        .modelContainer(AppStore.makeContainer(inMemory: true))
+        .preferredColorScheme(.dark)
 }
