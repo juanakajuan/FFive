@@ -1,18 +1,22 @@
 import SwiftUI
 import SwiftData
 
-enum SessionEnd { case finish, discard }
-
+/// The open workout as a stream of cards on the Workout tab: header, exercises with their feedback, then finish.
 struct ActiveWorkoutView: View {
     @Bindable var workout: Workout
-    var onEnd: (SessionEnd) -> Void
+    /// The block in progress, also when the session shown is a quick workout.
+    let activeMeso: Mesocycle?
+    let openQuickWorkout: Workout?
 
     @Environment(\.modelContext) private var context
-    @Environment(\.dismiss) private var dismiss
+    @Environment(AppRouter.self) private var router
     @AppStorage("weightUnit") private var unit: WeightUnit = .lb
 
     @State private var picker: PickerRequest?
+    @State private var showingSchedule = false
     @State private var confirmDiscard = false
+    @State private var confirmEnd = false
+    @State private var renameDraft: String?
     @State private var setsCompleted = 0
 
     private enum PickerRequest: Identifiable {
@@ -30,48 +34,26 @@ struct ActiveWorkoutView: View {
     var body: some View {
         let exercises = workout.sortedExercises
         let pendingSoreness = MesoPlanner.pendingSoreness(for: workout)
-        NavigationStack {
-            List {
-                Section {
-                    TextField("Workout name", text: $workout.name)
-                        .font(.title2.bold())
-                    HStack {
-                        Label {
-                            Text(workout.startDate, style: .timer).monospacedDigit()
-                        } icon: {
-                            Image(systemName: "timer").foregroundStyle(.tint)
-                        }
-                        Spacer()
-                        if let week = workout.week, let phase = workout.phase {
-                            Text(phase == .deload ? "Deload week" : "Week \(week + 1)")
-                                .font(.subheadline)
-                                .foregroundStyle(.secondary)
-                            PhaseBadge(phase: phase)
-                        } else {
-                            Text("\(workout.completedSets) \(workout.completedSets == 1 ? "set" : "sets") done")
-                                .foregroundStyle(.secondary)
-                        }
-                    }
-                }
+        ScrollView {
+            LazyVStack(spacing: 16) {
+                header
 
                 ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
                     let muscle = exercise.muscle
                     if let muscle, let record = pendingSoreness[muscle],
                        exercises.firstIndex(where: { $0.muscle == muscle }) == index {
-                        Section {
-                            SorenessCard(muscle: muscle, record: record) { soreness in
-                                withAnimation {
-                                    MesoPlanner.recordSoreness(soreness, on: record, during: workout, unit: unit, in: context)
-                                }
+                        SorenessCard(muscle: muscle, record: record) { soreness in
+                            withAnimation {
+                                MesoPlanner.recordSoreness(soreness, on: record, during: workout, unit: unit, in: context)
                             }
                         }
                     }
 
-                    ExerciseSection(exercise: exercise,
-                                    unit: unit,
-                                    phase: workout.phase,
-                                    onSetCompleted: { setsCompleted += 1 },
-                                    onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) }) {
+                    ExerciseCard(exercise: exercise,
+                                 unit: unit,
+                                 phase: workout.phase,
+                                 onSetCompleted: setCompleted,
+                                 onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) }) {
                         workout.exercises.removeAll { $0 === exercise }
                         context.delete(exercise)
                     }
@@ -79,60 +61,145 @@ struct ActiveWorkoutView: View {
                     if let muscle, workout.mesocycle != nil,
                        exercises.lastIndex(where: { $0.muscle == muscle }) == index,
                        !exercise.sets.isEmpty, exercise.sets.allSatisfy(\.isDone) {
-                        Section {
-                            FeedbackCard(muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()) { change in
-                                workout.updateFeedback(for: muscle, change)
-                            }
+                        FeedbackCard(muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()) { change in
+                            workout.updateFeedback(for: muscle, change)
                         }
                     }
                 }
 
-                Section {
-                    Button { picker = .add } label: {
-                        Label("Add Exercise", systemImage: "plus.circle.fill").font(.headline)
-                    }
-                }
-
-                Section {
-                    Button("Discard Workout", role: .destructive) { confirmDiscard = true }
-                }
-            }
-            .navigationTitle(workout.mesocycle?.name ?? "Workout")
-            .navigationBarTitleDisplayMode(.inline)
-            .scrollDismissesKeyboard(.interactively)
-            .animation(.snappy, value: exercises.map { $0.sets.allSatisfy(\.isDone) })
-            .toolbar {
-                ToolbarItem(placement: .topBarLeading) {
-                    Button("Close") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Finish") { onEnd(.finish) }
-                        .bold()
+                VStack(spacing: 12) {
+                    Button("Add Exercise") { picker = .add }
+                        .buttonStyle(.wideOutlined)
+                    Button("Finish Workout", action: finish)
+                        .buttonStyle(.wideFilled)
                         .disabled(workout.completedSets == 0)
                 }
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") {
-                        UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder),
-                                                        to: nil, from: nil, for: nil)
-                    }
-                }
-            }
-            .sensoryFeedback(.success, trigger: setsCompleted)
-            .sheet(item: $picker) { request in
-                switch request {
-                case .add:
-                    ExercisePickerView { name, muscle in addExercise(name, muscle: muscle) }
-                case .swap(let exercise):
-                    ExercisePickerView(title: "Swap \(exercise.name)", muscle: exercise.muscle) { name, muscle in
-                        MesoPlanner.swap(exercise, to: name, muscle: muscle, unit: unit, in: context)
-                    }
-                }
-            }
-            .confirmationDialog("Discard this workout?", isPresented: $confirmDiscard, titleVisibility: .visible) {
-                Button("Discard", role: .destructive) { onEnd(.discard) }
+                .padding(.horizontal, Theme.gutter)
+                .padding(.vertical, 8)
             }
         }
+        .scrollDismissesKeyboard(.interactively)
+        .animation(.snappy, value: exercises.map { $0.sets.allSatisfy(\.isDone) })
+        .toolbar {
+            ToolbarItemGroup(placement: .keyboard) {
+                Spacer()
+                Button("Done") {
+                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                }
+            }
+        }
+        .sensoryFeedback(.success, trigger: setsCompleted)
+        .sheet(item: $picker) { request in
+            switch request {
+            case .add:
+                ExercisePickerView { name, muscle in addExercise(name, muscle: muscle) }
+            case .swap(let exercise):
+                ExercisePickerView(title: "Swap \(exercise.name)", muscle: exercise.muscle) { name, muscle in
+                    MesoPlanner.swap(exercise, to: name, muscle: muscle, unit: unit, in: context)
+                }
+            }
+        }
+        .sheet(isPresented: $showingSchedule) {
+            if let activeMeso {
+                ScheduleSheet(meso: activeMeso, week: workout.week ?? activeMeso.nextUp?.week ?? activeMeso.accumulationWeeks)
+            }
+        }
+        .confirmationDialog("Discard this workout?", isPresented: $confirmDiscard, titleVisibility: .visible) {
+            Button("Discard Workout", role: .destructive, action: discard)
+        } message: {
+            Text(workout.mesocycle == nil
+                 ? "Its exercises and sets are deleted."
+                 : "Logged sets for this day are cleared and it starts over from the plan.")
+        }
+        .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
+            if let activeMeso {
+                Button("End Mesocycle", role: .destructive) { WorkoutTabActions.end(activeMeso, router: router, in: context) }
+            }
+        } message: {
+            Text("Logged sessions stay in Progress. You can plan a new block right after.")
+        }
+        .alert("Rename Workout", isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })) {
+            TextField("Workout name", text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
+            Button("Save") {
+                if let name = renameDraft?.trimmingCharacters(in: .whitespaces), !name.isEmpty { workout.name = name }
+            }
+            Button("Cancel", role: .cancel) {}
+        }
+    }
+
+    private var header: some View {
+        WorkoutHeader(title: headerTitle, subtitle: headerSubtitle) {
+            if activeMeso != nil {
+                Button { showingSchedule = true } label: { ActionIcon(systemName: "calendar") }
+                    .accessibilityLabel("Schedule")
+            }
+            Menu {
+                menuItems
+            } label: {
+                ActionIcon.verticalEllipsis
+            }
+            .accessibilityLabel("Workout menu")
+        }
+    }
+
+    private var headerTitle: Text {
+        guard let key = workout.key, let phase = workout.phase else { return Text("Quick Workout") }
+        let lead = phase == .deload ? "Deload" : "Week \(key.week + 1)"
+        return Text("\(lead) ") + Text("Day \(key.dayIndex + 1)").foregroundStyle(Theme.secondary)
+    }
+
+    private var headerSubtitle: Text {
+        if let meso = workout.mesocycle {
+            let effort = workout.phase.map { " • \($0.badgeText)" } ?? ""
+            return Text("\(workout.name) • \(meso.name)\(effort)")
+        }
+        return Text("\(workout.name) • ") + Text(workout.startDate, style: .timer).monospacedDigit()
+    }
+
+    @ViewBuilder
+    private var menuItems: some View {
+        Button("Add Exercise", systemImage: "plus") { picker = .add }
+        if let meso = workout.mesocycle, let key = workout.key, meso.canSkip(key) {
+            Button("Skip Day", systemImage: "forward") { skip(key, of: meso) }
+        }
+        if activeMeso != nil, openQuickWorkout !== workout {
+            Button(openQuickWorkout == nil ? "Quick Workout" : "Resume Quick Workout",
+                   systemImage: openQuickWorkout == nil ? "bolt" : "play") {
+                WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, in: context)
+            }
+        }
+        if workout.mesocycle == nil {
+            Button("Rename", systemImage: "pencil") { renameDraft = workout.name }
+        }
+        Button("Discard Workout", systemImage: "trash", role: .destructive) { confirmDiscard = true }
+        if activeMeso != nil {
+            Button("End Mesocycle", systemImage: "flag.checkered", role: .destructive) { confirmEnd = true }
+        }
+    }
+
+    private func setCompleted() {
+        setsCompleted += 1
+        // A block day is built as soon as the tab shows it, which can be well before training starts,
+        // so its clock starts at the first logged set.
+        if workout.mesocycle != nil, workout.completedSets == 1 { workout.startDate = .now }
+    }
+
+    private func finish() {
+        workout.finish(in: context)
+        try? context.save()
+        router.focus = nil
+    }
+
+    private func discard() {
+        workout.mesocycle?.workouts.removeAll { $0 === workout }
+        context.delete(workout)
+        try? context.save()
+    }
+
+    private func skip(_ key: SessionKey, of meso: Mesocycle) {
+        withAnimation { meso.skip(key, in: context) }
+        try? context.save()
+        router.focus = nil
     }
 
     private func addExercise(_ name: String, muscle: Muscle) {
@@ -144,7 +211,7 @@ struct ActiveWorkoutView: View {
         workout.exercises.append(exercise)
 
         // Pre-fill with what you did last time for this exercise, or a single empty set.
-        let previous = previousSets(for: name)
+        let previous = lastFinishedExercise(named: name, in: context)?.sortedSets.filter(\.isDone) ?? []
         if previous.isEmpty {
             exercise.sets.append(SetEntry(reps: 10, weight: 0, order: 0))
         } else {
@@ -153,18 +220,23 @@ struct ActiveWorkoutView: View {
             }
         }
     }
-
-    private func previousSets(for name: String) -> [SetEntry] {
-        let descriptor = FetchDescriptor<Exercise>(predicate: #Predicate { $0.name == name })
-        let matches = (try? context.fetch(descriptor)) ?? []
-        let last = matches
-            .filter { $0.workout?.endDate != nil }
-            .max { ($0.workout?.startDate ?? .distantPast) < ($1.workout?.startDate ?? .distantPast) }
-        return last?.sortedSets.filter(\.isDone) ?? []
-    }
 }
 
-struct ExerciseSection: View {
+/// The most recent finished session's entry for an exercise.
+@MainActor
+func lastFinishedExercise(named name: String, in context: ModelContext) -> Exercise? {
+    let descriptor = FetchDescriptor<Exercise>(predicate: #Predicate { $0.name == name })
+    return ((try? context.fetch(descriptor)) ?? [])
+        .filter { $0.workout?.endDate != nil }
+        .max { ($0.workout?.startDate ?? .distantPast) < ($1.workout?.startDate ?? .distantPast) }
+}
+
+private enum SetColumns {
+    static let menu: CGFloat = 32
+    static let field: CGFloat = 93
+}
+
+struct ExerciseCard: View {
     let exercise: Exercise
     let unit: WeightUnit
     let phase: WeekPhase?
@@ -174,70 +246,98 @@ struct ExerciseSection: View {
 
     @Environment(\.modelContext) private var context
     @State private var showingCue = false
+    @State private var showingHistory = false
 
     var body: some View {
-        Section {
-            if showingCue, let info = exercise.info {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(info.cue)
-                    Text("\(info.equipment.displayName) · \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
-                }
-                .font(.subheadline)
-                .listRowBackground(Color.accentColor.opacity(0.1))
+        let sets = exercise.sortedSets
+        VStack(alignment: .leading, spacing: 0) {
+            if let muscle = exercise.muscle {
+                MuscleTag(muscle: muscle).padding(.horizontal, Theme.gutter)
             }
 
-            ForEach(Array(exercise.sortedSets.enumerated()), id: \.element.id) { index, set in
-                SetRow(set: set, number: index + 1, unit: unit, target: phase.flatMap { targetText(set, $0) },
-                       onCompleted: onSetCompleted)
-                    .listRowBackground(set.isDone ? Color.green.opacity(0.15) : nil)
-            }
-            .onDelete { offsets in
-                let sorted = exercise.sortedSets
-                for index in offsets {
-                    let set = sorted[index]
-                    exercise.sets.removeAll { $0 === set }
-                    context.delete(set)
+            HStack(alignment: .top, spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(exercise.name)
+                        .font(Theme.cardTitle)
+                        .foregroundStyle(Theme.text)
+                        .fixedSize(horizontal: false, vertical: true)
+                    Text(exercise.info?.equipment.displayName ?? "Custom")
+                        .font(Theme.detail)
+                        .foregroundStyle(Theme.secondary)
                 }
+                Spacer(minLength: 0)
+                actions
             }
+            .padding(.horizontal, Theme.gutter)
+            .padding(.top, 10)
 
-            Button(action: addSet) {
-                Label("Add Set", systemImage: "plus")
+            VStack(spacing: 8) {
+                if showingCue, let info = exercise.info {
+                    Callout(text: "\(info.cue) \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps.",
+                            systemImage: "lightbulb.fill")
+                }
+                if let phase, let set = sets.first(where: { !$0.isDone }) ?? sets.first {
+                    Callout(text: targetText(set, phase))
+                }
             }
-        } header: {
-            HStack(spacing: 8) {
-                Text(exercise.name)
-                    .font(.headline)
-                    .foregroundStyle(.primary)
-                    .textCase(nil)
-                    .lineLimit(1)
-                if let muscle = exercise.muscle {
-                    MuscleChip(muscle: muscle).textCase(nil)
-                }
-                Spacer()
-                if exercise.info != nil {
-                    Button {
-                        withAnimation(.snappy) { showingCue.toggle() }
-                    } label: {
-                        Image(systemName: showingCue ? "info.circle.fill" : "info.circle").font(.body)
-                    }
-                    .accessibilityLabel("Technique cue")
-                }
-                Menu {
-                    if let onSwap {
-                        Button("Swap Exercise", systemImage: "arrow.triangle.2.circlepath", action: onSwap)
-                            .disabled(exercise.sets.contains(where: \.isDone))
-                    }
-                    Button("Remove Exercise", systemImage: "trash", role: .destructive, action: onRemove)
-                } label: {
-                    Image(systemName: "ellipsis.circle").font(.body)
+            .padding(.horizontal, Theme.gutter)
+            .padding(.top, 10)
+
+            if !sets.isEmpty {
+                columnHeaders.padding(.top, 14)
+                ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
+                    if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
+                    SetRow(set: set, number: index + 1, unit: unit, rir: phase?.rir,
+                           onCompleted: onSetCompleted, onAdd: addSet) { delete(set) }
                 }
             }
         }
+        .surfaceCard()
+        .sheet(isPresented: $showingHistory) { ExerciseHistorySheet(name: exercise.name, unit: unit) }
     }
 
-    private func targetText(_ set: SetEntry, _ phase: WeekPhase) -> String? {
+    private var actions: some View {
+        HStack(spacing: 16) {
+            if exercise.info != nil {
+                Button {
+                    withAnimation(.snappy) { showingCue.toggle() }
+                } label: {
+                    ActionIcon(systemName: showingCue ? "info.circle.fill" : "info.circle")
+                }
+                .accessibilityLabel("Technique cue")
+            }
+            Button { showingHistory = true } label: { ActionIcon(systemName: "clock.arrow.circlepath") }
+                .accessibilityLabel("History")
+            Menu {
+                if let onSwap {
+                    Button("Swap Exercise", systemImage: "arrow.triangle.2.circlepath", action: onSwap)
+                        .disabled(exercise.sets.contains(where: \.isDone))
+                }
+                Button("Add Set", systemImage: "plus", action: addSet)
+                Button("Remove Exercise", systemImage: "trash", role: .destructive, action: onRemove)
+            } label: {
+                ActionIcon.verticalEllipsis
+            }
+            .accessibilityLabel("Exercise menu")
+        }
+    }
+
+    private var columnHeaders: some View {
+        HStack(spacing: 0) {
+            Color.clear.frame(width: SetColumns.menu, height: 1)
+            Text("Weight").frame(width: SetColumns.field).padding(.leading, 12)
+            Text("Reps").frame(width: SetColumns.field).padding(.leading, 16)
+            Spacer(minLength: 0)
+            Text("Log")
+        }
+        .font(Theme.columnHeader)
+        .textCase(.uppercase)
+        .foregroundStyle(Theme.text)
+        .padding(.horizontal, Theme.gutter)
+        .padding(.bottom, 4)
+    }
+
+    private func targetText(_ set: SetEntry, _ phase: WeekPhase) -> String {
         guard let weight = set.targetWeight else {
             let range = exercise.repRange
             let effort = phase.rir.map { "at \($0) RIR" } ?? "kept light"
@@ -256,40 +356,65 @@ struct ExerciseSection: View {
         set.targetReps = last?.targetReps
         exercise.sets.append(set)
     }
+
+    private func delete(_ set: SetEntry) {
+        exercise.sets.removeAll { $0 === set }
+        context.delete(set)
+    }
 }
 
 struct SetRow: View {
     @Bindable var set: SetEntry
     let number: Int
     let unit: WeightUnit
-    let target: String?
+    let rir: Int?
     var onCompleted: () -> Void
+    var onAdd: () -> Void
+    var onDelete: () -> Void
+
+    private enum Field { case weight, reps }
+    @FocusState private var focus: Field?
+
+    /// Zero reads as "not entered yet", so the field shows its placeholder instead of a 0.
+    private var weight: Binding<Double?> {
+        Binding(get: { set.weight == 0 ? nil : set.weight }, set: { set.weight = $0 ?? 0 })
+    }
+
+    private var reps: Binding<Int?> {
+        Binding(get: { set.reps == 0 ? nil : set.reps }, set: { set.reps = $0 ?? 0 })
+    }
 
     var body: some View {
-        HStack(spacing: 10) {
-            Text("\(number)")
-                .font(.subheadline.bold())
-                .foregroundStyle(.secondary)
-                .frame(width: 22)
-
-            VStack(alignment: .leading, spacing: 5) {
-                HStack(spacing: 10) {
-                    TextField("0", value: $set.weight, format: .number)
-                        .keyboardType(.decimalPad)
-                        .modifier(NumberFieldStyle())
-                    Text(unit.rawValue).font(.caption).foregroundStyle(.secondary)
-
-                    TextField("0", value: $set.reps, format: .number)
-                        .keyboardType(.numberPad)
-                        .modifier(NumberFieldStyle())
-                    Text("reps").font(.caption).foregroundStyle(.secondary)
-                }
-                if let target {
-                    Text(target)
-                        .font(.caption)
-                        .foregroundStyle(set.targetWeight == nil ? Color.accentColor : Color.secondary)
-                }
+        HStack(spacing: 0) {
+            Menu {
+                Button("Add Set", systemImage: "plus", action: onAdd)
+                Button("Delete Set", systemImage: "trash", role: .destructive, action: onDelete)
+            } label: {
+                ActionIcon.verticalEllipsis.frame(width: SetColumns.menu, height: 44)
             }
+            .accessibilityLabel("Set \(number) menu")
+
+            TextField("Set \(number) weight", value: weight, format: .number,
+                      prompt: Text(unit.rawValue).foregroundStyle(Theme.secondary))
+                .keyboardType(.decimalPad)
+                .focused($focus, equals: .weight)
+                .themedField()
+                .contentShape(Rectangle())
+                .onTapGesture { focus = .weight }
+                .accessibilityLabel("Set \(number) weight")
+                .frame(width: SetColumns.field)
+                .padding(.leading, 12)
+
+            TextField("Set \(number) reps", value: reps, format: .number,
+                      prompt: Text(rir.map { "\($0) RIR" } ?? "reps").foregroundStyle(Theme.secondary))
+                .keyboardType(.numberPad)
+                .focused($focus, equals: .reps)
+                .themedField()
+                .contentShape(Rectangle())
+                .onTapGesture { focus = .reps }
+                .accessibilityLabel("Set \(number) reps")
+                .frame(width: SetColumns.field)
+                .padding(.leading, 16)
 
             Spacer(minLength: 0)
 
@@ -297,13 +422,71 @@ struct SetRow: View {
                 set.isDone.toggle()
                 if set.isDone { onCompleted() }
             } label: {
-                Image(systemName: set.isDone ? "checkmark.circle.fill" : "circle")
-                    .font(.title2)
-                    .foregroundStyle(set.isDone ? Color.green : Color.secondary)
-                    .contentTransition(.symbolEffect(.replace))
+                LogCheckbox(isOn: set.isDone)
+                    .frame(width: 44, height: 44, alignment: .trailing)
+                    .contentShape(Rectangle())
             }
-            .buttonStyle(.borderless)
+            .buttonStyle(.plain)
+            .accessibilityLabel("Log set \(number)")
+            .accessibilityAddTraits(set.isDone ? .isSelected : [])
         }
+        .padding(.horizontal, Theme.gutter)
+        .frame(minHeight: 52)
+    }
+}
+
+/// The sets logged for an exercise the last time it was trained.
+struct ExerciseHistorySheet: View {
+    let name: String
+    let unit: WeightUnit
+
+    @Environment(\.modelContext) private var context
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        let last = lastFinishedExercise(named: name, in: context)
+        let sets = last?.sortedSets.filter(\.isDone) ?? []
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 0) {
+                    if let workout = last?.workout, !sets.isEmpty {
+                        Text("\(workout.name) • \(workout.startDate.formatted(.dateTime.weekday(.wide).month().day()))")
+                            .font(Theme.detail)
+                            .foregroundStyle(Theme.secondary)
+                            .padding(.horizontal, Theme.gutter)
+                            .padding(.bottom, 8)
+                        ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
+                            if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
+                            HStack {
+                                Text("Set \(index + 1)").foregroundStyle(Theme.secondary)
+                                Spacer()
+                                Text("\(formatWeight(set.weight)) \(unit.rawValue) × \(set.reps)")
+                                    .monospacedDigit()
+                                    .foregroundStyle(Theme.text)
+                            }
+                            .font(Theme.body)
+                            .padding(.horizontal, Theme.gutter)
+                            .frame(minHeight: 44)
+                        }
+                    } else {
+                        Text("No finished session has this exercise yet.")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.secondary)
+                            .padding(Theme.gutter)
+                    }
+                }
+                .padding(.top, 8)
+            }
+            .background(Theme.surface)
+            .navigationTitle(name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
     }
 }
 
@@ -314,19 +497,23 @@ struct SorenessCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
+            MuscleTag(muscle: muscle)
             VStack(alignment: .leading, spacing: 2) {
-                Label("How did your \(muscle.displayName.lowercased()) recover?", systemImage: "bandage")
-                    .font(.headline)
+                Text("How did your \(muscle.displayName.lowercased()) recover?")
+                    .font(Theme.cardTitle)
+                    .foregroundStyle(Theme.text)
                 if let previous = record.workout {
                     Text("Since \(previous.name), \(previous.startDate.formatted(.dateTime.weekday(.wide)))")
-                        .font(.caption)
-                        .foregroundStyle(.secondary)
+                        .font(Theme.detail)
+                        .foregroundStyle(Theme.secondary)
                 }
             }
             ChipPicker(title: "Soreness after that session", options: Soreness.allCases, columns: 2,
                        label: \.label, selection: nil) { if let soreness = $0 { onAnswer(soreness) } }
         }
-        .padding(.vertical, 6)
+        .padding(.horizontal, Theme.gutter)
+        .padding(.bottom, 8)
+        .surfaceCard()
     }
 }
 
@@ -339,12 +526,18 @@ struct FeedbackCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
-            HStack {
-                Label("How did \(muscle.displayName.lowercased()) feel today?", systemImage: "waveform.path.ecg")
-                    .font(.headline)
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 8) {
+                    MuscleTag(muscle: muscle)
+                    Text("How did \(muscle.displayName.lowercased()) feel today?")
+                        .font(Theme.cardTitle)
+                        .foregroundStyle(Theme.text)
+                }
                 Spacer()
                 if isComplete {
-                    Image(systemName: "checkmark.circle.fill").foregroundStyle(.green)
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 22))
+                        .foregroundStyle(Theme.success)
                 }
             }
             ChipPicker(title: "Pump", options: Pump.allCases, columns: 3, label: \.label, selection: feedback.pump) { value in
@@ -357,20 +550,11 @@ struct FeedbackCard: View {
                 onChange { $0.jointPain = value }
             }
             Text("Next week's sets for \(muscle.displayName.lowercased()) come from these answers and how sore you get.")
-                .font(.caption)
-                .foregroundStyle(.secondary)
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondary)
         }
-        .padding(.vertical, 6)
-    }
-}
-
-struct NumberFieldStyle: ViewModifier {
-    func body(content: Content) -> some View {
-        content
-            .multilineTextAlignment(.center)
-            .monospacedDigit()
-            .frame(width: 60)
-            .padding(.vertical, 6)
-            .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 8))
+        .padding(.horizontal, Theme.gutter)
+        .padding(.bottom, 8)
+        .surfaceCard()
     }
 }
