@@ -2,67 +2,87 @@ import SwiftUI
 import SwiftData
 
 struct MesoBuilderView: View {
-    private enum Route: Hashable {
+    enum Route: Hashable {
         case template(String)
         case blank
     }
+
+    /// Opens straight into the editor, as when the Templates tab picks a template.
+    var startAt: Route?
 
     @Environment(\.dismiss) private var dismiss
     @State private var path: [Route] = []
 
     var body: some View {
         NavigationStack(path: $path) {
-            List {
-                if !ExerciseCatalog.templates.isEmpty {
-                    Section {
-                        ForEach(ExerciseCatalog.templates) { template in
-                            NavigationLink(value: Route.template(template.name)) {
-                                VStack(alignment: .leading, spacing: 4) {
-                                    Text(template.name).font(.headline)
-                                    Text(template.summary)
-                                        .font(.subheadline)
-                                        .foregroundStyle(.secondary)
-                                    Text(template.days.map(\.name).joined(separator: " · "))
-                                        .font(.caption)
-                                        .foregroundStyle(.tertiary)
-                                        .lineLimit(1)
-                                }
-                                .padding(.vertical, 4)
-                            }
-                        }
-                    } header: {
-                        Text("Start from a template")
-                    } footer: {
-                        Text("You can rename days and change any exercise on the next screen.")
-                    }
-                }
-                Section {
-                    NavigationLink(value: Route.blank) {
-                        Label("Build from scratch", systemImage: "square.and.pencil")
-                    }
+            Group {
+                if let startAt {
+                    editor(startAt)
+                } else {
+                    templateList
                 }
             }
-            .navigationTitle("New Mesocycle")
-            .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                 }
             }
-            .navigationDestination(for: Route.self) { route in
-                switch route {
-                case .template(let name):
-                    MesoEditorView(draft: MesoDraft(template: ExerciseCatalog.templates.first { $0.name == name })) { dismiss() }
-                case .blank:
-                    MesoEditorView(draft: MesoDraft(template: nil)) { dismiss() }
-                }
-            }
+            .navigationDestination(for: Route.self, destination: editor)
             .onAppear {
-                if DemoLaunch.route == .builder, path.isEmpty, let first = ExerciseCatalog.templates.first {
+                if startAt == nil, DemoLaunch.route == .builder, path.isEmpty, let first = ExerciseCatalog.templates.first {
                     path = [.template(first.name)]
                 }
             }
         }
+    }
+
+    private var templateList: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 0) {
+                SectionHeading(text: "Start from a template")
+                    .padding(.horizontal, Theme.gutter)
+                    .padding(.top, 16)
+                    .padding(.bottom, 10)
+                TemplateGroup {
+                    ForEach(ExerciseCatalog.templates) { template in
+                        NavigationLink(value: Route.template(template.name)) {
+                            TemplateListRow(template: template)
+                        }
+                        .buttonStyle(.plain)
+                        Rectangle().fill(Theme.hairline).frame(height: 1)
+                    }
+                    NavigationLink(value: Route.blank) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "square.and.pencil").font(.system(size: 18))
+                            Text("Build from scratch").font(.system(size: 16, weight: .semibold))
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.secondary)
+                        }
+                        .foregroundStyle(Theme.text)
+                        .padding(.vertical, 14)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                }
+                Text("You can rename days and change any exercise on the next screen.")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondary)
+                    .padding(.horizontal, Theme.gutter)
+                    .padding(.top, 10)
+            }
+            .padding(.bottom, Theme.gutter)
+        }
+        .background(Theme.surface)
+        .navigationTitle("New Mesocycle")
+        .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func editor(_ route: Route) -> some View {
+        let template: ProgramTemplate? = switch route {
+        case .template(let name): ExerciseCatalog.templates.first { $0.name == name }
+        case .blank: nil
+        }
+        return MesoEditorView(draft: MesoDraft(template: template)) { dismiss() }
     }
 }
 
@@ -71,6 +91,7 @@ struct MesoEditorView: View {
     var onStart: () -> Void
 
     @Environment(\.modelContext) private var context
+    @Query(filter: #Predicate<Mesocycle> { $0.finishedDate == nil }) private var activeMesos: [Mesocycle]
     @State private var picker: PickerRequest?
 
     private enum PickerRequest: Identifiable {
@@ -87,61 +108,78 @@ struct MesoEditorView: View {
 
     var body: some View {
         List {
-            Section("Name") {
-                TextField("Mesocycle name", text: $draft.name)
+            Section {
+                TextField("Mesocycle name", text: $draft.name, prompt: Text("Mesocycle name").foregroundStyle(Theme.secondary))
+                    .builderField()
+                    .builderRow()
+            } header: {
+                header("Name")
             }
 
             Section {
                 Stepper(value: $draft.accumulationWeeks, in: 3...6) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(draft.accumulationWeeks) training weeks")
-                        Text("then 1 deload week").font(.caption).foregroundStyle(.secondary)
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.text)
+                        Text("then 1 deload week").font(Theme.caption).foregroundStyle(Theme.secondary)
                     }
                 }
+                .builderRow()
                 RIRSchedule(accumulationWeeks: draft.accumulationWeeks)
+                    .builderRow()
+                footnote("Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next block starts fresh.")
             } header: {
-                Text("Length")
-            } footer: {
-                Text("Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next block starts fresh.")
+                header("Length")
             }
 
             ForEach($draft.days) { $day in
                 Section {
-                    TextField("Day name", text: $day.name)
-                        .font(.headline)
+                    TextField("Day name", text: $day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary))
+                        .font(.system(size: 16, weight: .semibold))
+                        .builderField()
+                        .builderRow()
                     ForEach(day.slots) { slot in
                         Button { picker = .swap(day: day.id, slot: slot) } label: {
-                            HStack {
-                                Text(slot.exercise).foregroundStyle(.primary)
+                            HStack(spacing: 10) {
+                                VStack(alignment: .leading, spacing: 3) {
+                                    Text(slot.exercise)
+                                        .font(Theme.body)
+                                        .foregroundStyle(Theme.text)
+                                    MuscleDotLabel(muscle: slot.muscle)
+                                }
                                 Spacer()
-                                MuscleChip(muscle: slot.muscle)
                                 Image(systemName: "arrow.triangle.2.circlepath")
-                                    .font(.caption)
-                                    .foregroundStyle(.tertiary)
+                                    .font(.system(size: 14))
+                                    .foregroundStyle(Theme.secondary)
                             }
+                            .contentShape(Rectangle())
                         }
-                        .tint(.primary)
+                        .buttonStyle(.plain)
+                        .builderRow()
                     }
                     .onDelete { offsets in update(day.id) { $0.slots.remove(atOffsets: offsets) } }
                     .onMove { from, to in update(day.id) { $0.slots.move(fromOffsets: from, toOffset: to) } }
                     Button { picker = .add(day: day.id) } label: {
                         Label("Add Exercise", systemImage: "plus")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.infoText)
+                    }
+                    .builderRow()
+                    if day.slots.isEmpty {
+                        footnote("Add at least one exercise, or remove this day.")
                     }
                 } header: {
                     HStack {
-                        Text("Day \((draft.days.firstIndex { $0.id == day.id } ?? 0) + 1)")
+                        header("Day \((draft.days.firstIndex { $0.id == day.id } ?? 0) + 1)")
                         Spacer()
                         if draft.days.count > 1 {
                             Button("Remove Day", role: .destructive) {
                                 withAnimation { draft.days.removeAll { $0.id == day.id } }
                             }
-                            .font(.caption)
-                            .textCase(nil)
+                            .font(Theme.detail)
+                            .foregroundStyle(Theme.danger)
                         }
-                    }
-                } footer: {
-                    if day.slots.isEmpty {
-                        Text("Add at least one exercise, or remove this day.")
                     }
                 }
             }
@@ -151,28 +189,33 @@ struct MesoEditorView: View {
                     withAnimation { draft.days.append(MesoDraft.Day(name: "Day \(draft.days.count + 1)", slots: [])) }
                 } label: {
                     Label("Add Day", systemImage: "calendar.badge.plus")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.infoText)
                 }
-            } footer: {
-                Text("Tap an exercise to swap it for another that trains the same muscle.")
+                .builderRow()
+                footnote("Tap an exercise to swap it for another that trains the same muscle.")
             }
         }
+        .listStyle(.plain)
+        .scrollContentBackground(.hidden)
+        .background(Theme.surface)
+        .environment(\.defaultMinListRowHeight, 48)
         .navigationTitle("Customize")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar { EditButton() }
         .safeAreaInset(edge: .bottom) {
-            Button(action: start) {
-                Text("Start Mesocycle")
-                    .font(.headline)
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 10)
+            VStack(spacing: 8) {
+                if let current = activeMesos.first {
+                    Text("End \(current.name) before starting a new mesocycle.")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondary)
+                }
+                FilledActionButton(title: "Start Mesocycle", isEnabled: draft.isStartable && activeMesos.isEmpty, action: start)
             }
-            .buttonStyle(.borderedProminent)
-            .buttonBorderShape(.roundedRectangle(radius: 14))
-            .foregroundStyle(.black)
-            .disabled(!draft.isStartable)
-            .padding(.horizontal)
-            .padding(.bottom, 8)
-            .background(.bar)
+            .padding(.horizontal, Theme.gutter)
+            .padding(.vertical, 10)
+            .background(Theme.surface)
+            .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
         }
         .sheet(item: $picker) { request in
             switch request {
@@ -190,6 +233,21 @@ struct MesoEditorView: View {
                 }
             }
         }
+    }
+
+    private func header(_ text: String) -> some View {
+        Text(text)
+            .font(Theme.columnHeader)
+            .textCase(.uppercase)
+            .foregroundStyle(Theme.secondary)
+    }
+
+    private func footnote(_ text: String) -> some View {
+        Text(text)
+            .font(Theme.caption)
+            .foregroundStyle(Theme.secondary)
+            .listRowBackground(Theme.surface)
+            .listRowSeparator(.hidden)
     }
 
     private func update(_ dayID: UUID, _ change: (inout MesoDraft.Day) -> Void) {
@@ -214,19 +272,57 @@ struct RIRSchedule: View {
                 let phase = Progression.phase(week: week, accumulationWeeks: accumulationWeeks)
                 VStack(spacing: 2) {
                     Text(phase == .deload ? "DL" : "W\(week + 1)")
-                        .font(.caption2)
-                        .foregroundStyle(.secondary)
+                        .font(Theme.tag)
+                        .foregroundStyle(Theme.secondary)
                     Text(phase.rir.map(String.init) ?? "—")
-                        .font(.headline.monospacedDigit())
-                        .foregroundStyle(phase == .deload ? Color.cyan : Color.primary)
+                        .font(.system(size: 17, weight: .semibold).monospacedDigit())
+                        .foregroundStyle(phase == .deload ? Theme.infoText : Theme.text)
                 }
                 .frame(maxWidth: .infinity)
                 .padding(.vertical, 6)
-                .background(Color(.tertiarySystemFill), in: RoundedRectangle(cornerRadius: 8))
+                .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             }
         }
         .animation(.snappy, value: accumulationWeeks)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel((0..<accumulationWeeks).map { "week \($0 + 1), \(Progression.phase(week: $0, accumulationWeeks: accumulationWeeks).rir ?? 0) RIR" }.joined(separator: ", ") + ", then deload")
+    }
+}
+
+/// The full-width filled button for a screen's main action.
+struct FilledActionButton: View {
+    let title: String
+    var isEnabled = true
+    let action: () -> Void
+
+    var body: some View {
+        Button(action: action) {
+            Text(title)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(Theme.page)
+                .frame(maxWidth: .infinity, minHeight: 48)
+                .background(Theme.text, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                .opacity(isEnabled ? 1 : 0.35)
+        }
+        .buttonStyle(.plain)
+        .disabled(!isEnabled)
+    }
+}
+
+private extension View {
+    func builderRow() -> some View {
+        listRowBackground(Theme.surface)
+            .listRowSeparatorTint(Theme.hairline)
+            .listRowInsets(EdgeInsets(top: 8, leading: Theme.gutter, bottom: 8, trailing: Theme.gutter))
+    }
+
+    /// A dark, left-aligned text box for names.
+    func builderField() -> some View {
+        font(Theme.body)
+            .foregroundStyle(Theme.text)
+            .padding(.horizontal, 12)
+            .frame(minHeight: 40)
+            .background(Theme.field, in: RoundedRectangle(cornerRadius: 2))
+            .overlay(RoundedRectangle(cornerRadius: 2).stroke(Theme.hairline, lineWidth: 1))
     }
 }
