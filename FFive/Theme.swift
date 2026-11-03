@@ -233,10 +233,18 @@ struct SearchBox: View {
 /// The full-width band under the search box that opens filter choices.
 struct FilterBar<MenuContent: View>: View {
     var label = "Filters"
-    @ViewBuilder var menu: () -> MenuContent
+    // Built once at init: a stored builder closure here stopped pushed screens from updating.
+    let menu: MenuContent
+
+    init(label: String = "Filters", @ViewBuilder menu: () -> MenuContent) {
+        self.label = label
+        self.menu = menu()
+    }
 
     var body: some View {
-        Menu(content: menu) {
+        Menu {
+            menu
+        } label: {
             HStack(spacing: 10) {
                 Image(systemName: "line.3.horizontal.decrease")
                 Text(label)
@@ -254,10 +262,13 @@ struct FilterBar<MenuContent: View>: View {
 
 /// A bordered group of rows, as on the More screen.
 struct OutlinedGroup<Content: View>: View {
-    @ViewBuilder var content: () -> Content
+    // Built once at init: a stored builder closure froze Settings when it was pushed from More.
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) { self.content = content() }
 
     var body: some View {
-        VStack(spacing: 0, content: content)
+        VStack(spacing: 0) { content }
             .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.hairline, lineWidth: 1))
     }
 }

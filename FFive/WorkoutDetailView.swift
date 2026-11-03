@@ -12,7 +12,7 @@ struct WorkoutDetailView: View {
             VStack(spacing: 16) {
                 summary
                 ForEach(workout.sortedExercises.filter { $0.sets.contains(where: \.isDone) }) { exercise in
-                    ExerciseCard(exercise: exercise, unit: unit)
+                    LoggedExerciseCard(exercise: exercise, unit: unit)
                 }
                 if !feedback.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
@@ -75,7 +75,7 @@ struct WorkoutDetailView: View {
     }
 }
 
-private struct ExerciseCard: View {
+private struct LoggedExerciseCard: View {
     let exercise: Exercise
     let unit: WeightUnit
 
