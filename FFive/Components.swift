@@ -10,6 +10,7 @@ struct StatTile: View {
             Image(systemName: icon)
                 .font(.system(size: 15))
                 .foregroundStyle(Theme.secondary)
+                .frame(height: 18)
             Text(value)
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(Theme.text)
@@ -215,7 +216,8 @@ extension View {
 
     /// A list row on `surface` with 16pt gutters and a hairline separator.
     func themedRow(vertical: CGFloat = 12) -> some View {
-        listRowBackground(Theme.surface)
+        alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+            .listRowBackground(Theme.surface)
             .listRowSeparatorTint(Theme.hairline)
             .listRowInsets(EdgeInsets(top: vertical, leading: Theme.gutter, bottom: vertical, trailing: Theme.gutter))
     }

@@ -404,11 +404,11 @@ struct HistoryRow: View {
             }
             HStack(spacing: 12) {
                 if let meso = workout.mesocycle, let week = workout.week {
-                    Label("\(meso.name) · \(workout.phase == .deload ? "Deload" : "W\(week + 1)")", systemImage: "calendar")
+                    meta("\(meso.name) · \(workout.phase == .deload ? "Deload" : "W\(week + 1)")", systemImage: "calendar")
                         .lineLimit(1)
                 }
-                Label(formatDuration(workout.duration), systemImage: "clock")
-                Label("\(workout.completedSets) \(workout.completedSets == 1 ? "set" : "sets")", systemImage: "checkmark.circle")
+                meta(formatDuration(workout.duration), systemImage: "clock")
+                meta("\(workout.completedSets) \(workout.completedSets == 1 ? "set" : "sets")", systemImage: "checkmark.circle")
             }
             .font(Theme.caption)
             .foregroundStyle(Theme.secondary)
@@ -419,6 +419,13 @@ struct HistoryRow: View {
                     .foregroundStyle(Theme.text.opacity(0.35))
                     .lineLimit(1)
             }
+        }
+    }
+
+    private func meta(_ text: String, systemImage: String) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: systemImage)
+            Text(text)
         }
     }
 }
