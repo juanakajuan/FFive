@@ -1,7 +1,5 @@
 import Foundation
 
-// Pure domain types. Foundation only, so the engine tests need no SwiftData.
-
 public enum WeightUnit: String, CaseIterable, Identifiable {
     case lb, kg
     public var id: String { rawValue }
