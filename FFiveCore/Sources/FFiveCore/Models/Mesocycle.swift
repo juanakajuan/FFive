@@ -91,3 +91,10 @@ public final class Mesocycle {
         finishedDate = .now
     }
 }
+
+extension Mesocycle {
+    /// The unfinished blocks, newest first. The app trains the first one.
+    public static var active: FetchDescriptor<Mesocycle> {
+        FetchDescriptor(predicate: #Predicate { $0.finishedDate == nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
+    }
+}

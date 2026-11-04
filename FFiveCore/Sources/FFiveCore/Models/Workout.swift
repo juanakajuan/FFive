@@ -101,3 +101,15 @@ public final class Workout {
         endDate = .now
     }
 }
+
+extension Workout {
+    /// Finished sessions, newest first.
+    public static var history: FetchDescriptor<Workout> {
+        FetchDescriptor(predicate: #Predicate { $0.endDate != nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
+    }
+
+    /// Sessions still in progress, newest first.
+    public static var open: FetchDescriptor<Workout> {
+        FetchDescriptor(predicate: #Predicate { $0.endDate == nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
+    }
+}

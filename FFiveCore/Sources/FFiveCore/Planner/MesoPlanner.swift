@@ -66,6 +66,7 @@ public enum MesoPlanner {
     /// Deload sessions and exercises added during one load at the easiest accumulation effort.
     private static let deloadRIR = 3
 
+    @discardableResult
     public static func start(_ draft: MesoDraft, in context: ModelContext) -> Mesocycle {
         let meso = Mesocycle(name: draft.name.trimmingCharacters(in: .whitespaces).isEmpty ? "My Mesocycle" : draft.name,
                              accumulationWeeks: draft.accumulationWeeks)
