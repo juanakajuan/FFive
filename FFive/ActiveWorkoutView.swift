@@ -331,7 +331,7 @@ struct ExerciseCard: View {
             VStack(spacing: 8) {
                 if let note {
                     HStack(spacing: 8) {
-                        Callout(text: note, systemImage: "note.text", style: .note)
+                        Callout(text: note, systemImage: "note.text", style: pinned == nil ? .note : .pinned)
                             .accessibilityLabel("Note: \(note)")
                         Button {
                             if pinned == nil { exercise.pinNote(in: context) } else { exercise.unpinNote(in: context) }

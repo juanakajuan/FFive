@@ -55,7 +55,7 @@ struct ExerciseDetailView: View {
                             .padding(.top, 4)
                     }
                     if let note = notes.first?.text {
-                        Callout(text: note, systemImage: "note.text", style: .note)
+                        Callout(text: note, systemImage: "note.text", style: .pinned)
                             .accessibilityLabel("Note: \(note)")
                     }
                 }
