@@ -1,0 +1,27 @@
+{
+  "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$CLAUDE_PROJECT_DIR/.claude/skills/verify-ffive/scripts/ffive-verify\"; grep -q cmd_sweep \"$f\" 2>/dev/null && \"$f\" sweep >/dev/null 2>&1 || true",
+            "async": true,
+            "timeout": 60
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$CLAUDE_PROJECT_DIR/.claude/skills/verify-ffive/scripts/ffive-verify\"; grep -q cmd_sweep \"$f\" 2>/dev/null && \"$f\" sweep >/dev/null 2>&1 || true",
+            "timeout": 30
+          }
+        ]
+      }
+    ]
+  }
+}

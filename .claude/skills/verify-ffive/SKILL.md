@@ -39,7 +39,7 @@ Two data modes, picked per `launch` step inside a drive:
 - **Demo, in memory:** `launch -seedDemo`. The `DemoSeed` data loads into an in-memory store: two free-form workouts and the "Full Body, 3 Days" block with week 1 logged, week 2 day 1 in progress, and week 2's last day skipped. Nothing persists between launches. `-demoRoute <train|builder|session|progress|strength>` opens straight into a screen. Use it for read-only journeys.
 - **On disk, the real user path:** a bare `launch`. This is the SwiftData store at `<app data container>/Library/Application Support/default.store`. It persists across launches and is what `store` reads. Start it empty with `$V reset-data`, which uninstalls and reinstalls the app and wipes the store and UserDefaults. Use it for any proof of a write.
 
-Teardown: see Cleanup.
+Teardown: see Cleanup. Simulators of removed worktrees are swept automatically.
 
 ## Doctor
 
@@ -143,6 +143,13 @@ $V cleanup --purge    # also delete .verify/build and .verify/build-driver
 ```
 
 Cleanup deletes only the simulator whose UDID is recorded in `state.env`, and only if its name is still our `FFive Verify …` name. It never kills processes by name. Evidence in `.verify/artifacts/` always survives. Delete old run dirs by hand when you no longer need them. After cleanup, the next `launch` creates a fresh simulator.
+
+```bash
+$V sweep              # delete simulators whose worktree no longer exists
+$V sweep --dry-run    # print what sweep would delete or adopt
+```
+
+`launch` records which checkout owns each simulator in `.git/ffive-verify/<udid>`, the git directory every worktree shares. `sweep` deletes a simulator only when its recorded checkout is no longer on disk and its name still matches the record. A simulator whose worktree still exists is never touched, even if its branch is merged. A simulator that predates the registry is adopted when a live checkout hashes to its name, and skipped otherwise. The project's `SessionStart` and `SessionEnd` hooks in `.claude/settings.json` run `sweep` automatically, so a removed worktree's simulator goes away at the next session start. Run `cleanup` yourself when you finish with a simulator in a worktree you are keeping.
 
 ## Feature map
 

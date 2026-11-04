@@ -14,9 +14,25 @@ bundle_id="com.juanix.FFive"
 device_type="${FFIVE_DEVICE_TYPE:-com.apple.CoreSimulator.SimDeviceType.iPhone-18-Pro}"
 # One simulator per checkout, so worktrees never share a device or its data.
 device_name="FFive Verify $(printf '%s' "$root" | shasum | cut -c1-8)"
+# Repo-wide registry (in the shared git dir) of which checkout owns each simulator, so sweep can
+# find simulators whose worktree is gone even after that worktree's .verify/ went with it.
+registry="$(git -C "$here" rev-parse --path-format=absolute --git-common-dir)/ffive-verify"
 
 die() { echo "ffive-verify: $*" >&2; exit 1; }
 log() { echo "ffive-verify: $*" >&2; }
+
+register() { mkdir -p "$registry"; printf 'ROOT=%q\nNAME=%q\n' "$2" "$3" >"$registry/$1"; }
+
+our_simulators() {
+    # udid<TAB>name<TAB>state for every simulator named like ours.
+    xcrun simctl list devices -j | /usr/bin/python3 -c '
+import json, re, sys
+for runtime in json.load(sys.stdin)["devices"].values():
+    for d in runtime:
+        if re.fullmatch(r"FFive Verify [0-9a-f]{8}", d["name"]):
+            print(d["udid"], d["name"], d["state"], sep="\t")
+'
+}
 
 load_state() {
     [[ -f "$state" ]] || die "no instance; run: $0 launch"
@@ -75,6 +91,7 @@ cmd_launch() {
         log "creating simulator \"$device_name\""
         udid="$(xcrun simctl create "$device_name" "$device_type" "$(latest_runtime)")"
     fi
+    register "$udid" "$root" "$device_name"
     if [[ "$(device_state "$udid" | cut -f1)" != "Booted" ]]; then
         xcrun simctl boot "$udid"
     fi
@@ -183,6 +200,7 @@ cmd_cleanup() {
         if [[ -n "$dev" && "$(cut -f2 <<<"$dev")" == "$DEVICE_NAME" && "$DEVICE_NAME" == "FFive Verify "* ]]; then
             xcrun simctl shutdown "$UDID" 2>/dev/null || true
             xcrun simctl delete "$UDID"
+            rm -f "$registry/$UDID"
             log "deleted simulator $UDID"
         elif [[ -n "$dev" ]]; then
             log "refusing to delete $UDID: it is \"$(cut -f2 <<<"$dev")\", not \"$DEVICE_NAME\""
@@ -194,6 +212,57 @@ cmd_cleanup() {
     echo "cleaned; evidence kept in $artifacts"
 }
 
+cmd_sweep() {
+    # Deletes simulators whose owning checkout no longer exists. Never touches a simulator whose
+    # worktree is still on disk, nor one this repo did not create.
+    local dry=0; [[ "${1:-}" == "--dry-run" ]] && dry=1
+    local live=() path
+    while IFS= read -r path; do
+        [[ -d "$path" ]] && live+=("$path")
+    done < <(git -C "$here" worktree list --porcelain | sed -n 's/^worktree //p')
+    is_live() { local p; for p in "${live[@]}"; do [[ "$p" == "$1" ]] && return 0; done; return 1; }
+
+    local udid name _state ROOT NAME p
+    while IFS=$'\t' read -r udid name _state; do
+        if [[ ! -f "$registry/$udid" ]]; then
+            # Created before the registry existed: adopt it if a live checkout hashes to its name.
+            for p in "${live[@]}"; do
+                if [[ "FFive Verify $(printf '%s' "$p" | shasum | cut -c1-8)" == "$name" ]]; then
+                    if [[ $dry == 1 ]]; then log "would adopt $name ($udid) for $p"
+                    else register "$udid" "$p" "$name"; log "adopted $name ($udid) for $p"; fi
+                    continue 2
+                fi
+            done
+            log "skipping $name ($udid): no record of which checkout made it"
+            continue
+        fi
+        # shellcheck disable=SC1090
+        ROOT=""; NAME=""; source "$registry/$udid"
+        is_live "$ROOT" && continue
+        if [[ "$NAME" != "$name" ]]; then
+            log "skipping $udid: registered as \"$NAME\" but now named \"$name\""
+            continue
+        fi
+        if [[ $dry == 1 ]]; then
+            log "would delete $name ($udid): $ROOT is gone"
+        else
+            xcrun simctl shutdown "$udid" 2>/dev/null || true
+            xcrun simctl delete "$udid"
+            rm -f "$registry/$udid"
+            log "deleted $name ($udid): $ROOT is gone"
+        fi
+    done < <(our_simulators)
+
+    # Drop records of simulators that no longer exist.
+    if [[ -d "$registry" && $dry == 0 ]]; then
+        local existing; existing="$(our_simulators | cut -f1)"
+        for p in "$registry"/*; do
+            [[ -f "$p" ]] || continue
+            grep -qxF "$(basename "$p")" <<<"$existing" || rm -f "$p"
+        done
+    fi
+}
+
 case "${1:-}" in
     launch) shift; cmd_launch "$@" ;;
     doctor) shift; cmd_doctor "$@" ;;
@@ -203,5 +272,6 @@ case "${1:-}" in
     shot) shift; cmd_shot "$@" ;;
     reset-data) shift; cmd_reset_data "$@" ;;
     cleanup) shift; cmd_cleanup "$@" ;;
-    *) echo "usage: $0 {launch|doctor|drive <steps|-> [--name n]|store [sql]|defaults|shot [name]|reset-data|cleanup [--purge]}" >&2; exit 2 ;;
+    sweep) shift; cmd_sweep "$@" ;;
+    *) echo "usage: $0 {launch|doctor|drive <steps|-> [--name n]|store [sql]|defaults|shot [name]|reset-data|cleanup [--purge]|sweep [--dry-run]}" >&2; exit 2 ;;
 esac
