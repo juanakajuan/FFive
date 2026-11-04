@@ -18,7 +18,7 @@ Each rule is enforced by the check named beside it. A rule with no check is a ju
 | Every file under `FFive/` typechecks together for iOS | `scripts/typecheck-app.sh` |
 | Engine and planner rules keep their behavior | `scripts/check-engine.sh`, `scripts/check-planner.sh` |
 | Each lint rule still catches its real past mistake | `scripts/lint.sh --self-test` |
-| A change passes the gate before it merges | `.github/workflows/check.yml` |
+| Every PR and every push to main runs the gate in CI | `.github/workflows/check.yml` |
 | A PR or issue whose change shows on screen carries screenshots or a recording | none, judgment |
 
 ## Pull requests and issues
