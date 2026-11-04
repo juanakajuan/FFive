@@ -7,13 +7,13 @@ struct ExerciseDetailView: View {
 
     @AppStorage("weightUnit") private var unit: WeightUnit = .lb
     @Query private var logged: [Exercise]
-    @Query private var notes: [ExerciseNote]
+    @Query private var notes: [PinnedNote]
 
     init(listing: ExerciseListing) {
         self.listing = listing
         let name = listing.name
         _logged = Query(filter: #Predicate<Exercise> { $0.name == name })
-        _notes = Query(filter: #Predicate<ExerciseNote> { $0.name == name })
+        _notes = Query(filter: #Predicate<PinnedNote> { $0.name == name })
     }
 
     private struct Session: Identifiable {

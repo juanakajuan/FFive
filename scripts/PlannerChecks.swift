@@ -267,13 +267,16 @@ extension PlannerChecks {
         let noted = Workout(name: "Noted day")
         noted.setNote("  Felt strong  ")
         writer.insert(noted)
-        ExerciseNote.set("Seat Level: 4", for: "Bench Press", in: writer)
+        let bench = Exercise(name: "Bench Press", order: 0)
+        noted.exercises.append(bench)
+        bench.setNote("Elbows in", in: writer)
+        PinnedNote.set("Seat Level: 4", for: "Bench Press", in: writer)
         try! writer.save()
         let second = open()
         let days = (try? second.fetch(FetchDescriptor<Workout>())) ?? []
         expect("store: a day note survives a save and reopen on disk", days.first { $0.name == "Noted day" }?.note, "Felt strong")
-        expect("store: an exercise note survives a save and reopen on disk",
-               ExerciseNote.find(named: "Bench Press", in: second)?.text, "Seat Level: 4")
+        expect("store: a pinned note survives a save and reopen on disk",
+               PinnedNote.find(named: "Bench Press", in: second)?.text, "Seat Level: 4")
     }
 }
 
@@ -307,28 +310,36 @@ extension PlannerChecks {
         context.insert(newer)
         older.exercises.append(Exercise(name: "Bench Press", order: 0))
         newer.exercises.append(Exercise(name: "Bench Press", order: 0))
+        let first = older.exercises[0], later = newer.exercises[0]
+        let pinnedCount = { (try? context.fetch(FetchDescriptor<PinnedNote>()))?.count }
 
-        ExerciseNote.set("Seat Level: 4", for: "Bench Press", in: context)
-        expect("note: found by name from a later workout's row",
-               ExerciseNote.find(named: newer.exercises[0].name, in: context)?.text, "Seat Level: 4")
-        expect("note: other exercises have none", ExerciseNote.find(named: "Barbell Row", in: context)?.text, nil)
+        first.setNote("  Elbows in \n", in: context)
+        expect("note: saved on that workout's exercise, trimmed", first.note, "Elbows in")
+        expect("note: not carried to another workout by default", later.note, nil)
+        expect("note: not pinned by default", pinnedCount(), 0)
 
-        ExerciseNote.set("Seat Level: 5", for: "Bench Press", in: context)
-        ExerciseNote.set("Seat Level: 5", for: "Bench Press", in: context)
-        expect("note: setting twice leaves one row", (try? context.fetch(FetchDescriptor<ExerciseNote>()))?.count, 1)
-        expect("note: the latest text wins", ExerciseNote.find(named: "Bench Press", in: context)?.text, "Seat Level: 5")
+        first.pinNote(in: context)
+        expect("pin: the note is found by name from a later workout", PinnedNote.find(named: later.name, in: context)?.text, "Elbows in")
+        expect("pin: the row copy is cleared so the note shows once", first.note, nil)
+        expect("pin: other exercises have none", PinnedNote.find(named: "Barbell Row", in: context)?.text, nil)
 
-        context.delete(older.exercises[0])
-        older.exercises.removeAll()
-        expect("note: removing an exercise from a workout keeps its note",
-               ExerciseNote.find(named: "Bench Press", in: context) != nil, true)
+        later.setNote("Seat Level: 5", in: context)
+        later.setNote("Seat Level: 5", in: context)
+        expect("pin: editing a pinned note edits the pin", PinnedNote.find(named: "Bench Press", in: context)?.text, "Seat Level: 5")
+        expect("pin: setting twice leaves one row", pinnedCount(), 1)
+        expect("pin: the edit stays off the row", later.note, nil)
 
-        ExerciseNote.set("  \n ", for: "Bench Press", in: context)
-        expect("note: blank text deletes it", (try? context.fetch(FetchDescriptor<ExerciseNote>()))?.count, 0)
-        ExerciseNote.set("Seat Level: 5", for: "Bench Press", in: context)
-        ExerciseNote.delete(for: "Bench Press", in: context)
-        ExerciseNote.delete(for: "Bench Press", in: context)
-        expect("note: delete removes it, twice over", (try? context.fetch(FetchDescriptor<ExerciseNote>()))?.count, 0)
+        later.unpinNote(in: context)
+        expect("unpin: the note stays on this workout", later.note, "Seat Level: 5")
+        expect("unpin: it no longer carries forward", pinnedCount(), 0)
+
+        later.pinNote(in: context)
+        later.deleteNote(in: context)
+        later.deleteNote(in: context)
+        expect("delete: removes the pin, twice over", pinnedCount(), 0)
+        expect("delete: and the row note", later.note, nil)
+        later.setNote("  \n ", in: context)
+        expect("note: blank text stores nil", later.note, nil)
 
         newer.setNote("  Left shoulder tight \n")
         expect("day note: trimmed on save", newer.note, "Left shoulder tight")

@@ -24,7 +24,7 @@ struct ActiveWorkoutView: View {
     private struct NoteEdit: Identifiable {
         enum Target {
             case day
-            case exercise(name: String)
+            case exercise(Exercise)
 
             var title: String {
                 if case .exercise = self { "Exercise Note" } else { "Workout Note" }
@@ -37,7 +37,7 @@ struct ActiveWorkoutView: View {
         var id: String {
             switch target {
             case .day: "day"
-            case .exercise(let name): "exercise:\(name)"
+            case .exercise(let exercise): "exercise:\(exercise.persistentModelID.hashValue)"
             }
         }
     }
@@ -80,7 +80,7 @@ struct ActiveWorkoutView: View {
                                  phase: workout.phase,
                                  onSetCompleted: setCompleted,
                                  onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
-                                 onEditNote: { noteEdit = NoteEdit(target: .exercise(name: exercise.name), draft: $0) }) {
+                                 onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }) {
                         workout.exercises.removeAll { $0 === exercise }
                         context.delete(exercise)
                     }
@@ -164,7 +164,7 @@ struct ActiveWorkoutView: View {
     private func saveNote(_ text: String, to target: NoteEdit.Target) {
         switch target {
         case .day: workout.setNote(text)
-        case .exercise(let name): ExerciseNote.set(text, for: name, in: context)
+        case .exercise(let exercise): exercise.setNote(text, in: context)
         }
         try? context.save()
     }
@@ -286,7 +286,7 @@ struct ExerciseCard: View {
     var onRemove: () -> Void
 
     @Environment(\.modelContext) private var context
-    @Query private var notes: [ExerciseNote]
+    @Query private var pinnedNotes: [PinnedNote]
     @State private var showingCue = false
     @State private var showingHistory = false
 
@@ -300,12 +300,13 @@ struct ExerciseCard: View {
         self.onEditNote = onEditNote
         self.onRemove = onRemove
         let name = exercise.name
-        _notes = Query(filter: #Predicate<ExerciseNote> { $0.name == name })
+        _pinnedNotes = Query(filter: #Predicate<PinnedNote> { $0.name == name })
     }
 
     var body: some View {
         let sets = exercise.sortedSets
-        let note = notes.first?.text
+        let pinned = pinnedNotes.first?.text
+        let note = pinned ?? exercise.note
         VStack(alignment: .leading, spacing: 0) {
             if let muscle = exercise.muscle {
                 MuscleTag(muscle: muscle).padding(.horizontal, Theme.gutter)
@@ -329,8 +330,17 @@ struct ExerciseCard: View {
 
             VStack(spacing: 8) {
                 if let note {
-                    Callout(text: note, systemImage: "note.text", style: .note)
-                        .accessibilityLabel("Note: \(note)")
+                    HStack(spacing: 8) {
+                        Callout(text: note, systemImage: "note.text", style: .note)
+                            .accessibilityLabel("Note: \(note)")
+                        Button {
+                            if pinned == nil { exercise.pinNote(in: context) } else { exercise.unpinNote(in: context) }
+                            try? context.save()
+                        } label: {
+                            ActionIcon(systemName: pinned == nil ? "pin" : "pin.fill")
+                        }
+                        .accessibilityLabel(pinned == nil ? "Pin note" : "Unpin note")
+                    }
                 }
                 if showingCue, let info = exercise.info {
                     Callout(text: "\(info.cue) \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps.",
@@ -374,12 +384,13 @@ struct ExerciseCard: View {
                         .disabled(exercise.sets.contains(where: \.isDone))
                 }
                 Button("Add Set", systemImage: "plus", action: addSet)
-                Button(notes.isEmpty ? "Add Note" : "Edit Note", systemImage: "note.text") {
-                    onEditNote(notes.first?.text ?? "")
+                let note = pinnedNotes.first?.text ?? exercise.note
+                Button(note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
+                    onEditNote(note ?? "")
                 }
-                if !notes.isEmpty {
+                if note != nil {
                     Button("Delete Note", systemImage: "trash", role: .destructive) {
-                        ExerciseNote.delete(for: exercise.name, in: context)
+                        exercise.deleteNote(in: context)
                         try? context.save()
                     }
                 }
