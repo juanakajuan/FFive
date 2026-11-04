@@ -7,11 +7,13 @@ struct ExerciseDetailView: View {
 
     @AppStorage("weightUnit") private var unit: WeightUnit = .lb
     @Query private var logged: [Exercise]
+    @Query private var notes: [ExerciseNote]
 
     init(listing: ExerciseListing) {
         self.listing = listing
         let name = listing.name
         _logged = Query(filter: #Predicate<Exercise> { $0.name == name })
+        _notes = Query(filter: #Predicate<ExerciseNote> { $0.name == name })
     }
 
     private struct Session: Identifiable {
@@ -51,6 +53,10 @@ struct ExerciseDetailView: View {
                     if let cue = listing.info?.cue {
                         Callout(text: cue, systemImage: "lightbulb")
                             .padding(.top, 4)
+                    }
+                    if let note = notes.first?.text {
+                        Callout(text: note, systemImage: "note.text", style: .note)
+                            .accessibilityLabel("Note: \(note)")
                     }
                 }
                 .padding(Theme.gutter)

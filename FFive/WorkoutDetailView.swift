@@ -68,6 +68,10 @@ struct WorkoutDetailView: View {
                          icon: "scalemass")
             }
             .fixedSize(horizontal: false, vertical: true)
+            if let note = workout.note {
+                Callout(text: note, systemImage: "note.text", style: .note)
+                    .accessibilityLabel("Workout note: \(note)")
+            }
         }
         .padding(.horizontal, Theme.gutter)
         .padding(.bottom, 8)

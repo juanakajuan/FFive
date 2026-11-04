@@ -18,7 +18,29 @@ struct ActiveWorkoutView: View {
     @State private var confirmDiscard = false
     @State private var confirmEnd = false
     @State private var renameDraft: String?
+    @State private var noteEdit: NoteEdit?
     @State private var setsCompleted = 0
+
+    private struct NoteEdit: Identifiable {
+        enum Target {
+            case day
+            case exercise(name: String)
+
+            var title: String {
+                if case .exercise = self { "Exercise Note" } else { "Workout Note" }
+            }
+        }
+
+        let target: Target
+        let draft: String
+
+        var id: String {
+            switch target {
+            case .day: "day"
+            case .exercise(let name): "exercise:\(name)"
+            }
+        }
+    }
 
     private enum PickerRequest: Identifiable {
         case add
@@ -37,6 +59,11 @@ struct ActiveWorkoutView: View {
         let pendingSoreness = MesoPlanner.pendingSoreness(for: workout)
         ScrollView {
             LazyVStack(spacing: 16) {
+                if let note = workout.note {
+                    Callout(text: note, systemImage: "note.text", style: .note)
+                        .padding(.horizontal, Theme.gutter)
+                        .accessibilityLabel("Workout note: \(note)")
+                }
                 ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
                     let muscle = exercise.muscle
                     if let muscle, let record = pendingSoreness[muscle],
@@ -52,7 +79,8 @@ struct ActiveWorkoutView: View {
                                  unit: unit,
                                  phase: workout.phase,
                                  onSetCompleted: setCompleted,
-                                 onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) }) {
+                                 onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
+                                 onEditNote: { noteEdit = NoteEdit(target: .exercise(name: exercise.name), draft: $0) }) {
                         workout.exercises.removeAll { $0 === exercise }
                         context.delete(exercise)
                     }
@@ -126,6 +154,19 @@ struct ActiveWorkoutView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+        .sheet(item: $noteEdit) { edit in
+            NoteEditor(title: edit.target.title, draft: edit.draft) {
+                saveNote($0, to: edit.target)
+            }
+        }
+    }
+
+    private func saveNote(_ text: String, to target: NoteEdit.Target) {
+        switch target {
+        case .day: workout.setNote(text)
+        case .exercise(let name): ExerciseNote.set(text, for: name, in: context)
+        }
+        try? context.save()
     }
 
     private var header: some View {
@@ -169,6 +210,7 @@ struct ActiveWorkoutView: View {
                 WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, in: context)
             }
         }
+        Button(workout.note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") { noteEdit = NoteEdit(target: .day, draft: workout.note ?? "") }
         if workout.mesocycle == nil {
             Button("Rename", systemImage: "pencil") { renameDraft = workout.name }
         }
@@ -240,14 +282,30 @@ struct ExerciseCard: View {
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
     var onSwap: (() -> Void)?
+    var onEditNote: (String) -> Void
     var onRemove: () -> Void
 
     @Environment(\.modelContext) private var context
+    @Query private var notes: [ExerciseNote]
     @State private var showingCue = false
     @State private var showingHistory = false
 
+    init(exercise: Exercise, unit: WeightUnit, phase: WeekPhase?, onSetCompleted: @escaping () -> Void,
+         onSwap: (() -> Void)? = nil, onEditNote: @escaping (String) -> Void, onRemove: @escaping () -> Void) {
+        self.exercise = exercise
+        self.unit = unit
+        self.phase = phase
+        self.onSetCompleted = onSetCompleted
+        self.onSwap = onSwap
+        self.onEditNote = onEditNote
+        self.onRemove = onRemove
+        let name = exercise.name
+        _notes = Query(filter: #Predicate<ExerciseNote> { $0.name == name })
+    }
+
     var body: some View {
         let sets = exercise.sortedSets
+        let note = notes.first?.text
         VStack(alignment: .leading, spacing: 0) {
             if let muscle = exercise.muscle {
                 MuscleTag(muscle: muscle).padding(.horizontal, Theme.gutter)
@@ -270,6 +328,10 @@ struct ExerciseCard: View {
             .padding(.top, 10)
 
             VStack(spacing: 8) {
+                if let note {
+                    Callout(text: note, systemImage: "note.text", style: .note)
+                        .accessibilityLabel("Note: \(note)")
+                }
                 if showingCue, let info = exercise.info {
                     Callout(text: "\(info.cue) \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps.",
                             systemImage: "lightbulb.fill")
@@ -312,6 +374,15 @@ struct ExerciseCard: View {
                         .disabled(exercise.sets.contains(where: \.isDone))
                 }
                 Button("Add Set", systemImage: "plus", action: addSet)
+                Button(notes.isEmpty ? "Add Note" : "Edit Note", systemImage: "note.text") {
+                    onEditNote(notes.first?.text ?? "")
+                }
+                if !notes.isEmpty {
+                    Button("Delete Note", systemImage: "trash", role: .destructive) {
+                        ExerciseNote.delete(for: exercise.name, in: context)
+                        try? context.save()
+                    }
+                }
                 Button("Remove Exercise", systemImage: "trash", role: .destructive, action: onRemove)
             } label: {
                 ActionIcon.verticalEllipsis
@@ -555,5 +626,54 @@ struct FeedbackCard: View {
         .padding(.horizontal, Theme.gutter)
         .padding(.bottom, 8)
         .surfaceCard()
+    }
+}
+
+/// Notes edit in a sheet, not an alert, because an alert's text field kept the old text after it was cleared and retyped.
+private struct NoteEditor: View {
+    let title: String
+    let onSave: (String) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: String
+    @FocusState private var focused: Bool
+
+    init(title: String, draft: String, onSave: @escaping (String) -> Void) {
+        self.title = title
+        self.onSave = onSave
+        _draft = State(initialValue: draft)
+    }
+
+    var body: some View {
+        NavigationStack {
+            VStack {
+                TextField("Note", text: $draft, axis: .vertical)
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.text)
+                    .lineLimit(3...8)
+                    .focused($focused)
+                    .accessibilityLabel("Note")
+                    .padding(12)
+                    .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                Spacer()
+            }
+            .padding(Theme.gutter)
+            .background(Theme.page)
+            .navigationTitle(title)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(draft)
+                        dismiss()
+                    }
+                }
+            }
+        }
+        .presentationDetents([.medium])
+        .onAppear { focused = true }
     }
 }
