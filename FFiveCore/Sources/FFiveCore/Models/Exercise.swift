@@ -9,7 +9,7 @@ public final class Exercise {
     @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
     public internal(set) var sets: [SetEntry] = []
     public var muscleRaw: String?
-    public var note: String?
+    public internal(set) var note: String?
 
     public init(name: String, order: Int, muscle: Muscle? = nil) {
         self.name = name
@@ -57,7 +57,7 @@ public final class Exercise {
 }
 
 extension Exercise {
-    public func setNote(_ text: String, in context: ModelContext) {
+    func setNote(_ text: String, in context: ModelContext) {
         if PinnedNote.find(named: name, in: context) != nil {
             PinnedNote.set(text, for: name, in: context)
         } else {
@@ -65,18 +65,18 @@ extension Exercise {
         }
     }
 
-    public func deleteNote(in context: ModelContext) {
+    func deleteNote(in context: ModelContext) {
         PinnedNote.delete(for: name, in: context)
         note = nil
     }
 
-    public func pinNote(in context: ModelContext) {
+    func pinNote(in context: ModelContext) {
         guard let note else { return }
         PinnedNote.set(note, for: name, in: context)
         self.note = nil
     }
 
-    public func unpinNote(in context: ModelContext) {
+    func unpinNote(in context: ModelContext) {
         note = PinnedNote.find(named: name, in: context)?.text
         PinnedNote.delete(for: name, in: context)
     }

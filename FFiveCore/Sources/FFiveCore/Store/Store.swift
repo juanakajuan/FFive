@@ -75,6 +75,31 @@ public final class Store {
         return workout
     }
 
+    public func setNote(_ text: String, on workout: Workout) {
+        workout.setNote(text)
+        commit()
+    }
+
+    public func setNote(_ text: String, on exercise: Exercise) {
+        exercise.setNote(text, in: context)
+        commit()
+    }
+
+    public func deleteNote(on exercise: Exercise) {
+        exercise.deleteNote(in: context)
+        commit()
+    }
+
+    public func pinNote(on exercise: Exercise) {
+        exercise.pinNote(in: context)
+        commit()
+    }
+
+    public func unpinNote(on exercise: Exercise) {
+        exercise.unpinNote(in: context)
+        commit()
+    }
+
     public func dismissFailure() {
         failure = nil
     }

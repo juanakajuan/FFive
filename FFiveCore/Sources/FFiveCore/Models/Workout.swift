@@ -13,14 +13,14 @@ public final class Workout {
     public internal(set) var dayIndex: Int?
     @Relationship(deleteRule: .cascade, inverse: \MuscleFeedbackRecord.workout)
     public var feedback: [MuscleFeedbackRecord] = []
-    public var note: String?
+    public internal(set) var note: String?
 
     public init(name: String, startDate: Date = .now) {
         self.name = name
         self.startDate = startDate
     }
 
-    public func setNote(_ text: String) {
+    func setNote(_ text: String) {
         note = text.noteText
     }
 

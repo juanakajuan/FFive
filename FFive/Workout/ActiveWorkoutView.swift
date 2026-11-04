@@ -164,10 +164,9 @@ struct ActiveWorkoutView: View {
 
     private func saveNote(_ text: String, to target: NoteEdit.Target) {
         switch target {
-        case .day: workout.setNote(text)
-        case .exercise(let exercise): exercise.setNote(text, in: context)
+        case .day: store.setNote(text, on: workout)
+        case .exercise(let exercise): store.setNote(text, on: exercise)
         }
-        try? context.save()
     }
 
     private var header: some View {
@@ -259,6 +258,7 @@ struct ExerciseCard: View {
     var onRemove: () -> Void
 
     @Environment(\.modelContext) private var context
+    @Environment(Store.self) private var store
     @Query private var pinnedNotes: [PinnedNote]
     @State private var showingCue = false
     @State private var showingHistory = false
@@ -307,8 +307,7 @@ struct ExerciseCard: View {
                         Callout(text: note, systemImage: "note.text", style: pinned == nil ? .note : .pinned)
                             .accessibilityLabel("Note: \(note)")
                         Button {
-                            if pinned == nil { exercise.pinNote(in: context) } else { exercise.unpinNote(in: context) }
-                            try? context.save()
+                            if pinned == nil { store.pinNote(on: exercise) } else { store.unpinNote(on: exercise) }
                         } label: {
                             ActionIcon(systemName: pinned == nil ? "pin" : "pin.fill")
                         }
@@ -363,8 +362,7 @@ struct ExerciseCard: View {
                 }
                 if note != nil {
                     Button("Delete Note", systemImage: "trash", role: .destructive) {
-                        exercise.deleteNote(in: context)
-                        try? context.save()
+                        store.deleteNote(on: exercise)
                     }
                 }
                 Button("Remove Exercise", systemImage: "trash", role: .destructive, action: onRemove)

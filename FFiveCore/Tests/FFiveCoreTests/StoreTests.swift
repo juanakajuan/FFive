@@ -60,4 +60,85 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(meso.status(at: day1), .upcoming, "its day is open to train again")
         XCTAssertEqual(meso.nextUp, day1)
     }
+
+    /// Two quick workouts that both hold Bench Press, oldest first, the way a later card finds an earlier pin.
+    func benchTwice() -> (store: Store, first: Exercise, later: Exercise) {
+        let store = Store(inMemory: true)
+        let exercises = (0..<2).map { _ in
+            let workout = store.startQuickWorkout()
+            MesoPlanner.addExercise(named: "Bench Press", muscle: .chest, to: workout, unit: .lb, in: store.context)
+            return workout.exercises[0]
+        }
+        return (store, exercises[0], exercises[1])
+    }
+
+    func pinned(_ store: Store, _ name: String) throws -> [String] {
+        try store.context.fetch(FetchDescriptor<PinnedNote>(predicate: #Predicate { $0.name == name })).map(\.text)
+    }
+
+    func testSetNoteOnWorkoutTrimsAndBlankClears() {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+
+        store.setNote("  Left shoulder tight \n", on: workout)
+        XCTAssertEqual(workout.note, "Left shoulder tight", "the session header shows the trimmed note")
+        XCTAssertFalse(store.context.hasChanges, "the note is saved")
+
+        store.setNote("   ", on: workout)
+        XCTAssertNil(workout.note, "a blank note removes the callout")
+        XCTAssertNil(store.failure)
+    }
+
+    func testSetNoteOnExerciseStaysOnThatWorkout() throws {
+        let (store, first, later) = benchTwice()
+
+        store.setNote("  Elbows in \n", on: first)
+
+        XCTAssertEqual(first.note, "Elbows in", "that workout's card shows the trimmed note")
+        XCTAssertNil(later.note, "a later workout's card shows nothing")
+        XCTAssertEqual(try pinned(store, "Bench Press"), [], "nothing is pinned")
+        XCTAssertFalse(store.context.hasChanges, "the note is saved")
+    }
+
+    func testPinNoteCarriesToLaterWorkoutsAndEditsFollowThePin() throws {
+        let (store, first, later) = benchTwice()
+        store.setNote("Elbows in", on: first)
+
+        store.pinNote(on: first)
+        XCTAssertEqual(try pinned(store, "Bench Press"), ["Elbows in"], "every Bench Press card and the exercise page read the pin")
+        XCTAssertNil(first.note, "the row copy is cleared so the note shows once")
+        XCTAssertFalse(store.context.hasChanges, "the pin is saved")
+
+        store.setNote("Seat Level: 5", on: later)
+        XCTAssertEqual(try pinned(store, "Bench Press"), ["Seat Level: 5"], "editing from a later card edits the pin")
+        XCTAssertNil(later.note, "the edit stays off the row")
+        XCTAssertFalse(store.context.hasChanges, "the edit is saved")
+    }
+
+    func testUnpinNoteReturnsToThisWorkout() throws {
+        let (store, first, later) = benchTwice()
+        store.setNote("Seat Level: 5", on: first)
+        store.pinNote(on: first)
+
+        store.unpinNote(on: later)
+
+        XCTAssertEqual(later.note, "Seat Level: 5", "the card that unpinned keeps the note")
+        XCTAssertNil(first.note, "the workout that pinned it shows nothing")
+        XCTAssertEqual(try pinned(store, "Bench Press"), [], "the exercise page no longer shows it")
+        XCTAssertFalse(store.context.hasChanges, "the move is saved")
+    }
+
+    func testDeleteNoteRemovesThePinAndTheRow() throws {
+        let (store, first, _) = benchTwice()
+        store.setNote("Elbows in", on: first)
+        store.pinNote(on: first)
+        store.setNote("Seat Level: 5", on: first)
+
+        store.deleteNote(on: first)
+
+        XCTAssertNil(first.note, "the card shows no note")
+        XCTAssertEqual(try pinned(store, "Bench Press"), [], "the exercise page shows no note")
+        XCTAssertFalse(store.context.hasChanges, "the delete is saved")
+        XCTAssertNil(store.failure)
+    }
 }
