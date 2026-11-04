@@ -79,7 +79,7 @@ struct ActionIcon: View {
     }
 }
 
-/// Full-width buttons: the workout's Finish button and the Workout tab's empty states.
+/// Full-width buttons for the Workout tab's empty states.
 struct WideButtonStyle: ButtonStyle {
     enum Kind { case filled, outlined }
 
@@ -115,4 +115,22 @@ private struct WideButtonLabel<Label: View>: View {
 extension ButtonStyle where Self == WideButtonStyle {
     static var wideFilled: WideButtonStyle { WideButtonStyle(kind: .filled) }
     static var wideOutlined: WideButtonStyle { WideButtonStyle(kind: .outlined) }
+}
+
+/// A blue capsule that floats over the content beneath it: the workout's Finish button.
+struct FloatingButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(Theme.body.weight(.semibold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, minHeight: 50)
+            .background(Theme.accent, in: Capsule())
+            .shadow(color: .black.opacity(0.4), radius: 10, y: 4)
+            .contentShape(Capsule())
+            .opacity(configuration.isPressed ? 0.8 : 1)
+    }
+}
+
+extension ButtonStyle where Self == FloatingButtonStyle {
+    static var floating: FloatingButtonStyle { FloatingButtonStyle() }
 }
