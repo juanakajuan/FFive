@@ -5,7 +5,7 @@ trap 'rm -f "$out"' EXIT
 
 run() {
     started=$(date +%s)
-    if "scripts/$1" $2 > "$out" 2>&1; then
+    if "$@" > "$out" 2>&1; then
         echo "ok   $* ($(($(date +%s) - started))s) $(tail -n 1 "$out")"
     else
         cat "$out"
@@ -14,10 +14,9 @@ run() {
     fi
 }
 
-run lint.sh --self-test
-run lint.sh
-run typecheck-app.sh
-run check-engine.sh
-run check-planner.sh
-run perf-probe.sh
+run scripts/lint.sh --self-test
+run scripts/lint.sh
+run scripts/typecheck-app.sh
+run swift test --package-path FFiveCore --disable-swift-testing
+run scripts/perf-probe.sh
 echo "CHECK PASS"

@@ -6,3 +6,7 @@ DerivedData/
 
 # verify-ffive skill: simulator state, build cache, and evidence
 .verify/
+
+# SwiftPM
+.build/
+.swiftpm/

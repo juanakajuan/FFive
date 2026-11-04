@@ -55,8 +55,8 @@ source_stamp() {
     # HEAD plus a hash of uncommitted app changes, so doctor can tell a stale install from a current one.
     local head dirty
     head="$(git -C "$root" rev-parse --short HEAD)"
-    dirty="$(git -C "$root" diff HEAD -- FFive FFive.xcodeproj | shasum | cut -c1-8)"
-    [[ -z "$(git -C "$root" status --porcelain -- FFive FFive.xcodeproj)" ]] && echo "$head" || echo "$head+dirty.$dirty"
+    dirty="$(git -C "$root" diff HEAD -- FFive FFiveCore FFive.xcodeproj | shasum | cut -c1-8)"
+    [[ -z "$(git -C "$root" status --porcelain -- FFive FFiveCore FFive.xcodeproj)" ]] && echo "$head" || echo "$head+dirty.$dirty"
 }
 
 latest_runtime() {
