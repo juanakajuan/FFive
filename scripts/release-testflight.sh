@@ -3,6 +3,12 @@
 #
 #   scripts/release-testflight.sh           archive and upload
 #   scripts/release-testflight.sh --local   archive and export an .ipa to build/release, no upload
+#   scripts/release-testflight.sh --version 1.1
+#                                           commit MARKETING_VERSION = 1.1 first, then release
+#
+# The build number is a UTC timestamp on every run. The user-facing version only
+# changes with --version; bump it for a meaningful release, and always after a
+# version is approved on the App Store, which then rejects new builds of it.
 #
 # Auth: set ASC_KEY_ID and ASC_ISSUER_ID to use an App Store Connect API key
 # (ASC_KEY_PATH defaults to ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8).
@@ -10,18 +16,43 @@
 set -eu
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-team="$(sed -n 's/.*DEVELOPMENT_TEAM = \(.*\);/\1/p' "$root/FFive.xcodeproj/project.pbxproj" | head -1)"
+project="$root/FFive.xcodeproj/project.pbxproj"
+team="$(sed -n 's/.*DEVELOPMENT_TEAM = \(.*\);/\1/p' "$project" | head -1)"
+usage="usage: $0 [--local] [--version X.Y[.Z]]"
 
 destination=upload
-case "${1:-}" in
-    "") ;;
-    --local) destination=export ;;
-    *) echo "usage: $0 [--local]" >&2; exit 2 ;;
-esac
+new_version=""
+while [ $# -gt 0 ]; do
+    case "$1" in
+        --local) destination=export ;;
+        --version)
+            [ $# -ge 2 ] || { echo "$usage" >&2; exit 2; }
+            new_version="$2"
+            shift
+            ;;
+        *) echo "$usage" >&2; exit 2 ;;
+    esac
+    shift
+done
+
+if [ -n "$new_version" ] && ! echo "$new_version" | grep -Eq '^[0-9]+(\.[0-9]+){0,2}$'; then
+    echo "error: --version must look like 1.1 or 1.1.2, got '$new_version'" >&2
+    exit 2
+fi
 
 if [ -n "$(git -C "$root" status --porcelain)" ]; then
     echo "error: working tree is dirty; commit first so the build matches a commit" >&2
     exit 1
+fi
+
+if [ -n "$new_version" ]; then
+    sed -i '' "s/MARKETING_VERSION = .*;/MARKETING_VERSION = $new_version;/" "$project"
+    if [ -n "$(git -C "$root" status --porcelain)" ]; then
+        git -C "$root" commit -q -m "chore: bump version to $new_version" -- "$project"
+        echo "==> committed version $new_version"
+    else
+        echo "==> version is already $new_version"
+    fi
 fi
 
 auth=""
