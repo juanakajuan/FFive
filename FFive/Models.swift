@@ -16,6 +16,7 @@ final class Workout {
     var dayIndex: Int?
     @Relationship(deleteRule: .cascade, inverse: \MuscleFeedbackRecord.workout)
     var feedback: [MuscleFeedbackRecord] = []
+    var note: String?
 
     init(name: String, startDate: Date = .now) {
         self.name = name
@@ -35,6 +36,11 @@ final class Workout {
         exercises.flatMap(\.sets).filter(\.isDone).reduce(0) { $0 + Double($1.reps) * $1.weight }
     }
     var isFinished: Bool { endDate != nil }
+
+    func setNote(_ text: String) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        note = trimmed.isEmpty ? nil : trimmed
+    }
 
     var key: SessionKey? {
         guard let week, let dayIndex else { return nil }
@@ -137,6 +143,41 @@ final class Exercise {
         return sets.filter { $0.isDone && $0.weight > 0 && $0.reps > 0 }
             .map { ($0, Progression.estimatedOneRepMax(weight: $0.weight, reps: $0.reps, rir: rir)) }
             .max { $0.1 < $1.1 }
+    }
+}
+
+@Model
+final class ExerciseNote {
+    var name: String = ""
+    var text: String = ""
+
+    init(name: String, text: String) {
+        self.name = name
+        self.text = text
+    }
+
+    private static func all(named name: String, in context: ModelContext) -> [ExerciseNote] {
+        (try? context.fetch(FetchDescriptor<ExerciseNote>(predicate: #Predicate { $0.name == name }))) ?? []
+    }
+
+    static func find(named name: String, in context: ModelContext) -> ExerciseNote? {
+        all(named: name, in: context).first
+    }
+
+    static func delete(for name: String, in context: ModelContext) {
+        all(named: name, in: context).forEach(context.delete)
+    }
+
+    static func set(_ text: String, for name: String, in context: ModelContext) {
+        let trimmed = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmed.isEmpty else { return delete(for: name, in: context) }
+        let existing = all(named: name, in: context)
+        if let first = existing.first {
+            first.text = trimmed
+            existing.dropFirst().forEach(context.delete)
+        } else {
+            context.insert(ExerciseNote(name: name, text: trimmed))
+        }
     }
 }
 
@@ -348,6 +389,7 @@ enum AppStore {
     static let schema = Schema([
         Workout.self, Exercise.self, SetEntry.self,
         Mesocycle.self, MesoDay.self, DaySlot.self, MuscleFeedbackRecord.self,
+        ExerciseNote.self,
     ])
 
     static func makeContainer(inMemory: Bool) -> ModelContainer {

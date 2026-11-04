@@ -151,6 +151,7 @@ struct PlannerChecks {
         skipChecks()
         storeChecks()
         endChecks()
+        noteChecks()
 
         print("\(count - failures)/\(count) checks passed")
         exit(failures == 0 ? 0 : 1)
@@ -262,6 +263,17 @@ extension PlannerChecks {
                reopened.first?.skippedSessions, [SessionKey(week: 0, dayIndex: 1), SessionKey(week: 1, dayIndex: 0)])
         expect("store: a reopened block reads the skip as its status",
                reopened.first?.status(at: SessionKey(week: 0, dayIndex: 1)), .skipped)
+
+        let noted = Workout(name: "Noted day")
+        noted.setNote("  Felt strong  ")
+        writer.insert(noted)
+        ExerciseNote.set("Seat Level: 4", for: "Bench Press", in: writer)
+        try! writer.save()
+        let second = open()
+        let days = (try? second.fetch(FetchDescriptor<Workout>())) ?? []
+        expect("store: a day note survives a save and reopen on disk", days.first { $0.name == "Noted day" }?.note, "Felt strong")
+        expect("store: an exercise note survives a save and reopen on disk",
+               ExerciseNote.find(named: "Bench Press", in: second)?.text, "Seat Level: 4")
     }
 }
 
@@ -282,6 +294,46 @@ extension PlannerChecks {
         expect("end: an open session with a logged set is finished so it reaches history", started.isFinished, true)
         expect("end: its logged set is kept", started.completedSets, 1)
         expect("end: an untouched open session is dropped", untouched.isDeleted && meso.workout(at: SessionKey(week: 0, dayIndex: 1)) == nil, true)
+    }
+}
+
+extension PlannerChecks {
+    @MainActor
+    static func noteChecks() {
+        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        let older = Workout(name: "Older")
+        let newer = Workout(name: "Newer")
+        context.insert(older)
+        context.insert(newer)
+        older.exercises.append(Exercise(name: "Bench Press", order: 0))
+        newer.exercises.append(Exercise(name: "Bench Press", order: 0))
+
+        ExerciseNote.set("Seat Level: 4", for: "Bench Press", in: context)
+        expect("note: found by name from a later workout's row",
+               ExerciseNote.find(named: newer.exercises[0].name, in: context)?.text, "Seat Level: 4")
+        expect("note: other exercises have none", ExerciseNote.find(named: "Barbell Row", in: context)?.text, nil)
+
+        ExerciseNote.set("Seat Level: 5", for: "Bench Press", in: context)
+        ExerciseNote.set("Seat Level: 5", for: "Bench Press", in: context)
+        expect("note: setting twice leaves one row", (try? context.fetch(FetchDescriptor<ExerciseNote>()))?.count, 1)
+        expect("note: the latest text wins", ExerciseNote.find(named: "Bench Press", in: context)?.text, "Seat Level: 5")
+
+        context.delete(older.exercises[0])
+        older.exercises.removeAll()
+        expect("note: removing an exercise from a workout keeps its note",
+               ExerciseNote.find(named: "Bench Press", in: context) != nil, true)
+
+        ExerciseNote.set("  \n ", for: "Bench Press", in: context)
+        expect("note: blank text deletes it", (try? context.fetch(FetchDescriptor<ExerciseNote>()))?.count, 0)
+        ExerciseNote.set("Seat Level: 5", for: "Bench Press", in: context)
+        ExerciseNote.delete(for: "Bench Press", in: context)
+        ExerciseNote.delete(for: "Bench Press", in: context)
+        expect("note: delete removes it, twice over", (try? context.fetch(FetchDescriptor<ExerciseNote>()))?.count, 0)
+
+        newer.setNote("  Left shoulder tight \n")
+        expect("day note: trimmed on save", newer.note, "Left shoulder tight")
+        newer.setNote("   ")
+        expect("day note: blank stores nil", newer.note, nil)
     }
 }
 
