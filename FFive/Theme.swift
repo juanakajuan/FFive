@@ -64,10 +64,10 @@ extension Muscle {
     /// Muscles share a color by region: pushing muscles, pulling muscles, legs, and calves with abs.
     var tint: Color {
         switch self {
-        case .chest, .frontDelts, .sideDelts, .rearDelts, .triceps: Color(rgb: 0xC98B8B)
-        case .back, .biceps, .traps, .forearms: Color(rgb: 0x7FA3C4)
-        case .quads, .hamstrings, .glutes: Color(rgb: 0x8FB59A)
-        case .calves, .abs: Color(rgb: 0xC9B27A)
+        case .chest, .frontDelts, .sideDelts, .rearDelts, .triceps: Color(rgb: 0xFB4934)
+        case .back, .biceps, .traps, .forearms: Color(rgb: 0x83A598)
+        case .quads, .hamstrings, .glutes: Color(rgb: 0xB8BB26)
+        case .calves, .abs: Color(rgb: 0xD3869B)
         }
     }
 }
