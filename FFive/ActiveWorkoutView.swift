@@ -473,6 +473,7 @@ struct ExerciseHistorySheet: View {
                             .padding(Theme.gutter)
                     }
                 }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 .padding(.top, 8)
             }
             .background(Theme.surface)
