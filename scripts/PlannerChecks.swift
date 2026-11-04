@@ -151,6 +151,7 @@ struct PlannerChecks {
         skipChecks()
         storeChecks()
         endChecks()
+        noteChecks()
 
         print("\(count - failures)/\(count) checks passed")
         exit(failures == 0 ? 0 : 1)
@@ -262,6 +263,20 @@ extension PlannerChecks {
                reopened.first?.skippedSessions, [SessionKey(week: 0, dayIndex: 1), SessionKey(week: 1, dayIndex: 0)])
         expect("store: a reopened block reads the skip as its status",
                reopened.first?.status(at: SessionKey(week: 0, dayIndex: 1)), .skipped)
+
+        let noted = Workout(name: "Noted day")
+        noted.setNote("  Felt strong  ")
+        writer.insert(noted)
+        let bench = Exercise(name: "Bench Press", order: 0)
+        noted.exercises.append(bench)
+        bench.setNote("Elbows in", in: writer)
+        PinnedNote.set("Seat Level: 4", for: "Bench Press", in: writer)
+        try! writer.save()
+        let second = open()
+        let days = (try? second.fetch(FetchDescriptor<Workout>())) ?? []
+        expect("store: a day note survives a save and reopen on disk", days.first { $0.name == "Noted day" }?.note, "Felt strong")
+        expect("store: a pinned note survives a save and reopen on disk",
+               PinnedNote.find(named: "Bench Press", in: second)?.text, "Seat Level: 4")
     }
 }
 
@@ -282,6 +297,54 @@ extension PlannerChecks {
         expect("end: an open session with a logged set is finished so it reaches history", started.isFinished, true)
         expect("end: its logged set is kept", started.completedSets, 1)
         expect("end: an untouched open session is dropped", untouched.isDeleted && meso.workout(at: SessionKey(week: 0, dayIndex: 1)) == nil, true)
+    }
+}
+
+extension PlannerChecks {
+    @MainActor
+    static func noteChecks() {
+        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        let older = Workout(name: "Older")
+        let newer = Workout(name: "Newer")
+        context.insert(older)
+        context.insert(newer)
+        older.exercises.append(Exercise(name: "Bench Press", order: 0))
+        newer.exercises.append(Exercise(name: "Bench Press", order: 0))
+        let first = older.exercises[0], later = newer.exercises[0]
+        let pinnedCount = { (try? context.fetch(FetchDescriptor<PinnedNote>()))?.count }
+
+        first.setNote("  Elbows in \n", in: context)
+        expect("note: saved on that workout's exercise, trimmed", first.note, "Elbows in")
+        expect("note: not carried to another workout by default", later.note, nil)
+        expect("note: not pinned by default", pinnedCount(), 0)
+
+        first.pinNote(in: context)
+        expect("pin: the note is found by name from a later workout", PinnedNote.find(named: later.name, in: context)?.text, "Elbows in")
+        expect("pin: the row copy is cleared so the note shows once", first.note, nil)
+        expect("pin: other exercises have none", PinnedNote.find(named: "Barbell Row", in: context)?.text, nil)
+
+        later.setNote("Seat Level: 5", in: context)
+        later.setNote("Seat Level: 5", in: context)
+        expect("pin: editing a pinned note edits the pin", PinnedNote.find(named: "Bench Press", in: context)?.text, "Seat Level: 5")
+        expect("pin: setting twice leaves one row", pinnedCount(), 1)
+        expect("pin: the edit stays off the row", later.note, nil)
+
+        later.unpinNote(in: context)
+        expect("unpin: the note stays on this workout", later.note, "Seat Level: 5")
+        expect("unpin: it no longer carries forward", pinnedCount(), 0)
+
+        later.pinNote(in: context)
+        later.deleteNote(in: context)
+        later.deleteNote(in: context)
+        expect("delete: removes the pin, twice over", pinnedCount(), 0)
+        expect("delete: and the row note", later.note, nil)
+        later.setNote("  \n ", in: context)
+        expect("note: blank text stores nil", later.note, nil)
+
+        newer.setNote("  Left shoulder tight \n")
+        expect("day note: trimmed on save", newer.note, "Left shoulder tight")
+        newer.setNote("   ")
+        expect("day note: blank stores nil", newer.note, nil)
     }
 }
 

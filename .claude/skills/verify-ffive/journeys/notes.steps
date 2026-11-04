@@ -1,0 +1,117 @@
+# notes: an exercise note stays on its workout until pinned; a pinned note carries forward, edits, unpins, and deletes. A day note shows in history. On-disk.
+# Before: ffive-verify reset-data (no active mesocycle).
+# After: ffive-verify store "select ZNAME, ZTEXT from ZPINNEDNOTE", "select ZNAME, ZNOTE from ZEXERCISE", and "select ZNAME, ZNOTE from ZWORKOUT"
+launch
+wait button "Quick Workout" timeout=20
+tap button "Quick Workout"
+wait text "QUICK WORKOUT"
+tap button "Workout menu"
+tap button "Add Exercise"
+wait nav "Add Exercise"
+type search "Search or create exercise" "Lateral"
+tap button "Lateral Raise, Dumbbell"
+wait text "Lateral Raise"
+tap button "Exercise menu"
+wait button "Add Note"
+tap button "Add Note"
+wait nav "Exercise Note"
+type field "Note" "Seat Level: 4"
+tap button "Save"
+wait any "Note: Seat Level: 4"
+wait button "Pin note"
+shot 01-unpinned-note-on-card
+tap button "Workout menu"
+wait button "Add Note"
+tap button "Add Note"
+wait nav "Workout Note"
+type field "Note" "Gym was busy"
+tap button "Save"
+wait any "Workout note: Gym was busy"
+shot 02-day-note-in-session
+replace field "Set 1 weight" "25"
+replace field "Set 1 reps" "12"
+tap button "Done"
+tap button "Log set 1"
+wait button "Finish Workout"
+tap button "Finish Workout"
+wait text "All Time" timeout=10
+# Relaunch proves both notes reached the store.
+launch
+wait button "Quick Workout" timeout=20
+tap button "More"
+tap button "Progress"
+tap button "History"
+tap button "~Workout,"
+wait any "Workout note: Gym was busy"
+wait any "Note: Seat Level: 4"
+shot 03-notes-in-workout-detail
+tap button "Workout"
+wait button "Quick Workout"
+tap button "Quick Workout"
+wait text "QUICK WORKOUT"
+tap button "Workout menu"
+tap button "Add Exercise"
+wait nav "Add Exercise"
+type search "Search or create exercise" "Lateral"
+tap button "Lateral Raise, Dumbbell"
+wait text "Lateral Raise"
+absent any "~Note: Seat Level"
+shot 04-unpinned-note-not-carried
+tap button "Exercise menu"
+wait button "Add Note"
+tap button "Add Note"
+wait nav "Exercise Note"
+type field "Note" "Seat Level: 5"
+tap button "Save"
+wait any "Note: Seat Level: 5"
+tap button "Pin note"
+wait button "Unpin note"
+shot 05-note-pinned
+replace field "Set 1 weight" "25"
+replace field "Set 1 reps" "12"
+tap button "Done"
+tap button "Log set 1"
+wait button "Finish Workout"
+tap button "Finish Workout"
+wait text "All Time" timeout=10
+launch
+wait button "Quick Workout" timeout=20
+tap button "Exercises"
+wait text "Exercises"
+type field "Search" "Lateral Raise"
+tap button "Lateral Raise, Side Delts, •, Dumbbell"
+wait any "Note: Seat Level: 5"
+shot 06-pinned-note-in-exercise-detail
+tap button "Workout"
+wait button "Quick Workout"
+tap button "Quick Workout"
+wait text "QUICK WORKOUT"
+tap button "Workout menu"
+tap button "Add Exercise"
+wait nav "Add Exercise"
+type search "Search or create exercise" "Lateral"
+tap button "Lateral Raise, Dumbbell"
+wait any "Note: Seat Level: 5"
+wait button "Unpin note"
+shot 07-pinned-note-carried
+tap button "Exercise menu"
+wait button "Edit Note"
+tap button "Edit Note"
+wait nav "Exercise Note"
+replace field "Note" "Seat Level: 6"
+tap button "Save"
+wait any "Note: Seat Level: 6"
+wait button "Unpin note"
+tap button "Unpin note"
+wait button "Pin note"
+wait any "Note: Seat Level: 6"
+shot 08-unpinned-note-stays-on-workout
+tap button "Exercise menu"
+wait button "Delete Note"
+tap button "Delete Note"
+absent any "~Note: Seat Level"
+shot 09-note-deleted
+# An immediate relaunch proves the unpin and delete were saved, not left to autosave.
+launch
+wait text "QUICK WORKOUT" timeout=20
+absent any "~Note: Seat Level"

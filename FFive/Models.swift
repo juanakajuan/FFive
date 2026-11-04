@@ -16,6 +16,7 @@ final class Workout {
     var dayIndex: Int?
     @Relationship(deleteRule: .cascade, inverse: \MuscleFeedbackRecord.workout)
     var feedback: [MuscleFeedbackRecord] = []
+    var note: String?
 
     init(name: String, startDate: Date = .now) {
         self.name = name
@@ -35,6 +36,10 @@ final class Workout {
         exercises.flatMap(\.sets).filter(\.isDone).reduce(0) { $0 + Double($1.reps) * $1.weight }
     }
     var isFinished: Bool { endDate != nil }
+
+    func setNote(_ text: String) {
+        note = text.noteText
+    }
 
     var key: SessionKey? {
         guard let week, let dayIndex else { return nil }
@@ -108,6 +113,7 @@ final class Exercise {
     @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
     var sets: [SetEntry] = []
     var muscleRaw: String?
+    var note: String?
 
     init(name: String, order: Int, muscle: Muscle? = nil) {
         self.name = name
@@ -137,6 +143,73 @@ final class Exercise {
         return sets.filter { $0.isDone && $0.weight > 0 && $0.reps > 0 }
             .map { ($0, Progression.estimatedOneRepMax(weight: $0.weight, reps: $0.reps, rir: rir)) }
             .max { $0.1 < $1.1 }
+    }
+}
+
+@Model
+final class PinnedNote {
+    var name: String = ""
+    var text: String = ""
+
+    init(name: String, text: String) {
+        self.name = name
+        self.text = text
+    }
+
+    private static func all(named name: String, in context: ModelContext) -> [PinnedNote] {
+        (try? context.fetch(FetchDescriptor<PinnedNote>(predicate: #Predicate { $0.name == name }))) ?? []
+    }
+
+    static func find(named name: String, in context: ModelContext) -> PinnedNote? {
+        all(named: name, in: context).first
+    }
+
+    static func delete(for name: String, in context: ModelContext) {
+        all(named: name, in: context).forEach(context.delete)
+    }
+
+    static func set(_ text: String, for name: String, in context: ModelContext) {
+        guard let text = text.noteText else { return delete(for: name, in: context) }
+        let existing = all(named: name, in: context)
+        if let first = existing.first {
+            first.text = text
+            existing.dropFirst().forEach(context.delete)
+        } else {
+            context.insert(PinnedNote(name: name, text: text))
+        }
+    }
+}
+
+extension Exercise {
+    func setNote(_ text: String, in context: ModelContext) {
+        if PinnedNote.find(named: name, in: context) != nil {
+            PinnedNote.set(text, for: name, in: context)
+        } else {
+            note = text.noteText
+        }
+    }
+
+    func deleteNote(in context: ModelContext) {
+        PinnedNote.delete(for: name, in: context)
+        note = nil
+    }
+
+    func pinNote(in context: ModelContext) {
+        guard let note else { return }
+        PinnedNote.set(note, for: name, in: context)
+        self.note = nil
+    }
+
+    func unpinNote(in context: ModelContext) {
+        note = PinnedNote.find(named: name, in: context)?.text
+        PinnedNote.delete(for: name, in: context)
+    }
+}
+
+extension String {
+    var noteText: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
 
@@ -348,6 +421,7 @@ enum AppStore {
     static let schema = Schema([
         Workout.self, Exercise.self, SetEntry.self,
         Mesocycle.self, MesoDay.self, DaySlot.self, MuscleFeedbackRecord.self,
+        PinnedNote.self,
     ])
 
     static func makeContainer(inMemory: Bool) -> ModelContainer {

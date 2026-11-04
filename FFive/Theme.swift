@@ -160,7 +160,17 @@ struct LogCheckbox: View {
 
 /// A tinted strip inside a card: blue for guidance, gold for a note the lifter saved.
 struct Callout: View {
-    enum Style { case info, note }
+    enum Style {
+        case info, note, pinned
+
+        var fill: Color {
+            switch self {
+            case .info: Theme.infoFill
+            case .note: Theme.raised
+            case .pinned: Theme.noteFill
+            }
+        }
+    }
 
     let text: String
     var systemImage: String = "info.circle.fill"
@@ -176,7 +186,7 @@ struct Callout: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 6)
         .frame(maxWidth: .infinity, alignment: .leading)
-        .background(style == .info ? Theme.infoFill : Theme.noteFill, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+        .background(style.fill, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
     }
 }
 
