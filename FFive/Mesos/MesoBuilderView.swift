@@ -91,8 +91,8 @@ struct MesoEditorView: View {
     @State var draft: MesoDraft
     var onStart: () -> Void
 
-    @Environment(\.modelContext) private var context
-    @Query(filter: #Predicate<Mesocycle> { $0.finishedDate == nil }) private var activeMesos: [Mesocycle]
+    @Environment(Store.self) private var store
+    @Query(Mesocycle.active) private var activeMesos: [Mesocycle]
     @State private var picker: PickerRequest?
 
     private enum PickerRequest: Identifiable {
@@ -257,8 +257,7 @@ struct MesoEditorView: View {
     }
 
     private func start() {
-        _ = MesoPlanner.start(draft, in: context)
-        try? context.save()
+        guard (try? store.startMesocycle(draft)) != nil else { return }
         onStart()
     }
 }

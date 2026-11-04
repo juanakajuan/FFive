@@ -4,13 +4,13 @@ import SwiftData
 @Model
 public final class Workout {
     public var name: String
-    public var startDate: Date
-    public var endDate: Date?
+    public internal(set) var startDate: Date
+    public internal(set) var endDate: Date?
     @Relationship(deleteRule: .cascade, inverse: \Exercise.workout)
-    public var exercises: [Exercise] = []
+    public internal(set) var exercises: [Exercise] = []
     public var mesocycle: Mesocycle?
-    public var week: Int?
-    public var dayIndex: Int?
+    public internal(set) var week: Int?
+    public internal(set) var dayIndex: Int?
     @Relationship(deleteRule: .cascade, inverse: \MuscleFeedbackRecord.workout)
     public var feedback: [MuscleFeedbackRecord] = []
     public var note: String?
@@ -86,9 +86,14 @@ public final class Workout {
         change(&record.value)
     }
 
+    public func remove(_ exercise: Exercise, in context: ModelContext) {
+        exercises.removeAll { $0 === exercise }
+        context.delete(exercise)
+    }
+
     /// Free-form sessions drop what was never done. Mesocycle sessions keep the full prescription,
     /// because next week's plan is built from it and an untouched set means "repeat the target".
-    public func finish(in context: ModelContext) {
+    func finish(in context: ModelContext) {
         if mesocycle == nil {
             for exercise in exercises {
                 if !exercise.sets.contains(where: \.isDone) {
@@ -103,12 +108,10 @@ public final class Workout {
 }
 
 extension Workout {
-    /// Finished sessions, newest first.
     public static var history: FetchDescriptor<Workout> {
         FetchDescriptor(predicate: #Predicate { $0.endDate != nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
     }
 
-    /// Sessions still in progress, newest first.
     public static var open: FetchDescriptor<Workout> {
         FetchDescriptor(predicate: #Predicate { $0.endDate == nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
     }

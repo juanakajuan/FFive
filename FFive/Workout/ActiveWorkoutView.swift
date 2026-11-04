@@ -11,6 +11,7 @@ struct ActiveWorkoutView: View {
     let openQuickWorkout: Workout?
 
     @Environment(\.modelContext) private var context
+    @Environment(Store.self) private var store
     @Environment(AppRouter.self) private var router
     @AppStorage("weightUnit") private var unit: WeightUnit = .lb
 
@@ -82,8 +83,7 @@ struct ActiveWorkoutView: View {
                                  onSetCompleted: setCompleted,
                                  onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
                                  onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }) {
-                        workout.exercises.removeAll { $0 === exercise }
-                        context.delete(exercise)
+                        workout.remove(exercise, in: context)
                     }
 
                     if let muscle, workout.mesocycle != nil,
@@ -143,7 +143,7 @@ struct ActiveWorkoutView: View {
         }
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
             if let activeMeso {
-                Button("End Mesocycle", role: .destructive) { WorkoutTabActions.end(activeMeso, router: router, in: context) }
+                Button("End Mesocycle", role: .destructive) { WorkoutTabActions.end(activeMeso, router: router, store: store) }
             }
         } message: {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
@@ -208,7 +208,7 @@ struct ActiveWorkoutView: View {
         if activeMeso != nil, openQuickWorkout !== workout {
             Button(openQuickWorkout == nil ? "Quick Workout" : "Resume Quick Workout",
                    systemImage: openQuickWorkout == nil ? "bolt" : "play") {
-                WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, in: context)
+                WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store)
             }
         }
         Button(workout.note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") { noteEdit = NoteEdit(target: .day, draft: workout.note ?? "") }
@@ -226,50 +226,22 @@ struct ActiveWorkoutView: View {
     }
 
     private func finish() {
-        workout.finish(in: context)
-        try? context.save()
+        store.finish(workout)
         router.focus = nil
     }
 
     private func discard() {
-        workout.mesocycle?.workouts.removeAll { $0 === workout }
-        context.delete(workout)
-        try? context.save()
+        store.delete(workout)
     }
 
     private func skip(_ key: SessionKey, of meso: Mesocycle) {
-        withAnimation { meso.skip(key, in: context) }
-        try? context.save()
+        withAnimation { store.skip(key, of: meso) }
         router.focus = nil
     }
 
     private func addExercise(_ name: String, muscle: Muscle) {
-        if workout.mesocycle != nil {
-            MesoPlanner.addExercise(named: name, muscle: muscle, to: workout, unit: unit, in: context)
-            return
-        }
-        let exercise = Exercise(name: name, order: (workout.exercises.map(\.order).max() ?? -1) + 1, muscle: muscle)
-        workout.exercises.append(exercise)
-
-        // Pre-fill with what you did last time for this exercise, or a single empty set.
-        let previous = lastFinishedExercise(named: name, in: context)?.sortedSets.filter(\.isDone) ?? []
-        if previous.isEmpty {
-            exercise.sets.append(SetEntry(reps: 10, weight: 0, order: 0))
-        } else {
-            for (i, set) in previous.enumerated() {
-                exercise.sets.append(SetEntry(reps: set.reps, weight: set.weight, order: i))
-            }
-        }
+        MesoPlanner.addExercise(named: name, muscle: muscle, to: workout, unit: unit, in: context)
     }
-}
-
-/// The most recent finished session's entry for an exercise.
-@MainActor
-func lastFinishedExercise(named name: String, in context: ModelContext) -> Exercise? {
-    let descriptor = FetchDescriptor<Exercise>(predicate: #Predicate { $0.name == name })
-    return ((try? context.fetch(descriptor)) ?? [])
-        .filter { $0.workout?.endDate != nil }
-        .max { ($0.workout?.startDate ?? .distantPast) < ($1.workout?.startDate ?? .distantPast) }
 }
 
 private enum SetColumns {
@@ -359,7 +331,7 @@ struct ExerciseCard: View {
                 ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
                     if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
                     SetRow(set: set, number: index + 1, unit: unit, rir: phase?.rir,
-                           onCompleted: onSetCompleted, onAdd: addSet) { delete(set) }
+                           onCompleted: onSetCompleted, onAdd: exercise.addSet) { exercise.remove(set, in: context) }
                 }
             }
         }
@@ -384,7 +356,7 @@ struct ExerciseCard: View {
                     Button("Swap Exercise", systemImage: "arrow.triangle.2.circlepath", action: onSwap)
                         .disabled(exercise.sets.contains(where: \.isDone))
                 }
-                Button("Add Set", systemImage: "plus", action: addSet)
+                Button("Add Set", systemImage: "plus", action: exercise.addSet)
                 let note = pinnedNotes.first?.text ?? exercise.note
                 Button(note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
                     onEditNote(note ?? "")
@@ -426,21 +398,6 @@ struct ExerciseCard: View {
         }
         guard let reps = set.targetReps else { return "Target \(formatWeight(weight)) \(unit.rawValue)" }
         return weight == 0 ? "Target \(reps) reps" : "Target \(formatWeight(weight)) × \(reps)"
-    }
-
-    private func addSet() {
-        let last = exercise.sortedSets.last
-        let set = SetEntry(reps: last?.reps ?? 10,
-                           weight: last?.weight ?? 0,
-                           order: (last?.order ?? -1) + 1)
-        set.targetWeight = last?.targetWeight
-        set.targetReps = last?.targetReps
-        exercise.sets.append(set)
-    }
-
-    private func delete(_ set: SetEntry) {
-        exercise.sets.removeAll { $0 === set }
-        context.delete(set)
     }
 }
 
@@ -525,7 +482,7 @@ struct ExerciseHistorySheet: View {
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        let last = lastFinishedExercise(named: name, in: context)
+        let last = MesoPlanner.lastFinishedExercise(named: name, in: context)
         let sets = last?.sortedSets.filter(\.isDone) ?? []
         NavigationStack {
             ScrollView {

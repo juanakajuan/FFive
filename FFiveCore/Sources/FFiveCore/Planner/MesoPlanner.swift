@@ -67,7 +67,7 @@ public enum MesoPlanner {
     private static let deloadRIR = 3
 
     @discardableResult
-    public static func start(_ draft: MesoDraft, in context: ModelContext) -> Mesocycle {
+    static func start(_ draft: MesoDraft, in context: ModelContext) -> Mesocycle {
         let meso = Mesocycle(name: draft.name.trimmingCharacters(in: .whitespaces).isEmpty ? "My Mesocycle" : draft.name,
                              accumulationWeeks: draft.accumulationWeeks)
         context.insert(meso)
@@ -82,7 +82,7 @@ public enum MesoPlanner {
     }
 
     /// The session for `key`, built from the plan the first time it is asked for.
-    public static func workout(for meso: Mesocycle, at key: SessionKey, unit: WeightUnit, in context: ModelContext) -> Workout {
+    static func workout(for meso: Mesocycle, at key: SessionKey, unit: WeightUnit, in context: ModelContext) -> Workout {
         if let existing = meso.workout(at: key) { return existing }
         let planned = plan(meso, at: key, unit: unit, context: context)
         let days = meso.sortedDays
@@ -219,12 +219,30 @@ public enum MesoPlanner {
 
     public static func addExercise(named name: String, muscle: Muscle, to workout: Workout, unit: WeightUnit, in context: ModelContext) {
         let exercise = Exercise(name: name, order: (workout.exercises.map(\.order).max() ?? -1) + 1, muscle: muscle)
-        let sessions = workout.mesocycle?.days.filter { $0.slots.contains { $0.muscleRaw == muscle.rawValue } }.count ?? 1
-        let count = Progression.initialSetsPerExercise(muscle: muscle, sessionsPerWeek: sessions,
-                                                       exercisesInSession: workout.exercises(for: muscle).count + 1)
         workout.exercises.append(exercise)
+        guard let meso = workout.mesocycle else {
+            let previous = lastFinishedExercise(named: name, in: context)?.sortedSets.filter(\.isDone) ?? []
+            if previous.isEmpty {
+                exercise.sets.append(SetEntry(reps: 10, weight: 0, order: 0))
+            } else {
+                for (order, set) in previous.enumerated() {
+                    exercise.sets.append(SetEntry(reps: set.reps, weight: set.weight, order: order))
+                }
+            }
+            return
+        }
+        let sessions = meso.days.filter { $0.slots.contains { $0.muscleRaw == muscle.rawValue } }.count
+        let count = Progression.initialSetsPerExercise(muscle: muscle, sessionsPerWeek: sessions,
+                                                       exercisesInSession: workout.exercises(for: muscle).count)
         replaceSets(of: exercise, with: freshTargets(for: name, count: count, rir: workout.phase?.rir ?? deloadRIR,
                                                      unit: unit, context: context), in: context)
+    }
+
+    public static func lastFinishedExercise(named name: String, in context: ModelContext) -> Exercise? {
+        let descriptor = FetchDescriptor<Exercise>(predicate: #Predicate { $0.name == name })
+        return ((try? context.fetch(descriptor)) ?? [])
+            .filter { $0.workout?.endDate != nil }
+            .max { ($0.workout?.startDate ?? .distantPast) < ($1.workout?.startDate ?? .distantPast) }
     }
 
     /// Swaps an untouched exercise for another, keeping its set count and re-deriving targets.

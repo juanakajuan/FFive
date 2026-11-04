@@ -1,4 +1,4 @@
-import FFiveCore
+@testable import FFiveCore
 import Foundation
 import SwiftData
 

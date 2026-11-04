@@ -6,7 +6,6 @@ public enum StoreError: Error, Equatable {
     case anotherMesocycleIsActive
 }
 
-/// The one writer of block and workout lifecycle. Views read the models and ask the store to change them.
 @MainActor
 @Observable
 public final class Store {

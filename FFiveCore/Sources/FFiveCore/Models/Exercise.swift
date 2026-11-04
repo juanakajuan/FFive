@@ -7,7 +7,7 @@ public final class Exercise {
     public var order: Int
     public var workout: Workout?
     @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
-    public var sets: [SetEntry] = []
+    public internal(set) var sets: [SetEntry] = []
     public var muscleRaw: String?
     public var note: String?
 
@@ -31,6 +31,20 @@ public final class Exercise {
 
     public func increment(_ unit: WeightUnit) -> Double {
         ExerciseCatalog.increment(for: name, unit: unit)
+    }
+
+    /// Appends a set shaped like the last one, so the lifter edits instead of retyping.
+    public func addSet() {
+        let last = sortedSets.last
+        let set = SetEntry(reps: last?.reps ?? 10, weight: last?.weight ?? 0, order: (last?.order ?? -1) + 1)
+        set.targetWeight = last?.targetWeight
+        set.targetReps = last?.targetReps
+        sets.append(set)
+    }
+
+    public func remove(_ set: SetEntry, in context: ModelContext) {
+        sets.removeAll { $0 === set }
+        context.delete(set)
     }
 
     /// The done, loaded set with the highest estimated 1RM, or nil when no set says anything about strength.

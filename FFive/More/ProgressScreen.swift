@@ -10,9 +10,9 @@ struct ProgressScreen: View {
     }
 
     @Environment(\.modelContext) private var context
+    @Environment(Store.self) private var store
     @Query(sort: \Mesocycle.startDate, order: .reverse) private var mesos: [Mesocycle]
-    @Query(filter: #Predicate<Workout> { $0.endDate != nil }, sort: \Workout.startDate, order: .reverse)
-    private var history: [Workout]
+    @Query(Workout.history) private var history: [Workout]
     @AppStorage("weightUnit") private var unit: WeightUnit = .lb
 
     @State private var pane: Pane = DemoLaunch.route == .strength ? .strength : .volume
@@ -166,7 +166,7 @@ struct ProgressScreen: View {
             .themedRow()
         }
         .onDelete { offsets in
-            for index in offsets { context.delete(history[index]) }
+            for index in offsets { store.delete(history[index]) }
         }
     }
 }

@@ -7,7 +7,7 @@ struct MesoScheduleGrid: View {
     let meso: Mesocycle
     var onOpen: (SessionKey) -> Void
 
-    @Environment(\.modelContext) private var context
+    @Environment(Store.self) private var store
     @State private var trainAfterAll: SessionKey?
 
     var body: some View {
@@ -44,7 +44,7 @@ struct MesoScheduleGrid: View {
                             isPresented: Binding(get: { trainAfterAll != nil }, set: { if !$0 { trainAfterAll = nil } }),
                             titleVisibility: .visible, presenting: trainAfterAll) { key in
             Button("Train Day \(key.dayIndex + 1)") {
-                meso.unskip(key)
+                store.unskip(key, of: meso)
                 onOpen(key)
             }
         }
@@ -82,7 +82,7 @@ struct MesoScheduleGrid: View {
                 .buttonStyle(.plain)
                 .contextMenu {
                     if meso.canSkip(key) {
-                        Button("Skip Day", systemImage: "forward") { skip(key) }
+                        Button("Skip Day", systemImage: "forward") { withAnimation { store.skip(key, of: meso) } }
                     }
                 }
             } else {
@@ -97,11 +97,6 @@ struct MesoScheduleGrid: View {
             .foregroundStyle(color)
             .frame(maxWidth: .infinity, minHeight: 34)
             .contentShape(Rectangle())
-    }
-
-    private func skip(_ key: SessionKey) {
-        withAnimation { meso.skip(key, in: context) }
-        try? context.save()
     }
 }
 
