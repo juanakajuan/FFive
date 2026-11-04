@@ -44,6 +44,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Skip a day](./skip-day.md): skip from the workout menu or the schedule grid, then train it after all (on disk).
 - [End a mesocycle](./end-mesocycle.md): end the active block from the workout menu; the session reaches History and the block shows finished (demo).
 - [Quick workout](./quick-workout.md): a free-form session with exercises from the picker (on disk).
+- [Notes](./notes.md): add, carry forward, edit, and delete an exercise note, and add a day note (on disk).
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
 - [Settings](./settings.md): weight unit and app version, pushed from More (demo plus UserDefaults).
 

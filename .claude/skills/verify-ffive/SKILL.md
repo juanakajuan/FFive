@@ -109,8 +109,8 @@ To watch a drive live, open the simulator panel (iOS Simulator `attach` with the
 
 ## Reading state
 
-- `$V store` lists the store's entity tables with row counts: `ZWORKOUT`, `ZEXERCISE`, `ZSETENTRY`, `ZMESOCYCLE`, `ZMESODAY`, `ZDAYSLOT`, `ZMUSCLEFEEDBACKRECORD`.
-- `$V store "<sql>"` runs a read-only query. Columns are the model properties, uppercased with a `Z` prefix: `ZWORKOUT(ZNAME, ZSTARTDATE, ZENDDATE, ZWEEK, ZDAYINDEX, ZMESOCYCLE)`, `ZEXERCISE(ZNAME, ZORDER, ZMUSCLERAW, ZWORKOUT)`, `ZSETENTRY(ZWEIGHT, ZREPS, ZISDONE, ZTARGETWEIGHT, ZTARGETREPS, ZEXERCISE)`, `ZMESOCYCLE(ZNAME, ZACCUMULATIONWEEKS, ZFINISHEDDATE, ZSKIPPEDSESSIONS)`. Dates are Core Data seconds since 2001. `ZSKIPPEDSESSIONS` is a JSON blob: read it with `cast(ZSKIPPEDSESSIONS as text)`.
+- `$V store` lists the store's entity tables with row counts: `ZWORKOUT`, `ZEXERCISE`, `ZSETENTRY`, `ZMESOCYCLE`, `ZMESODAY`, `ZDAYSLOT`, `ZMUSCLEFEEDBACKRECORD`, `ZEXERCISENOTE`.
+- `$V store "<sql>"` runs a read-only query. Columns are the model properties, uppercased with a `Z` prefix: `ZWORKOUT(ZNAME, ZSTARTDATE, ZENDDATE, ZWEEK, ZDAYINDEX, ZMESOCYCLE, ZNOTE)`, `ZEXERCISENOTE(ZNAME, ZTEXT)`, `ZEXERCISE(ZNAME, ZORDER, ZMUSCLERAW, ZWORKOUT)`, `ZSETENTRY(ZWEIGHT, ZREPS, ZISDONE, ZTARGETWEIGHT, ZTARGETREPS, ZEXERCISE)`, `ZMESOCYCLE(ZNAME, ZACCUMULATIONWEEKS, ZFINISHEDDATE, ZSKIPPEDSESSIONS)`. Dates are Core Data seconds since 2001. `ZSKIPPEDSESSIONS` is a JSON blob: read it with `cast(ZSKIPPEDSESSIONS as text)`.
 - `$V defaults` prints the app's UserDefaults plist (`weightUnit`).
 - `$V shot <name>` takes a screenshot outside a drive, into the newest run dir.
 
