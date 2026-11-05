@@ -1,14 +1,16 @@
-import SwiftUI
 import FFiveCore
+import SwiftUI
 
 struct LearnView: View {
     var body: some View {
         List {
-            Text("The app picks your sets, reps, and weights from a few training ideas. Each short read explains one of them, so you know why a number changed.")
-                .font(Theme.detail)
-                .foregroundStyle(Theme.secondary)
-                .themedRow()
-                .listRowSeparator(.hidden)
+            Text(
+                "The app picks your sets, reps, and weights from a few training ideas. Each short read explains one of them, so you know why a number changed."
+            )
+            .font(Theme.detail)
+            .foregroundStyle(Theme.secondary)
+            .themedRow()
+            .listRowSeparator(.hidden)
             ForEach(Learn.Category.allCases) { category in
                 SectionHeading(text: category.rawValue)
                     .accessibilityAddTraits(.isHeader)
@@ -24,11 +26,13 @@ struct LearnView: View {
                     .themedRow()
                 }
             }
-            Text("Volume landmarks, the stimulus-to-fatigue ratio, and adjusting sets from session feedback come from Renaissance Periodization (Mike Israetel and colleagues). This app is not affiliated with RP.")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.secondary)
-                .themedRow(vertical: 20)
-                .listRowSeparator(.hidden)
+            Text(
+                "Volume landmarks, the stimulus-to-fatigue ratio, and adjusting sets from session feedback come from Renaissance Periodization (Mike Israetel and colleagues). This app is not affiliated with RP."
+            )
+            .font(Theme.caption)
+            .foregroundStyle(Theme.secondary)
+            .themedRow(vertical: 20)
+            .listRowSeparator(.hidden)
         }
         .themedList()
         .navigationTitle("Learn")
@@ -243,8 +247,10 @@ extension Learn {
 
         var body: some View {
             VStack(alignment: .leading, spacing: 14) {
-                LazyVGrid(columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)],
-                          alignment: .leading, spacing: 6) {
+                LazyVGrid(
+                    columns: [GridItem(.flexible(), alignment: .leading), GridItem(.flexible(), alignment: .leading)],
+                    alignment: .leading, spacing: 6
+                ) {
                     ForEach(LandmarkZone.allCases) { zone in
                         HStack(spacing: 6) {
                             RoundedRectangle(cornerRadius: 3).fill(zone.color).frame(width: 14, height: 10)
@@ -277,17 +283,24 @@ extension Learn {
                     Text(muscle.displayName)
                         .font(Theme.detail.weight(.medium))
                     Spacer(minLength: 8)
-                    Text(verbatim: "MV \(landmarks.mv)  MEV \(landmarks.mev)  MAV \(landmarks.mav.lowerBound)-\(landmarks.mav.upperBound)  MRV \(landmarks.mrv)")
-                        .font(Theme.caption.monospacedDigit())
-                        .foregroundStyle(Theme.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.75)
+                    Text(
+                        verbatim:
+                            "MV \(landmarks.mv)  MEV \(landmarks.mev)  MAV \(landmarks.mav.lowerBound)-\(landmarks.mav.upperBound)  MRV \(landmarks.mrv)"
+                    )
+                    .font(Theme.caption.monospacedDigit())
+                    .foregroundStyle(Theme.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
                 }
                 LandmarkBar(landmarks: landmarks, scale: scale)
                     .frame(height: 10)
             }
             .accessibilityElement(children: .ignore)
-            .accessibilityLabel(Text(verbatim: "\(muscle.displayName). Maintenance \(landmarks.mv), minimum effective \(landmarks.mev), maximum adaptive \(landmarks.mav.lowerBound) to \(landmarks.mav.upperBound), maximum recoverable \(landmarks.mrv) sets per week."))
+            .accessibilityLabel(
+                Text(
+                    verbatim:
+                        "\(muscle.displayName). Maintenance \(landmarks.mv), minimum effective \(landmarks.mev), maximum adaptive \(landmarks.mav.lowerBound) to \(landmarks.mav.upperBound), maximum recoverable \(landmarks.mrv) sets per week."
+                ))
         }
     }
 
@@ -336,13 +349,15 @@ extension Learn {
                 HStack(spacing: 6) {
                     ForEach(0..<weeks, id: \.self) { week in
                         let rir = Learn.rir(week: week, accumulationWeeks: weeks)
-                        WeekChip(caption: "Wk \(week + 1)", value: "\(rir)", unit: "RIR",
-                                 fill: Theme.infoText.opacity(0.2 + 0.18 * Double(3 - rir)),
-                                 spoken: "Week \(week + 1), \(rir) reps in reserve")
+                        WeekChip(
+                            caption: "Wk \(week + 1)", value: "\(rir)", unit: "RIR",
+                            fill: Theme.infoText.opacity(0.2 + 0.18 * Double(3 - rir)),
+                            spoken: "Week \(week + 1), \(rir) reps in reserve")
                     }
-                    WeekChip(caption: "Deload", value: "\u{00BD}", unit: "sets",
-                             fill: Theme.field,
-                             spoken: "Deload week, half the sets")
+                    WeekChip(
+                        caption: "Deload", value: "\u{00BD}", unit: "sets",
+                        fill: Theme.field,
+                        spoken: "Deload week, half the sets")
                 }
                 .animation(.snappy, value: weeks)
 
@@ -355,7 +370,8 @@ extension Learn {
 
         private var summary: String {
             let countdown = (0..<weeks).map { String(Learn.rir(week: $0, accumulationWeeks: weeks)) }
-            return "A \(weeks)-week block runs \(countdown.joined(separator: ", ")) RIR, then a deload week at half the sets."
+            return
+                "A \(weeks)-week block runs \(countdown.joined(separator: ", ")) RIR, then a deload week at half the sets."
         }
     }
 
@@ -395,9 +411,11 @@ extension Learn {
 
         var body: some View {
             VStack(alignment: .leading, spacing: 14) {
-                Text("Rows are soreness and columns are workload. Each cell is next week's change in sets for that muscle in that session.")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondary)
+                Text(
+                    "Rows are soreness and columns are workload. Each cell is next week's change in sets for that muscle in that session."
+                )
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondary)
 
                 // Grid sizes these columns from each label's one-line width and overflows a phone, so the rows are HStacks.
                 VStack(spacing: 4) {
@@ -435,9 +453,13 @@ extension Learn {
                     .font(Theme.detail.weight(.semibold))
                     .tint(Theme.success)
 
-                Text(adjusted ? "Outlined cells changed because of pump or joint pain." : "A moderate pump and little or no joint pain leave the table as it is.")
-                    .font(Theme.caption)
-                    .foregroundStyle(Theme.secondary)
+                Text(
+                    adjusted
+                        ? "Outlined cells changed because of pump or joint pain."
+                        : "A moderate pump and little or no joint pain leave the table as it is."
+                )
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondary)
             }
             .learnPanel()
             .animation(.snappy, value: pump)

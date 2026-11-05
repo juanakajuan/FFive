@@ -1,6 +1,6 @@
+import FFiveCore
 import SwiftUI
 import UIKit
-import FFiveCore
 
 /// The app's palette and type scale. Every screen draws from these tokens instead of system grouped colors.
 enum Theme {
@@ -58,7 +58,9 @@ enum Theme {
 
 extension Color {
     init(rgb: UInt32) {
-        self.init(red: Double((rgb >> 16) & 0xFF) / 255, green: Double((rgb >> 8) & 0xFF) / 255, blue: Double(rgb & 0xFF) / 255)
+        self.init(
+            red: Double((rgb >> 16) & 0xFF) / 255, green: Double((rgb >> 8) & 0xFF) / 255,
+            blue: Double(rgb & 0xFF) / 255)
     }
 }
 

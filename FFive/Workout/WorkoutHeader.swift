@@ -101,7 +101,9 @@ private struct WideButtonLabel<Label: View>: View {
             .font(Theme.body.weight(.semibold))
             .foregroundStyle(kind == .filled ? Theme.page : Theme.text)
             .frame(maxWidth: .infinity, minHeight: 44)
-            .background(kind == .filled ? Theme.text : Color.clear, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            .background(
+                kind == .filled ? Theme.text : Color.clear, in: RoundedRectangle(cornerRadius: Theme.cornerRadius)
+            )
             .overlay {
                 if kind == .outlined {
                     RoundedRectangle(cornerRadius: Theme.cornerRadius).stroke(Theme.secondary, lineWidth: 1)

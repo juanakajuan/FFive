@@ -176,9 +176,11 @@ public final class Store {
 
     @discardableResult
     func backfillExerciseKeys() -> Int {
-        let exercises = (try? context.fetch(FetchDescriptor<Exercise>(predicate: #Predicate { $0.exerciseKey == nil }))) ?? []
+        let exercises =
+            (try? context.fetch(FetchDescriptor<Exercise>(predicate: #Predicate { $0.exerciseKey == nil }))) ?? []
         for exercise in exercises { exercise.exerciseKey = ExerciseID(folding: exercise.name).rawValue }
-        let slots = (try? context.fetch(FetchDescriptor<DaySlot>(predicate: #Predicate { $0.exerciseKey == nil }))) ?? []
+        let slots =
+            (try? context.fetch(FetchDescriptor<DaySlot>(predicate: #Predicate { $0.exerciseKey == nil }))) ?? []
         for slot in slots { slot.exerciseKey = ExerciseID(folding: slot.exerciseName).rawValue }
         let written = exercises.count + slots.count
         if written > 0 { commit() }

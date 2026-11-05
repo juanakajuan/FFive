@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 /// One exercise in the library: a catalog entry, or a custom one the lifter has logged.
 struct ExerciseListing: Hashable, Identifiable {
@@ -30,7 +30,8 @@ struct ExercisesView: View {
             result.append(ExerciseListing(id: exercise.key, name: exercise.name, muscle: muscle, info: nil))
         }
         let query = search.trimmingCharacters(in: .whitespaces)
-        return result
+        return
+            result
             .filter { muscle == nil || $0.muscle == muscle }
             .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
             .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }

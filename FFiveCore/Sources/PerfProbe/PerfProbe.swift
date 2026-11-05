@@ -1,6 +1,7 @@
-@testable import FFiveCore
 import Foundation
 import SwiftData
+
+@testable import FFiveCore
 
 @main
 struct PerfProbe {
@@ -38,9 +39,13 @@ struct PerfProbe {
             }
         }
         for size in sizes {
-            print("perf-probe: weeklyVolume median \(format(median(warms[size]!))) ms (min \(format(warms[size]!.min()!))) at \(size) finished workouts, \(format(median(colds[size]!))) ms (min \(format(colds[size]!.min()!))) on the first render after a commit")
+            print(
+                "perf-probe: weeklyVolume median \(format(median(warms[size]!))) ms (min \(format(warms[size]!.min()!))) at \(size) finished workouts, \(format(median(colds[size]!))) ms (min \(format(colds[size]!.min()!))) on the first render after a commit"
+            )
         }
-        print("perf-probe: main-thread CPU time over \(rounds) rounds interleaving the sizes, each a commit, one first render and \(warmPerRound) renders per size; gates use the min")
+        print(
+            "perf-probe: main-thread CPU time over \(rounds) rounds interleaving the sizes, each a commit, one first render and \(warmPerRound) renders per size; gates use the min"
+        )
 
         let (store, meso) = stores[budgetSize]!
         let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
@@ -60,14 +65,21 @@ struct PerfProbe {
         }
         let warm = warms.mapValues { $0.min()! }
         let cold = colds.mapValues { $0.min()! }
-        gate(warm[budgetSize]! <= budgetMillis,
-             "weeklyVolume min \(format(warm[budgetSize]!)) ms at \(budgetSize) exceeds \(format(budgetMillis)) ms")
-        gate(warm[scaleSize]! <= budgetScaleFactor * warm[budgetSize]!,
-             "weeklyVolume min \(format(warm[scaleSize]!)) ms at \(scaleSize) exceeds \(format(budgetScaleFactor)) x the \(format(warm[budgetSize]!)) ms at \(budgetSize)")
-        gate(warm[scaleSize]! <= budgetScaleFactor * warm[0]!,
-             "weeklyVolume min \(format(warm[scaleSize]!)) ms at \(scaleSize) exceeds \(format(budgetScaleFactor)) x the \(format(warm[0]!)) ms at 0, so a render between commits scales with history")
-        gate(cold[scaleSize]! <= coldScaleFactor * cold[budgetSize]!,
-             "first render after a commit min \(format(cold[scaleSize]!)) ms at \(scaleSize) exceeds \(format(coldScaleFactor)) x the \(format(cold[budgetSize]!)) ms at \(budgetSize)")
+        gate(
+            warm[budgetSize]! <= budgetMillis,
+            "weeklyVolume min \(format(warm[budgetSize]!)) ms at \(budgetSize) exceeds \(format(budgetMillis)) ms")
+        gate(
+            warm[scaleSize]! <= budgetScaleFactor * warm[budgetSize]!,
+            "weeklyVolume min \(format(warm[scaleSize]!)) ms at \(scaleSize) exceeds \(format(budgetScaleFactor)) x the \(format(warm[budgetSize]!)) ms at \(budgetSize)"
+        )
+        gate(
+            warm[scaleSize]! <= budgetScaleFactor * warm[0]!,
+            "weeklyVolume min \(format(warm[scaleSize]!)) ms at \(scaleSize) exceeds \(format(budgetScaleFactor)) x the \(format(warm[0]!)) ms at 0, so a render between commits scales with history"
+        )
+        gate(
+            cold[scaleSize]! <= coldScaleFactor * cold[budgetSize]!,
+            "first render after a commit min \(format(cold[scaleSize]!)) ms at \(scaleSize) exceeds \(format(coldScaleFactor)) x the \(format(cold[budgetSize]!)) ms at \(budgetSize)"
+        )
         if failed { exit(1) }
     }
 

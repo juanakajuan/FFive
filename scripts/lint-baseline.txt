@@ -4,5 +4,5 @@ no-stored-builder FFive/Shared/Theme.swift: @ViewBuilder var trailing: () -> Tra
 no-stored-builder FFive/Templates/TemplatesView.swift: @ViewBuilder var content: () -> Content
 no-stored-builder FFive/Workout/WorkoutHeader.swift: @ViewBuilder var label: () -> Label
 no-stored-builder FFive/Workout/WorkoutHeader.swift: @ViewBuilder var trailing: () -> Trailing
-presentation-at-screen-root FFive/Mesos/MesoSchedule.swift: .confirmationDialog("Train this day after all?",
+presentation-at-screen-root FFive/Mesos/MesoSchedule.swift: .confirmationDialog(
 presentation-at-screen-root FFive/Workout/ActiveWorkoutView.swift: .sheet(isPresented: $showingHistory) { ExerciseHistorySheet(name: exercise.name) }

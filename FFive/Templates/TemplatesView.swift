@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 struct TemplatesView: View {
     @Query(Mesocycle.active) private var activeMesos: [Mesocycle]
@@ -42,11 +42,15 @@ struct TemplatesView: View {
                     } else {
                         TemplateGroup {
                             ForEach(templates) { template in
-                                Button { builder = .template(template.name) } label: {
+                                Button {
+                                    builder = .template(template.name)
+                                } label: {
                                     TemplateListRow(template: template)
                                 }
                                 .buttonStyle(.plain)
-                                if template.id != templates.last?.id { Rectangle().fill(Theme.hairline).frame(height: 1) }
+                                if template.id != templates.last?.id {
+                                    Rectangle().fill(Theme.hairline).frame(height: 1)
+                                }
                             }
                         }
                     }

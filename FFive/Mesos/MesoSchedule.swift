@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 /// The block's week-by-day grid. Current-week days open or skip; finished days push their workout.
 struct MesoScheduleGrid: View {
@@ -35,14 +35,18 @@ struct MesoScheduleGrid: View {
                     }
                 }
             }
-            Text("Tap a day in the current week to train it, or a finished day to review it. Long-press a day to skip it.")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.secondary)
+            Text(
+                "Tap a day in the current week to train it, or a finished day to review it. Long-press a day to skip it."
+            )
+            .font(Theme.caption)
+            .foregroundStyle(Theme.secondary)
         }
         .scheduleCard()
-        .confirmationDialog("Train this day after all?",
-                            isPresented: Binding(get: { trainAfterAll != nil }, set: { if !$0 { trainAfterAll = nil } }),
-                            titleVisibility: .visible, presenting: trainAfterAll) { key in
+        .confirmationDialog(
+            "Train this day after all?",
+            isPresented: Binding(get: { trainAfterAll != nil }, set: { if !$0 { trainAfterAll = nil } }),
+            titleVisibility: .visible, presenting: trainAfterAll
+        ) { key in
             Button("Train Day \(key.dayIndex + 1)") {
                 store.unskip(key, of: meso)
                 onOpen(key)
@@ -64,14 +68,20 @@ struct MesoScheduleGrid: View {
             .buttonStyle(.plain)
         case .skipped:
             if isCurrentWeek {
-                Button { trainAfterAll = key } label: { cellIcon("forward.circle", Theme.secondary) }
-                    .buttonStyle(.plain)
+                Button {
+                    trainAfterAll = key
+                } label: {
+                    cellIcon("forward.circle", Theme.secondary)
+                }
+                .buttonStyle(.plain)
             } else {
                 cellIcon("forward.circle", Theme.secondary)
             }
         case .upcoming, .inProgress:
             if isCurrentWeek {
-                Button { onOpen(key) } label: {
+                Button {
+                    onOpen(key)
+                } label: {
                     if case .inProgress = status {
                         cellIcon("circle.lefthalf.filled", Theme.infoText)
                     } else if key == next {
@@ -127,9 +137,9 @@ struct WeekVolumeCard: View {
     }
 }
 
-private extension View {
+extension View {
     /// Full-width card on the page background, matching the Workout tab's cards.
-    func scheduleCard() -> some View {
+    fileprivate func scheduleCard() -> some View {
         padding(Theme.gutter)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))

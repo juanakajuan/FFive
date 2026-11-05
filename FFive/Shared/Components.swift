@@ -1,5 +1,5 @@
-import SwiftUI
 import FFiveCore
+import SwiftUI
 
 struct StatTile: View {
     let title: String
@@ -84,7 +84,10 @@ struct SegmentedButtons<Option: Hashable>: View {
                         .minimumScaleFactor(0.7)
                         .foregroundStyle(selected ? Theme.text : Theme.secondary)
                         .frame(maxWidth: .infinity, minHeight: 32)
-                        .background(selected ? Theme.raised : Color.clear, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                        .background(
+                            selected ? Theme.raised : Color.clear,
+                            in: RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                        )
                         .contentShape(Rectangle())
                 }
                 .buttonStyle(.borderless)
@@ -123,7 +126,10 @@ struct ChipPicker<Option: Hashable>: View {
                             .foregroundStyle(Theme.text)
                             .frame(maxWidth: .infinity)
                             .padding(.vertical, 9)
-                            .background(selected ? Theme.infoFill : Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                            .background(
+                                selected ? Theme.infoFill : Theme.raised,
+                                in: RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                            )
                             .overlay {
                                 RoundedRectangle(cornerRadius: Theme.cornerRadius)
                                     .stroke(selected ? Theme.infoText : Color.clear, lineWidth: 1)
@@ -159,7 +165,8 @@ struct VolumeBar: View {
                         RoundedRectangle(cornerRadius: 2).fill(Theme.raised)
                         RoundedRectangle(cornerRadius: 2).fill(Theme.infoFill).frame(width: x(volume.planned))
                         RoundedRectangle(cornerRadius: 2).fill(Theme.infoText).frame(width: x(volume.done))
-                        Rectangle().fill(Theme.text.opacity(0.7)).frame(width: 2, height: 14).offset(x: x(landmarks.mev) - 1)
+                        Rectangle().fill(Theme.text.opacity(0.7)).frame(width: 2, height: 14).offset(
+                            x: x(landmarks.mev) - 1)
                     }
                     .frame(height: 10)
                     Capsule()
@@ -175,7 +182,9 @@ struct VolumeBar: View {
                 .frame(width: 40, alignment: .trailing)
         }
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel("\(volume.muscle.displayName), \(volume.done) of \(volume.planned) sets done, minimum effective \(landmarks.mev), maximum recoverable \(landmarks.mrv)")
+        .accessibilityLabel(
+            "\(volume.muscle.displayName), \(volume.done) of \(volume.planned) sets done, minimum effective \(landmarks.mev), maximum recoverable \(landmarks.mrv)"
+        )
     }
 }
 

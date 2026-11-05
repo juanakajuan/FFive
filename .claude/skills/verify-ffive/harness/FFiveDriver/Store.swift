@@ -5,23 +5,37 @@ import SQLite3
 /// A missing or busy store is a reason to keep polling. Any other failure throws.
 func storeMismatch(path: String, model: String, field: String, value: String) throws -> String? {
     guard FileManager.default.fileExists(atPath: path) else { return "no on-disk store at \(path) yet" }
-    let table = "Z" + model.uppercased(), column = "Z" + field.uppercased()
-    let condition = switch value {
-    case "null": "is null"
-    case "not-null": "is not null"
-    default: "= ?"
-    }
+    let table = "Z" + model.uppercased()
+    let column = "Z" + field.uppercased()
+    let condition =
+        switch value {
+        case "null": "is null"
+        case "not-null": "is not null"
+        default: "= ?"
+        }
     do {
         let store = try Store(path: path)
         defer { store.close() }
-        let tables = try store.firstColumn("select name from sqlite_master where type = 'table' and name like 'Z%' and name not like 'Z\\_%' escape '\\' order by name")
-        guard tables.contains(table) else { throw StoreError.failed("no table \(table); tables: \(tables.joined(separator: ", "))") }
+        let tables = try store.firstColumn(
+            "select name from sqlite_master where type = 'table' and name like 'Z%' and name not like 'Z\\_%' escape '\\' order by name"
+        )
+        guard tables.contains(table) else {
+            throw StoreError.failed("no table \(table); tables: \(tables.joined(separator: ", "))")
+        }
         let columns = try store.firstColumn("select name from pragma_table_info('\(table)')")
-        guard columns.contains(column) else { throw StoreError.failed("no column \(column) in \(table); columns: \(columns.joined(separator: ", "))") }
+        guard columns.contains(column) else {
+            throw StoreError.failed("no column \(column) in \(table); columns: \(columns.joined(separator: ", "))")
+        }
         // Bound as text, the value takes the column's affinity: a number column compares 25 with 25.0, a text column compares strings.
-        if try store.firstColumn("select count(*) from \(table) where \(column) \(condition)", binding: condition == "= ?" ? value : nil) != ["0"] { return nil }
+        if try store.firstColumn(
+            "select count(*) from \(table) where \(column) \(condition)", binding: condition == "= ?" ? value : nil)
+            != ["0"]
+        {
+            return nil
+        }
         let values = try store.firstColumn("select distinct \(column) from \(table) limit 10")
-        return "no \(model) row has \(field) \(condition.replacingOccurrences(of: "?", with: value)); values: \(values.joined(separator: ", "))"
+        return
+            "no \(model) row has \(field) \(condition.replacingOccurrences(of: "?", with: value)); values: \(values.joined(separator: ", "))"
     } catch StoreError.busy(let reason) {
         return reason
     }

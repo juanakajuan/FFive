@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 struct MesoBuilderView: View {
     enum Route: Hashable {
@@ -31,7 +31,9 @@ struct MesoBuilderView: View {
             }
             .navigationDestination(for: Route.self, destination: editor)
             .onAppear {
-                if startAt == nil, DemoLaunch.route == .builder, path.isEmpty, let first = ExerciseCatalog.templates.first {
+                if startAt == nil, DemoLaunch.route == .builder, path.isEmpty,
+                    let first = ExerciseCatalog.templates.first
+                {
                     path = [.template(first.name)]
                 }
             }
@@ -59,7 +61,8 @@ struct MesoBuilderView: View {
                             Image(systemName: "square.and.pencil").font(.system(size: 18))
                             Text("Build from scratch").font(.system(size: 16, weight: .semibold))
                             Spacer()
-                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .medium)).foregroundStyle(Theme.secondary)
+                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .medium)).foregroundStyle(
+                                Theme.secondary)
                         }
                         .foregroundStyle(Theme.text)
                         .padding(.vertical, 14)
@@ -82,10 +85,11 @@ struct MesoBuilderView: View {
     }
 
     private func editor(_ route: Route) -> some View {
-        let template: ProgramTemplate? = switch route {
-        case .template(let name): ExerciseCatalog.templates.first { $0.name == name }
-        case .blank: nil
-        }
+        let template: ProgramTemplate? =
+            switch route {
+            case .template(let name): ExerciseCatalog.templates.first { $0.name == name }
+            case .blank: nil
+            }
         return MesoEditorView(draft: MesoDraft(template: template)) { dismiss() }
     }
 }
@@ -113,10 +117,12 @@ struct MesoEditorView: View {
     var body: some View {
         List {
             Section {
-                TextField("Mesocycle name", text: $draft.name, prompt: Text("Mesocycle name").foregroundStyle(Theme.secondary))
-                    .builderField()
-                    .builderRow()
-                    .a11y(.builderName)
+                TextField(
+                    "Mesocycle name", text: $draft.name, prompt: Text("Mesocycle name").foregroundStyle(Theme.secondary)
+                )
+                .builderField()
+                .builderRow()
+                .a11y(.builderName)
             } header: {
                 header("Name")
             }
@@ -133,7 +139,9 @@ struct MesoEditorView: View {
                 .builderRow()
                 RIRSchedule(accumulationWeeks: draft.accumulationWeeks)
                     .builderRow()
-                footnote("Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next block starts fresh.")
+                footnote(
+                    "Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next block starts fresh."
+                )
             } header: {
                 header("Length")
             }
@@ -145,7 +153,9 @@ struct MesoEditorView: View {
                         .builderField()
                         .builderRow()
                     ForEach(day.slots) { slot in
-                        Button { picker = .swap(day: day.id, slot: slot) } label: {
+                        Button {
+                            picker = .swap(day: day.id, slot: slot)
+                        } label: {
                             HStack(spacing: 10) {
                                 VStack(alignment: .leading, spacing: 3) {
                                     Text(slot.exercise)
@@ -165,7 +175,9 @@ struct MesoEditorView: View {
                     }
                     .onDelete { offsets in update(day.id) { $0.slots.remove(atOffsets: offsets) } }
                     .onMove { from, to in update(day.id) { $0.slots.move(fromOffsets: from, toOffset: to) } }
-                    Button { picker = .add(day: day.id) } label: {
+                    Button {
+                        picker = .add(day: day.id)
+                    } label: {
                         Label("Add Exercise", systemImage: "plus")
                             .font(Theme.body)
                             .foregroundStyle(Theme.infoText)
@@ -215,8 +227,10 @@ struct MesoEditorView: View {
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondary)
                 }
-                FilledActionButton(title: "Start Mesocycle", isEnabled: draft.isStartable && activeMesos.isEmpty, action: start)
-                    .a11y(.builderStart)
+                FilledActionButton(
+                    title: "Start Mesocycle", isEnabled: draft.isStartable && activeMesos.isEmpty, action: start
+                )
+                .a11y(.builderStart)
             }
             .padding(.horizontal, Theme.gutter)
             .padding(.vertical, 10)
@@ -290,7 +304,10 @@ struct RIRSchedule: View {
         }
         .animation(.snappy, value: accumulationWeeks)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel((0..<accumulationWeeks).map { "week \($0 + 1), \(Progression.phase(week: $0, accumulationWeeks: accumulationWeeks).rir ?? 0) RIR" }.joined(separator: ", ") + ", then deload")
+        .accessibilityLabel(
+            (0..<accumulationWeeks).map {
+                "week \($0 + 1), \(Progression.phase(week: $0, accumulationWeeks: accumulationWeeks).rir ?? 0) RIR"
+            }.joined(separator: ", ") + ", then deload")
     }
 }
 
@@ -314,15 +331,15 @@ struct FilledActionButton: View {
     }
 }
 
-private extension View {
-    func builderRow() -> some View {
+extension View {
+    fileprivate func builderRow() -> some View {
         listRowBackground(Theme.surface)
             .listRowSeparatorTint(Theme.hairline)
             .listRowInsets(EdgeInsets(top: 8, leading: Theme.gutter, bottom: 8, trailing: Theme.gutter))
     }
 
     /// A dark, left-aligned text box for names.
-    func builderField() -> some View {
+    fileprivate func builderField() -> some View {
         font(Theme.body)
             .foregroundStyle(Theme.text)
             .padding(.horizontal, 12)

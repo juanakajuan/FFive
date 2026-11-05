@@ -1,4 +1,5 @@
 import XCTest
+
 @testable import FFiveCore
 
 final class A11yTests: XCTestCase {
