@@ -1,17 +1,17 @@
 # end-mesocycle (demo): end the demo block from inside its in-progress session; the logged session reaches history.
 launch -seedDemo
 wait text "WEEK 2 DAY 1" timeout=20
-tap button "Workout menu"
-tap button "End Mesocycle"
-tap button "End Mesocycle"
-wait button "Plan a Mesocycle" timeout=10
+tap #workout.menu
+tap #menu.end-mesocycle
+tap #dialog.end-mesocycle
+wait #workout.plan timeout=10
 shot 01-empty-after-end
-tap button "More"
-tap button "Progress"
-tap button "History"
+tap #tab.more
+tap #more.progress
+tap #segment.history
 # Week 1 Full Body A is already in history; the ended Week 2 session makes it two.
-count button "~Full Body A" "2"
+count #history.row.full-body-a "2"
 shot 02-history-has-session
-tap button "Mesos"
+tap #tab.mesos
 wait any "Finished"
 shot 03-mesos-finished

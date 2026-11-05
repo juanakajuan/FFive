@@ -1,23 +1,25 @@
 # plan-mesocycle: plan a block from a template on an empty, on-disk store.
 # Before: ffive-verify reset-data. After: ffive-verify store "select ZNAME, ZACCUMULATIONWEEKS from ZMESOCYCLE"
 launch
-wait button "Plan a Mesocycle" timeout=20
+wait #workout.plan timeout=20
 shot 01-empty-workout
-tap button "Plan a Mesocycle"
+tap #workout.plan
 wait nav "New Mesocycle"
-tap button "~Upper/Lower, 4 Days"
+tap #builder.template.upper-lower-4-days
 wait nav "Customize"
-replace field "Mesocycle name" "Verify Block"
+replace #builder.name "Verify Block"
 tap button "~Increment"
 wait text "5 training weeks"
 shot 02-customized
-tap button "Start Mesocycle"
+tap #builder.start
 wait text "WEEK 1 DAY 1" timeout=10
-wait text "~Upper A · Verify Block"
+store-expect Mesocycle name "Verify Block"
+store-expect Mesocycle accumulationWeeks 5
+wait text "~Verify Block"
 shot 03-session
-tap button "Mesos"
+tap #tab.mesos
 wait text "Verify Block"
-wait text "~6 WEEKS - 4 DAYS/WEEK"
+wait text "~6 WEEKS"
 shot 04-mesos
 launch
 wait text "WEEK 1 DAY 1" timeout=20

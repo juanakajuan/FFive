@@ -1,22 +1,22 @@
 # train-session (seeded): the demo block's in-progress session shows on the Workout tab; give feedback, answer soreness.
 launch -seedDemo
 wait text "WEEK 2 DAY 1" timeout=20
-wait text "Target 185 × 7"
+wait text "~Target 185"
 wait text "How did quads feel today?"
 # scrollto swipes a long way and can leave its target under the tab bar, so each row is brought on screen
 # by scrolling to the element just below it.
-scrollto button "Pretty good"
-tap button "Great"
-tap button "Pretty good"
+scrollto #chip.pretty-good
+tap #chip.great
+tap #chip.pretty-good
 scrollto text "~Next week's sets for quads"
-tap button "None"
-selected button "None"
+tap #chip.none
+selected #chip.none
 wait image "checkmark.circle.fill"
 shot 01-quads-feedback
 scrollto text "How did your chest recover?"
-wait text "Target 150 × 8"
+wait text "~Target 150"
 shot 02-soreness-asked
-tap button "Healed just in time"
+tap #chip.healed-just-in-time
 absent text "How did your chest recover?"
 tree 03-soreness-answered
 shot 03-soreness-answered

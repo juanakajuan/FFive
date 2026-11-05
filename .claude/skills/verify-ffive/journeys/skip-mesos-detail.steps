@@ -1,22 +1,22 @@
 # skip-mesos-detail (on disk): skip a built day from the Mesos tab's detail grid, then train it after all.
-# Before: unskip-day.steps ran on this store (Week 1 · Day 2 showing, Days 2 and 3 built, Day 4 skipped).
+# Before: unskip-day.steps ran on this store (Week 1 Day 2 showing, Days 2 and 3 built, Day 4 skipped).
 # After the skip shot, ZWORKOUT has no dayIndex 1 row; after the run, a fresh open Lower A row.
 launch
 wait text "WEEK 1 DAY 2" timeout=20
-tap button "Mesos"
-tap button "~Verify Block"
+tap #tab.mesos
+tap #mesos.row.verify-block
 wait nav "Verify Block"
 count button "forward.circle" "1"
 count button "circle.lefthalf.filled" "2"
 shot 01-detail-before
 longpress button "circle.lefthalf.filled"
-tap button "Skip Day"
+tap #menu.skip-day
 count button "forward.circle" "2"
 count button "circle.lefthalf.filled" "1"
 shot 02-skipped-from-detail
 tap button "forward.circle"
 wait text "Train this day after all?"
-tap button "Train Day 2"
+tap #dialog.train-day
 wait text "WEEK 1 DAY 2" timeout=10
 wait text "~Lower A"
 shot 03-trained-after-all
