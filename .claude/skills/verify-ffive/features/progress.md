@@ -24,7 +24,7 @@ Preconditions:
 - **Volume.** Steps: `tap button "More" timeout=20`, `tap button "Progress"`, `wait nav "Progress"`, `selected button "Volume"`, `wait text "Sets per muscle · Week 2"`, `wait any "~Quads 4 of"`, `tap button "W1"`, `wait text "Sets per muscle · Week 1"`.
 - **Strength.** Steps: `tap button "Strength"`, `wait text "Estimated 1RM"`, `tap button "~Leg Press, Quads"`, `wait nav "Leg Press"`.
 - **History.** Steps: `tap button "Progress"` (back), `tap button "History"`, `wait text "All Time"`, `tap button "~Morning Workout"`, `wait nav "Morning Workout"`, `wait text "Bench Press"`.
-- **Proof.** Keep shots `01-volume-w1`, `02-strength-trend`, and `03-history-detail`. For a change to how numbers are computed, compare the chart's accessibility label (`any "~<Muscle> <done> of <planned> sets"`) with the planner's expectations in `scripts/check-planner.sh`.
+- **Proof.** Keep shots `01-volume-w1`, `02-strength-trend`, and `03-history-detail`. For a change to how numbers are computed, compare the chart's accessibility label (`any "~<Muscle> <done> of <planned> sets"`) with the planner's expectations in `FFiveCore/Tests/FFiveCoreTests/PlannerTests.swift`.
 
 ## Gotchas
 

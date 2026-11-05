@@ -6,6 +6,10 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		A1000000000000000000A010 /* FFiveCore in Frameworks */ = {isa = PBXBuildFile; productRef = A1000000000000000000A012 /* FFiveCore */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		A1000000000000000000A001 /* FFive.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = FFive.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +27,7 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				A1000000000000000000A010 /* FFiveCore in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +70,7 @@
 			);
 			name = FFive;
 			packageProductDependencies = (
+				A1000000000000000000A012 /* FFiveCore */,
 			);
 			productName = FFive;
 			productReference = A1000000000000000000A001 /* FFive.app */;
@@ -94,6 +100,9 @@
 			);
 			mainGroup = A1000000000000000000A004;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				A1000000000000000000A011 /* XCLocalSwiftPackageReference "FFiveCore" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = A1000000000000000000A005 /* Products */;
 			projectDirPath = "";
@@ -306,6 +315,20 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		A1000000000000000000A011 /* XCLocalSwiftPackageReference "FFiveCore" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = FFiveCore;
+		};
+/* End XCLocalSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		A1000000000000000000A012 /* FFiveCore */ = {
+			isa = XCSwiftPackageProductDependency;
+			productName = FFiveCore;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = A1000000000000000000A009 /* Project object */;
 }

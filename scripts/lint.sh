@@ -54,7 +54,7 @@ scan() {
 # elsewhere in a file leave it alone. Repeated identical lines each need their own baseline line.
 key() { awk -F'\t' '{ print $1 " " $2 ": " $4 }'; }
 
-app_hits() { scan $(find FFive -name '*.swift' | sort); }
+app_hits() { scan $(find FFive FFiveCore/Sources -name '*.swift' | sort); }
 
 ratchet() {
     awk -F'\t' -v base="$baseline" '

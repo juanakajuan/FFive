@@ -1,0 +1,22 @@
+import SwiftUI
+import SwiftData
+import FFiveCore
+
+@main
+struct FFiveApp: App {
+    let container: ModelContainer
+
+    init() {
+        container = AppStore.makeContainer(inMemory: DemoLaunch.isEnabled)
+        if DemoLaunch.isEnabled { DemoSeed.seed(container.mainContext) }
+        Theme.applyNavigationBarAppearance()
+    }
+
+    var body: some Scene {
+        WindowGroup {
+            RootView()
+                .preferredColorScheme(.dark)
+        }
+        .modelContainer(container)
+    }
+}

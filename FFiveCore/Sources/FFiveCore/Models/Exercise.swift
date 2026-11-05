@@ -1,0 +1,69 @@
+import Foundation
+import SwiftData
+
+@Model
+public final class Exercise {
+    public var name: String
+    public var order: Int
+    public var workout: Workout?
+    @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
+    public var sets: [SetEntry] = []
+    public var muscleRaw: String?
+    public var note: String?
+
+    public init(name: String, order: Int, muscle: Muscle? = nil) {
+        self.name = name
+        self.order = order
+        self.muscleRaw = muscle?.rawValue
+    }
+
+    public var sortedSets: [SetEntry] { sets.sorted { $0.order < $1.order } }
+    public var isLogged: Bool { !sets.isEmpty && sets.allSatisfy(\.isDone) }
+    public var info: ExerciseInfo? { ExerciseCatalog.info(named: name) }
+
+    /// Rows logged before muscles were stored resolve through the catalog.
+    public var muscle: Muscle? {
+        get { muscleRaw.flatMap(Muscle.init(rawValue:)) ?? info?.muscle }
+        set { muscleRaw = newValue?.rawValue }
+    }
+
+    public var repRange: ClosedRange<Int> { ExerciseCatalog.repRange(for: name) }
+
+    public func increment(_ unit: WeightUnit) -> Double {
+        ExerciseCatalog.increment(for: name, unit: unit)
+    }
+
+    /// The done, loaded set with the highest estimated 1RM, or nil when no set says anything about strength.
+    public var strongestSet: (entry: SetEntry, oneRepMax: Double)? {
+        guard let rir = workout?.effortRIR else { return nil }
+        return sets.filter { $0.isDone && $0.weight > 0 && $0.reps > 0 }
+            .map { ($0, Progression.estimatedOneRepMax(weight: $0.weight, reps: $0.reps, rir: rir)) }
+            .max { $0.1 < $1.1 }
+    }
+}
+
+extension Exercise {
+    public func setNote(_ text: String, in context: ModelContext) {
+        if PinnedNote.find(named: name, in: context) != nil {
+            PinnedNote.set(text, for: name, in: context)
+        } else {
+            note = text.noteText
+        }
+    }
+
+    public func deleteNote(in context: ModelContext) {
+        PinnedNote.delete(for: name, in: context)
+        note = nil
+    }
+
+    public func pinNote(in context: ModelContext) {
+        guard let note else { return }
+        PinnedNote.set(note, for: name, in: context)
+        self.note = nil
+    }
+
+    public func unpinNote(in context: ModelContext) {
+        note = PinnedNote.find(named: name, in: context)?.text
+        PinnedNote.delete(for: name, in: context)
+    }
+}
