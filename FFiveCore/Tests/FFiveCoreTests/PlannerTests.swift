@@ -185,6 +185,141 @@ final class PlannerTests: XCTestCase {
         expect("next up is nil once the deload is done", meso.nextUp, nil)
     }
 
+    // MARK: - Reorder
+
+    @MainActor private final class Block {
+        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        let meso: Mesocycle
+
+        init() {
+            var draft = MesoDraft(template: nil)
+            draft.days = [
+                .init(
+                    name: "A",
+                    slots: [
+                        .init(exercise: "Bench Press", muscle: .chest),
+                        .init(exercise: "Lat Pulldown", muscle: .back),
+                        .init(exercise: "Calf Raise", muscle: .calves),
+                    ])
+            ]
+            meso = MesoPlanner.start(draft, in: context)
+        }
+
+        func session(_ week: Int) -> Workout {
+            MesoPlanner.workout(
+                for: meso, at: SessionKey(week: week, dayIndex: 0), unit: .lb,
+                snapshot: PlanningSnapshot(context: context), in: context)
+        }
+
+        func reorder(_ workout: Workout, to names: [String], _ scope: ReorderScope) {
+            MesoPlanner.reorder(
+                workout, to: names.map { name in workout.exercises.first { $0.name == name }! }, scope: scope)
+        }
+
+        func finish(_ workout: Workout) {
+            for set in workout.exercises.flatMap(\.sets) {
+                set.weight = set.targetWeight ?? 100
+                set.reps = set.targetReps ?? 10
+                set.isDone = true
+            }
+            workout.finish(in: context)
+        }
+    }
+
+    private let original = ["Bench Press", "Lat Pulldown", "Calf Raise"]
+    private let reordered = ["Calf Raise", "Bench Press", "Lat Pulldown"]
+
+    private func names(_ workout: Workout) -> [String] { workout.sortedExercises.map(\.name) }
+
+    func testReorderQuickWorkout() {
+        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        let quick = Workout(name: "Quick")
+        context.insert(quick)
+        for (order, name) in original.enumerated() { quick.exercises.append(Exercise(name: name, order: order)) }
+        MesoPlanner.reorder(
+            quick, to: reordered.map { name in quick.exercises.first { $0.name == name }! }, scope: .thisSession)
+        try! context.save()
+        expect("reorder: a quick workout shows the new order", names(quick), reordered)
+        let fetched = try! context.fetch(FetchDescriptor<Workout>())
+        expect("reorder: a quick workout keeps the new order in the store", fetched.first.map(names), reordered)
+    }
+
+    func testReorderLaterWeeksCarriesForward() {
+        let block = Block()
+        let week0 = block.session(0)
+        block.reorder(week0, to: reordered, .laterWeeks)
+        block.finish(week0)
+        expect("reorder: week 1 shows the new order", names(week0), reordered)
+        expect("reorder: week 2 is planned in the new order", names(block.session(1)), reordered)
+    }
+
+    func testReorderThisSessionOnly() {
+        let block = Block()
+        let week0 = block.session(0)
+        block.reorder(week0, to: reordered, .thisSession)
+        block.finish(week0)
+        expect("reorder: this session shows the new order", names(week0), reordered)
+        let week1 = block.session(1)
+        expect("reorder: week 2 keeps the original order", names(week1), original)
+        block.finish(week1)
+        expect("reorder: week 3 keeps the original order", names(block.session(2)), original)
+    }
+
+    func testReorderThisSessionTwiceKeepsLaterWeeksOriginal() {
+        let block = Block()
+        let week0 = block.session(0)
+        block.reorder(week0, to: reordered, .thisSession)
+        block.reorder(week0, to: ["Lat Pulldown", "Calf Raise", "Bench Press"], .thisSession)
+        block.finish(week0)
+        expect(
+            "reorder: a second session-only reorder still leaves later weeks alone", names(block.session(1)), original)
+    }
+
+    func testReorderLaterWeeksReachesBuiltUnstartedWeek() {
+        let block = Block()
+        let week0 = block.session(0)
+        block.finish(week0)
+        let week1 = block.session(1)
+        let week2 = week1
+        block.reorder(week0, to: reordered, .laterWeeks)
+        expect("reorder: a built, unstarted later week follows", names(week2), reordered)
+    }
+
+    func testReorderLeavesFinishedLaterWeeksAlone() {
+        let block = Block()
+        let week0 = block.session(0)
+        block.finish(week0)
+        let week1 = block.session(1)
+        block.finish(week1)
+        block.reorder(week0, to: reordered, .laterWeeks)
+        expect("reorder: a finished later week keeps what was done", names(week1), original)
+    }
+
+    func testReorderIsTotal() {
+        let block = Block()
+        let week0 = block.session(0)
+        let stranger = Exercise(name: "Squat", order: 0)
+        let calves = week0.exercises.first { $0.name == "Calf Raise" }!
+        MesoPlanner.reorder(week0, to: [calves, stranger, calves], scope: .laterWeeks)
+        expect(
+            "reorder: unlisted exercises follow, strangers and repeats are ignored", names(week0),
+            ["Calf Raise", "Bench Press", "Lat Pulldown"])
+    }
+
+    func testReorderDoesNotChangeProgression() {
+        func run(reorder scope: ReorderScope?) -> [String: [SetTarget]] {
+            let block = Block()
+            let week0 = block.session(0)
+            if let scope { block.reorder(week0, to: reordered, scope) }
+            block.finish(week0)
+            let week1 = block.session(1)
+            return Dictionary(uniqueKeysWithValues: week1.exercises.map { ($0.name, $0.sortedSets.map(\.target)) })
+        }
+        let untouched = run(reorder: nil)
+        expect("reorder: later-weeks reorder keeps every exercise's targets", run(reorder: .laterWeeks), untouched)
+        expect("reorder: this-session reorder keeps every exercise's targets", run(reorder: .thisSession), untouched)
+    }
+
     func testSkip() {
         let context = ModelContext(AppStore.makeContainer(inMemory: true))
         var draft = MesoDraft(template: nil)

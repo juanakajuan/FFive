@@ -40,6 +40,12 @@ public struct MesoDraft {
     public var isStartable: Bool { days.contains { !$0.slots.isEmpty } }
 }
 
+/// Which sessions a reorder applies to.
+public enum ReorderScope {
+    case thisSession
+    case laterWeeks
+}
+
 public struct PlannedExercise {
     public let name: String
     let key: ExerciseID
@@ -121,7 +127,7 @@ enum MesoPlanner {
                             firstWeek: $0.targets, lastAccumulationSetCount: $0.targets.count))
                 }
             }
-            return base.sortedExercises.map { exercise in
+            return base.plannedExercises.map { exercise in
                 PlannedExercise(
                     name: exercise.name, key: exercise.key, muscle: exercise.muscle,
                     targets: Progression.deloadTargets(
@@ -157,7 +163,7 @@ enum MesoPlanner {
         from base: Workout, baseRIR: Int, meso: Mesocycle, key: SessionKey,
         rir: Int, unit: WeightUnit
     ) -> [PlannedExercise] {
-        let exercises = base.sortedExercises
+        let exercises = base.plannedExercises
         var counts = exercises.map { max(1, $0.sets.count) }
         for muscle in base.trainedMuscles {
             let indices = exercises.indices.filter { exercises[$0].muscle == muscle }
@@ -257,7 +263,9 @@ enum MesoPlanner {
                 exercise.sets.append(SetEntry(reps: 10, weight: 0, order: 0))
             } else {
                 for (order, set) in previous.enumerated() {
-                    exercise.sets.append(SetEntry(reps: set.reps, weight: set.weight, order: order))
+                    let copy = SetEntry(reps: set.reps, weight: set.weight, order: order)
+                    copy.type = set.type
+                    exercise.sets.append(copy)
                 }
             }
             return
@@ -295,6 +303,34 @@ enum MesoPlanner {
                 for: exercise.key, count: max(1, exercise.sets.count),
                 rir: workout.phase?.rir ?? deloadRIR, unit: unit, snapshot: snapshot),
             in: context)
+    }
+
+    /// Puts `workout`'s exercises in the order of `exercises`. Exercises left out of the list follow the listed ones.
+    /// In a block, `.thisSession` keeps the old order for later weeks and `.laterWeeks` hands the new one on,
+    /// including to later same-day sessions that are built but not finished.
+    static func reorder(_ workout: Workout, to exercises: [Exercise], scope: ReorderScope) {
+        var seen = Set<ObjectIdentifier>()
+        let listed = exercises.filter { workout.exercises.contains($0) && seen.insert(ObjectIdentifier($0)).inserted }
+        let ordered = listed + workout.sortedExercises.filter { !seen.contains(ObjectIdentifier($0)) }
+        let carriesForward = workout.mesocycle != nil && scope == .thisSession
+        for (index, exercise) in ordered.enumerated() {
+            if carriesForward, exercise.plannedOrder == nil { exercise.plannedOrder = exercise.order }
+            if !carriesForward { exercise.plannedOrder = nil }
+            exercise.order = index
+        }
+        guard let meso = workout.mesocycle, scope == .laterWeeks, let key = workout.key else { return }
+        let keys = ordered.map(\.key)
+        for later in meso.workouts
+        where !later.isFinished && later.dayIndex == key.dayIndex && (later.week ?? 0) > key.week {
+            let rank = { (exercise: Exercise) in keys.firstIndex(of: exercise.key) ?? keys.count }
+            let following = later.sortedExercises.enumerated().sorted {
+                (rank($0.element), $0.offset) < (rank($1.element), $1.offset)
+            }
+            for (index, entry) in following.enumerated() {
+                entry.element.order = index
+                entry.element.plannedOrder = nil
+            }
+        }
     }
 
     private static func replaceSets(of exercise: Exercise, with targets: [SetTarget], in context: ModelContext) {

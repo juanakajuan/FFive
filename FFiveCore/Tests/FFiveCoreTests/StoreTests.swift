@@ -551,4 +551,32 @@ final class StoreTests: XCTestCase {
         store.unpinNote(on: exercise)
         XCTAssertNil(store.pinnedNote(on: exercise))
     }
+
+    func testMyorepSetsDoNotDriveNextWeekOrStrength() throws {
+        let (store, meso) = try startedStore()
+        let week0 = store.buildSession(meso, at: day1)
+        let bench = week0.sortedExercises[0]
+        let sets = Array(bench.sortedSets.prefix(2))
+        for set in sets {
+            set.weight = 100
+            set.reps = 10
+            store.log(set, done: true)
+        }
+        store.setType(.myorep, of: sets[1])
+        XCTAssertEqual(sets[1].type, .myorep, "the type is stored on the set")
+        XCTAssertEqual(bench.strongestSet?.entry, sets[0], "a myo-rep set never feeds the strength estimate")
+        week0.finish(in: store.context)
+
+        let next = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0)).sortedExercises[0].sortedSets
+        XCTAssertNotEqual(next[0].target, SetTarget.calibrate, "a regular log turns the calibration into a target")
+        XCTAssertEqual(next[1].target, SetTarget.calibrate, "a myo-rep log leaves its slot's target unchanged")
+    }
+
+    func testAddSetCopiesTheLastSetType() throws {
+        let (store, meso) = try startedStore()
+        let bench = store.buildSession(meso, at: day1).sortedExercises[0]
+        store.setType(.myorepMatch, of: bench.sortedSets.last!)
+        store.addSet(to: bench)
+        XCTAssertEqual(bench.sortedSets.last?.type, .myorepMatch)
+    }
 }

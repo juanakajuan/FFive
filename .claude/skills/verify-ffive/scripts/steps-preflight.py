@@ -8,7 +8,7 @@ CASE = re.compile(r'^\s*case\s+(\w+)\s*=\s*"([^"]+)"')
 FAMILY_SET = re.compile(r"static let (indexed|keyed): Set<A11y> = \[([^\]]*)\]")
 SLUG = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 BARE_INDEX = re.compile(r"#\d+")
-TARGET_VERBS = {"tap", "longpress", "type", "replace", "wait", "assert", "exists", "absent", "value", "selected", "unselected", "count", "scrollto"}
+TARGET_VERBS = {"tap", "longpress", "drag", "type", "replace", "wait", "assert", "exists", "absent", "value", "selected", "unselected", "count", "scrollto"}
 PAYLOAD_VERBS = {"type", "replace", "value", "count"}
 Ids = namedtuple("Ids", "plain indexed keyed")
 
@@ -60,6 +60,11 @@ def target_error(words, ids):
         del args[timeout]
     if words[0] in PAYLOAD_VERBS:
         args = args[:-1]
+    if words[0] == "drag":
+        if "to" not in args:
+            return "expected `drag <target> to <target>`"
+        split = args.index("to")
+        return target_error(["tap", *args[:split]], ids) or target_error(["tap", *args[split + 1 :]], ids)
     if not args:
         return None
     if not args[0].startswith("#"):

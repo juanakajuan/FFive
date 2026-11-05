@@ -1,0 +1,40 @@
+# reorder-exercises: reorder a quick workout's exercises from the workout menu, on disk, and check a block day's scope control.
+# Before: ffive-verify reset-data. After: ffive-verify store "select ZNAME, ZORDER, ZPLANNEDORDER from ZEXERCISE order by ZORDER"
+launch
+wait #workout.quick timeout=20
+tap #workout.quick
+wait text "QUICK WORKOUT"
+tap #workout.menu
+tap #menu.add-exercise
+type #picker.search "Lateral"
+tap #picker.row.lateral-raise
+wait text "Lateral Raise"
+tap #workout.menu
+tap #menu.add-exercise
+type #picker.search "Bench Press"
+tap #picker.row.bench-press
+wait text "Bench Press"
+shot 01-before
+tap #workout.menu
+tap #menu.reorder
+wait nav "Reorder Exercises"
+# A quick workout has no later weeks, so the scope control is a block-only thing.
+absent #segment.this-session
+drag button "Reorder Bench Press" to button "Reorder Lateral Raise"
+shot 02-sheet
+tap #reorder.save
+absent nav "Reorder Exercises"
+store-expect Exercise name "Bench Press"
+launch
+wait text "QUICK WORKOUT" timeout=20
+shot 03-after-relaunch
+launch -seedDemo
+wait text "WEEK 2 DAY 1" timeout=20
+tap #workout.menu
+tap #menu.reorder
+wait nav "Reorder Exercises"
+selected #segment.later-weeks-too
+tap #segment.this-session
+wait text "Later weeks keep the order they have now."
+tap #reorder.cancel
+absent nav "Reorder Exercises"

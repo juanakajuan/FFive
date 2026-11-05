@@ -101,6 +101,11 @@ public final class Store {
         commit()
     }
 
+    public func setType(_ type: SetType, of set: SetEntry) {
+        set.type = type
+        commit()
+    }
+
     public func addSet(to exercise: Exercise) {
         exercise.addSet()
         commit()
@@ -119,6 +124,11 @@ public final class Store {
 
     public func swapExercise(_ exercise: Exercise, to name: String, muscle: Muscle) {
         MesoPlanner.swap(exercise, to: name, muscle: muscle, unit: unit, snapshot: snapshot, in: context)
+        commit()
+    }
+
+    public func reorderExercises(of workout: Workout, to exercises: [Exercise], scope: ReorderScope) {
+        MesoPlanner.reorder(workout, to: exercises, scope: scope)
         commit()
     }
 
