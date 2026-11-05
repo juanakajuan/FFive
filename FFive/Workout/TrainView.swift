@@ -31,7 +31,6 @@ struct TrainView: View {
     @Environment(AppRouter.self) private var router
     @Query(Mesocycle.active) private var activeMesos: [Mesocycle]
     @Query(Workout.open) private var openWorkouts: [Workout]
-    @Query(Workout.history) private var finishedWorkouts: [Workout]
 
     @State private var showingBuilder = false
     @State private var showingSchedule = false
@@ -99,7 +98,7 @@ struct TrainView: View {
                 .padding(.bottom, 8)
                 .surfaceCard()
 
-                StatsRow(history: finishedWorkouts)
+                StatsRow(stats: store.weekStats())
                     .padding(.horizontal, Theme.gutter)
             }
         }
@@ -190,21 +189,6 @@ struct ScheduleSheet: View {
                 }
             }
         }
-    }
-}
-
-struct StatsRow: View {
-    let history: [Workout]
-
-    var body: some View {
-        let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
-        let thisWeek = history.filter { $0.startDate >= weekStart }
-        HStack(spacing: 12) {
-            StatTile(title: "This Week", value: "\(thisWeek.count)", icon: "flame.fill")
-            StatTile(title: "Time", value: formatDuration(thisWeek.reduce(0) { $0 + $1.duration }), icon: "clock.fill")
-            StatTile(title: "All Time", value: "\(history.count)", icon: "trophy.fill")
-        }
-        .fixedSize(horizontal: false, vertical: true)
     }
 }
 

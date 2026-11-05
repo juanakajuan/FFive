@@ -56,7 +56,7 @@ struct ActiveWorkoutView: View {
 
     var body: some View {
         let exercises = workout.sortedExercises
-        let pendingSoreness = workout.pendingSoreness
+        let pendingSoreness = store.pendingSoreness(in: workout)
         ScrollView {
             LazyVStack(spacing: 16) {
                 if let note = workout.note {

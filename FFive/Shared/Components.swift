@@ -31,6 +31,20 @@ struct StatTile: View {
     }
 }
 
+/// This week's sessions and time, and every session, on the Workout tab and in Progress.
+struct StatsRow: View {
+    let stats: WeekStats
+
+    var body: some View {
+        HStack(spacing: 8) {
+            StatTile(title: "This Week", value: "\(stats.thisWeek)", icon: "flame")
+            StatTile(title: "Time", value: formatDuration(stats.time), icon: "clock")
+            StatTile(title: "All Time", value: "\(stats.allTime)", icon: "trophy")
+        }
+        .fixedSize(horizontal: false, vertical: true)
+    }
+}
+
 struct MuscleChip: View {
     let muscle: Muscle
 

@@ -40,7 +40,7 @@ struct ProgressScreen: View {
         .navigationDestination(item: $demoSeries) { ExerciseTrendView(series: $0, unit: unit) }
         .task {
             if DemoLaunch.take(.strength) {
-                demoSeries = StrengthSeries.all(from: history).max { $0.points.count < $1.points.count }
+                demoSeries = store.strengthSeries().max { $0.points.count < $1.points.count }
             }
         }
     }
@@ -104,7 +104,7 @@ struct ProgressScreen: View {
 
     @ViewBuilder
     private var strength: some View {
-        let series = StrengthSeries.all(from: history)
+        let series = store.strengthSeries()
         if series.isEmpty {
             empty("No loaded sets yet", systemImage: "chart.line.uptrend.xyaxis",
                   description: "Finish a session with weighted sets to start tracking estimated 1RM.")
@@ -151,7 +151,7 @@ struct ProgressScreen: View {
 
     @ViewBuilder
     private var historyList: some View {
-        HistoryStats(history: history)
+        StatsRow(stats: store.weekStats())
             .themedRow(vertical: 4)
             .listRowSeparator(.hidden)
         heading("History")
@@ -169,57 +169,6 @@ struct ProgressScreen: View {
         .onDelete { offsets in
             for index in offsets { store.delete(history[index]) }
         }
-    }
-}
-
-private struct HistoryStats: View {
-    let history: [Workout]
-
-    var body: some View {
-        let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
-        let thisWeek = history.filter { $0.startDate >= weekStart }
-        HStack(spacing: 8) {
-            StatTile(title: "This Week", value: "\(thisWeek.count)", icon: "flame")
-            StatTile(title: "Time", value: formatDuration(thisWeek.reduce(0) { $0 + $1.duration }), icon: "clock")
-            StatTile(title: "All Time", value: "\(history.count)", icon: "trophy")
-        }
-        .fixedSize(horizontal: false, vertical: true)
-    }
-}
-
-struct StrengthSeries: Identifiable, Hashable {
-    struct Point: Identifiable, Hashable {
-        let id = UUID()
-        let date: Date
-        let value: Double
-        let bestSet: String
-    }
-
-    let id: ExerciseID
-    let name: String
-    let muscle: Muscle?
-    let points: [Point]
-
-    var latest: Double { points.last?.value ?? 0 }
-    var change: Double { latest - (points.first?.value ?? 0) }
-
-    /// One point per finished session per exercise, most recently trained exercise first.
-    static func all(from workouts: [Workout]) -> [StrengthSeries] {
-        var byKey: [ExerciseID: (name: String, muscle: Muscle?, points: [Point])] = [:]
-        for workout in workouts.sorted(by: { $0.startDate < $1.startDate }) {
-            for exercise in workout.exercises {
-                guard let best = exercise.strongestSet else { continue }
-                let point = Point(date: workout.startDate, value: best.oneRepMax,
-                                  bestSet: "\(formatWeight(best.entry.weight)) × \(best.entry.reps)")
-                var series = byKey[exercise.key] ?? (name: "", muscle: exercise.muscle, points: [])
-                series.name = exercise.info?.name ?? exercise.name
-                series.points.append(point)
-                byKey[exercise.key] = series
-            }
-        }
-        return byKey
-            .map { StrengthSeries(id: $0.key, name: $0.value.name, muscle: $0.value.muscle, points: $0.value.points) }
-            .sorted { ($0.points.last?.date ?? .distantPast) > ($1.points.last?.date ?? .distantPast) }
     }
 }
 
@@ -436,7 +385,9 @@ struct HistoryRow: View {
 }
 
 #Preview {
-    NavigationStack { ProgressScreen() }
-        .modelContainer(AppStore.makeContainer(inMemory: true))
+    let store = Store(inMemory: true)
+    return NavigationStack { ProgressScreen() }
+        .environment(store)
+        .modelContainer(store.container)
         .preferredColorScheme(.dark)
 }

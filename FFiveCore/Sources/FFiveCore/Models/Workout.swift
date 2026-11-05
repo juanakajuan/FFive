@@ -79,7 +79,7 @@ public final class Workout {
 
     /// Earlier sessions in this block still waiting to hear how a muscle recovered, keyed by muscle.
     /// Soreness is only knowable once the muscle is trained again, so this session collects it.
-    public var pendingSoreness: [Muscle: MuscleFeedbackRecord] {
+    var pendingSoreness: [Muscle: MuscleFeedbackRecord] {
         guard let mesocycle, !isFinished else { return [:] }
         var pending: [Muscle: MuscleFeedbackRecord] = [:]
         for muscle in trainedMuscles {

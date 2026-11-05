@@ -1,5 +1,4 @@
 import SwiftUI
-import SwiftData
 import FFiveCore
 
 struct ExercisePickerView: View {
@@ -9,34 +8,13 @@ struct ExercisePickerView: View {
     var onPick: (String, Muscle) -> Void
 
     @Environment(\.dismiss) private var dismiss
-    @Query private var logged: [Exercise]
+    @Environment(Store.self) private var store
     @State private var search = ""
-
-    private struct Entry: Identifiable {
-        let id: ExerciseID
-        let name: String
-        let muscle: Muscle
-        let detail: String
-    }
 
     private var query: String { search.trimmingCharacters(in: .whitespaces) }
 
-    /// Catalog exercises plus custom ones the lifter has logged with a muscle.
-    private var entries: [Entry] {
-        var result = ExerciseCatalog.all.map { Entry(id: $0.id, name: $0.name, muscle: $0.muscle, detail: $0.equipment.displayName) }
-        var seen = Set(result.map(\.id))
-        for exercise in logged {
-            guard let muscle = exercise.muscle, seen.insert(exercise.key).inserted else { continue }
-            result.append(Entry(id: exercise.key, name: exercise.name, muscle: muscle, detail: "Custom"))
-        }
-        return result
-            .filter { muscle == nil || $0.muscle == muscle }
-            .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
-            .sorted { $0.name < $1.name }
-    }
-
     var body: some View {
-        let entries = entries
+        let entries = store.library(muscle: muscle, search: search)
         NavigationStack {
             VStack(spacing: 0) {
                 SearchBox(prompt: "Search or create exercise", text: $search)
@@ -97,7 +75,7 @@ struct ExercisePickerView: View {
         }
     }
 
-    private func row(_ entry: Entry) -> some View {
+    private func row(_ entry: ExerciseListing) -> some View {
         Button { pick(entry.name, entry.muscle) } label: {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
@@ -106,7 +84,7 @@ struct ExercisePickerView: View {
                         .foregroundStyle(Theme.text)
                     HStack(spacing: 4) {
                         MuscleDotLabel(muscle: entry.muscle)
-                        Text("\u{2022} \(entry.detail)")
+                        Text("\u{2022} \(entry.equipment)")
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondary)
                     }
@@ -119,7 +97,7 @@ struct ExercisePickerView: View {
             .contentShape(Rectangle())
         }
         .buttonStyle(.plain)
-        .accessibilityLabel("\(entry.name), \(entry.detail)")
+        .accessibilityLabel("\(entry.name), \(entry.equipment)")
         .accessibilityValue(entry.muscle.displayName)
         .a11y(.pickerRow, key: entry.name)
     }

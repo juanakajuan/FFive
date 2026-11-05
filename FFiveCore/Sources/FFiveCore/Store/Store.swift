@@ -12,6 +12,7 @@ public final class Store {
     public let container: ModelContainer
     public let settings: Settings
     let context: ModelContext
+    /// Bumped by every saved commit. A read that fetches touches it, so the view calling the read re-renders after a write.
     public private(set) var revision = 0
     /// The error of the last commit that did not save, until a screen has shown it.
     public private(set) var failure: (any Error)?
@@ -124,6 +125,67 @@ public final class Store {
 
     public func lastFinishedExercise(_ key: ExerciseID) -> Exercise? {
         MesoPlanner.lastFinishedExercise(key, in: context)
+    }
+
+    /// Catalog exercises plus custom ones the lifter has logged with a muscle, by name.
+    public func library(muscle: Muscle?, search: String) -> [ExerciseListing] {
+        _ = revision
+        var listings = ExerciseCatalog.all.map { ExerciseListing(id: $0.id, name: $0.name, muscle: $0.muscle, info: $0) }
+        var seen = Set(listings.map(\.id))
+        for exercise in (try? context.fetch(FetchDescriptor<Exercise>())) ?? [] {
+            guard let muscle = exercise.muscle, seen.insert(exercise.key).inserted else { continue }
+            listings.append(ExerciseListing(id: exercise.key, name: exercise.name, muscle: muscle, info: nil))
+        }
+        let query = search.trimmingCharacters(in: .whitespaces)
+        return listings
+            .filter { muscle == nil || $0.muscle == muscle }
+            .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
+            .sorted {
+                switch $0.name.localizedCaseInsensitiveCompare($1.name) {
+                case .orderedSame: $0.id.rawValue < $1.id.rawValue
+                case let order: order == .orderedAscending
+                }
+            }
+    }
+
+    public func weekStats(now: Date = .now) -> WeekStats {
+        _ = revision
+        let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        let thisWeek = (try? context.fetch(FetchDescriptor<Workout>(predicate: #Predicate { $0.endDate != nil && $0.startDate >= weekStart }))) ?? []
+        return WeekStats(thisWeek: thisWeek.count,
+                         time: thisWeek.reduce(0) { $0 + $1.duration },
+                         allTime: (try? context.fetchCount(Workout.history)) ?? 0)
+    }
+
+    /// Most recently trained exercise first. A session that logs one exercise twice gives one point, its stronger set.
+    public func strengthSeries() -> [StrengthSeries] {
+        _ = revision
+        var finished = FetchDescriptor<Workout>(predicate: #Predicate { $0.endDate != nil }, sortBy: [SortDescriptor(\.startDate)])
+        finished.relationshipKeyPathsForPrefetching = [\.exercises]
+        var byKey: [ExerciseID: (name: String, muscle: Muscle?, points: [StrengthSeries.Point])] = [:]
+        for workout in (try? context.fetch(finished)) ?? [] {
+            var best: [ExerciseID: (exercise: Exercise, entry: SetEntry, oneRepMax: Double)] = [:]
+            for exercise in workout.exercises {
+                guard let strongest = exercise.strongestSet,
+                      strongest.oneRepMax > best[exercise.key]?.oneRepMax ?? -.infinity else { continue }
+                best[exercise.key] = (exercise, strongest.entry, strongest.oneRepMax)
+            }
+            for (key, set) in best {
+                let point = StrengthSeries.Point(id: .init(exercise: key, date: workout.startDate), value: set.oneRepMax,
+                                                 bestSet: "\(formatWeight(set.entry.weight)) × \(set.entry.reps)")
+                var series = byKey[key] ?? (name: "", muscle: set.exercise.muscle, points: [])
+                series.name = set.exercise.info?.name ?? set.exercise.name
+                series.points.append(point)
+                byKey[key] = series
+            }
+        }
+        return byKey
+            .map { StrengthSeries(id: $0.key, name: $0.value.name, muscle: $0.value.muscle, points: $0.value.points) }
+            .sorted { ($0.points.last?.date ?? .distantPast, $1.id.rawValue) > ($1.points.last?.date ?? .distantPast, $0.id.rawValue) }
+    }
+
+    public func pendingSoreness(in workout: Workout) -> [Muscle: MuscleFeedbackRecord] {
+        workout.pendingSoreness
     }
 
     public func finish(_ workout: Workout) {
