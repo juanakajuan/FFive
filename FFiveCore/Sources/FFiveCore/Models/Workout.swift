@@ -93,7 +93,7 @@ public final class Workout {
         return pending
     }
 
-    public func updateFeedback(for muscle: Muscle, _ change: (inout MuscleFeedback) -> Void) {
+    func updateFeedback(for muscle: Muscle, _ change: (inout MuscleFeedback) -> Void) {
         let record =
             feedbackRecord(for: muscle)
             ?? {

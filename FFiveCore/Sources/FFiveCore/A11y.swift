@@ -32,6 +32,7 @@ public enum A11y: String, CaseIterable {
     case menuRemoveExercise = "menu.remove-exercise"
     case menuDeleteSet = "menu.delete-set"
     case menuSetType = "menu.set-type"
+    case menuJointPain = "menu.joint-pain"
     case dialogEndMesocycle = "dialog.end-mesocycle"
     case dialogDiscard = "dialog.discard"
     case dialogTrainDay = "dialog.train-day"
