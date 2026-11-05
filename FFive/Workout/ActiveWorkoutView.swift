@@ -68,40 +68,7 @@ struct ActiveWorkoutView: View {
                         .accessibilityLabel("Workout note: \(note)")
                 }
                 ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
-                    let muscle = exercise.muscle
-                    if let muscle, let record = pendingSoreness[muscle],
-                        exercises.firstIndex(where: { $0.muscle == muscle }) == index
-                    {
-                        SorenessCard(muscle: muscle, record: record) { soreness in
-                            withAnimation {
-                                store.recordSoreness(soreness, on: record, during: workout)
-                            }
-                        }
-                    }
-
-                    ExerciseCard(
-                        exercise: exercise,
-                        position: index + 1,
-                        phase: workout.phase,
-                        onSetCompleted: setCompleted,
-                        onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
-                        jointPain: jointPain(for: muscle),
-                        onShowHistory: { historyFor = exercise },
-                        onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }
-                    ) {
-                        store.removeExercise(exercise, from: workout)
-                    }
-
-                    if let muscle, workout.mesocycle != nil,
-                        exercises.lastIndex(where: { $0.muscle == muscle }) == index,
-                        exercise.isLogged
-                    {
-                        FeedbackCard(
-                            muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()
-                        ) { change in
-                            store.updateFeedback(for: muscle, in: workout, change)
-                        }
-                    }
+                    exerciseRow(exercise, at: index, in: exercises, pendingSoreness: pendingSoreness)
                 }
             }
             .padding(.vertical, 16)
@@ -199,6 +166,47 @@ struct ActiveWorkoutView: View {
         return Binding(
             get: { workout.feedbackRecord(for: muscle)?.value.jointPain },
             set: { value in store.updateFeedback(for: muscle, in: workout) { $0.jointPain = value } })
+    }
+
+    @ViewBuilder
+    private func exerciseRow(
+        _ exercise: Exercise, at index: Int, in exercises: [Exercise],
+        pendingSoreness: [Muscle: MuscleFeedbackRecord]
+    ) -> some View {
+        let muscle = exercise.muscle
+        if let muscle, let record = pendingSoreness[muscle],
+            exercises.firstIndex(where: { $0.muscle == muscle }) == index
+        {
+            SorenessCard(muscle: muscle, record: record) { soreness in
+                withAnimation {
+                    store.recordSoreness(soreness, on: record, during: workout)
+                }
+            }
+        }
+
+        ExerciseCard(
+            exercise: exercise,
+            position: index + 1,
+            phase: workout.phase,
+            onSetCompleted: setCompleted,
+            onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
+            jointPain: jointPain(for: muscle),
+            onShowHistory: { historyFor = exercise },
+            onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }
+        ) {
+            store.removeExercise(exercise, from: workout)
+        }
+
+        if let muscle, workout.mesocycle != nil,
+            exercises.lastIndex(where: { $0.muscle == muscle }) == index,
+            exercise.isLogged
+        {
+            FeedbackCard(
+                muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()
+            ) { change in
+                store.updateFeedback(for: muscle, in: workout, change)
+            }
+        }
     }
 
     private func saveNote(_ text: String, to target: NoteEdit.Target) {
