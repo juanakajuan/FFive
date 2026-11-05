@@ -3,7 +3,7 @@ import SwiftData
 import FFiveCore
 
 struct MesosView: View {
-    @Environment(\.modelContext) private var context
+    @Environment(Store.self) private var store
     @Query(sort: \Mesocycle.startDate, order: .reverse) private var mesos: [Mesocycle]
 
     @State private var path = NavigationPath()
@@ -39,7 +39,7 @@ struct MesosView: View {
             .confirmationDialog("End this mesocycle?",
                                 isPresented: Binding(get: { ending != nil }, set: { if !$0 { ending = nil } }),
                                 titleVisibility: .visible, presenting: ending) { meso in
-                Button("End Mesocycle", role: .destructive) { end(meso) }
+                Button("End Mesocycle", role: .destructive) { store.endMesocycle(meso) }
             } message: { _ in
                 Text("Logged sessions stay in Progress. You can plan a new block right after.")
             }
@@ -109,16 +109,13 @@ struct MesosView: View {
         }
         .padding(Theme.gutter * 2)
     }
-
-    private func end(_ meso: Mesocycle) {
-        meso.end(in: context)
-        try? context.save()
-    }
 }
 
 #Preview {
-    MesosView()
+    let store = Store(inMemory: true)
+    return MesosView()
         .environment(AppRouter())
-        .modelContainer(AppStore.makeContainer(inMemory: true))
+        .environment(store)
+        .modelContainer(store.container)
         .preferredColorScheme(.dark)
 }

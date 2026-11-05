@@ -5,9 +5,9 @@ import SwiftData
 public final class SetEntry {
     public var reps: Int
     public var weight: Double
-    public var isDone: Bool = false
+    public internal(set) var isDone: Bool = false
     public var order: Int
-    public var exercise: Exercise?
+    public internal(set) var exercise: Exercise?
     public var targetWeight: Double?
     public var targetReps: Int?
 

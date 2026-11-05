@@ -47,6 +47,7 @@ final class AppRouter {
 }
 
 struct RootView: View {
+    @Environment(Store.self) private var store
     @State private var router = AppRouter()
     @State private var keyboardShown = false
 
@@ -72,6 +73,11 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardShown = false }
         .environment(router)
         .tint(Theme.text)
+        .alert("Your last change was not saved",
+               isPresented: Binding(get: { store.failure != nil }, set: { if !$0 { store.dismissFailure() } })) {
+        } message: {
+            Text(store.failure?.localizedDescription ?? "")
+        }
     }
 }
 

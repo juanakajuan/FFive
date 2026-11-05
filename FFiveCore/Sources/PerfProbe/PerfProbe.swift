@@ -1,4 +1,4 @@
-import FFiveCore
+@testable import FFiveCore
 import Foundation
 import SwiftData
 
@@ -6,10 +6,12 @@ import SwiftData
 struct PerfProbe {
     static let historyCount = 156
     static let runs = 5
+    static let writes = 100
 
     @MainActor
     static func main() {
-        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        let store = Store(inMemory: true)
+        let context = store.context
         let lifts: [(name: String, muscle: Muscle)] = [
             ("Bench Press", .chest), ("Cable Fly", .chest), ("Lat Pulldown", .back),
             ("Barbell Row", .back), ("Calf Raise", .calves), ("Incline Dumbbell Press", .chest),
@@ -38,13 +40,37 @@ struct PerfProbe {
         }
         let meso = MesoPlanner.start(draft, in: context)
 
+        let clock = ContinuousClock()
         var millis: [Double] = []
         for _ in 0..<runs {
-            let clock = ContinuousClock()
             let elapsed = clock.measure { _ = MesoPlanner.weeklyVolume(meso, week: 0, unit: .lb, context: context) }
-            millis.append(Double(elapsed.components.seconds) * 1000 + Double(elapsed.components.attoseconds) / 1e15)
+            millis.append(elapsed.milliseconds)
         }
-        let median = millis.sorted()[runs / 2]
-        print("perf-probe: weeklyVolume median \(Int(median.rounded())) ms over \(runs) runs, \(historyCount) finished workouts")
+        print("perf-probe: weeklyVolume median \(Int(millis.sorted()[runs / 2].rounded())) ms over \(runs) runs, \(historyCount) finished workouts")
+
+        let session = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb, in: context)
+        try? context.save()
+        let set = session.sortedExercises[0].sortedSets[0]
+        var toggleSave: [Double] = []
+        for _ in 0..<writes {
+            toggleSave.append(clock.measure {
+                set.isDone.toggle()
+                try? context.save()
+            }.milliseconds)
+        }
+        print("perf-probe: set-done median \(toggleSave.sorted()[writes / 2].formatted(.number.precision(.fractionLength(2)))) ms per write over \(writes) writes (toggle+save, the trunk write)")
+        #if !TRUNK_WRITE
+        var storeLog: [Double] = []
+        for index in 0..<writes {
+            storeLog.append(clock.measure { store.log(set, done: index.isMultiple(of: 2)) }.milliseconds)
+        }
+        print("perf-probe: set-done median \(storeLog.sorted()[writes / 2].formatted(.number.precision(.fractionLength(2)))) ms per write over \(writes) writes (store.log)")
+        #endif
+    }
+}
+
+extension Duration {
+    var milliseconds: Double {
+        Double(components.seconds) * 1000 + Double(components.attoseconds) / 1e15
     }
 }

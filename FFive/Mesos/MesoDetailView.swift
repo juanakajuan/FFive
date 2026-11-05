@@ -6,9 +6,8 @@ import FFiveCore
 struct MesoDetailView: View {
     let meso: Mesocycle
 
-    @Environment(\.modelContext) private var context
+    @Environment(Store.self) private var store
     @Environment(AppRouter.self) private var router
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
     @State private var confirmEnd = false
 
     private var isActive: Bool { meso.finishedDate == nil }
@@ -22,7 +21,7 @@ struct MesoDetailView: View {
                 MesoScheduleGrid(meso: meso) { key in
                     if isActive { router.openSession(key, in: meso) }
                 }
-                WeekVolumeCard(meso: meso, week: week, unit: unit)
+                WeekVolumeCard(meso: meso, week: week)
                 if isActive {
                     Button("End Mesocycle", role: .destructive) { confirmEnd = true }
                         .font(.system(size: 16, weight: .semibold))
@@ -37,7 +36,7 @@ struct MesoDetailView: View {
         .navigationTitle(meso.name)
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button("End Mesocycle", role: .destructive, action: end)
+            Button("End Mesocycle", role: .destructive) { store.endMesocycle(meso) }
         } message: {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
         }
@@ -62,10 +61,5 @@ struct MesoDetailView: View {
         .padding(Theme.gutter)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
-    }
-
-    private func end() {
-        meso.end(in: context)
-        try? context.save()
     }
 }

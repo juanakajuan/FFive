@@ -4,23 +4,23 @@ import SwiftData
 @Model
 public final class Workout {
     public var name: String
-    public var startDate: Date
-    public var endDate: Date?
+    public internal(set) var startDate: Date
+    public internal(set) var endDate: Date?
     @Relationship(deleteRule: .cascade, inverse: \Exercise.workout)
-    public var exercises: [Exercise] = []
-    public var mesocycle: Mesocycle?
-    public var week: Int?
-    public var dayIndex: Int?
+    public internal(set) var exercises: [Exercise] = []
+    public internal(set) var mesocycle: Mesocycle?
+    public internal(set) var week: Int?
+    public internal(set) var dayIndex: Int?
     @Relationship(deleteRule: .cascade, inverse: \MuscleFeedbackRecord.workout)
     public var feedback: [MuscleFeedbackRecord] = []
-    public var note: String?
+    public internal(set) var note: String?
 
     public init(name: String, startDate: Date = .now) {
         self.name = name
         self.startDate = startDate
     }
 
-    public func setNote(_ text: String) {
+    func setNote(_ text: String) {
         note = text.noteText
     }
 
@@ -77,6 +77,22 @@ public final class Workout {
         feedback.first { $0.muscleRaw == muscle.rawValue }
     }
 
+    /// Earlier sessions in this block still waiting to hear how a muscle recovered, keyed by muscle.
+    /// Soreness is only knowable once the muscle is trained again, so this session collects it.
+    public var pendingSoreness: [Muscle: MuscleFeedbackRecord] {
+        guard let mesocycle, !isFinished else { return [:] }
+        var pending: [Muscle: MuscleFeedbackRecord] = [:]
+        for muscle in trainedMuscles {
+            let previous = mesocycle.workouts
+                .filter { $0 !== self && $0.isFinished && $0.startDate < startDate && $0.trained(muscle) }
+                .max { $0.startDate < $1.startDate }
+            if let record = previous?.feedbackRecord(for: muscle), record.value.soreness == nil {
+                pending[muscle] = record
+            }
+        }
+        return pending
+    }
+
     public func updateFeedback(for muscle: Muscle, _ change: (inout MuscleFeedback) -> Void) {
         let record = feedbackRecord(for: muscle) ?? {
             let record = MuscleFeedbackRecord(muscle: muscle)
@@ -86,9 +102,14 @@ public final class Workout {
         change(&record.value)
     }
 
+    func remove(_ exercise: Exercise, in context: ModelContext) {
+        exercises.removeAll { $0 === exercise }
+        context.delete(exercise)
+    }
+
     /// Free-form sessions drop what was never done. Mesocycle sessions keep the full prescription,
     /// because next week's plan is built from it and an untouched set means "repeat the target".
-    public func finish(in context: ModelContext) {
+    func finish(in context: ModelContext) {
         if mesocycle == nil {
             for exercise in exercises {
                 if !exercise.sets.contains(where: \.isDone) {
@@ -99,5 +120,15 @@ public final class Workout {
             }
         }
         endDate = .now
+    }
+}
+
+extension Workout {
+    public static var history: FetchDescriptor<Workout> {
+        FetchDescriptor(predicate: #Predicate { $0.endDate != nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
+    }
+
+    public static var open: FetchDescriptor<Workout> {
+        FetchDescriptor(predicate: #Predicate { $0.endDate == nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
     }
 }

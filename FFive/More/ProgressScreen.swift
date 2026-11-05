@@ -9,11 +9,10 @@ struct ProgressScreen: View {
         var id: Self { self }
     }
 
-    @Environment(\.modelContext) private var context
+    @Environment(Store.self) private var store
     @Query(sort: \Mesocycle.startDate, order: .reverse) private var mesos: [Mesocycle]
-    @Query(filter: #Predicate<Workout> { $0.endDate != nil }, sort: \Workout.startDate, order: .reverse)
-    private var history: [Workout]
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
+    @Query(Workout.history) private var history: [Workout]
+    private var unit: WeightUnit { store.settings.weightUnit }
 
     @State private var pane: Pane = DemoLaunch.route == .strength ? .strength : .volume
     @State private var demoSeries: StrengthSeries?
@@ -72,7 +71,7 @@ struct ProgressScreen: View {
     private var volume: some View {
         if let meso = mesos.first(where: { $0.persistentModelID == selectedMeso }) ?? mesos.first(where: { $0.finishedDate == nil }) ?? mesos.first {
             let week = min(selectedWeek ?? meso.nextUp?.week ?? meso.accumulationWeeks, meso.accumulationWeeks)
-            let volumes = MesoPlanner.weeklyVolume(meso, week: week, unit: unit, context: context)
+            let volumes = store.weeklyVolume(meso, week: week)
             heading("Sets per muscle · \(meso.phase(week: week) == .deload ? "Deload" : "Week \(week + 1)")")
             VStack(alignment: .leading, spacing: 14) {
                 if mesos.count > 1 {
@@ -166,7 +165,7 @@ struct ProgressScreen: View {
             .themedRow()
         }
         .onDelete { offsets in
-            for index in offsets { context.delete(history[index]) }
+            for index in offsets { store.delete(history[index]) }
         }
     }
 }

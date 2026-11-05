@@ -27,16 +27,11 @@ enum WorkoutTabContent: Equatable {
 }
 
 struct TrainView: View {
-    @Environment(\.modelContext) private var context
+    @Environment(Store.self) private var store
     @Environment(AppRouter.self) private var router
-    @Query(filter: #Predicate<Mesocycle> { $0.finishedDate == nil }, sort: \Mesocycle.startDate, order: .reverse)
-    private var activeMesos: [Mesocycle]
-    @Query(filter: #Predicate<Workout> { $0.endDate == nil }, sort: \Workout.startDate, order: .reverse)
-    private var openWorkouts: [Workout]
-    @Query(filter: #Predicate<Workout> { $0.endDate != nil })
-    private var finishedWorkouts: [Workout]
-
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
+    @Query(Mesocycle.active) private var activeMesos: [Mesocycle]
+    @Query(Workout.open) private var openWorkouts: [Workout]
+    @Query(Workout.history) private var finishedWorkouts: [Workout]
 
     @State private var showingBuilder = false
     @State private var showingSchedule = false
@@ -71,15 +66,9 @@ struct TrainView: View {
             }
             .task(id: content) {
                 switch content {
-                case .unbuilt(let meso, let key):
-                    _ = MesoPlanner.workout(for: meso, at: key, unit: unit, in: context)
-                    try? context.save()
-                case .session(let workout) where workout.mesocycle != nil && workout.completedSets == 0:
-                    // A block day is built as soon as the tab shows it. Until a set is logged its clock restarts
-                    // each time it is shown, so duration and the soreness lookback count from when training began.
-                    workout.startDate = .now
-                default:
-                    break
+                case .unbuilt(let meso, let key): store.buildSession(meso, at: key)
+                case .session(let workout): store.show(workout)
+                default: break
                 }
             }
         }
@@ -98,7 +87,7 @@ struct TrainView: View {
                     Button("Plan a Mesocycle") { showingBuilder = true }
                         .buttonStyle(.wideFilled)
                         .padding(.top, 4)
-                    Button("Quick Workout") { WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, in: context) }
+                    Button("Quick Workout") { WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store) }
                         .buttonStyle(.wideOutlined)
                     Text("Log a free-form session with no plan.")
                         .font(Theme.caption)
@@ -126,7 +115,7 @@ struct TrainView: View {
                 Button("End Mesocycle") { confirmEnd = true }
                     .buttonStyle(.wideFilled)
                     .padding(.top, 4)
-                Button("Quick Workout") { WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, in: context) }
+                Button("Quick Workout") { WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store) }
                     .buttonStyle(.wideOutlined)
             }
             .padding(.horizontal, Theme.gutter)
@@ -142,7 +131,7 @@ struct TrainView: View {
         }
         .sheet(isPresented: $showingSchedule) { ScheduleSheet(meso: meso, week: meso.accumulationWeeks) }
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button("End Mesocycle", role: .destructive) { WorkoutTabActions.end(meso, router: router, in: context) }
+            Button("End Mesocycle", role: .destructive) { WorkoutTabActions.end(meso, router: router, store: store) }
         } message: {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
         }
@@ -153,26 +142,14 @@ struct TrainView: View {
 @MainActor
 enum WorkoutTabActions {
     /// Shows the open quick workout, starting one first when none is open.
-    static func showQuickWorkout(_ open: Workout?, router: AppRouter, in context: ModelContext) {
-        if open == nil {
-            context.insert(Workout(name: defaultWorkoutName()))
-            try? context.save()
-        }
+    static func showQuickWorkout(_ open: Workout?, router: AppRouter, store: Store) {
+        if open == nil { store.startQuickWorkout() }
         router.focus = nil
     }
 
-    static func end(_ meso: Mesocycle, router: AppRouter, in context: ModelContext) {
-        meso.end(in: context)
-        try? context.save()
+    static func end(_ meso: Mesocycle, router: AppRouter, store: Store) {
+        store.endMesocycle(meso)
         router.focus = nil
-    }
-
-    private static func defaultWorkoutName() -> String {
-        switch Calendar.current.component(.hour, from: .now) {
-        case 5..<12: "Morning Workout"
-        case 12..<17: "Afternoon Workout"
-        default: "Evening Workout"
-        }
     }
 }
 
@@ -183,7 +160,6 @@ struct ScheduleSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(AppRouter.self) private var router
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
 
     var body: some View {
         NavigationStack {
@@ -193,7 +169,7 @@ struct ScheduleSheet: View {
                         router.openSession(key, in: meso)
                         dismiss()
                     }
-                    WeekVolumeCard(meso: meso, week: week, unit: unit)
+                    WeekVolumeCard(meso: meso, week: week)
                 }
                 .padding(Theme.gutter)
             }
@@ -226,8 +202,10 @@ struct StatsRow: View {
 }
 
 #Preview {
-    TrainView()
+    let store = Store(inMemory: true)
+    return TrainView()
         .environment(AppRouter())
-        .modelContainer(AppStore.makeContainer(inMemory: true))
+        .environment(store)
+        .modelContainer(store.container)
         .preferredColorScheme(.dark)
 }

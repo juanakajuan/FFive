@@ -3,7 +3,7 @@ import SwiftData
 import FFiveCore
 
 struct TemplatesView: View {
-    @Query(filter: #Predicate<Mesocycle> { $0.finishedDate == nil }) private var activeMesos: [Mesocycle]
+    @Query(Mesocycle.active) private var activeMesos: [Mesocycle]
 
     @State private var search = ""
     @State private var daysPerWeek: Int?
