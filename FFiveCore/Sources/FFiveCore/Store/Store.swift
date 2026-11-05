@@ -188,6 +188,12 @@ public final class Store {
         workout.pendingSoreness
     }
 
+    /// The exercise's pinned note, which follows it into every later session.
+    public func pinnedNote(on exercise: Exercise) -> String? {
+        _ = revision
+        return PinnedNote.find(named: exercise.name, in: context)?.text
+    }
+
     public func finish(_ workout: Workout) {
         workout.finish(in: context)
         commit()

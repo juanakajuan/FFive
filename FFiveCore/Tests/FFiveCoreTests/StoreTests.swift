@@ -444,4 +444,17 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(Set(bench.points.map(\.id)).count, bench.points.count)
         XCTAssertEqual(store.strengthSeries(), series, "ids come from the lift and the date, so a re-read is equal")
     }
+
+    func testPinnedNoteFollowsTheExercise() throws {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
+        let exercise = workout.exercises[0]
+        XCTAssertNil(store.pinnedNote(on: exercise))
+        store.setNote("Elbows in", on: exercise)
+        store.pinNote(on: exercise)
+        XCTAssertEqual(store.pinnedNote(on: exercise), "Elbows in")
+        store.unpinNote(on: exercise)
+        XCTAssertNil(store.pinnedNote(on: exercise))
+    }
 }

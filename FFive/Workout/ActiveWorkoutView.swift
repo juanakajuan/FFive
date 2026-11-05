@@ -273,27 +273,12 @@ struct ExerciseCard: View {
     var onRemove: () -> Void
 
     @Environment(Store.self) private var store
-    @Query private var pinnedNotes: [PinnedNote]
     @State private var showingCue = false
-
-    init(exercise: Exercise, position: Int, phase: WeekPhase?, onSetCompleted: @escaping () -> Void,
-         onSwap: (() -> Void)? = nil, onShowHistory: @escaping () -> Void, onEditNote: @escaping (String) -> Void, onRemove: @escaping () -> Void) {
-        self.exercise = exercise
-        self.position = position
-        self.phase = phase
-        self.onSetCompleted = onSetCompleted
-        self.onSwap = onSwap
-        self.onShowHistory = onShowHistory
-        self.onEditNote = onEditNote
-        self.onRemove = onRemove
-        let name = exercise.name
-        _pinnedNotes = Query(filter: #Predicate<PinnedNote> { $0.name == name })
-    }
 
     var body: some View {
         let unit = store.settings.weightUnit
         let sets = exercise.sortedSets
-        let pinned = pinnedNotes.first?.text
+        let pinned = store.pinnedNote(on: exercise)
         let note = pinned ?? exercise.note
         VStack(alignment: .leading, spacing: 0) {
             if let muscle = exercise.muscle {
@@ -311,7 +296,7 @@ struct ExerciseCard: View {
                         .foregroundStyle(Theme.secondary)
                 }
                 Spacer(minLength: 0)
-                actions
+                actions(note: note)
             }
             .padding(.horizontal, Theme.gutter)
             .padding(.top, 10)
@@ -353,7 +338,7 @@ struct ExerciseCard: View {
         .surfaceCard()
     }
 
-    private var actions: some View {
+    private func actions(note: String?) -> some View {
         HStack(spacing: 16) {
             if exercise.info != nil {
                 Button {
@@ -375,7 +360,6 @@ struct ExerciseCard: View {
                 }
                 Button("Add Set", systemImage: "plus") { store.addSet(to: exercise) }
                     .a11y(.menuAddSet)
-                let note = pinnedNotes.first?.text ?? exercise.note
                 Button(note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
                     onEditNote(note ?? "")
                 }
