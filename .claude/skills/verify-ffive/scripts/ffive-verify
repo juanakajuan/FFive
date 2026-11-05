@@ -150,12 +150,12 @@ cmd_drive() {
     done
     [[ -n "$steps" && -f "$steps" ]] || die "usage: drive <steps-file|-> [--name <label>] [--timeout <seconds>]"
     local checked; checked="$(mktemp "$work/steps.XXXXXX")"
-    trap 'rm -f ${piped:+"$piped"} "$checked"' RETURN EXIT
+    trap 'rm -f ${piped:+"$piped"} ${checked:+"$checked"}' RETURN EXIT
     /usr/bin/python3 "$here/steps-preflight.py" "$steps" "$root/FFiveCore/Sources/FFiveCore/A11y.swift" "$checked" || exit 1
     load_state
     mkdir "$work/drive.lock" 2>/dev/null || die "another drive is running (pid $(cat "$work/drive.lock/pid" 2>/dev/null)); never double-drive one simulator"
     echo $$ >"$work/drive.lock/pid"
-    trap 'rm -rf "$work/drive.lock" ${piped:+"$piped"} "$checked"' RETURN EXIT
+    trap 'rm -rf "$work/drive.lock" ${piped:+"$piped"} ${checked:+"$checked"}' RETURN EXIT
     local run="$artifacts/$(date +%Y%m%d-%H%M%S)-$name"
     mkdir -p "$run"
     cp "$checked" "$run/steps.txt"
