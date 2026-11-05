@@ -19,6 +19,7 @@ struct ActiveWorkoutView: View {
     @State private var confirmDiscard = false
     @State private var confirmEnd = false
     @State private var renameDraft: String?
+    @State private var bodyweightDraft: String?
     @State private var noteEdit: NoteEdit?
     @State private var historyFor: Exercise?
     @State private var setsCompleted = 0
@@ -173,6 +174,24 @@ struct ActiveWorkoutView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+        .alert(
+            "Bodyweight",
+            isPresented: Binding(get: { bodyweightDraft != nil }, set: { if !$0 { bodyweightDraft = nil } })
+        ) {
+            TextField(
+                "Bodyweight (\(store.settings.weightUnit.rawValue))",
+                text: Binding(get: { bodyweightDraft ?? "" }, set: { bodyweightDraft = $0 })
+            )
+            .keyboardType(.decimalPad)
+            .a11y(.bodyweightField)
+            Button("Save") {
+                let text = (bodyweightDraft ?? "").trimmingCharacters(in: .whitespaces)
+                store.setBodyweight(Double(text.replacing(",", with: ".")), of: workout)
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Bodyweight lifts log the load you add to it. Leave it empty to clear.")
+        }
         .sheet(item: $noteEdit) { edit in
             NoteEditor(title: edit.target.title, draft: edit.draft) {
                 saveNote($0, to: edit.target)
@@ -248,6 +267,14 @@ struct ActiveWorkoutView: View {
             noteEdit = NoteEdit(target: .day, draft: workout.note ?? "")
         }
         .a11y(.menuWorkoutNote)
+        Button(
+            workout.bodyweight.map { "Bodyweight · \(formatWeight($0)) \(store.settings.weightUnit.rawValue)" }
+                ?? "Set Bodyweight",
+            systemImage: "figure.stand"
+        ) {
+            bodyweightDraft = workout.bodyweight.map(formatWeight) ?? ""
+        }
+        .a11y(.menuBodyweight)
         if workout.mesocycle == nil {
             Button("Rename", systemImage: "pencil") { renameDraft = workout.name }
                 .a11y(.menuRename)
@@ -313,7 +340,7 @@ struct ExerciseCard: View {
                         .font(Theme.cardTitle)
                         .foregroundStyle(Theme.text)
                         .fixedSize(horizontal: false, vertical: true)
-                    Text(exercise.info?.equipment.displayName ?? "Custom")
+                    Text(subtitle(unit: unit))
                         .font(Theme.detail)
                         .foregroundStyle(Theme.secondary)
                 }
@@ -340,6 +367,11 @@ struct ExerciseCard: View {
                     Callout(
                         text: "\(info.cue) \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps.",
                         systemImage: "lightbulb.fill")
+                }
+                if exercise.isBodyweight, exercise.workout?.bodyweight == nil {
+                    Callout(
+                        text: "Set your bodyweight in the workout menu to track strength on this lift.",
+                        systemImage: "figure.stand")
                 }
                 if let phase, let set = sets.first(where: { $0.status == .pending }) ?? sets.first {
                     Callout(text: targetText(set, phase))
@@ -410,10 +442,15 @@ struct ExerciseCard: View {
         }
     }
 
+    private func subtitle(unit: WeightUnit) -> String {
+        guard exercise.isBodyweight else { return exercise.info?.equipment.displayName ?? "Custom" }
+        return exercise.workout?.bodyweight.map { "Bodyweight · \(formatWeight($0)) \(unit.rawValue)" } ?? "Bodyweight"
+    }
+
     private var columnHeaders: some View {
         HStack(spacing: 0) {
             Color.clear.frame(width: SetColumns.menu, height: 1)
-            Text("Weight").frame(width: SetColumns.field).padding(.leading, 12)
+            Text(exercise.isBodyweight ? "BW +/−" : "Weight").frame(width: SetColumns.field).padding(.leading, 12)
             Text("Reps").frame(width: SetColumns.field).padding(.leading, 16)
             Spacer(minLength: 0)
             Text("Log")
@@ -432,9 +469,10 @@ struct ExerciseCard: View {
             return "Calibrate · \(range.lowerBound)–\(range.upperBound) reps \(effort)"
         }
         guard let reps = set.targetReps else {
-            return "Target \(formatWeight(weight)) \(store.settings.weightUnit.rawValue)"
+            return "Target \(exercise.weightText(weight, unit: store.settings.weightUnit))"
         }
-        return weight == 0 ? "Target \(reps) reps" : "Target \(formatWeight(weight)) × \(reps)"
+        return weight == 0 && !exercise.isBodyweight
+            ? "Target \(reps) reps" : "Target \(exercise.weightText(weight)) × \(reps)"
     }
 }
 
@@ -456,6 +494,8 @@ struct SetRow: View {
     private var weight: Binding<Double?> {
         Binding(get: { set.weight == 0 ? nil : set.weight }, set: { set.weight = $0 ?? 0 })
     }
+
+    private var isBodyweight: Bool { self.set.exercise?.isBodyweight ?? false }
 
     private var reps: Binding<Int?> {
         Binding(get: { set.reps == 0 ? nil : set.reps }, set: { set.reps = $0 ?? 0 })
@@ -494,9 +534,9 @@ struct SetRow: View {
 
             TextField(
                 "Set \(number) weight", value: weight, format: .number,
-                prompt: Text(unit.rawValue).foregroundStyle(Theme.secondary)
+                prompt: Text(isBodyweight ? "BW" : unit.rawValue).foregroundStyle(Theme.secondary)
             )
-            .keyboardType(.decimalPad)
+            .keyboardType(isBodyweight ? .numbersAndPunctuation : .decimalPad)
             .focused($focus, equals: .weight)
             .themedField()
             .contentShape(Rectangle())
@@ -581,7 +621,7 @@ struct ExerciseHistorySheet: View {
                                     Text(tag).font(Theme.caption.weight(.medium)).foregroundStyle(Theme.secondary)
                                 }
                                 Spacer()
-                                Text("\(formatWeight(set.weight)) \(unit.rawValue) × \(set.reps)")
+                                Text("\(set.weightText(unit: unit)) × \(set.reps)")
                                     .monospacedDigit()
                                     .foregroundStyle(Theme.text)
                             }
@@ -590,7 +630,7 @@ struct ExerciseHistorySheet: View {
                             .frame(minHeight: 44)
                             .accessibilityElement(children: .ignore)
                             .accessibilityLabel(
-                                "Set \(index + 1)\(set.type.tag == nil ? "" : ", \(set.type.title)"), \(formatWeight(set.weight)) \(unit.rawValue) × \(set.reps)"
+                                "Set \(index + 1)\(set.type.tag == nil ? "" : ", \(set.type.title)"), \(set.weightText(unit: unit)) × \(set.reps)"
                             )
                         }
                     } else {

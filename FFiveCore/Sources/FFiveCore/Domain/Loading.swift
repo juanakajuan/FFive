@@ -29,6 +29,9 @@ struct Loading: Equatable {
 extension Exercise {
     var loading: Loading { Loading(equipment: info?.equipment, bodyweight: workout?.bodyweight) }
 
+    /// Whether the weight logged for this lift is load added to body weight.
+    public var isBodyweight: Bool { loading.addsToBodyweight }
+
     /// A logged weight as the lifter reads it: "BW", "BW+25" or "BW−40" for a bodyweight lift, else the weight
     /// followed by `unit` when one is given.
     public func weightText(_ weight: Double, unit: WeightUnit? = nil) -> String {

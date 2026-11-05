@@ -87,7 +87,8 @@ final class BodyweightTests: XCTestCase {
         let workout = loggedPullUp(store, bodyweight: 180, weight: 0, reps: 8)
 
         let strongest = try XCTUnwrap(workout.exercises[0].strongestSet)
-        XCTAssertEqual(strongest.oneRepMax, Progression.estimatedOneRepMax(weight: 180, reps: 8, rir: 0), accuracy: 0.001)
+        XCTAssertEqual(
+            strongest.oneRepMax, Progression.estimatedOneRepMax(weight: 180, reps: 8, rir: 0), accuracy: 0.001)
     }
 
     func testBodyweightCarriesIntoQuickWorkoutAndBlockSession() throws {
