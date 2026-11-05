@@ -26,12 +26,10 @@ shot 02-empty-after-end
 tap #tab.more
 tap #more.progress
 tap #segment.history
-# The one logged session reaches History as a finished workout.
 count #history.row.full-body-a "1"
 shot 03-history-has-session
 tap #tab.mesos
 wait any "Finished"
 shot 04-mesos-finished
-# Relaunch: the finished block stays finished and no session reopens.
 launch
 wait #workout.plan timeout=20

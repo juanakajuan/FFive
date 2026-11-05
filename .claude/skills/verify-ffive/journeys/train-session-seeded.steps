@@ -11,7 +11,7 @@ tap #chip.pretty-good
 scrollto text "~Next week's sets for quads"
 tap #chip.none
 selected #chip.none
-wait image "checkmark.circle.fill"
+exists image "checkmark.circle.fill"
 shot 01-quads-feedback
 scrollto text "How did your chest recover?"
 wait text "~Target 150"

@@ -9,7 +9,7 @@ tap #builder.template.upper-lower-4-days
 wait nav "Customize"
 replace #builder.name "Verify Block"
 tap button "~Increment"
-wait text "5 training weeks"
+wait any "5 training weeks, then 1 deload week"
 shot 02-customized
 tap #builder.start
 wait text "WEEK 1 DAY 1" timeout=10

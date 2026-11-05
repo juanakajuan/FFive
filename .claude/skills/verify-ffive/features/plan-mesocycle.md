@@ -29,7 +29,7 @@ Preconditions:
 
 - **Open builder.** Tap `Plan a Mesocycle`. Steps: `wait #workout.plan timeout=20`, `tap #workout.plan`, `wait nav "New Mesocycle"`. The template sheet appears.
 - **Pick template.** Tap the Upper/Lower 4-day row. Steps: `tap #builder.template.upper-lower-4-days`, `wait nav "Customize"`. The name field holds `Upper/Lower, 4 Days`.
-- **Customize.** Rename the block and add a week. Steps: `replace #builder.name "Verify Block"`, `tap button "~Increment"`, `wait text "5 training weeks"`.
+- **Customize.** Rename the block and add a week. Steps: `replace #builder.name "Verify Block"`, `tap button "~Increment"`, `wait any "5 training weeks, then 1 deload week"`.
 - **Start.** Tap `Start Mesocycle`. Steps: `tap #builder.start`, `wait text "WEEK 1 DAY 1" timeout=10`, `store-expect Mesocycle name "Verify Block"`, `store-expect Mesocycle accumulationWeeks 5`, `wait text "~Verify Block"`. The subtitle ends in `• 3 RIR` (Week 1 is `min(3, training weeks - 1)` RIR, so a 3-week block starts at `2 RIR`).
 - **Mesos.** Steps: `tap #tab.mesos`, `wait text "Verify Block"`, `wait text "~6 WEEKS"`. The row reads `6 WEEKS - 4 DAYS/WEEK`.
 - **Persist.** Relaunch, which opens on the Workout tab. Steps: `launch`, `wait text "WEEK 1 DAY 1" timeout=20`, `wait text "~Verify Block"`.

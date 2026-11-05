@@ -1,6 +1,5 @@
 # settings: switch the weight unit to kilograms, see it in a session, then switch back.
 # The unit lives in UserDefaults, which -seedDemo does not isolate: this journey always ends on Pounds.
-# defaults-expect reads the stored unit after the last switch to each unit.
 launch -seedDemo
 tap #tab.more timeout=20
 tap #more.settings
