@@ -5,7 +5,7 @@ import SwiftData
 public final class Exercise {
     public var name: String
     public var order: Int
-    public var workout: Workout?
+    public internal(set) var workout: Workout?
     @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
     public internal(set) var sets: [SetEntry] = []
     public var muscleRaw: String?

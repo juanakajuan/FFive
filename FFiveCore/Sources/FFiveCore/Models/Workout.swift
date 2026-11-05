@@ -8,7 +8,7 @@ public final class Workout {
     public internal(set) var endDate: Date?
     @Relationship(deleteRule: .cascade, inverse: \Exercise.workout)
     public internal(set) var exercises: [Exercise] = []
-    public var mesocycle: Mesocycle?
+    public internal(set) var mesocycle: Mesocycle?
     public internal(set) var week: Int?
     public internal(set) var dayIndex: Int?
     @Relationship(deleteRule: .cascade, inverse: \MuscleFeedbackRecord.workout)

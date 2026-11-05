@@ -8,7 +8,7 @@ public final class MuscleFeedbackRecord {
     var pumpRaw: Int?
     var workloadRaw: Int?
     var jointPainRaw: Int?
-    public var workout: Workout?
+    public internal(set) var workout: Workout?
 
     init(muscle: Muscle) {
         self.muscleRaw = muscle.rawValue

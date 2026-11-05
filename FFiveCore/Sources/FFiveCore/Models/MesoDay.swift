@@ -5,7 +5,7 @@ import SwiftData
 public final class MesoDay {
     public var name: String = ""
     public var order: Int = 0
-    public var mesocycle: Mesocycle?
+    public internal(set) var mesocycle: Mesocycle?
     @Relationship(deleteRule: .cascade, inverse: \DaySlot.day)
     public var slots: [DaySlot] = []
 
