@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 /// One block's schedule and the current week's volume, pushed from the Mesos tab.
 struct MesoDetailView: View {

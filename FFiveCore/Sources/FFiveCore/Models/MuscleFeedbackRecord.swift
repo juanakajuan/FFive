@@ -18,10 +18,11 @@ public final class MuscleFeedbackRecord {
 
     public var value: MuscleFeedback {
         get {
-            MuscleFeedback(soreness: sorenessRaw.flatMap(Soreness.init(rawValue:)),
-                           pump: pumpRaw.flatMap(Pump.init(rawValue:)),
-                           workload: workloadRaw.flatMap(Workload.init(rawValue:)),
-                           jointPain: jointPainRaw.flatMap(JointPain.init(rawValue:)))
+            MuscleFeedback(
+                soreness: sorenessRaw.flatMap(Soreness.init(rawValue:)),
+                pump: pumpRaw.flatMap(Pump.init(rawValue:)),
+                workload: workloadRaw.flatMap(Workload.init(rawValue:)),
+                jointPain: jointPainRaw.flatMap(JointPain.init(rawValue:)))
         }
         set {
             sorenessRaw = newValue.soreness?.rawValue

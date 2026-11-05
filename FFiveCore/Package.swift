@@ -5,7 +5,7 @@ let package = Package(
     name: "FFiveCore",
     platforms: [.iOS(.v17), .macOS(.v14)],
     products: [
-        .library(name: "FFiveCore", targets: ["FFiveCore"]),
+        .library(name: "FFiveCore", targets: ["FFiveCore"])
     ],
     targets: [
         .target(name: "FFiveCore"),

@@ -65,8 +65,13 @@ public enum A11y: String, CaseIterable {
     case historyRow = "history.row"
     case settingsUnit = "settings.unit"
 
-    static let indexed: Set<A11y> = [.setWeight, .setReps, .setMenu, .setLog, .exerciseMenu, .exerciseCue, .exerciseHistory, .exercisePin]
-    static let keyed: Set<A11y> = [.pickerRow, .exercisesRow, .builderTemplate, .mesosRow, .mesosMenu, .segment, .chip, .strengthRow, .historyRow, .settingsUnit]
+    static let indexed: Set<A11y> = [
+        .setWeight, .setReps, .setMenu, .setLog, .exerciseMenu, .exerciseCue, .exerciseHistory, .exercisePin,
+    ]
+    static let keyed: Set<A11y> = [
+        .pickerRow, .exercisesRow, .builderTemplate, .mesosRow, .mesosMenu, .segment, .chip, .strengthRow, .historyRow,
+        .settingsUnit,
+    ]
 
     func indexed(_ index: Int) -> String { "\(rawValue).\(index)" }
     func keyed(_ key: String) -> String { "\(rawValue).\(A11y.slug(key))" }
@@ -89,8 +94,8 @@ public enum A11y: String, CaseIterable {
     }
 }
 
-public extension View {
-    func a11y(_ id: A11y) -> some View { accessibilityIdentifier(id.rawValue) }
-    func a11y(_ id: A11y, _ index: Int) -> some View { accessibilityIdentifier(id.indexed(index)) }
-    func a11y(_ id: A11y, key: String) -> some View { accessibilityIdentifier(id.keyed(key)) }
+extension View {
+    public func a11y(_ id: A11y) -> some View { accessibilityIdentifier(id.rawValue) }
+    public func a11y(_ id: A11y, _ index: Int) -> some View { accessibilityIdentifier(id.indexed(index)) }
+    public func a11y(_ id: A11y, key: String) -> some View { accessibilityIdentifier(id.keyed(key)) }
 }

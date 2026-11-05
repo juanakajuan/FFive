@@ -12,8 +12,9 @@ struct MuscleIcon: View {
             context.clip(to: Path(CGRect(origin: .zero, size: size)))
             let crop = lit.crop
             let scale = min(size.width / crop.width, size.height / crop.height)
-            context.translateBy(x: (size.width - crop.width * scale) / 2 - crop.minX * scale,
-                                y: (size.height - crop.height * scale) / 2 - crop.minY * scale)
+            context.translateBy(
+                x: (size.width - crop.width * scale) / 2 - crop.minX * scale,
+                y: (size.height - crop.height * scale) / 2 - crop.minY * scale)
             context.scaleBy(x: scale, y: scale)
             for part in BodyPart.allCases where part.isVisible(from: facing) {
                 context.fill(part.path, with: .color(part == lit ? muscle.tint : Theme.page.opacity(0.6)))
@@ -79,12 +80,16 @@ enum BodyPart: CaseIterable {
     }
 
     /// A left shape and its mirror image across the figure's center line, or at `mirroredAt` if given.
-    private static func pair(x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat, radius: CGFloat,
-                             mirroredAt rightX: CGFloat? = nil) -> Path {
+    private static func pair(
+        x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat, radius: CGFloat,
+        mirroredAt rightX: CGFloat? = nil
+    ) -> Path {
         Path { p in
-            p.addRoundedRect(in: CGRect(x: x, y: y, width: width, height: height), cornerSize: CGSize(width: radius, height: radius))
-            p.addRoundedRect(in: CGRect(x: rightX ?? box.width - x - width, y: y, width: width, height: height),
-                             cornerSize: CGSize(width: radius, height: radius))
+            p.addRoundedRect(
+                in: CGRect(x: x, y: y, width: width, height: height), cornerSize: CGSize(width: radius, height: radius))
+            p.addRoundedRect(
+                in: CGRect(x: rightX ?? box.width - x - width, y: y, width: width, height: height),
+                cornerSize: CGSize(width: radius, height: radius))
         }
     }
 }

@@ -94,6 +94,7 @@ public final class Mesocycle {
 
 extension Mesocycle {
     public static var active: FetchDescriptor<Mesocycle> {
-        FetchDescriptor(predicate: #Predicate { $0.finishedDate == nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
+        FetchDescriptor(
+            predicate: #Predicate { $0.finishedDate == nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
     }
 }

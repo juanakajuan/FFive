@@ -1,5 +1,6 @@
 import Foundation
 import XCTest
+
 @testable import FFiveCore
 
 @MainActor
@@ -15,7 +16,9 @@ final class SettingsTests: XCTestCase {
         XCTAssertEqual(Settings(defaults: defaults).weightUnit, .lb, "a fresh install trains in pounds")
 
         defaults.set("kg", forKey: "weightUnit")
-        XCTAssertEqual(Settings(defaults: defaults).weightUnit, .kg, "an @AppStorage(\"weightUnit\") value from an earlier build is read")
+        XCTAssertEqual(
+            Settings(defaults: defaults).weightUnit, .kg,
+            "an @AppStorage(\"weightUnit\") value from an earlier build is read")
 
         let settings = Settings(defaults: defaults)
         settings.weightUnit = .lb
@@ -41,7 +44,9 @@ final class SettingsTests: XCTestCase {
         let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
         let load = try XCTUnwrap(session.sortedExercises[0].sortedSets[0].targetWeight)
 
-        XCTAssertEqual(load.truncatingRemainder(dividingBy: 2.5), 0, "a kilogram lifter's barbell target lands on a 2.5 kg jump")
-        XCTAssertNotEqual(load.truncatingRemainder(dividingBy: 5), 0, "and not on the 5 lb jump a pound lifter would get")
+        XCTAssertEqual(
+            load.truncatingRemainder(dividingBy: 2.5), 0, "a kilogram lifter's barbell target lands on a 2.5 kg jump")
+        XCTAssertNotEqual(
+            load.truncatingRemainder(dividingBy: 5), 0, "and not on the 5 lb jump a pound lifter would get")
     }
 }

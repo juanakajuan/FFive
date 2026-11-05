@@ -1,11 +1,13 @@
-import SwiftUI
-import SwiftData
 import Charts
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 struct ProgressScreen: View {
     private enum Pane: String, CaseIterable, Identifiable {
-        case volume = "Volume", strength = "Strength", history = "History"
+        case volume = "Volume"
+        case strength = "Strength"
+        case history = "History"
         var id: Self { self }
     }
 
@@ -69,7 +71,9 @@ struct ProgressScreen: View {
 
     @ViewBuilder
     private var volume: some View {
-        if let meso = mesos.first(where: { $0.persistentModelID == selectedMeso }) ?? mesos.first(where: { $0.finishedDate == nil }) ?? mesos.first {
+        if let meso = mesos.first(where: { $0.persistentModelID == selectedMeso }) ?? mesos.first(where: {
+            $0.finishedDate == nil
+        }) ?? mesos.first {
             let week = min(selectedWeek ?? meso.nextUp?.week ?? meso.accumulationWeeks, meso.accumulationWeeks)
             let volumes = store.weeklyVolume(meso, week: week)
             heading("Sets per muscle · \(meso.phase(week: week) == .deload ? "Deload" : "Week \(week + 1)")")
@@ -78,25 +82,37 @@ struct ProgressScreen: View {
                     HStack {
                         Text("Mesocycle").font(Theme.detail).foregroundStyle(Theme.secondary)
                         Spacer()
-                        Picker("Mesocycle", selection: Binding(get: { meso.persistentModelID }, set: { selectedMeso = $0; selectedWeek = nil })) {
+                        Picker(
+                            "Mesocycle",
+                            selection: Binding(
+                                get: { meso.persistentModelID },
+                                set: {
+                                    selectedMeso = $0
+                                    selectedWeek = nil
+                                })
+                        ) {
                             ForEach(mesos) { Text($0.name).tag($0.persistentModelID) }
                         }
                         .pickerStyle(.menu)
                         .tint(Theme.text)
                     }
                 }
-                SegmentedButtons(options: Array(0..<meso.totalWeeks),
-                                 selection: Binding(get: { week }, set: { selectedWeek = $0 }),
-                                 label: { $0 == meso.accumulationWeeks ? "DL" : "W\($0 + 1)" })
+                SegmentedButtons(
+                    options: Array(0..<meso.totalWeeks),
+                    selection: Binding(get: { week }, set: { selectedWeek = $0 }),
+                    label: { $0 == meso.accumulationWeeks ? "DL" : "W\($0 + 1)" })
                 VolumeChart(volumes: volumes)
                 VolumeLegend(includesMaximum: true)
             }
             .themedRow(vertical: 4)
             .listRowSeparator(.hidden)
-            note("Aim to finish most weeks inside the green range. The red tick is the most a muscle usually recovers from; feedback keeps you below it.")
+            note(
+                "Aim to finish most weeks inside the green range. The red tick is the most a muscle usually recovers from; feedback keeps you below it."
+            )
         } else {
-            empty("No mesocycle yet", systemImage: "chart.bar.xaxis",
-                  description: "Plan a mesocycle on the Train tab to see weekly sets against each muscle's landmarks.")
+            empty(
+                "No mesocycle yet", systemImage: "chart.bar.xaxis",
+                description: "Plan a mesocycle on the Train tab to see weekly sets against each muscle's landmarks.")
         }
     }
 
@@ -106,8 +122,9 @@ struct ProgressScreen: View {
     private var strength: some View {
         let series = StrengthSeries.all(from: history)
         if series.isEmpty {
-            empty("No loaded sets yet", systemImage: "chart.line.uptrend.xyaxis",
-                  description: "Finish a session with weighted sets to start tracking estimated 1RM.")
+            empty(
+                "No loaded sets yet", systemImage: "chart.line.uptrend.xyaxis",
+                description: "Finish a session with weighted sets to start tracking estimated 1RM.")
         } else {
             heading("Estimated 1RM")
             ForEach(series) { item in
@@ -133,9 +150,13 @@ struct ProgressScreen: View {
                                 .font(Theme.body.weight(.semibold).monospacedDigit())
                                 .foregroundStyle(Theme.text)
                             if item.points.count > 1 {
-                                Text(item.change >= 0 ? "+\(formatWeight(item.change.rounded()))" : formatWeight(item.change.rounded()))
-                                    .font(Theme.caption.monospacedDigit())
-                                    .foregroundStyle(item.change >= 0 ? Theme.success : Theme.danger)
+                                Text(
+                                    item.change >= 0
+                                        ? "+\(formatWeight(item.change.rounded()))"
+                                        : formatWeight(item.change.rounded())
+                                )
+                                .font(Theme.caption.monospacedDigit())
+                                .foregroundStyle(item.change >= 0 ? Theme.success : Theme.danger)
                             }
                         }
                     }
@@ -209,15 +230,17 @@ struct StrengthSeries: Identifiable, Hashable {
         for workout in workouts.sorted(by: { $0.startDate < $1.startDate }) {
             for exercise in workout.exercises {
                 guard let best = exercise.strongestSet else { continue }
-                let point = Point(date: workout.startDate, value: best.oneRepMax,
-                                  bestSet: "\(formatWeight(best.entry.weight)) × \(best.entry.reps)")
+                let point = Point(
+                    date: workout.startDate, value: best.oneRepMax,
+                    bestSet: "\(formatWeight(best.entry.weight)) × \(best.entry.reps)")
                 var series = byKey[exercise.key] ?? (name: "", muscle: exercise.muscle, points: [])
                 series.name = exercise.info?.name ?? exercise.name
                 series.points.append(point)
                 byKey[exercise.key] = series
             }
         }
-        return byKey
+        return
+            byKey
             .map { StrengthSeries(id: $0.key, name: $0.value.name, muscle: $0.value.muscle, points: $0.value.points) }
             .sorted { ($0.points.last?.date ?? .distantPast) > ($1.points.last?.date ?? .distantPast) }
     }
@@ -231,34 +254,44 @@ struct VolumeChart: View {
             ForEach(volumes) { volume in
                 let name = volume.muscle.displayName
                 let landmarks = volume.muscle.landmarks
-                RuleMark(xStart: .value("Productive from", landmarks.mav.lowerBound),
-                         xEnd: .value("Productive to", landmarks.mav.upperBound),
-                         y: .value("Muscle", name))
-                    .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .foregroundStyle(Theme.success)
-                    .offset(y: 10)
-                BarMark(xStart: .value("Start", 0), xEnd: .value("Planned", volume.planned),
-                        y: .value("Muscle", name), height: .fixed(12))
-                    .foregroundStyle(Theme.infoFill)
-                    .cornerRadius(2)
-                    .annotation(position: .top, alignment: .leading, spacing: 4) {
-                        HStack(spacing: 6) {
-                            Text(name).foregroundStyle(Theme.text)
-                            Text("\(volume.done)/\(volume.planned)").foregroundStyle(Theme.secondary).monospacedDigit()
-                        }
-                        .font(Theme.caption)
-                        .fixedSize()
+                RuleMark(
+                    xStart: .value("Productive from", landmarks.mav.lowerBound),
+                    xEnd: .value("Productive to", landmarks.mav.upperBound),
+                    y: .value("Muscle", name)
+                )
+                .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
+                .foregroundStyle(Theme.success)
+                .offset(y: 10)
+                BarMark(
+                    xStart: .value("Start", 0), xEnd: .value("Planned", volume.planned),
+                    y: .value("Muscle", name), height: .fixed(12)
+                )
+                .foregroundStyle(Theme.infoFill)
+                .cornerRadius(2)
+                .annotation(position: .top, alignment: .leading, spacing: 4) {
+                    HStack(spacing: 6) {
+                        Text(name).foregroundStyle(Theme.text)
+                        Text("\(volume.done)/\(volume.planned)").foregroundStyle(Theme.secondary).monospacedDigit()
                     }
-                BarMark(xStart: .value("Start", 0), xEnd: .value("Done", volume.done),
-                        y: .value("Muscle", name), height: .fixed(12))
-                    .foregroundStyle(Theme.infoText)
-                    .cornerRadius(2)
-                RectangleMark(x: .value("Minimum effective", landmarks.mev), y: .value("Muscle", name),
-                              width: 2, height: .fixed(14))
-                    .foregroundStyle(Theme.text.opacity(0.7))
-                RectangleMark(x: .value("Maximum recoverable", landmarks.mrv), y: .value("Muscle", name),
-                              width: 2, height: .fixed(14))
-                    .foregroundStyle(Theme.danger)
+                    .font(Theme.caption)
+                    .fixedSize()
+                }
+                BarMark(
+                    xStart: .value("Start", 0), xEnd: .value("Done", volume.done),
+                    y: .value("Muscle", name), height: .fixed(12)
+                )
+                .foregroundStyle(Theme.infoText)
+                .cornerRadius(2)
+                RectangleMark(
+                    x: .value("Minimum effective", landmarks.mev), y: .value("Muscle", name),
+                    width: 2, height: .fixed(14)
+                )
+                .foregroundStyle(Theme.text.opacity(0.7))
+                RectangleMark(
+                    x: .value("Maximum recoverable", landmarks.mrv), y: .value("Muscle", name),
+                    width: 2, height: .fixed(14)
+                )
+                .foregroundStyle(Theme.danger)
             }
         }
         .chartXAxis {
@@ -273,7 +306,8 @@ struct VolumeChart: View {
         }
         .frame(height: CGFloat(volumes.count) * 44 + 40)
         .accessibilityElement(children: .ignore)
-        .accessibilityLabel(volumes.map { "\($0.muscle.displayName) \($0.done) of \($0.planned) sets" }.joined(separator: ", "))
+        .accessibilityLabel(
+            volumes.map { "\($0.muscle.displayName) \($0.done) of \($0.planned) sets" }.joined(separator: ", "))
     }
 }
 
@@ -285,16 +319,22 @@ struct ExerciseTrendView: View {
 
     private var selected: StrengthSeries.Point? {
         guard let selectedDate else { return nil }
-        return series.points.min { abs($0.date.timeIntervalSince(selectedDate)) < abs($1.date.timeIntervalSince(selectedDate)) }
+        return series.points.min {
+            abs($0.date.timeIntervalSince(selectedDate)) < abs($1.date.timeIntervalSince(selectedDate))
+        }
     }
 
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 HStack(spacing: 8) {
-                    StatTile(title: "Current (\(unit.rawValue))", value: formatWeight(series.latest.rounded()), icon: "scalemass")
-                    StatTile(title: "Since first", value: (series.change >= 0 ? "+" : "") + formatWeight(series.change.rounded()),
-                             icon: "chart.line.uptrend.xyaxis")
+                    StatTile(
+                        title: "Current (\(unit.rawValue))", value: formatWeight(series.latest.rounded()),
+                        icon: "scalemass")
+                    StatTile(
+                        title: "Since first",
+                        value: (series.change >= 0 ? "+" : "") + formatWeight(series.change.rounded()),
+                        icon: "chart.line.uptrend.xyaxis")
                     StatTile(title: "Sessions", value: "\(series.points.count)", icon: "calendar")
                 }
                 .fixedSize(horizontal: false, vertical: true)
@@ -409,11 +449,16 @@ struct HistoryRow: View {
             }
             HStack(spacing: 12) {
                 if let meso = workout.mesocycle, let week = workout.week {
-                    meta("\(meso.name) · \(workout.phase == .deload ? "Deload" : "W\(week + 1)")", systemImage: "calendar")
-                        .lineLimit(1)
+                    meta(
+                        "\(meso.name) · \(workout.phase == .deload ? "Deload" : "W\(week + 1)")",
+                        systemImage: "calendar"
+                    )
+                    .lineLimit(1)
                 }
                 meta(formatDuration(workout.duration), systemImage: "clock")
-                meta("\(workout.completedSets) \(workout.completedSets == 1 ? "set" : "sets")", systemImage: "checkmark.circle")
+                meta(
+                    "\(workout.completedSets) \(workout.completedSets == 1 ? "set" : "sets")",
+                    systemImage: "checkmark.circle")
             }
             .font(Theme.caption)
             .foregroundStyle(Theme.secondary)

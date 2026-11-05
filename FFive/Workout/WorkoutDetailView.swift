@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 struct WorkoutDetailView: View {
     let workout: Workout
@@ -27,13 +27,17 @@ struct WorkoutDetailView: View {
                             Rectangle().fill(Theme.hairline).frame(height: 1).padding(.horizontal, Theme.gutter)
                             VStack(alignment: .leading, spacing: 6) {
                                 MuscleTag(muscle: muscle)
-                                Text([value.pump.map { "Pump: \($0.label)" },
-                                      value.workload.map { "Workload: \($0.label)" },
-                                      value.jointPain.map { "Joints: \($0.label)" },
-                                      value.soreness.map { "Afterwards: \($0.label)" }]
-                                    .compactMap { $0 }.joined(separator: " · "))
-                                    .font(Theme.detail)
-                                    .foregroundStyle(Theme.secondary)
+                                Text(
+                                    [
+                                        value.pump.map { "Pump: \($0.label)" },
+                                        value.workload.map { "Workload: \($0.label)" },
+                                        value.jointPain.map { "Joints: \($0.label)" },
+                                        value.soreness.map { "Afterwards: \($0.label)" },
+                                    ]
+                                    .compactMap { $0 }.joined(separator: " · ")
+                                )
+                                .font(Theme.detail)
+                                .foregroundStyle(Theme.secondary)
                             }
                             .padding(.horizontal, Theme.gutter)
                             .padding(.vertical, 10)
@@ -65,9 +69,10 @@ struct WorkoutDetailView: View {
             HStack(spacing: 8) {
                 StatTile(title: "Duration", value: formatDuration(workout.duration), icon: "clock")
                 StatTile(title: "Sets", value: "\(workout.completedSets)", icon: "checkmark.circle")
-                StatTile(title: "Volume (\(unit.rawValue))",
-                         value: Int(workout.totalVolume).formatted(),
-                         icon: "scalemass")
+                StatTile(
+                    title: "Volume (\(unit.rawValue))",
+                    value: Int(workout.totalVolume).formatted(),
+                    icon: "scalemass")
             }
             .fixedSize(horizontal: false, vertical: true)
             if let note = workout.note {

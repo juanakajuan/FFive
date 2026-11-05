@@ -3,6 +3,7 @@
 ## Commands
 
 - `scripts/check` is the one gate. It prints `CHECK PASS` or `CHECK FAIL <step>` in about 15 seconds. Run it before every push. CI runs the same command on every PR and every push to `main`.
+- `scripts/format.sh` reformats every Swift file in place with swift-format, which ships with the Swift toolchain. Its settings live in `.swift-format`. `scripts/format.sh --lint` fails on any file it would change and on any swift-format lint rule hit. Run `scripts/format.sh` before you commit.
 - `scripts/lint.sh` holds the lint rules. Its baseline, `scripts/lint-baseline.txt`, lists the hits that already exist. A new hit fails, and so does a baseline line whose hit is gone. Fix a hit and delete its line. Add a line only with the operator's approval.
 - Use the `verify-ffive` skill to prove a change on the simulator. `scripts/check` does not drive the app.
 
@@ -22,6 +23,7 @@ Each rule is enforced by the check named beside it. A rule with no check is a ju
 | Alerts, sheets, confirmation dialogs and covers attach to a screen struct (a name ending in `View` or `Screen`), never a row or card | `scripts/lint.sh` rule `presentation-at-screen-root` |
 | Every file under `FFive/` typechecks together for iOS, against the built `FFiveCore` package | `scripts/typecheck-app.sh` |
 | Engine and planner rules keep their behavior | `swift test --package-path FFiveCore` |
+| Swift files match `.swift-format` and pass its lint rules | `scripts/format.sh --lint` |
 | Each lint rule still catches its real past mistake | `scripts/lint.sh --self-test` |
 | Every PR and every push to main runs the gate in CI | `.github/workflows/check.yml` |
 | A PR or issue whose change shows on screen carries screenshots or a recording | none, judgment |

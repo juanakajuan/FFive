@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 /// The open workout on the Workout tab: a pinned header over a stream of exercise cards with their feedback,
 /// and a pinned Finish button once every set is logged.
@@ -67,7 +67,8 @@ struct ActiveWorkoutView: View {
                 ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
                     let muscle = exercise.muscle
                     if let muscle, let record = pendingSoreness[muscle],
-                       exercises.firstIndex(where: { $0.muscle == muscle }) == index {
+                        exercises.firstIndex(where: { $0.muscle == muscle }) == index
+                    {
                         SorenessCard(muscle: muscle, record: record) { soreness in
                             withAnimation {
                                 store.recordSoreness(soreness, on: record, during: workout)
@@ -75,19 +76,24 @@ struct ActiveWorkoutView: View {
                         }
                     }
 
-                    ExerciseCard(exercise: exercise,
-                                 position: index + 1,
-                                 phase: workout.phase,
-                                 onSetCompleted: setCompleted,
-                                 onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
-                                 onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }) {
+                    ExerciseCard(
+                        exercise: exercise,
+                        position: index + 1,
+                        phase: workout.phase,
+                        onSetCompleted: setCompleted,
+                        onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
+                        onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }
+                    ) {
                         store.removeExercise(exercise, from: workout)
                     }
 
                     if let muscle, workout.mesocycle != nil,
-                       exercises.lastIndex(where: { $0.muscle == muscle }) == index,
-                       exercise.isLogged {
-                        FeedbackCard(muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()) { change in
+                        exercises.lastIndex(where: { $0.muscle == muscle }) == index,
+                        exercise.isLogged
+                    {
+                        FeedbackCard(
+                            muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()
+                        ) { change in
                             workout.updateFeedback(for: muscle, change)
                         }
                     }
@@ -112,7 +118,8 @@ struct ActiveWorkoutView: View {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
                 Button("Done") {
-                    UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    UIApplication.shared.sendAction(
+                        #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
                 .a11y(.keyboardDone)
             }
@@ -130,26 +137,32 @@ struct ActiveWorkoutView: View {
         }
         .sheet(isPresented: $showingSchedule) {
             if let activeMeso {
-                ScheduleSheet(meso: activeMeso, week: workout.week ?? activeMeso.nextUp?.week ?? activeMeso.accumulationWeeks)
+                ScheduleSheet(
+                    meso: activeMeso, week: workout.week ?? activeMeso.nextUp?.week ?? activeMeso.accumulationWeeks)
             }
         }
         .confirmationDialog("Discard this workout?", isPresented: $confirmDiscard, titleVisibility: .visible) {
             Button("Discard Workout", role: .destructive, action: discard)
                 .a11y(.dialogDiscard)
         } message: {
-            Text(workout.mesocycle == nil
-                 ? "Its exercises and sets are deleted."
-                 : "Logged sets for this day are cleared and it starts over from the plan.")
+            Text(
+                workout.mesocycle == nil
+                    ? "Its exercises and sets are deleted."
+                    : "Logged sets for this day are cleared and it starts over from the plan.")
         }
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
             if let activeMeso {
-                Button("End Mesocycle", role: .destructive) { WorkoutTabActions.end(activeMeso, router: router, store: store) }
-                    .a11y(.dialogEndMesocycle)
+                Button("End Mesocycle", role: .destructive) {
+                    WorkoutTabActions.end(activeMeso, router: router, store: store)
+                }
+                .a11y(.dialogEndMesocycle)
             }
         } message: {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
         }
-        .alert("Rename Workout", isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })) {
+        .alert(
+            "Rename Workout", isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
+        ) {
             TextField("Workout name", text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
             Button("Save") {
                 if let name = renameDraft?.trimmingCharacters(in: .whitespaces), !name.isEmpty { workout.name = name }
@@ -173,9 +186,13 @@ struct ActiveWorkoutView: View {
     private var header: some View {
         WorkoutHeader(title: headerTitle, subtitle: headerSubtitle, progress: workout.setProgress) {
             if activeMeso != nil {
-                Button { showingSchedule = true } label: { ActionIcon.calendar }
-                    .accessibilityLabel("Schedule")
-                    .a11y(.workoutSchedule)
+                Button {
+                    showingSchedule = true
+                } label: {
+                    ActionIcon.calendar
+                }
+                .accessibilityLabel("Schedule")
+                .a11y(.workoutSchedule)
             }
             Menu {
                 menuItems
@@ -210,14 +227,18 @@ struct ActiveWorkoutView: View {
                 .a11y(.menuSkipDay)
         }
         if activeMeso != nil, openQuickWorkout !== workout {
-            Button(openQuickWorkout == nil ? "Quick Workout" : "Resume Quick Workout",
-                   systemImage: openQuickWorkout == nil ? "bolt" : "play") {
+            Button(
+                openQuickWorkout == nil ? "Quick Workout" : "Resume Quick Workout",
+                systemImage: openQuickWorkout == nil ? "bolt" : "play"
+            ) {
                 WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store)
             }
             .a11y(.menuQuickWorkout)
         }
-        Button(workout.note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") { noteEdit = NoteEdit(target: .day, draft: workout.note ?? "") }
-            .a11y(.menuWorkoutNote)
+        Button(workout.note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
+            noteEdit = NoteEdit(target: .day, draft: workout.note ?? "")
+        }
+        .a11y(.menuWorkoutNote)
         if workout.mesocycle == nil {
             Button("Rename", systemImage: "pencil") { renameDraft = workout.name }
                 .a11y(.menuRename)
@@ -272,8 +293,10 @@ struct ExerciseCard: View {
     @State private var showingCue = false
     @State private var showingHistory = false
 
-    init(exercise: Exercise, position: Int, phase: WeekPhase?, onSetCompleted: @escaping () -> Void,
-         onSwap: (() -> Void)? = nil, onEditNote: @escaping (String) -> Void, onRemove: @escaping () -> Void) {
+    init(
+        exercise: Exercise, position: Int, phase: WeekPhase?, onSetCompleted: @escaping () -> Void,
+        onSwap: (() -> Void)? = nil, onEditNote: @escaping (String) -> Void, onRemove: @escaping () -> Void
+    ) {
         self.exercise = exercise
         self.position = position
         self.phase = phase
@@ -321,8 +344,9 @@ struct ExerciseCard: View {
                     }
                 }
                 if showingCue, let info = exercise.info {
-                    Callout(text: "\(info.cue) \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps.",
-                            systemImage: "lightbulb.fill")
+                    Callout(
+                        text: "\(info.cue) \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps.",
+                        systemImage: "lightbulb.fill")
                 }
                 if let phase, let set = sets.first(where: { !$0.isDone }) ?? sets.first {
                     Callout(text: targetText(set, phase))
@@ -335,8 +359,10 @@ struct ExerciseCard: View {
                 columnHeaders.padding(.top, 14)
                 ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
                     if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
-                    SetRow(set: set, number: index + 1, unit: unit, rir: phase?.rir,
-                           onCompleted: onSetCompleted, onAdd: { store.addSet(to: exercise) }) { store.deleteSet(set, from: exercise) }
+                    SetRow(
+                        set: set, number: index + 1, unit: unit, rir: phase?.rir,
+                        onCompleted: onSetCompleted, onAdd: { store.addSet(to: exercise) }
+                    ) { store.deleteSet(set, from: exercise) }
                 }
             }
         }
@@ -355,9 +381,13 @@ struct ExerciseCard: View {
                 .accessibilityLabel("Technique cue")
                 .a11y(.exerciseCue, position)
             }
-            Button { showingHistory = true } label: { ActionIcon(systemName: "clock.arrow.circlepath") }
-                .accessibilityLabel("History")
-                .a11y(.exerciseHistory, position)
+            Button {
+                showingHistory = true
+            } label: {
+                ActionIcon(systemName: "clock.arrow.circlepath")
+            }
+            .accessibilityLabel("History")
+            .a11y(.exerciseHistory, position)
             Menu {
                 if let onSwap {
                     Button("Swap Exercise", systemImage: "arrow.triangle.2.circlepath", action: onSwap)
@@ -408,7 +438,9 @@ struct ExerciseCard: View {
             let effort = phase.rir.map { "at \($0) RIR" } ?? "kept light"
             return "Calibrate · \(range.lowerBound)–\(range.upperBound) reps \(effort)"
         }
-        guard let reps = set.targetReps else { return "Target \(formatWeight(weight)) \(store.settings.weightUnit.rawValue)" }
+        guard let reps = set.targetReps else {
+            return "Target \(formatWeight(weight)) \(store.settings.weightUnit.rawValue)"
+        }
         return weight == 0 ? "Target \(reps) reps" : "Target \(formatWeight(weight)) × \(reps)"
     }
 }
@@ -449,29 +481,33 @@ struct SetRow: View {
             .accessibilityLabel("Set \(number) menu")
             .a11y(.setMenu, number)
 
-            TextField("Set \(number) weight", value: weight, format: .number,
-                      prompt: Text(unit.rawValue).foregroundStyle(Theme.secondary))
-                .keyboardType(.decimalPad)
-                .focused($focus, equals: .weight)
-                .themedField()
-                .contentShape(Rectangle())
-                .onTapGesture { focus = .weight }
-                .accessibilityLabel("Set \(number) weight")
-                .a11y(.setWeight, number)
-                .frame(width: SetColumns.field)
-                .padding(.leading, 12)
+            TextField(
+                "Set \(number) weight", value: weight, format: .number,
+                prompt: Text(unit.rawValue).foregroundStyle(Theme.secondary)
+            )
+            .keyboardType(.decimalPad)
+            .focused($focus, equals: .weight)
+            .themedField()
+            .contentShape(Rectangle())
+            .onTapGesture { focus = .weight }
+            .accessibilityLabel("Set \(number) weight")
+            .a11y(.setWeight, number)
+            .frame(width: SetColumns.field)
+            .padding(.leading, 12)
 
-            TextField("Set \(number) reps", value: reps, format: .number,
-                      prompt: Text(rir.map { "\($0) RIR" } ?? "reps").foregroundStyle(Theme.secondary))
-                .keyboardType(.numberPad)
-                .focused($focus, equals: .reps)
-                .themedField()
-                .contentShape(Rectangle())
-                .onTapGesture { focus = .reps }
-                .accessibilityLabel("Set \(number) reps")
-                .a11y(.setReps, number)
-                .frame(width: SetColumns.field)
-                .padding(.leading, 16)
+            TextField(
+                "Set \(number) reps", value: reps, format: .number,
+                prompt: Text(rir.map { "\($0) RIR" } ?? "reps").foregroundStyle(Theme.secondary)
+            )
+            .keyboardType(.numberPad)
+            .focused($focus, equals: .reps)
+            .themedField()
+            .contentShape(Rectangle())
+            .onTapGesture { focus = .reps }
+            .accessibilityLabel("Set \(number) reps")
+            .a11y(.setReps, number)
+            .frame(width: SetColumns.field)
+            .padding(.leading, 16)
 
             Spacer(minLength: 0)
 
@@ -567,8 +603,10 @@ struct SorenessCard: View {
                         .foregroundStyle(Theme.secondary)
                 }
             }
-            ChipPicker(title: "Soreness after that session", options: Soreness.allCases, columns: 2,
-                       label: \.label, selection: nil) { if let soreness = $0 { onAnswer(soreness) } }
+            ChipPicker(
+                title: "Soreness after that session", options: Soreness.allCases, columns: 2,
+                label: \.label, selection: nil
+            ) { if let soreness = $0 { onAnswer(soreness) } }
         }
         .padding(.horizontal, Theme.gutter)
         .padding(.bottom, 8)
@@ -596,18 +634,26 @@ struct FeedbackCard: View {
                         .foregroundStyle(Theme.success)
                 }
             }
-            ChipPicker(title: "Pump", options: Pump.allCases, columns: 3, label: \.label, selection: feedback.pump) { value in
+            ChipPicker(title: "Pump", options: Pump.allCases, columns: 3, label: \.label, selection: feedback.pump) {
+                value in
                 onChange { $0.pump = value }
             }
-            ChipPicker(title: "Workload", options: Workload.allCases, columns: 2, label: \.label, selection: feedback.workload) { value in
+            ChipPicker(
+                title: "Workload", options: Workload.allCases, columns: 2, label: \.label, selection: feedback.workload
+            ) { value in
                 onChange { $0.workload = value }
             }
-            ChipPicker(title: "Joint pain", options: JointPain.allCases, columns: 4, label: \.label, selection: feedback.jointPain) { value in
+            ChipPicker(
+                title: "Joint pain", options: JointPain.allCases, columns: 4, label: \.label,
+                selection: feedback.jointPain
+            ) { value in
                 onChange { $0.jointPain = value }
             }
-            Text("Next week's sets for \(muscle.displayName.lowercased()) come from these answers and how sore you get.")
-                .font(Theme.caption)
-                .foregroundStyle(Theme.secondary)
+            Text(
+                "Next week's sets for \(muscle.displayName.lowercased()) come from these answers and how sore you get."
+            )
+            .font(Theme.caption)
+            .foregroundStyle(Theme.secondary)
         }
         .padding(.horizontal, Theme.gutter)
         .padding(.bottom, 8)

@@ -88,7 +88,9 @@ final class DriverTests: XCTestCase {
             launchedDemo = args.contains("-seedDemo")
             app.launchArguments = args
             app.launch()
-            guard app.wait(for: .runningForeground, timeout: 15) else { throw StepError("app did not reach the foreground") }
+            guard app.wait(for: .runningForeground, timeout: 15) else {
+                throw StepError("app did not reach the foreground")
+            }
         case "terminate":
             app.terminate()
         case "tap":
@@ -120,7 +122,9 @@ final class DriverTests: XCTestCase {
             guard actual == expected else { throw StepError("value is \"\(actual)\", expected \"\(expected)\"") }
         case "selected", "unselected":
             let found = try onScreen(args, timeout)
-            guard found.isSelected == (verb == "selected") else { throw StepError("\(args) is \(found.isSelected ? "" : "not ")selected") }
+            guard found.isSelected == (verb == "selected") else {
+                throw StepError("\(args) is \(found.isSelected ? "" : "not ")selected")
+            }
         case "count":
             let expected = try Self.pop(&args, "expected count")
             let actual = try resolveAll(args).count
@@ -138,8 +142,14 @@ final class DriverTests: XCTestCase {
             default: throw StepError("swipe needs up, down, left, or right")
             }
         case "store-expect":
-            guard args.count == 3 else { throw StepError("expected `store-expect <Model> <field> <value>`, got \(args)") }
-            guard !launchedDemo else { throw StepError("store-expect after `launch -seedDemo`: the demo store is in memory, so no on-disk store holds its data") }
+            guard args.count == 3 else {
+                throw StepError("expected `store-expect <Model> <field> <value>`, got \(args)")
+            }
+            guard !launchedDemo else {
+                throw StepError(
+                    "store-expect after `launch -seedDemo`: the demo store is in memory, so no on-disk store holds its data"
+                )
+            }
             guard let path = environment["FFIVE_STORE"] else { throw StepError("FFIVE_STORE is not set") }
             try poll(timeout) { try storeMismatch(path: path, model: args[0], field: args[1], value: args[2]) }
         case "defaults-expect":
@@ -176,24 +186,26 @@ final class DriverTests: XCTestCase {
             return app.descendants(matching: .any).matching(identifier: String(id.dropFirst()))
         }
         guard args.count >= 2 else { throw StepError("expected `#<id>` or `<kind> \"<label>\"`, got \(args)") }
-        let type: XCUIElement.ElementType = switch args[0] {
-        case "button": .button
-        case "text": .staticText
-        case "field": .textField
-        case "search": .searchField
-        case "cell": .cell
-        case "tab": .button
-        case "switch": .switch
-        case "image": .image
-        case "nav": .navigationBar
-        case "alert": .alert
-        case "any": .any
-        default: throw StepError("unknown element kind `\(args[0])`")
-        }
-        let scope: XCUIElementQuery = switch args[0] {
-        case "tab": app.tabBars.descendants(matching: type)
-        default: app.descendants(matching: type)
-        }
+        let type: XCUIElement.ElementType =
+            switch args[0] {
+            case "button": .button
+            case "text": .staticText
+            case "field": .textField
+            case "search": .searchField
+            case "cell": .cell
+            case "tab": .button
+            case "switch": .switch
+            case "image": .image
+            case "nav": .navigationBar
+            case "alert": .alert
+            case "any": .any
+            default: throw StepError("unknown element kind `\(args[0])`")
+            }
+        let scope: XCUIElementQuery =
+            switch args[0] {
+            case "tab": app.tabBars.descendants(matching: type)
+            default: app.descendants(matching: type)
+            }
         return scope.matching(labelPredicate(args[1]))
     }
 
@@ -240,9 +252,13 @@ final class DriverTests: XCTestCase {
 
     private func defaultsMismatch(key: String, expected: String) throws -> String? {
         guard let path = environment["FFIVE_DEFAULTS"] else { throw StepError("FFIVE_DEFAULTS is not set") }
-        guard let data = FileManager.default.contents(atPath: path) else { return "no preferences written yet at \(path)" }
+        guard let data = FileManager.default.contents(atPath: path) else {
+            return "no preferences written yet at \(path)"
+        }
         let dict = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] ?? [:]
-        guard let actual = dict[key] else { return "no key \(key); keys: \(dict.keys.sorted().joined(separator: ", "))" }
+        guard let actual = dict[key] else {
+            return "no key \(key); keys: \(dict.keys.sorted().joined(separator: ", "))"
+        }
         return "\(actual)" == expected ? nil : "\(key) is \"\(actual)\", expected \"\(expected)\""
     }
 
@@ -263,15 +279,24 @@ final class DriverTests: XCTestCase {
 
     /// Splits on spaces, keeping "double quoted" runs together.
     static func tokenize(_ line: String) -> [String] {
-        var words: [String] = [], current = "", quoted = false, started = false
+        var words: [String] = []
+        var current = ""
+        var quoted = false
+        var started = false
         for character in line {
-            if character == "\"" { quoted.toggle(); started = true; continue }
-            if character == " " && !quoted {
-                if started { words.append(current) }
-                current = ""; started = false
+            if character == "\"" {
+                quoted.toggle()
+                started = true
                 continue
             }
-            current.append(character); started = true
+            if character == " " && !quoted {
+                if started { words.append(current) }
+                current = ""
+                started = false
+                continue
+            }
+            current.append(character)
+            started = true
         }
         if started { words.append(current) }
         return words

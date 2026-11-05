@@ -14,16 +14,20 @@ public enum DemoSeed {
         let now = Date.now
         func snapshot() -> PlanningSnapshot { PlanningSnapshot(context: context) }
 
-        quickWorkout("Morning Workout", at: now - 19 * day, [
-            ("Bench Press", .chest, [(155, 8), (155, 7), (155, 6)]),
-            ("Squat", .quads, [(205, 6), (205, 6)]),
-            ("Lateral Raise", .sideDelts, [(20, 14), (20, 12)]),
-        ], unit: unit, context: context)
-        quickWorkout("Evening Workout", at: now - 16 * day, [
-            ("Bench Press", .chest, [(160, 7), (160, 6)]),
-            ("Romanian Deadlift", .hamstrings, [(185, 8), (185, 8)]),
-            ("Lat Pulldown", .back, [(130, 11), (130, 10)]),
-        ], unit: unit, context: context)
+        quickWorkout(
+            "Morning Workout", at: now - 19 * day,
+            [
+                ("Bench Press", .chest, [(155, 8), (155, 7), (155, 6)]),
+                ("Squat", .quads, [(205, 6), (205, 6)]),
+                ("Lateral Raise", .sideDelts, [(20, 14), (20, 12)]),
+            ], unit: unit, context: context)
+        quickWorkout(
+            "Evening Workout", at: now - 16 * day,
+            [
+                ("Bench Press", .chest, [(160, 7), (160, 6)]),
+                ("Romanian Deadlift", .hamstrings, [(185, 8), (185, 8)]),
+                ("Lat Pulldown", .back, [(130, 11), (130, 10)]),
+            ], unit: unit, context: context)
 
         guard let template = ExerciseCatalog.templates.first else {
             store.commit()
@@ -40,14 +44,16 @@ public enum DemoSeed {
         var answer = 0
         for dayIndex in meso.days.indices {
             let start = meso.startDate + Double(dayIndex) * 2 * day
-            let workout = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: dayIndex), unit: unit,
-                                              snapshot: snapshot(), in: context)
+            let workout = MesoPlanner.workout(
+                for: meso, at: SessionKey(week: 0, dayIndex: dayIndex), unit: unit,
+                snapshot: snapshot(), in: context)
             workout.startDate = start
             let pending = workout.pendingSoreness
             for muscle in workout.trainedMuscles {
                 guard let record = pending[muscle] else { continue }
-                MesoPlanner.recordSoreness(sorenessAnswers[answer % sorenessAnswers.count], on: record, during: workout,
-                                           unit: unit, snapshot: snapshot(), in: context)
+                MesoPlanner.recordSoreness(
+                    sorenessAnswers[answer % sorenessAnswers.count], on: record, during: workout,
+                    unit: unit, snapshot: snapshot(), in: context)
                 answer += 1
             }
             for (index, exercise) in workout.sortedExercises.enumerated() {
@@ -65,12 +71,14 @@ public enum DemoSeed {
             workout.endDate = start + 64 * 60
         }
 
-        let current = MesoPlanner.workout(for: meso, at: SessionKey(week: 1, dayIndex: 0), unit: unit,
-                                          snapshot: snapshot(), in: context)
+        let current = MesoPlanner.workout(
+            for: meso, at: SessionKey(week: 1, dayIndex: 0), unit: unit,
+            snapshot: snapshot(), in: context)
         current.startDate = now - 24 * 60
         if let first = current.trainedMuscles.first {
             if let record = current.pendingSoreness[first] {
-                MesoPlanner.recordSoreness(.healedOnTime, on: record, during: current, unit: unit, snapshot: snapshot(), in: context)
+                MesoPlanner.recordSoreness(
+                    .healedOnTime, on: record, during: current, unit: unit, snapshot: snapshot(), in: context)
             }
             for exercise in current.exercises(for: first) {
                 logAllSets(of: exercise, beatTargetBy: 0, unit: unit)
@@ -82,8 +90,10 @@ public enum DemoSeed {
         store.commit()
     }
 
-    private static func quickWorkout(_ name: String, at start: Date, _ exercises: [(String, Muscle, [(Double, Int)])],
-                                     unit: WeightUnit, context: ModelContext) {
+    private static func quickWorkout(
+        _ name: String, at start: Date, _ exercises: [(String, Muscle, [(Double, Int)])],
+        unit: WeightUnit, context: ModelContext
+    ) {
         let workout = Workout(name: name, startDate: start)
         context.insert(workout)
         for (order, (exerciseName, muscle, sets)) in exercises.enumerated() {
@@ -105,8 +115,9 @@ public enum DemoSeed {
                 set.weight = weight
                 set.reps = reps + extra
             } else {
-                set.weight = Progression.roundDown(converted(calibrationLoad(exercise.info?.equipment), unit),
-                                                   to: exercise.increment(unit))
+                set.weight = Progression.roundDown(
+                    converted(calibrationLoad(exercise.info?.equipment), unit),
+                    to: exercise.increment(unit))
                 set.reps = Progression.startingReps(in: exercise.repRange) + 1
             }
             set.isDone = true

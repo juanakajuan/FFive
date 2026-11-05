@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 struct ExercisePickerView: View {
     var title = "Add Exercise"
@@ -23,13 +23,16 @@ struct ExercisePickerView: View {
 
     /// Catalog exercises plus custom ones the lifter has logged with a muscle.
     private var entries: [Entry] {
-        var result = ExerciseCatalog.all.map { Entry(id: $0.id, name: $0.name, muscle: $0.muscle, detail: $0.equipment.displayName) }
+        var result = ExerciseCatalog.all.map {
+            Entry(id: $0.id, name: $0.name, muscle: $0.muscle, detail: $0.equipment.displayName)
+        }
         var seen = Set(result.map(\.id))
         for exercise in logged {
             guard let muscle = exercise.muscle, seen.insert(exercise.key).inserted else { continue }
             result.append(Entry(id: exercise.key, name: exercise.name, muscle: muscle, detail: "Custom"))
         }
-        return result
+        return
+            result
             .filter { muscle == nil || $0.muscle == muscle }
             .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
             .sorted { $0.name < $1.name }
@@ -81,9 +84,10 @@ struct ExercisePickerView: View {
             .background(Theme.surface)
             .overlay {
                 if entries.isEmpty && query.isEmpty {
-                    ContentUnavailableView("Search to add an exercise",
-                                           systemImage: "magnifyingglass",
-                                           description: Text("Type a name to create your own, then choose the muscle it trains."))
+                    ContentUnavailableView(
+                        "Search to add an exercise",
+                        systemImage: "magnifyingglass",
+                        description: Text("Type a name to create your own, then choose the muscle it trains."))
                 }
             }
             .navigationTitle(title)
@@ -98,7 +102,9 @@ struct ExercisePickerView: View {
     }
 
     private func row(_ entry: Entry) -> some View {
-        Button { pick(entry.name, entry.muscle) } label: {
+        Button {
+            pick(entry.name, entry.muscle)
+        } label: {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(entry.name)
@@ -137,8 +143,12 @@ struct ExercisePickerView: View {
         }
         .contentShape(Rectangle())
         if let muscle {
-            Button { pick(query, muscle) } label: { label }
-                .buttonStyle(.plain)
+            Button {
+                pick(query, muscle)
+            } label: {
+                label
+            }
+            .buttonStyle(.plain)
         } else {
             Menu {
                 Section("Which muscle does it train?") {
