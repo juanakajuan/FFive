@@ -24,21 +24,21 @@ A lifter with no active block plans one from a program template. They rename it,
 
 Preconditions:
 
-- On-disk baseline: `ffive-verify reset-data`, or at least no active block and no open quick workout (an open one replaces the empty state). Workout shows `button "Plan a Mesocycle"`.
+- On-disk baseline: `ffive-verify reset-data`, or at least no active block and no open quick workout (an open one replaces the empty state). Workout shows `#workout.plan`.
 - Journey: `ffive-verify drive .claude/skills/verify-ffive/journeys/plan-mesocycle.steps --name plan-mesocycle`.
 
-- **Open builder.** Tap `Plan a Mesocycle`. Steps: `wait button "Plan a Mesocycle" timeout=20`, `tap button "Plan a Mesocycle"`, `wait nav "New Mesocycle"`. The template sheet appears.
-- **Pick template.** Tap the Upper/Lower 4-day row. Steps: `tap button "~Upper/Lower, 4 Days"`, `wait nav "Customize"`. The name field holds `Upper/Lower, 4 Days`.
-- **Customize.** Rename the block and add a week. Steps: `replace field "Mesocycle name" "Verify Block"`, `tap button "~Increment"`, `wait text "5 training weeks"`.
-- **Start.** Tap `Start Mesocycle`. Steps: `tap button "Start Mesocycle"`, `wait text "WEEK 1 DAY 1" timeout=10`, `wait text "~Upper A · Verify Block"`. The subtitle ends in `• 3 RIR` (Week 1 is `min(3, training weeks - 1)` RIR, so a 3-week block starts at `2 RIR`).
-- **Mesos.** Steps: `tap button "Mesos"`, `wait text "Verify Block"`, `wait text "~6 WEEKS - 4 DAYS/WEEK"`.
+- **Open builder.** Tap `Plan a Mesocycle`. Steps: `wait #workout.plan timeout=20`, `tap #workout.plan`, `wait nav "New Mesocycle"`. The template sheet appears.
+- **Pick template.** Tap the Upper/Lower 4-day row. Steps: `tap #builder.template.upper-lower-4-days`, `wait nav "Customize"`. The name field holds `Upper/Lower, 4 Days`.
+- **Customize.** Rename the block and add a week. Steps: `replace #builder.name "Verify Block"`, `tap button "~Increment"`, `wait text "5 training weeks"`.
+- **Start.** Tap `Start Mesocycle`. Steps: `tap #builder.start`, `wait text "WEEK 1 DAY 1" timeout=10`, `store-expect Mesocycle name "Verify Block"`, `store-expect Mesocycle accumulationWeeks 5`, `wait text "~Verify Block"`. The subtitle ends in `• 3 RIR` (Week 1 is `min(3, training weeks - 1)` RIR, so a 3-week block starts at `2 RIR`).
+- **Mesos.** Steps: `tap #tab.mesos`, `wait text "Verify Block"`, `wait text "~6 WEEKS"`. The row reads `6 WEEKS - 4 DAYS/WEEK`.
 - **Persist.** Relaunch, which opens on the Workout tab. Steps: `launch`, `wait text "WEEK 1 DAY 1" timeout=20`, `wait text "~Verify Block"`.
-- **Proof.** Run `ffive-verify store "select ZNAME, ZACCUMULATIONWEEKS, ZFINISHEDDATE from ZMESOCYCLE"`. It returns one row, `Verify Block | 5 | (null)`, and `ffive-verify store` shows `ZMESODAY 4`. Keep shots `02-customized`, `03-session`, `04-mesos`, and `05-after-relaunch`.
+- **Proof.** The journey's `store-expect` steps check the name and the length. For the full row, run `ffive-verify store "select ZNAME, ZACCUMULATIONWEEKS, ZFINISHEDDATE from ZMESOCYCLE"`. It returns one row, `Verify Block | 5 | (null)`, and `ffive-verify store` shows `ZMESODAY 4`. Keep shots `02-customized`, `03-session`, `04-mesos`, and `05-after-relaunch`.
 
 ## Gotchas
 
-- `~Upper/Lower, 4 Days` must keep the `, 4 Days`, because `~Upper/Lower` also matches the 5-day template.
-- The template row label joins the split caption, the template's name, and its `<n>/week` pill. Do not match it exactly.
+- A template row's id is the slug of the template's name. `Upper/Lower, 4 Days` is `#builder.template.upper-lower-4-days`, and `Upper/Lower + Arms & Delts, 5 Days` is `#builder.template.upper-lower-arms-delts-5-days`.
+- The template row's label joins the split caption, the template's name, and its `<n>/week` pill. Tap the row by id, not by label.
 - `-seedDemo -demoRoute builder` jumps straight to Customize for the first template. It is a shortcut for looking, not proof of `plan-open` or `plan-template`. The demo block is active, so `Start Mesocycle` is disabled there.
 - Total weeks is training weeks + 1 (deload): 5 training weeks show as `6 WEEKS` on the Mesos tab and `Week 1 of 6` on the block's detail page.
 - The Workout tab builds Week 1 · Day 1 as soon as it shows it, so `ZWORKOUT` already holds an open row for that day before any set is logged.

@@ -21,15 +21,15 @@ Preconditions:
 - Demo baseline (`launch -seedDemo`).
 - Journey: `journeys/progress.steps`.
 
-- **Volume.** Steps: `tap button "More" timeout=20`, `tap button "Progress"`, `wait nav "Progress"`, `selected button "Volume"`, `wait text "Sets per muscle · Week 2"`, `wait any "~Quads 4 of"`, `tap button "W1"`, `wait text "Sets per muscle · Week 1"`.
-- **Strength.** Steps: `tap button "Strength"`, `wait text "Estimated 1RM"`, `tap button "~Leg Press, Quads"`, `wait nav "Leg Press"`.
-- **History.** Steps: `tap button "Progress"` (back), `tap button "History"`, `wait text "All Time"`, `tap button "~Morning Workout"`, `wait nav "Morning Workout"`, `wait text "Bench Press"`.
+- **Volume.** Steps: `tap #tab.more timeout=20`, `tap #more.progress`, `wait nav "Progress"`, `selected #segment.volume`, `wait text "~Sets per muscle"`, `wait text "~Week 2"`, `wait any "~Quads 4 of"`, `tap #segment.w1`, `wait text "~Sets per muscle"`, `wait text "~Week 1"`.
+- **Strength.** Steps: `tap #segment.strength`, `wait text "Estimated 1RM"`, `tap #strength.row.leg-press`, `wait nav "Leg Press"`.
+- **History.** Steps: `tap button "Progress"` (back), `tap #segment.history`, `wait text "All Time"`, `tap #history.row.morning-workout`, `wait nav "Morning Workout"`, `wait text "Bench Press"`.
 - **Proof.** Keep shots `01-volume-w1`, `02-strength-trend`, and `03-history-detail`. For a change to how numbers are computed, compare the chart's accessibility label (`any "~<Muscle> <done> of <planned> sets"`) with the planner's expectations in `FFiveCore/Tests/FFiveCoreTests/PlannerTests.swift`.
 
 ## Gotchas
 
-- The pane control's segments are plain `button`s (`Volume`, `Strength`, `History`), and the selected one carries the selected trait.
+- The pane control's segments are `#segment.volume`, `#segment.strength`, and `#segment.history`, and the selected one carries the selected trait. The week picker's segments are `#segment.w1` through `#segment.dl`.
 - The back button on pushed pages is labeled with the previous title: `button "Progress"` from a trend page or detail, `button "More"` from Progress.
-- Switching tabs resets More to its root. Re-enter with `tap button "Progress"` after any tab switch.
+- Switching tabs resets More to its root. Re-enter with `tap #more.progress` after any tab switch.
 - `-seedDemo -demoRoute progress` opens More and Progress directly. `-seedDemo -demoRoute strength` opens the richest trend page (Bench Press) on top of it. It is a shortcut, not proof of navigation.
 - Demo dates are relative to now, so History's dates and the "This Week" tile change from day to day. Assert names and counts, not dates.

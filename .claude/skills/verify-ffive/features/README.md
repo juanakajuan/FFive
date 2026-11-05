@@ -13,18 +13,19 @@ This directory is the maintained source for verifying FFive's user-facing behavi
 
 ## Driving conventions
 
-- The tabs are Workout, Mesos, Templates, Exercises, and More. The tab bar is a row of plain buttons, so match `button "Workout"`, never `tab "Workout"`. Settings, Progress, and Learn are pushed from More.
+- The tabs are Workout, Mesos, Templates, Exercises, and More. The tab bar is a row of plain buttons with the ids `#tab.workout`, `#tab.mesos`, `#tab.templates`, `#tab.exercises`, and `#tab.more`. The `tab` kind matches nothing. Settings, Progress, and Learn are pushed from More.
 - Only the selected tab is rendered, and a tab starts over at its root each time it is reopened. Re-enter pushed pages after every tab switch.
-- Prefer navigation titles, button labels, and placeholders over indexes. Set fields carry labels (`Set n weight`, `Set n reps`), so `#n` is rarely needed. Say so in the recipe where it is.
-- Treat every step as literal. Labels include their punctuation: `·`, `•`, `×`, curly quotes.
+- Address every control by its `#id` from `FFiveCore/Sources/FFiveCore/A11y.swift`. An indexed id ends in the 1-based set number or card position (`#set.weight.1`, `#exercise.menu.2`). A keyed id ends in the slug of a name (`#picker.row.lateral-raise`). `drive` rejects an unknown id before it touches the simulator.
+- Assert screen text by its visible text, with no separator characters in the step. Leave out `·`, `•`, `×`, a spaced `-`, and `/`. Match the part before the separator with `~`, or split the assertion in two, as in `wait text "~Sets per muscle"` then `wait text "~Week 2"`.
+- A few controls have no id and keep a label. They are the schedule grid cells (SF Symbol identifiers such as `forward.circle`), the builder's `Increment` and `Decrement`, the back buttons, and History rows of quick workouts, whose names depend on the clock.
 - Wait for the new screen's `nav` title or a state-specific label after every navigation, not a fixed `sleep`. The Workout tab has no navigation bar. Wait for its header text (`WEEK n DAY m`, `DELOAD DAY m`, or `QUICK WORKOUT`).
-- While the keyboard is up the tab bar is hidden. Tap `button "Done"` before tapping a tab.
+- While the keyboard is up the tab bar is hidden. Tap `#keyboard.done` before tapping a tab.
 - Put durable writes on the on-disk path. `-seedDemo` is in-memory and resets on every `launch`, but it shares the real UserDefaults, so restore `weightUnit` to `lb`.
 
 ## Proof and skip reporting
 
 - Capture the user action and the resulting state: `shot` before and after, plus an assertion on the new state.
-- Writes need a second, read-only view: `ffive-verify store "<sql>"` or `ffive-verify defaults`, saved next to the run with `tee`, plus a relaunch for persistence.
+- Writes need a second, read-only view. Inside the journey, `store-expect` and `defaults-expect` check the write. Outside it, run `ffive-verify store "<sql>"` or `ffive-verify defaults` and save the output next to the run with `tee`. Add a relaunch for persistence.
 - Record the feature ID and entry point with every artifact (`--name <feature-id>`).
 - Report an unreachable path with the failing step from `steps.log` and the unmet precondition. Do not report a skipped entry point as verified through another one.
 

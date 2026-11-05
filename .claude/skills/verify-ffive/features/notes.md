@@ -4,7 +4,7 @@ A lifter attaches a note to an exercise in a workout. By default it stays with t
 
 ## Sub-features
 
-- `note-exercise-add` adds an exercise note with `Exercise menu`, then `Add Note`. An `Exercise Note` sheet takes the text in `field "Note"` and saves with `Save`. The card shows it as a callout labeled `Note: <text>`, with `button "Pin note"` beside it.
+- `note-exercise-add` adds an exercise note with `Exercise menu`, then `Add Note`. An `Exercise Note` sheet takes the text in `#note.text` and saves with `#note.save`. The card shows it as a callout labeled `Note: <text>`, with the pin button `#exercise.pin.<n>` beside it.
 - `note-exercise-local` keeps an unpinned note off later workouts, and shows it in the finished workout's detail page.
 - `note-exercise-pin` pins it with `Pin note`. The button becomes `Unpin note`, and the note shows on the exercise's card in later workouts, including after a relaunch.
 - `note-exercise-edit` edits it with `Exercise menu`, then `Edit Note`. Editing a pinned note edits the pin.
@@ -27,17 +27,18 @@ Preconditions:
 - On-disk baseline right after `ffive-verify reset-data`.
 - Journey: `journeys/notes.steps`.
 
-- **Add an exercise note.** Steps: `tap button "Exercise menu"`, `wait button "Add Note"`, `tap button "Add Note"`, `wait nav "Exercise Note"`, `type field "Note" "Seat Level: 4"`, `tap button "Save"`, `wait any "Note: Seat Level: 4"`, `wait button "Pin note"`.
-- **Add a day note.** Steps: `tap button "Workout menu"`, `wait button "Add Note"`, `tap button "Add Note"`, `wait nav "Workout Note"`, `type field "Note" "Gym was busy"`, `tap button "Save"`, `wait any "Workout note: Gym was busy"`.
-- **Notes in history.** Finish, then `tap button "More"`, `tap button "Progress"`, `tap button "History"`, `tap button "~Workout,"`, `wait any "Workout note: Gym was busy"`, `wait any "Note: Seat Level: 4"`.
+- **Add an exercise note.** Steps: `tap #exercise.menu.1`, `wait #menu.exercise-note`, `tap #menu.exercise-note`, `wait nav "Exercise Note"`, `type #note.text "Seat Level: 4"`, `tap #note.save`, `wait any "Note: Seat Level: 4"`, `wait button "Pin note"`.
+- **Add a day note.** Steps: `tap #workout.menu`, `wait #menu.workout-note`, `tap #menu.workout-note`, `wait nav "Workout Note"`, `type #note.text "Gym was busy"`, `tap #note.save`, `wait any "Workout note: Gym was busy"`.
+- **Notes in history.** Finish, then `store-expect Workout note "Gym was busy"`, `tap #tab.more`, `tap #more.progress`, `tap #segment.history`, `tap button "~Workout,"`, `wait any "Workout note: Gym was busy"`, `wait any "Note: Seat Level: 4"`.
 - **Unpinned stays put.** Start another quick workout, add the same exercise, then `absent any "~Note: Seat Level"`.
-- **Pin and carry.** Add a note, `tap button "Pin note"`, `wait button "Unpin note"`. Finish, relaunch, and the Exercises tab page (`type field "Search" "Lateral Raise"`, `tap button "Lateral Raise, Side Delts, •, Dumbbell"`) shows `Note: <text>`. A new quick workout with the exercise shows the note and `Unpin note`.
-- **Edit, unpin, delete.** `Edit Note` then `replace field "Note" "Seat Level: 6"`. `tap button "Unpin note"`, then `wait button "Pin note"` with the note still on the card. `Delete Note`, then `absent any "~Note: Seat Level"`. An immediate `launch` then `absent any "~Note: Seat Level"` proves the writes were saved, not left to autosave.
-- **Proof.** Run `ffive-verify store "select ZNAME, ZTEXT from ZPINNEDNOTE"`, `ffive-verify store "select ZNAME, ZNOTE from ZEXERCISE"`, and `ffive-verify store "select ZNAME, ZNOTE from ZWORKOUT"`.
+- **Pin and carry.** Add a note, `tap #exercise.pin.1`, `wait button "Unpin note"`, `store-expect PinnedNote text "Seat Level: 5"`. Finish, relaunch, and the Exercises tab page (`type #exercises.search "Lateral Raise"`, `tap #exercises.row.lateral-raise`) shows `Note: <text>`. A new quick workout with the exercise shows the note and `Unpin note`.
+- **Edit, unpin, delete.** `tap #exercise.menu.1`, `tap #menu.exercise-note` (it reads `Edit Note` now), then `replace #note.text "Seat Level: 6"`. `tap #exercise.pin.1`, then `wait button "Pin note"` with the note still on the card. `tap #exercise.menu.1`, `tap #menu.delete-note`, then `absent any "~Note: Seat Level"`. An immediate `launch` then `absent any "~Note: Seat Level"` proves the writes were saved, not left to autosave.
+- **Proof.** The journey's `store-expect` steps check the day note and the pin. For the full picture, run `ffive-verify store "select ZNAME, ZTEXT from ZPINNEDNOTE"`, `ffive-verify store "select ZNAME, ZNOTE from ZEXERCISE"`, and `ffive-verify store "select ZNAME, ZNOTE from ZWORKOUT"`.
 
 ## Gotchas
 
 - The note editor is a sheet because alert text fields lost a cleared-and-retyped edit. Present it from the workout screen root, since a presentation on a card inside the lazy stack was dropped after the picker closed.
-- Tapping a menu item right after the exercise picker closes can race the menu. Wait for the item (`wait button "Add Note"`) before tapping it.
-- Menu items do not appear in `tree` dumps, but tapping them by label works.
-- `tap button "~Workout,"` taps the first finished workout in History. Open it while only one exists, or the match is ambiguous.
+- Tapping a menu item right after the exercise picker closes can race the menu. Wait for the item (`wait #menu.exercise-note`) before tapping it.
+- Menu items do not appear in `tree` dumps, but tapping them by id works.
+- `#exercise.pin.<n>` is one id for both `Pin note` and `Unpin note`. Assert the pin state by label, with `wait button "Unpin note"` or `wait button "Pin note"`.
+- History rows are keyed by workout name, and a quick workout's name depends on the clock. So the journey taps `button "~Workout,"`, the first finished workout in History. Open it while only one exists, or the match is ambiguous.
