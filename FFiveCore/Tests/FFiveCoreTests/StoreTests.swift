@@ -295,6 +295,57 @@ final class StoreTests: XCTestCase {
         XCTAssertFalse(store.context.hasChanges)
     }
 
+    func testSkippedSetsLetTheSessionFinish() throws {
+        let (store, meso) = try startedStore()
+        let workout = store.buildSession(meso, at: day1)
+        let exercise = workout.sortedExercises[0]
+        let sets = exercise.sortedSets
+        XCTAssertGreaterThan(sets.count, 2)
+
+        store.log(sets[0], done: true)
+        store.skip(sets[1], skipped: true)
+        XCTAssertEqual(sets[1].status, .skipped)
+        XCTAssertFalse(workout.isFullyLogged, "a pending set still blocks finishing")
+
+        store.skipRemainingSets(of: exercise)
+        XCTAssertEqual(sets.map(\.status), [.done] + Array(repeating: .skipped, count: sets.count - 1))
+        XCTAssertTrue(workout.isFullyLogged, "skipped sets do not block finishing")
+        XCTAssertEqual(workout.setProgress, 1)
+        XCTAssertEqual(workout.completedSets, 1, "a skipped set is not a completed one")
+        XCTAssertFalse(store.context.hasChanges, "the skip is saved")
+
+        let chest = store.weeklyVolume(meso, week: 0).first { $0.muscle == .chest }
+        XCTAssertEqual(chest?.done, 1)
+        XCTAssertEqual(chest?.planned, 1, "skipped sets are not missed volume")
+
+        store.log(sets[1], done: true)
+        XCTAssertEqual(sets[1].status, .done, "logging a skipped set replaces the skip")
+        store.skip(sets[2], skipped: false)
+        XCTAssertEqual(sets[2].status, .pending, "a skip can be undone")
+        XCTAssertNil(store.failure)
+    }
+
+    func testSkippedSetsRepeatTheirTargetNextWeek() throws {
+        let (store, meso) = try startedStore()
+        let workout = store.buildSession(meso, at: day1)
+        let sets = workout.sortedExercises[0].sortedSets
+        for set in sets {
+            set.weight = 100
+            set.reps = 10
+        }
+        store.log(sets[0], done: true)
+        store.skipRemainingSets(of: workout.sortedExercises[0])
+        store.finish(workout)
+
+        let next = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0)).sortedExercises[0].sortedSets
+        XCTAssertGreaterThanOrEqual(next.count, sets.count, "skipped sets stay in the prescription")
+        for (skipped, planned) in zip(sets.dropFirst(), next.dropFirst()) {
+            XCTAssertEqual(planned.targetWeight, skipped.targetWeight, "a skipped set repeats its target load")
+            XCTAssertEqual(planned.targetReps, skipped.targetReps, "a skipped set repeats its target reps")
+        }
+        XCTAssertNil(store.failure)
+    }
+
     func testSwapAndRemoveExercise() throws {
         let store = Store(inMemory: true)
         finishedBench(store)

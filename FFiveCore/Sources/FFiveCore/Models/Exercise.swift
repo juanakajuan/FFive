@@ -6,6 +6,8 @@ public final class Exercise {
     public internal(set) var name: String
     public internal(set) var exerciseKey: String?
     public var order: Int
+    /// Where this exercise sits in the plan built from this session. Nil means the same as `order`.
+    var plannedOrder: Int?
     public internal(set) var workout: Workout?
     @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
     public internal(set) var sets: [SetEntry] = []
@@ -27,7 +29,8 @@ public final class Exercise {
     }
 
     public var sortedSets: [SetEntry] { sets.sorted { $0.order < $1.order } }
-    public var isLogged: Bool { !sets.isEmpty && sets.allSatisfy(\.isDone) }
+    /// Every set is logged or skipped.
+    public var isLogged: Bool { !sets.isEmpty && !sets.contains { $0.status == .pending } }
     public var info: ExerciseInfo? { ExerciseCatalog.info(key) }
 
     /// Rows logged before muscles were stored resolve through the catalog.
@@ -50,6 +53,10 @@ public final class Exercise {
         set.targetReps = last?.targetReps
         set.type = last?.type ?? .regular
         sets.append(set)
+    }
+
+    func skipRemainingSets() {
+        for set in sets where set.status == .pending { set.status = .skipped }
     }
 
     func remove(_ set: SetEntry, in context: ModelContext) {

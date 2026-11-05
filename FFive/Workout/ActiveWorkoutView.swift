@@ -15,6 +15,7 @@ struct ActiveWorkoutView: View {
 
     @State private var picker: PickerRequest?
     @State private var showingSchedule = false
+    @State private var showingReorder = false
     @State private var confirmDiscard = false
     @State private var confirmEnd = false
     @State private var renameDraft: String?
@@ -138,6 +139,7 @@ struct ActiveWorkoutView: View {
                 }
             }
         }
+        .sheet(isPresented: $showingReorder) { ReorderExercisesView(workout: workout) }
         .sheet(isPresented: $showingSchedule) {
             if let activeMeso {
                 ScheduleSheet(
@@ -235,6 +237,10 @@ struct ActiveWorkoutView: View {
     private var menuItems: some View {
         Button("Add Exercise", systemImage: "plus") { picker = .add }
             .a11y(.menuAddExercise)
+        if workout.exercises.count > 1 {
+            Button("Reorder Exercises", systemImage: "arrow.up.arrow.down") { showingReorder = true }
+                .a11y(.menuReorder)
+        }
         if let meso = workout.mesocycle, let key = workout.key, meso.canSkip(key) {
             Button("Skip Day", systemImage: "forward") { skip(key, of: meso) }
                 .a11y(.menuSkipDay)
@@ -346,7 +352,7 @@ struct ExerciseCard: View {
                         text: "\(info.cue) \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps.",
                         systemImage: "lightbulb.fill")
                 }
-                if let phase, let set = sets.first(where: { !$0.isDone }) ?? sets.first {
+                if let phase, let set = sets.first(where: { $0.status == .pending }) ?? sets.first {
                     Callout(text: targetText(set, phase))
                 }
             }
@@ -389,6 +395,12 @@ struct ExerciseCard: View {
                 }
                 Button("Add Set", systemImage: "plus") { store.addSet(to: exercise) }
                     .a11y(.menuAddSet)
+                if exercise.sets.contains(where: { $0.status == .pending }) {
+                    Button("Skip Remaining Sets", systemImage: "forward.end") {
+                        store.skipRemainingSets(of: exercise)
+                    }
+                    .a11y(.menuSkipRemaining)
+                }
                 if let jointPain {
                     Picker(selection: jointPain) {
                         ForEach(JointPain.allCases, id: \.self) { Text($0.label).tag(Optional($0)) }
@@ -479,6 +491,16 @@ struct SetRow: View {
             Menu {
                 Button("Add Set", systemImage: "plus", action: onAdd)
                     .a11y(.menuAddSet)
+                switch set.status {
+                case .pending:
+                    Button("Skip Set", systemImage: "forward.end") { store.skip(set, skipped: true) }
+                        .a11y(.menuSkipSet)
+                case .skipped:
+                    Button("Unskip Set", systemImage: "arrow.uturn.backward") { store.skip(set, skipped: false) }
+                        .a11y(.menuSkipSet)
+                case .done:
+                    EmptyView()
+                }
                 Picker("Set Type", selection: setType) {
                     ForEach(SetType.allCases) { Text($0.title).tag($0) }
                 }
@@ -504,6 +526,7 @@ struct SetRow: View {
             .a11y(.setWeight, number)
             .frame(width: SetColumns.field)
             .padding(.leading, 12)
+            .opacity(set.status == .skipped ? 0.4 : 1)
 
             TextField(
                 "Set \(number) reps", value: reps, format: .number,
@@ -518,6 +541,7 @@ struct SetRow: View {
             .a11y(.setReps, number)
             .frame(width: SetColumns.field)
             .padding(.leading, 16)
+            .opacity(set.status == .skipped ? 0.4 : 1)
 
             if let tag = set.type.tag {
                 Text(tag)
@@ -535,13 +559,14 @@ struct SetRow: View {
                 store.log(set, done: !set.isDone)
                 if set.isDone { onCompleted() }
             } label: {
-                LogCheckbox(isOn: set.isDone)
+                LogCheckbox(status: set.status)
                     .frame(width: 44, height: 44, alignment: .trailing)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Log set \(number)")
             .a11y(.setLog, number)
+            .accessibilityValue(set.status == .skipped ? "Skipped" : "")
             .accessibilityAddTraits(set.isDone ? .isSelected : [])
         }
         .padding(.horizontal, Theme.gutter)

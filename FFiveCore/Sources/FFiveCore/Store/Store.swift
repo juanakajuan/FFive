@@ -87,7 +87,17 @@ public final class Store {
         if done, let workout = set.exercise?.workout, workout.mesocycle != nil, workout.completedSets == 0 {
             workout.startDate = .now
         }
-        set.isDone = done
+        set.status = done ? .done : .pending
+        commit()
+    }
+
+    public func skip(_ set: SetEntry, skipped: Bool) {
+        set.status = skipped ? .skipped : .pending
+        commit()
+    }
+
+    public func skipRemainingSets(of exercise: Exercise) {
+        exercise.skipRemainingSets()
         commit()
     }
 
@@ -114,6 +124,11 @@ public final class Store {
 
     public func swapExercise(_ exercise: Exercise, to name: String, muscle: Muscle) {
         MesoPlanner.swap(exercise, to: name, muscle: muscle, unit: unit, snapshot: snapshot, in: context)
+        commit()
+    }
+
+    public func reorderExercises(of workout: Workout, to exercises: [Exercise], scope: ReorderScope) {
+        MesoPlanner.reorder(workout, to: exercises, scope: scope)
         commit()
     }
 

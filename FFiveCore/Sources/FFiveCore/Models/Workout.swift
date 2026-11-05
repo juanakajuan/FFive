@@ -25,12 +25,16 @@ public final class Workout {
     }
 
     public var sortedExercises: [Exercise] { exercises.sorted { $0.order < $1.order } }
+    /// The order later weeks are planned in, which a session-only reorder keeps apart from `sortedExercises`.
+    var plannedExercises: [Exercise] {
+        exercises.sorted { ($0.plannedOrder ?? $0.order, $0.order) < ($1.plannedOrder ?? $1.order, $1.order) }
+    }
     public var duration: TimeInterval { (endDate ?? .now).timeIntervalSince(startDate) }
     public var completedSets: Int { exercises.reduce(0) { $0 + $1.sets.filter(\.isDone).count } }
-    /// The share of planned sets logged, from 0 to 1.
+    /// The share of planned sets logged or skipped, from 0 to 1.
     public var setProgress: Double {
-        let total = exercises.reduce(0) { $0 + $1.sets.count }
-        return total == 0 ? 0 : Double(completedSets) / Double(total)
+        let sets = exercises.flatMap(\.sets)
+        return sets.isEmpty ? 0 : Double(sets.filter { $0.status != .pending }.count) / Double(sets.count)
     }
     public var isFullyLogged: Bool { !exercises.isEmpty && exercises.allSatisfy(\.isLogged) }
     public var totalVolume: Double {
