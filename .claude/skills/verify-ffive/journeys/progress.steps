@@ -4,12 +4,10 @@ tap #tab.more timeout=20
 tap #more.progress
 wait nav "Progress"
 selected #segment.volume
-wait text "~Sets per muscle"
-wait text "~Week 2"
+wait text "Sets per muscle*Week 2"
 wait any "~Quads 4 of"
 tap #segment.w1
-wait text "~Sets per muscle"
-wait text "~Week 1"
+wait text "Sets per muscle*Week 1"
 shot 01-volume-w1
 tap #segment.strength
 wait text "Estimated 1RM"

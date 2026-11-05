@@ -177,12 +177,7 @@ final class DriverTests: XCTestCase {
         case "tab": app.tabBars.descendants(matching: type)
         default: app.descendants(matching: type)
         }
-        let label = args[1]
-        let predicate = label.hasPrefix("~")
-            ? NSPredicate(format: "label CONTAINS %@ OR identifier CONTAINS %@ OR placeholderValue CONTAINS %@",
-                          String(label.dropFirst()), String(label.dropFirst()), String(label.dropFirst()))
-            : NSPredicate(format: "label == %@ OR identifier == %@ OR placeholderValue == %@", label, label, label)
-        return scope.matching(predicate)
+        return scope.matching(labelPredicate(args[1]))
     }
 
     private static func index(_ args: [String]) -> Int? {
