@@ -17,6 +17,7 @@ struct ActiveWorkoutView: View {
     @State private var showingSchedule = false
     @State private var showingReorder = false
     @State private var confirmDiscard = false
+    @State private var confirmReset = false
     @State private var confirmEnd = false
     @State private var renameDraft: String?
     @State private var noteEdit: NoteEdit?
@@ -152,7 +153,13 @@ struct ActiveWorkoutView: View {
             Text(
                 workout.mesocycle == nil
                     ? "Its exercises and sets are deleted."
-                    : "Logged sets for this day are cleared and it starts over from the plan.")
+                    : "This day is rebuilt from the plan. Logged sets, swaps and added exercises are dropped.")
+        }
+        .confirmationDialog("Reset this workout?", isPresented: $confirmReset, titleVisibility: .visible) {
+            Button("Reset Workout", role: .destructive) { store.reset(workout) }
+                .a11y(.dialogReset)
+        } message: {
+            Text("Logged sets are cleared. Exercises and targets stay.")
         }
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
             if let activeMeso {
@@ -165,11 +172,14 @@ struct ActiveWorkoutView: View {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
         }
         .alert(
-            "Rename Workout", isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
+            workout.mesocycle == nil ? "Rename Workout" : "Rename Day",
+            isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
         ) {
-            TextField("Workout name", text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
+            TextField(
+                workout.mesocycle == nil ? "Workout name" : "Day name",
+                text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
             Button("Save") {
-                if let name = renameDraft?.trimmingCharacters(in: .whitespaces), !name.isEmpty { workout.name = name }
+                if let name = renameDraft { store.rename(workout, to: name) }
             }
             Button("Cancel", role: .cancel) {}
         }
@@ -248,9 +258,11 @@ struct ActiveWorkoutView: View {
             noteEdit = NoteEdit(target: .day, draft: workout.note ?? "")
         }
         .a11y(.menuWorkoutNote)
-        if workout.mesocycle == nil {
-            Button("Rename", systemImage: "pencil") { renameDraft = workout.name }
-                .a11y(.menuRename)
+        Button(workout.mesocycle == nil ? "Rename" : "Rename Day", systemImage: "pencil") { renameDraft = workout.name }
+            .a11y(.menuRename)
+        if workout.mesocycle != nil, workout.completedSets > 0 {
+            Button("Reset Workout", systemImage: "arrow.counterclockwise", role: .destructive) { confirmReset = true }
+                .a11y(.menuReset)
         }
         Button("Discard Workout", systemImage: "trash", role: .destructive) { confirmDiscard = true }
             .a11y(.menuDiscard)
