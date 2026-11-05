@@ -44,8 +44,6 @@ struct LearnView: View {
         .preferredColorScheme(.dark)
 }
 
-// MARK: - Article list and page
-
 extension Learn {
     fileprivate static func inline(_ text: String) -> AttributedString {
         let options = AttributedString.MarkdownParsingOptions(interpretedSyntax: .inlineOnlyPreservingWhitespace)
@@ -205,8 +203,6 @@ extension Learn {
         }
     }
 }
-
-// MARK: - Visual aids
 
 extension Learn {
     fileprivate enum LandmarkZone: CaseIterable, Identifiable {

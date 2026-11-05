@@ -140,7 +140,6 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(meso.nextUp, day1)
     }
 
-    /// Two quick workouts that both hold Bench Press, oldest first, the way a later card finds an earlier pin.
     func benchTwice() -> (store: Store, first: Exercise, later: Exercise) {
         let store = Store(inMemory: true)
         let exercises = (0..<2).map { _ in

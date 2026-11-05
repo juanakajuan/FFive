@@ -1,6 +1,5 @@
 import Foundation
 
-/// Matches a step's `"<label>"` against an element's label, identifier, or placeholder.
 func labelPredicate(_ label: String) -> NSPredicate {
     let (comparison, pattern) =
         if label.hasPrefix("~") {

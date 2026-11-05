@@ -52,7 +52,6 @@ struct MuscleChip: View {
     }
 }
 
-/// The week's phase in `StatusBadge` style: blue for an accumulation week's RIR, gold for the deload.
 struct PhaseBadge: View {
     let phase: WeekPhase
 
@@ -78,7 +77,6 @@ extension WeekPhase {
     }
 }
 
-/// Equal-width buttons that pick exactly one option, in place of the system segmented control.
 struct SegmentedButtons<Option: Hashable>: View {
     let options: [Option]
     @Binding var selection: Option
@@ -114,7 +112,6 @@ struct SegmentedButtons<Option: Hashable>: View {
     }
 }
 
-/// A row of tappable options that reads as one question. Tapping the selected option clears it.
 struct ChipPicker<Option: Hashable>: View {
     let title: String
     let options: [Option]
@@ -158,8 +155,6 @@ struct ChipPicker<Option: Hashable>: View {
     }
 }
 
-/// One muscle's weekly sets against its landmarks. The track ends at MRV, the tick marks MEV,
-/// and the green rule underneath spans the productive range, so no two fills ever overlap.
 struct VolumeBar: View {
     let volume: MuscleVolume
 
@@ -232,14 +227,12 @@ struct VolumeLegend: View {
 }
 
 extension View {
-    /// A plain list on `surface`, without the system grouped look.
     func themedList() -> some View {
         listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(Theme.surface)
     }
 
-    /// A list row on `surface` with 16pt gutters and a hairline separator.
     func themedRow(vertical: CGFloat = 12) -> some View {
         alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
             .listRowBackground(Theme.surface)

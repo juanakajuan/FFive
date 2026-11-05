@@ -85,7 +85,6 @@ public enum A11y: String, CaseIterable {
     func indexed(_ index: Int) -> String { "\(rawValue).\(index)" }
     func keyed(_ key: String) -> String { "\(rawValue).\(A11y.slug(key))" }
 
-    /// Lowercase, every run of characters outside a-z and 0-9 becomes one hyphen, no leading or trailing hyphen.
     static func slug(_ text: String) -> String {
         var out = ""
         var pendingHyphen = false

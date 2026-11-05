@@ -67,8 +67,6 @@ struct ProgressScreen: View {
             .listRowSeparator(.hidden)
     }
 
-    // MARK: Volume
-
     @ViewBuilder
     private var volume: some View {
         if let meso = mesos.first(where: { $0.persistentModelID == selectedMeso }) ?? mesos.first(where: {
@@ -115,8 +113,6 @@ struct ProgressScreen: View {
                 description: "Plan a mesocycle on the Train tab to see weekly sets against each muscle's landmarks.")
         }
     }
-
-    // MARK: Strength
 
     @ViewBuilder
     private var strength: some View {
@@ -167,8 +163,6 @@ struct ProgressScreen: View {
             note("Estimated from your best set each session, counting the reps you left in reserve.")
         }
     }
-
-    // MARK: History
 
     @ViewBuilder
     private var historyList: some View {

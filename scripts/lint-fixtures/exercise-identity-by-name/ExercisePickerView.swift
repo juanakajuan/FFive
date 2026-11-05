@@ -4,7 +4,6 @@ import FFiveCore
 
 struct ExercisePickerView: View {
     var title = "Add Exercise"
-    /// Limits the list to one muscle, as when swapping an exercise for another that trains the same thing.
     var muscle: Muscle?
     var onPick: (String, Muscle) -> Void
 
@@ -21,7 +20,6 @@ struct ExercisePickerView: View {
 
     private var query: String { search.trimmingCharacters(in: .whitespaces) }
 
-    /// Catalog exercises plus custom ones the lifter has logged with a muscle.
     private var entries: [Entry] {
         var result = ExerciseCatalog.all.map { Entry(name: $0.name, muscle: $0.muscle, detail: $0.equipment.displayName) }
         var seen = Set(result.map(\.id))

@@ -1,6 +1,5 @@
 import Foundation
 
-/// One exercise in the library: a catalog entry, or a custom one the lifter has logged.
 public struct ExerciseListing: Hashable, Identifiable {
     public let id: ExerciseID
     public let name: String
@@ -20,7 +19,6 @@ public struct WeekStats: Equatable {
     public let allTime: Int
 }
 
-/// One exercise's estimated 1RM, one point per finished session that logged it.
 public struct StrengthSeries: Identifiable, Hashable {
     public struct Point: Identifiable, Hashable {
         public struct ID: Hashable {

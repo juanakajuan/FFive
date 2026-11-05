@@ -29,7 +29,6 @@ public final class Mesocycle {
         days[dayIndex].name = name
         for workout in workouts where workout.dayIndex == dayIndex { workout.name = name }
     }
-    /// Accumulation weeks plus the deload.
     public var totalWeeks: Int { accumulationWeeks + 1 }
 
     public func phase(week: Int) -> WeekPhase {
@@ -44,7 +43,6 @@ public final class Mesocycle {
         workouts.first { $0.key == key }
     }
 
-    /// The session after which this one is planned: the latest earlier week on the same day.
     func latestWorkout(dayIndex: Int, before week: Int) -> Workout? {
         workouts
             .filter { $0.dayIndex == dayIndex && ($0.week ?? .max) < week }
@@ -86,8 +84,6 @@ public final class Mesocycle {
         skippedSessions.removeAll { $0 == key }
     }
 
-    /// Ends the block. Open sessions with logged sets are finished so they reach history; untouched ones,
-    /// such as a day built only because it was shown, are dropped.
     func end(in context: ModelContext) {
         for workout in workouts where !workout.isFinished {
             if workout.completedSets > 0 {

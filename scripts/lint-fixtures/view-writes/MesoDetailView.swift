@@ -1,7 +1,6 @@
 import SwiftUI
 import SwiftData
 
-/// One block's schedule and the current week's volume, pushed from the Mesos tab.
 struct MesoDetailView: View {
     let meso: Mesocycle
 
@@ -17,7 +16,6 @@ struct MesoDetailView: View {
         ScrollView {
             VStack(spacing: Theme.gutter) {
                 header(week: week)
-                // Only the active block trains from the Workout tab, so a finished block's days don't open anything.
                 MesoScheduleGrid(meso: meso) { key in
                     if isActive { router.openSession(key) }
                 }

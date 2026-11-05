@@ -42,12 +42,9 @@ struct SessionFocus: Equatable {
     let key: SessionKey
 }
 
-/// Cross-tab navigation: another tab can send the lifter to a session on the Workout tab.
 @Observable
 final class AppRouter {
     var tab: AppTab = [.progress, .strength].contains(DemoLaunch.route) ? .more : .workout
-    /// A day the Workout tab should show instead of the next session. It names its block, so a pick made in
-    /// one block never carries into the next.
     var focus: SessionFocus?
 
     func openSession(_ key: SessionKey, in meso: Mesocycle) {

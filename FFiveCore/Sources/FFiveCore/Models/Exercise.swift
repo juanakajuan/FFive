@@ -45,7 +45,6 @@ public final class Exercise {
         ExerciseCatalog.increment(for: key, unit: unit)
     }
 
-    /// Appends a set shaped like the last one, so the lifter edits instead of retyping.
     func addSet() {
         let last = sortedSets.last
         let set = SetEntry(reps: last?.reps ?? 10, weight: last?.weight ?? 0, order: (last?.order ?? -1) + 1)

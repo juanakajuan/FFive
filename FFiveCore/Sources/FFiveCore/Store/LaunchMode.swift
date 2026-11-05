@@ -1,20 +1,16 @@
 import Foundation
 
-/// Screens a demo launch can open straight into, chosen with `-demoRoute <name>`.
 public enum DemoRoute: String {
     case train, builder, session, progress, strength
 }
 
 public struct LaunchMode: Equatable {
     enum Source: Equatable {
-        /// The lifter's own store on disk.
         case lifter
-        /// `-seedDemo`: an in-memory store filled by `DemoSeed`, opened on `route` when one is named.
         case demo(route: DemoRoute?)
     }
 
     let source: Source
-    /// `-disableAnimations`: the verify driver launches with it so taps land on settled screens.
     public let animationsDisabled: Bool
 
     public init(arguments: [String] = ProcessInfo.processInfo.arguments) {

@@ -8,7 +8,6 @@ struct MesoBuilderView: View {
         case blank
     }
 
-    /// Opens straight into the editor, as when the Templates tab picks a template.
     var startAt: Route?
 
     @Environment(\.dismiss) private var dismiss
@@ -281,7 +280,6 @@ struct MesoEditorView: View {
     }
 }
 
-/// The week-by-week effort targets for a block length, updated live as the length changes.
 struct RIRSchedule: View {
     let accumulationWeeks: Int
 
@@ -311,7 +309,6 @@ struct RIRSchedule: View {
     }
 }
 
-/// The full-width filled button for a screen's main action.
 struct FilledActionButton: View {
     let title: String
     var isEnabled = true
@@ -338,7 +335,6 @@ extension View {
             .listRowInsets(EdgeInsets(top: 8, leading: Theme.gutter, bottom: 8, trailing: Theme.gutter))
     }
 
-    /// A dark, left-aligned text box for names.
     fileprivate func builderField() -> some View {
         font(Theme.body)
             .foregroundStyle(Theme.text)

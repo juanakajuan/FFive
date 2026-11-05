@@ -2,7 +2,6 @@ import FFiveCore
 import SwiftData
 import SwiftUI
 
-/// The block's week-by-day grid. Current-week days open or skip; finished days push their workout.
 struct MesoScheduleGrid: View {
     let meso: Mesocycle
     var onOpen: (SessionKey) -> Void
@@ -110,7 +109,6 @@ struct MesoScheduleGrid: View {
     }
 }
 
-/// One week's sets per muscle against the volume landmarks.
 struct WeekVolumeCard: View {
     let meso: Mesocycle
     let week: Int
@@ -155,7 +153,6 @@ extension View {
 }
 
 extension View {
-    /// Full-width card on the page background, matching the Workout tab's cards.
     fileprivate func scheduleCard() -> some View {
         padding(Theme.gutter)
             .frame(maxWidth: .infinity, alignment: .leading)

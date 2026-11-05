@@ -13,7 +13,6 @@ public struct SetTarget: Equatable {
     static let calibrate = SetTarget(weight: nil, reps: nil)
 }
 
-/// Where a mesocycle week sits: accumulation weeks count down RIR, the final week is a deload.
 public enum WeekPhase: Equatable {
     case accumulation(rir: Int)
     case deload
@@ -59,8 +58,6 @@ public enum Progression {
         return delta
     }
 
-    /// Spreads a muscle's set delta across its exercises in one session.
-    /// Adds go to the exercise with the fewest sets, removals come from the most. No exercise drops below 1.
     /// `weeklyRoom` is how many sets the muscle can still gain before its weekly MRV.
     static func distribute(delta: Int, across counts: [Int], weeklyRoom: Int) -> [Int] {
         var result = counts
@@ -81,8 +78,6 @@ public enum Progression {
         return result
     }
 
-    /// Week-1 sets for each exercise of a muscle in one session: MEV split over its weekly sessions
-    /// and its exercises in this session, at least 2 sets per exercise.
     static func initialSetsPerExercise(muscle: Muscle, sessionsPerWeek: Int, exercisesInSession: Int) -> Int {
         let slots = max(1, sessionsPerWeek) * max(1, exercisesInSession)
         let share = (muscle.landmarks.mev + slots - 1) / slots
@@ -122,7 +117,6 @@ public enum Progression {
         return resized(progressed, to: setCount)
     }
 
-    /// Deload: half the sets (rounded up) of the last accumulation week, week-1 loads and reps.
     static func deloadTargets(firstWeek: [SetTarget], lastAccumulationSetCount: Int) -> [SetTarget] {
         resized(firstWeek, to: max(1, (lastAccumulationSetCount + 1) / 2))
     }
@@ -132,13 +126,11 @@ public enum Progression {
         weight * (1 + Double(reps + rir) / 30)
     }
 
-    /// A first-week rep target between the bottom and the middle of the range.
     public static func startingReps(in repRange: ClosedRange<Int>) -> Int {
         let middle = (repRange.lowerBound + repRange.upperBound) / 2
         return (repRange.lowerBound + middle) / 2
     }
 
-    /// The load that leaves `rir` reps in reserve after `reps` reps, from an estimated 1RM.
     static func load(forReps reps: Int, rir: Int, oneRepMax: Double, increment: Double) -> Double {
         roundDown(oneRepMax / (1 + Double(reps + rir) / 30), to: increment)
     }
@@ -149,13 +141,11 @@ public enum Progression {
         return Int((30 * (oneRepMax / load - 1)).rounded(.down)) - rir
     }
 
-    /// Loads round down so a prescription never asks for more than the math supports.
     public static func roundDown(_ weight: Double, to increment: Double) -> Double {
         guard increment > 0 else { return weight }
         return (weight / increment + 1e-9).rounded(.down) * increment
     }
 
-    /// Trims from the end, or repeats the last target, to reach `count`.
     private static func resized(_ targets: [SetTarget], to count: Int) -> [SetTarget] {
         guard count > 0 else { return [] }
         guard let last = targets.last else { return Array(repeating: .calibrate, count: count) }

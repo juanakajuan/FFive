@@ -3,7 +3,6 @@ import SwiftUI
 
 struct ExercisePickerView: View {
     var title = "Add Exercise"
-    /// Limits the list to one muscle, as when swapping an exercise for another that trains the same thing.
     var muscle: Muscle?
     var onPick: (String, Muscle) -> Void
 
