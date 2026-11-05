@@ -6,11 +6,14 @@ final class DriverTests: XCTestCase {
     private let app = XCUIApplication(bundleIdentifier: "com.juanix.FFive")
     private let environment = ProcessInfo.processInfo.environment
     private var out = URL(fileURLWithPath: NSTemporaryDirectory())
+    private var launchedDemo = false
+    /// Guards the state below, which the watchdog thread shares with the test.
+    private let lock = NSLock()
     private var log: [String] = []
     private var currentStep = ""
     private var finished = false
     private var timedOut = false
-    private var launchedDemo = false
+    private var failureCaptured = false
 
     func testRunSteps() throws {
         let stepsPath = try XCTUnwrap(environment["FFIVE_STEPS"], "FFIVE_STEPS is not set")
@@ -20,16 +23,17 @@ final class DriverTests: XCTestCase {
         if let deadline = environment["FFIVE_DEADLINE"].flatMap(Double.init) {
             startWatchdog(at: Date(timeIntervalSince1970: deadline))
         }
-        defer { finished = true }
+        defer { lock.withLock { finished = true } }
 
         let lines = try String(contentsOfFile: stepsPath, encoding: .utf8).components(separatedBy: .newlines)
         for (number, raw) in lines.enumerated() {
             let line = raw.trimmingCharacters(in: .whitespaces)
             if line.isEmpty || line.hasPrefix("#") { continue }
-            currentStep = "\(number + 1): \(line)"
+            let step = "\(number + 1): \(line)"
+            lock.withLock { currentStep = step }
             do {
                 try run(Self.tokenize(line))
-                append("ok   \(currentStep)")
+                append("ok   \(step)")
             } catch {
                 record(XCTIssue(type: .assertionFailure, compactDescription: "\(error)"))
                 return
@@ -38,23 +42,36 @@ final class DriverTests: XCTestCase {
     }
 
     override func record(_ issue: XCTIssue) {
-        append("FAIL \(currentStep) -> \(issue.compactDescription)")
+        append("FAIL \(lock.withLock { currentStep }) -> \(issue.compactDescription)")
+        captureFailure()
+        super.record(issue)
+    }
+
+    /// Saves the tree and screen once per drive: an issue recorded while capturing, or a later one, keeps the first capture.
+    private func captureFailure() {
+        let first = lock.withLock {
+            defer { failureCaptured = true }
+            return !failureCaptured
+        }
+        guard first else { return }
         save(app.debugDescription, as: "failure.tree.txt")
         save(XCUIScreen.main.screenshot().pngRepresentation, as: "failure.png")
-        super.record(issue)
     }
 
     private func startWatchdog(at deadline: Date) {
         let pollingStepGrace: TimeInterval = 3
         Thread.detachNewThread { [self] in
             Thread.sleep(until: deadline)
-            guard !finished else { return }
-            timedOut = true
-            append("TIMEOUT during step \(currentStep)")
+            let step: String? = lock.withLock {
+                guard !finished else { return nil }
+                timedOut = true
+                return currentStep
+            }
+            guard let step else { return }
+            append("TIMEOUT during step \(step)")
             Thread.sleep(forTimeInterval: pollingStepGrace)
-            guard !finished else { return }
-            save(app.debugDescription, as: "failure.tree.txt")
-            save(XCUIScreen.main.screenshot().pngRepresentation, as: "failure.png")
+            guard !lock.withLock({ finished }) else { return }
+            captureFailure()
         }
     }
 
@@ -215,7 +232,7 @@ final class DriverTests: XCTestCase {
         let deadline = Date.now.addingTimeInterval(timeout)
         while true {
             guard let reason = try mismatch() else { return }
-            if timedOut { throw StepError("drive timed out (--timeout): \(reason)") }
+            if lock.withLock({ timedOut }) { throw StepError("drive timed out (--timeout): \(reason)") }
             guard Date.now < deadline else { throw StepError(reason) }
             Thread.sleep(forTimeInterval: 0.25)
         }
@@ -232,8 +249,10 @@ final class DriverTests: XCTestCase {
     // MARK: Plumbing
 
     private func append(_ entry: String) {
-        log.append(entry)
-        save(log.joined(separator: "\n") + "\n", as: "steps.log")
+        lock.withLock {
+            log.append(entry)
+            save(log.joined(separator: "\n") + "\n", as: "steps.log")
+        }
     }
 
     private func save(_ text: String, as name: String) { save(Data(text.utf8), as: name) }
