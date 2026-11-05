@@ -4,11 +4,11 @@ import FFiveCore
 
 /// One exercise in the library: a catalog entry, or a custom one the lifter has logged.
 struct ExerciseListing: Hashable, Identifiable {
+    let id: ExerciseID
     let name: String
     let muscle: Muscle
     let info: ExerciseInfo?
 
-    var id: String { name.lowercased() }
     var equipment: String { info?.equipment.displayName ?? "Custom" }
 
     static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
@@ -23,12 +23,11 @@ struct ExercisesView: View {
 
     /// Catalog exercises plus custom ones the lifter has logged with a muscle, as in the exercise picker.
     private var listings: [ExerciseListing] {
-        var result = ExerciseCatalog.all.map { ExerciseListing(name: $0.name, muscle: $0.muscle, info: $0) }
+        var result = ExerciseCatalog.all.map { ExerciseListing(id: $0.id, name: $0.name, muscle: $0.muscle, info: $0) }
         var seen = Set(result.map(\.id))
         for exercise in logged {
-            guard let muscle = exercise.muscleRaw.flatMap(Muscle.init(rawValue:)),
-                  seen.insert(exercise.name.lowercased()).inserted else { continue }
-            result.append(ExerciseListing(name: exercise.name, muscle: muscle, info: nil))
+            guard let muscle = exercise.muscle, seen.insert(exercise.key).inserted else { continue }
+            result.append(ExerciseListing(id: exercise.key, name: exercise.name, muscle: muscle, info: nil))
         }
         let query = search.trimmingCharacters(in: .whitespaces)
         return result
@@ -43,6 +42,7 @@ struct ExercisesView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     SearchBox(text: $search)
+                        .a11y(.exercisesSearch)
                         .padding(.horizontal, Theme.gutter)
                         .padding(.bottom, 12)
                     FilterBar(label: muscle?.displayName ?? "Filters") {
@@ -60,6 +60,7 @@ struct ExercisesView: View {
                     ForEach(listings) { listing in
                         NavigationLink(value: listing) { row(listing) }
                             .buttonStyle(.plain)
+                            .a11y(.exercisesRow, key: listing.name)
                     }
                 }
             }

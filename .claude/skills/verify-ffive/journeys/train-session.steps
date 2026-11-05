@@ -1,51 +1,53 @@
 # train-session: log a planned session of the on-disk block.
-# Before: plan-mesocycle.steps ran on this store (block "Verify Block", Week 1 · Day 1 showing).
+# Before: plan-mesocycle.steps ran on this store (block "Verify Block", Week 1 Day 1 showing).
 # After: ffive-verify store "select w.ZWEEK, w.ZDAYINDEX, w.ZENDDATE is not null as finished, s.ZWEIGHT, s.ZREPS, s.ZISDONE from ZWORKOUT w join ZEXERCISE e on e.ZWORKOUT = w.Z_PK join ZSETENTRY s on s.ZEXERCISE = e.Z_PK where w.ZMESOCYCLE is not null and s.ZISDONE = 1"
 launch
 wait text "WEEK 1 DAY 1" timeout=20
 wait text "Bench Press"
 wait text "~Calibrate"
 tree 01-session-open
-replace field "Set 1 weight" "135"
-replace field "Set 1 reps" "9"
-value field "Set 1 weight" "135"
-value field "Set 1 reps" "9"
-tap button "Done"
-tap button "Log set 1"
-selected button "Log set 1"
-absent button "Finish Workout"
+replace #set.weight.1 "135"
+replace #set.reps.1 "9"
+value #set.weight.1 "135"
+value #set.reps.1 "9"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+absent #workout.finish
 shot 02-first-set-done
 # Finish appears only once every set is logged, so a lifter stopping early deletes what they skipped.
 # One unlogged Bench set stays until the other cards are gone: a fully logged Bench adds the chest feedback
 # card, which would push the next card's menu off screen.
-tap button "Set 2 menu"
-tap button "Delete Set"
-tap button "Set 2 menu"
-tap button "Delete Set"
-tap button "Set 2 menu"
-tap button "Delete Set"
-tap button "Exercise menu" #1
-tap button "Remove Exercise"
+tap #set.menu.2
+tap #menu.delete-set
+tap #set.menu.2
+tap #menu.delete-set
+tap #set.menu.2
+tap #menu.delete-set
+tap #exercise.menu.2
+tap #menu.remove-exercise
 absent text "Pull-Up"
-tap button "Exercise menu" #1
-tap button "Remove Exercise"
+tap #exercise.menu.2
+tap #menu.remove-exercise
 absent text "Seated Cable Row"
-tap button "Exercise menu" #1
-tap button "Remove Exercise"
+tap #exercise.menu.2
+tap #menu.remove-exercise
 absent text "Lateral Raise"
-tap button "Exercise menu" #1
-tap button "Remove Exercise"
+tap #exercise.menu.2
+tap #menu.remove-exercise
 absent text "EZ-Bar Curl"
-tap button "Exercise menu" #1
-tap button "Remove Exercise"
+tap #exercise.menu.2
+tap #menu.remove-exercise
 absent text "Skull Crusher"
-absent button "Finish Workout"
-tap button "Set 2 menu"
-tap button "Delete Set"
-absent field "Set 2 weight"
-wait button "Finish Workout"
+absent #workout.finish
+tap #set.menu.2
+tap #menu.delete-set
+absent #set.weight.2
+wait #workout.finish
 shot 03-finish-shown
-tap button "Finish Workout"
+tap #workout.finish
 wait text "WEEK 1 DAY 2" timeout=10
+store-expect SetEntry weight 135
+store-expect SetEntry reps 9
 tree 04-next-day
 shot 04-next-day

@@ -1,35 +1,77 @@
 import XCTest
 
 /// Runs a step file against the installed FFive app (`com.juanix.FFive`).
-/// `ffive-verify drive` passes the file as FFIVE_STEPS and the evidence folder as FFIVE_OUT.
 /// The step language is documented in the skill's SKILL.md.
 final class DriverTests: XCTestCase {
     private let app = XCUIApplication(bundleIdentifier: "com.juanix.FFive")
+    private let environment = ProcessInfo.processInfo.environment
     private var out = URL(fileURLWithPath: NSTemporaryDirectory())
+    private var launchedDemo = false
+    /// Guards the state below, which the watchdog thread shares with the test.
+    private let lock = NSLock()
     private var log: [String] = []
+    private var currentStep = ""
+    private var finished = false
+    private var timedOut = false
+    private var failureCaptured = false
 
     func testRunSteps() throws {
-        let env = ProcessInfo.processInfo.environment
-        let stepsPath = try XCTUnwrap(env["FFIVE_STEPS"], "FFIVE_STEPS is not set")
-        out = URL(fileURLWithPath: try XCTUnwrap(env["FFIVE_OUT"], "FFIVE_OUT is not set"))
+        let stepsPath = try XCTUnwrap(environment["FFIVE_STEPS"], "FFIVE_STEPS is not set")
+        out = URL(fileURLWithPath: try XCTUnwrap(environment["FFIVE_OUT"], "FFIVE_OUT is not set"))
         try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
         continueAfterFailure = false
+        if let deadline = environment["FFIVE_DEADLINE"].flatMap(Double.init) {
+            startWatchdog(at: Date(timeIntervalSince1970: deadline))
+        }
+        defer { lock.withLock { finished = true } }
 
         let lines = try String(contentsOfFile: stepsPath, encoding: .utf8).components(separatedBy: .newlines)
         for (number, raw) in lines.enumerated() {
             let line = raw.trimmingCharacters(in: .whitespaces)
             if line.isEmpty || line.hasPrefix("#") { continue }
+            let step = "\(number + 1): \(line)"
+            lock.withLock { currentStep = step }
             do {
                 try run(Self.tokenize(line))
-                record("ok   \(number + 1): \(line)")
+                append("ok   \(step)")
             } catch {
-                // XCTFail stops the test, so everything worth keeping is written before it.
-                record("FAIL \(number + 1): \(line) -> \(error)")
-                save(app.debugDescription, as: "failure.tree.txt")
-                save(XCUIScreen.main.screenshot().pngRepresentation, as: "failure.png")
-                XCTFail("step \(number + 1) `\(line)` failed: \(error)")
+                record(XCTIssue(type: .assertionFailure, compactDescription: "\(error)"))
                 return
             }
+        }
+    }
+
+    override func record(_ issue: XCTIssue) {
+        append("FAIL \(lock.withLock { currentStep }) -> \(issue.compactDescription)")
+        captureFailure()
+        super.record(issue)
+    }
+
+    /// Saves the tree and screen once per drive: an issue recorded while capturing, or a later one, keeps the first capture.
+    private func captureFailure() {
+        let first = lock.withLock {
+            defer { failureCaptured = true }
+            return !failureCaptured
+        }
+        guard first else { return }
+        save(app.debugDescription, as: "failure.tree.txt")
+        save(XCUIScreen.main.screenshot().pngRepresentation, as: "failure.png")
+    }
+
+    private func startWatchdog(at deadline: Date) {
+        let pollingStepGrace: TimeInterval = 3
+        Thread.detachNewThread { [self] in
+            Thread.sleep(until: deadline)
+            let step: String? = lock.withLock {
+                guard !finished else { return nil }
+                timedOut = true
+                return currentStep
+            }
+            guard let step else { return }
+            append("TIMEOUT during step \(step)")
+            Thread.sleep(forTimeInterval: pollingStepGrace)
+            guard !lock.withLock({ finished }) else { return }
+            captureFailure()
         }
     }
 
@@ -38,10 +80,12 @@ final class DriverTests: XCTestCase {
     private func run(_ words: [String]) throws {
         guard let verb = words.first else { return }
         var args = Array(words.dropFirst())
-        let timeout = Self.option("timeout", in: &args).flatMap(Double.init) ?? 5
+        // cfprefsd writes the preferences plist seconds after the app sets a value, longer when values change in quick succession.
+        let timeout = Self.option("timeout", in: &args).flatMap(Double.init) ?? (verb == "defaults-expect" ? 30 : 5)
         switch verb {
         case "launch":
             app.terminate()
+            launchedDemo = args.contains("-seedDemo")
             app.launchArguments = args
             app.launch()
             guard app.wait(for: .runningForeground, timeout: 15) else { throw StepError("app did not reach the foreground") }
@@ -59,24 +103,23 @@ final class DriverTests: XCTestCase {
         case "replace":
             let text = try Self.pop(&args, "text")
             let field = try onScreen(args, timeout)
-            // A centered tap can drop the cursor before the old text; tap the trailing edge so deletes clear it.
-            field.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.5)).tap()
+            try focusTrailingEdge(field, timeout)
             let current = field.value as? String ?? ""
             field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count + 4) + text)
         case "wait", "assert":
+            _ = try onScreen(args, timeout)
+        case "exists":
             _ = try element(args, timeout)
         case "absent":
-            let query = try resolve(args)
-            let gone = NSPredicate(format: "exists == false")
-            let expectation = XCTNSPredicateExpectation(predicate: gone, object: query)
-            guard XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed else { throw StepError("still present: \(args)") }
+            let found = try resolve(args)
+            try poll(timeout) { found.exists ? "still present: \(args)" : nil }
         case "value":
             let expected = try Self.pop(&args, "expected value")
             let found = try onScreen(args, timeout)
             let actual = found.value as? String ?? ""
             guard actual == expected else { throw StepError("value is \"\(actual)\", expected \"\(expected)\"") }
         case "selected", "unselected":
-            let found = try element(args, timeout)
+            let found = try onScreen(args, timeout)
             guard found.isSelected == (verb == "selected") else { throw StepError("\(args) is \(found.isSelected ? "" : "not ")selected") }
         case "count":
             let expected = try Self.pop(&args, "expected count")
@@ -94,6 +137,14 @@ final class DriverTests: XCTestCase {
             case "right": app.swipeRight()
             default: throw StepError("swipe needs up, down, left, or right")
             }
+        case "store-expect":
+            guard args.count == 3 else { throw StepError("expected `store-expect <Model> <field> <value>`, got \(args)") }
+            guard !launchedDemo else { throw StepError("store-expect after `launch -seedDemo`: the demo store is in memory, so no on-disk store holds its data") }
+            guard let path = environment["FFIVE_STORE"] else { throw StepError("FFIVE_STORE is not set") }
+            try poll(timeout) { try storeMismatch(path: path, model: args[0], field: args[1], value: args[2]) }
+        case "defaults-expect":
+            guard args.count == 2 else { throw StepError("expected `defaults-expect <key> <value>`, got \(args)") }
+            try poll(timeout) { try defaultsMismatch(key: args[0], expected: args[1]) }
         case "shot":
             save(XCUIScreen.main.screenshot().pngRepresentation, as: "\(try Self.pop(&args, "name")).png")
         case "tree":
@@ -105,13 +156,26 @@ final class DriverTests: XCTestCase {
         }
     }
 
+    /// Taps the field as near its trailing edge as still focuses it, so the cursor lands after the old text and
+    /// deletes clear all of it. A centered tap can drop the cursor before the text, and the frame XCUITest
+    /// reports includes the field's padding, where a tap focuses nothing.
+    private func focusTrailingEdge(_ field: XCUIElement, _ timeout: Double) throws {
+        var dx = 0.97
+        try poll(timeout) {
+            if field.value(forKey: "hasKeyboardFocus") as? Bool == true { return nil }
+            field.coordinate(withNormalizedOffset: CGVector(dx: dx, dy: 0.5)).tap()
+            dx = max(dx - 0.1, 0.5)
+            return "no keyboard focus after taps along the trailing edge"
+        }
+    }
+
     // MARK: Queries
 
-    /// `<kind> "<label>" [#n]`, where kind is button, text, field, search, cell, tab, switch,
-    /// image, nav, alert, or any. The label matches the accessibility label, identifier, or placeholder exactly;
-    /// prefix it with `~` to match a substring.
     private func resolveAll(_ args: [String]) throws -> XCUIElementQuery {
-        guard args.count >= 2 else { throw StepError("expected `<kind> \"<label>\"`, got \(args)") }
+        if let id = args.first, id.hasPrefix("#") {
+            return app.descendants(matching: .any).matching(identifier: String(id.dropFirst()))
+        }
+        guard args.count >= 2 else { throw StepError("expected `#<id>` or `<kind> \"<label>\"`, got \(args)") }
         let type: XCUIElement.ElementType = switch args[0] {
         case "button": .button
         case "text": .staticText
@@ -130,12 +194,7 @@ final class DriverTests: XCTestCase {
         case "tab": app.tabBars.descendants(matching: type)
         default: app.descendants(matching: type)
         }
-        let label = args[1]
-        let predicate = label.hasPrefix("~")
-            ? NSPredicate(format: "label CONTAINS %@ OR identifier CONTAINS %@ OR placeholderValue CONTAINS %@",
-                          String(label.dropFirst()), String(label.dropFirst()), String(label.dropFirst()))
-            : NSPredicate(format: "label == %@ OR identifier == %@ OR placeholderValue == %@", label, label, label)
-        return scope.matching(predicate)
+        return scope.matching(labelPredicate(args[1]))
     }
 
     private static func index(_ args: [String]) -> Int? {
@@ -150,29 +209,50 @@ final class DriverTests: XCTestCase {
 
     private func element(_ args: [String], _ timeout: Double) throws -> XCUIElement {
         let found = try resolve(args)
-        guard found.waitForExistence(timeout: timeout) else { throw StepError("not found within \(timeout)s: \(args)") }
+        try poll(timeout) { found.exists ? nil : "not found within \(timeout)s: \(args)" }
         return found
     }
 
-    /// For actions: `#n` counts only hittable matches. Screens under a sheet or full-screen cover stay in the
-    /// tree, so counting every match would land on hidden elements.
+    /// For actions and on-screen checks: `#n` counts only hittable matches. Screens under a sheet or
+    /// full-screen cover stay in the tree, so counting every match would land on hidden elements.
     private func onScreen(_ args: [String], _ timeout: Double) throws -> XCUIElement {
         let query = try resolveAll(args)
         let wanted = Self.index(args) ?? 0
-        let deadline = Date.now.addingTimeInterval(timeout)
-        repeat {
+        var found: XCUIElement?
+        try poll(timeout) {
             let visible = query.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }
-            if visible.count > wanted { return visible[wanted] }
+            guard visible.count > wanted else { return "not on screen within \(timeout)s: \(args)" }
+            found = visible[wanted]
+            return nil
+        }
+        return try XCTUnwrap(found)
+    }
+
+    private func poll(_ timeout: Double, _ mismatch: () throws -> String?) throws {
+        let deadline = Date.now.addingTimeInterval(timeout)
+        while true {
+            guard let reason = try mismatch() else { return }
+            if lock.withLock({ timedOut }) { throw StepError("drive timed out (--timeout): \(reason)") }
+            guard Date.now < deadline else { throw StepError(reason) }
             Thread.sleep(forTimeInterval: 0.25)
-        } while Date.now < deadline
-        throw StepError("no on-screen match #\(wanted) within \(timeout)s: \(args)")
+        }
+    }
+
+    private func defaultsMismatch(key: String, expected: String) throws -> String? {
+        guard let path = environment["FFIVE_DEFAULTS"] else { throw StepError("FFIVE_DEFAULTS is not set") }
+        guard let data = FileManager.default.contents(atPath: path) else { return "no preferences written yet at \(path)" }
+        let dict = try PropertyListSerialization.propertyList(from: data, format: nil) as? [String: Any] ?? [:]
+        guard let actual = dict[key] else { return "no key \(key); keys: \(dict.keys.sorted().joined(separator: ", "))" }
+        return "\(actual)" == expected ? nil : "\(key) is \"\(actual)\", expected \"\(expected)\""
     }
 
     // MARK: Plumbing
 
-    private func record(_ entry: String) {
-        log.append(entry)
-        save(log.joined(separator: "\n") + "\n", as: "steps.log")
+    private func append(_ entry: String) {
+        lock.withLock {
+            log.append(entry)
+            save(log.joined(separator: "\n") + "\n", as: "steps.log")
+        }
     }
 
     private func save(_ text: String, as name: String) { save(Data(text.utf8), as: name) }

@@ -37,6 +37,7 @@ struct MesoDetailView: View {
         .navigationBarTitleDisplayMode(.inline)
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
             Button("End Mesocycle", role: .destructive) { store.endMesocycle(meso) }
+                .a11y(.dialogEndMesocycle)
         } message: {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
         }

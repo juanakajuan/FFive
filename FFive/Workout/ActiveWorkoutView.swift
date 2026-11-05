@@ -76,6 +76,7 @@ struct ActiveWorkoutView: View {
                     }
 
                     ExerciseCard(exercise: exercise,
+                                 position: index + 1,
                                  phase: workout.phase,
                                  onSetCompleted: setCompleted,
                                  onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
@@ -100,6 +101,7 @@ struct ActiveWorkoutView: View {
             if workout.isFullyLogged {
                 Button("Finish Workout", action: finish)
                     .buttonStyle(.floating)
+                    .a11y(.workoutFinish)
                     .padding(.horizontal, Theme.gutter)
                     .padding(.vertical, 12)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
@@ -112,6 +114,7 @@ struct ActiveWorkoutView: View {
                 Button("Done") {
                     UIApplication.shared.sendAction(#selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
                 }
+                .a11y(.keyboardDone)
             }
         }
         .sensoryFeedback(.success, trigger: setsCompleted)
@@ -132,6 +135,7 @@ struct ActiveWorkoutView: View {
         }
         .confirmationDialog("Discard this workout?", isPresented: $confirmDiscard, titleVisibility: .visible) {
             Button("Discard Workout", role: .destructive, action: discard)
+                .a11y(.dialogDiscard)
         } message: {
             Text(workout.mesocycle == nil
                  ? "Its exercises and sets are deleted."
@@ -140,6 +144,7 @@ struct ActiveWorkoutView: View {
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
             if let activeMeso {
                 Button("End Mesocycle", role: .destructive) { WorkoutTabActions.end(activeMeso, router: router, store: store) }
+                    .a11y(.dialogEndMesocycle)
             }
         } message: {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
@@ -170,6 +175,7 @@ struct ActiveWorkoutView: View {
             if activeMeso != nil {
                 Button { showingSchedule = true } label: { ActionIcon.calendar }
                     .accessibilityLabel("Schedule")
+                    .a11y(.workoutSchedule)
             }
             Menu {
                 menuItems
@@ -177,6 +183,7 @@ struct ActiveWorkoutView: View {
                 ActionIcon.verticalEllipsis
             }
             .accessibilityLabel("Workout menu")
+            .a11y(.workoutMenu)
         }
     }
 
@@ -197,22 +204,29 @@ struct ActiveWorkoutView: View {
     @ViewBuilder
     private var menuItems: some View {
         Button("Add Exercise", systemImage: "plus") { picker = .add }
+            .a11y(.menuAddExercise)
         if let meso = workout.mesocycle, let key = workout.key, meso.canSkip(key) {
             Button("Skip Day", systemImage: "forward") { skip(key, of: meso) }
+                .a11y(.menuSkipDay)
         }
         if activeMeso != nil, openQuickWorkout !== workout {
             Button(openQuickWorkout == nil ? "Quick Workout" : "Resume Quick Workout",
                    systemImage: openQuickWorkout == nil ? "bolt" : "play") {
                 WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store)
             }
+            .a11y(.menuQuickWorkout)
         }
         Button(workout.note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") { noteEdit = NoteEdit(target: .day, draft: workout.note ?? "") }
+            .a11y(.menuWorkoutNote)
         if workout.mesocycle == nil {
             Button("Rename", systemImage: "pencil") { renameDraft = workout.name }
+                .a11y(.menuRename)
         }
         Button("Discard Workout", systemImage: "trash", role: .destructive) { confirmDiscard = true }
+            .a11y(.menuDiscard)
         if activeMeso != nil {
             Button("End Mesocycle", systemImage: "flag.checkered", role: .destructive) { confirmEnd = true }
+                .a11y(.menuEndMesocycle)
         }
     }
 
@@ -246,6 +260,7 @@ private enum SetColumns {
 
 struct ExerciseCard: View {
     let exercise: Exercise
+    let position: Int
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
     var onSwap: (() -> Void)?
@@ -257,9 +272,10 @@ struct ExerciseCard: View {
     @State private var showingCue = false
     @State private var showingHistory = false
 
-    init(exercise: Exercise, phase: WeekPhase?, onSetCompleted: @escaping () -> Void,
+    init(exercise: Exercise, position: Int, phase: WeekPhase?, onSetCompleted: @escaping () -> Void,
          onSwap: (() -> Void)? = nil, onEditNote: @escaping (String) -> Void, onRemove: @escaping () -> Void) {
         self.exercise = exercise
+        self.position = position
         self.phase = phase
         self.onSetCompleted = onSetCompleted
         self.onSwap = onSwap
@@ -301,6 +317,7 @@ struct ExerciseCard: View {
                             ActionIcon(systemName: pinned == nil ? "pin" : "pin.fill")
                         }
                         .accessibilityLabel(pinned == nil ? "Pin note" : "Unpin note")
+                        .a11y(.exercisePin, position)
                     }
                 }
                 if showingCue, let info = exercise.info {
@@ -336,29 +353,37 @@ struct ExerciseCard: View {
                     ActionIcon(systemName: showingCue ? "info.circle.fill" : "info.circle")
                 }
                 .accessibilityLabel("Technique cue")
+                .a11y(.exerciseCue, position)
             }
             Button { showingHistory = true } label: { ActionIcon(systemName: "clock.arrow.circlepath") }
                 .accessibilityLabel("History")
+                .a11y(.exerciseHistory, position)
             Menu {
                 if let onSwap {
                     Button("Swap Exercise", systemImage: "arrow.triangle.2.circlepath", action: onSwap)
                         .disabled(exercise.sets.contains(where: \.isDone))
+                        .a11y(.menuSwap)
                 }
                 Button("Add Set", systemImage: "plus") { store.addSet(to: exercise) }
+                    .a11y(.menuAddSet)
                 let note = pinnedNotes.first?.text ?? exercise.note
                 Button(note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
                     onEditNote(note ?? "")
                 }
+                .a11y(.menuExerciseNote)
                 if note != nil {
                     Button("Delete Note", systemImage: "trash", role: .destructive) {
                         store.deleteNote(on: exercise)
                     }
+                    .a11y(.menuDeleteNote)
                 }
                 Button("Remove Exercise", systemImage: "trash", role: .destructive, action: onRemove)
+                    .a11y(.menuRemoveExercise)
             } label: {
                 ActionIcon.verticalEllipsis
             }
             .accessibilityLabel("Exercise menu")
+            .a11y(.exerciseMenu, position)
         }
     }
 
@@ -415,11 +440,14 @@ struct SetRow: View {
         HStack(spacing: 0) {
             Menu {
                 Button("Add Set", systemImage: "plus", action: onAdd)
+                    .a11y(.menuAddSet)
                 Button("Delete Set", systemImage: "trash", role: .destructive, action: onDelete)
+                    .a11y(.menuDeleteSet)
             } label: {
                 ActionIcon.verticalEllipsis.frame(width: SetColumns.menu, height: 44)
             }
             .accessibilityLabel("Set \(number) menu")
+            .a11y(.setMenu, number)
 
             TextField("Set \(number) weight", value: weight, format: .number,
                       prompt: Text(unit.rawValue).foregroundStyle(Theme.secondary))
@@ -429,6 +457,7 @@ struct SetRow: View {
                 .contentShape(Rectangle())
                 .onTapGesture { focus = .weight }
                 .accessibilityLabel("Set \(number) weight")
+                .a11y(.setWeight, number)
                 .frame(width: SetColumns.field)
                 .padding(.leading, 12)
 
@@ -440,6 +469,7 @@ struct SetRow: View {
                 .contentShape(Rectangle())
                 .onTapGesture { focus = .reps }
                 .accessibilityLabel("Set \(number) reps")
+                .a11y(.setReps, number)
                 .frame(width: SetColumns.field)
                 .padding(.leading, 16)
 
@@ -455,6 +485,7 @@ struct SetRow: View {
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Log set \(number)")
+            .a11y(.setLog, number)
             .accessibilityAddTraits(set.isDone ? .isSelected : [])
         }
         .padding(.horizontal, Theme.gutter)
@@ -471,7 +502,7 @@ struct ExerciseHistorySheet: View {
 
     var body: some View {
         let unit = store.settings.weightUnit
-        let last = store.lastFinishedExercise(named: name)
+        let last = store.lastFinishedExercise(ExerciseID(folding: name))
         let sets = last?.sortedSets.filter(\.isDone) ?? []
         NavigationStack {
             ScrollView {
@@ -511,6 +542,7 @@ struct ExerciseHistorySheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
+                        .a11y(.sheetDone)
                 }
             }
         }
@@ -607,6 +639,7 @@ private struct NoteEditor: View {
                     .lineLimit(3...8)
                     .focused($focused)
                     .accessibilityLabel("Note")
+                    .a11y(.noteText)
                     .padding(12)
                     .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
                 Spacer()
@@ -618,12 +651,14 @@ private struct NoteEditor: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .a11y(.noteCancel)
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
                         onSave(draft)
                         dismiss()
                     }
+                    .a11y(.noteSave)
                 }
             }
         }

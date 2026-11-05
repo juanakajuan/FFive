@@ -1,17 +1,35 @@
-# end-mesocycle (demo): end the demo block from inside its in-progress session; the logged session reaches history.
-launch -seedDemo
-wait text "WEEK 2 DAY 1" timeout=20
-tap button "Workout menu"
-tap button "End Mesocycle"
-tap button "End Mesocycle"
-wait button "Plan a Mesocycle" timeout=10
-shot 01-empty-after-end
-tap button "More"
-tap button "Progress"
-tap button "History"
-# Week 1 Full Body A is already in history; the ended Week 2 session makes it two.
-count button "~Full Body A" "2"
-shot 02-history-has-session
-tap button "Mesos"
+# end-mesocycle (on disk): plan a block, end it from inside its first session, and see the block finished in the store, in History, and on the Mesos tab.
+# Before: ffive-verify reset-data (no active mesocycle).
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.full-body-3-days
+wait nav "Customize"
+replace #builder.name "Ending Block"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+store-expect Mesocycle finishedDate null
+replace #set.weight.1 "135"
+replace #set.reps.1 "9"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+shot 01-session-before-end
+tap #workout.menu
+tap #menu.end-mesocycle
+tap #dialog.end-mesocycle
+wait #workout.plan timeout=10
+store-expect Mesocycle finishedDate not-null
+store-expect Workout endDate not-null
+shot 02-empty-after-end
+tap #tab.more
+tap #more.progress
+tap #segment.history
+count #history.row.full-body-a "1"
+shot 03-history-has-session
+tap #tab.mesos
 wait any "Finished"
-shot 03-mesos-finished
+shot 04-mesos-finished
+launch
+wait #workout.plan timeout=20

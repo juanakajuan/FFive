@@ -89,6 +89,7 @@ struct SegmentedButtons<Option: Hashable>: View {
                 }
                 .buttonStyle(.borderless)
                 .accessibilityAddTraits(selected ? .isSelected : [])
+                .a11y(.segment, key: label(option))
             }
         }
         .padding(2)
@@ -130,6 +131,7 @@ struct ChipPicker<Option: Hashable>: View {
                     }
                     .buttonStyle(.borderless)
                     .accessibilityAddTraits(selected ? .isSelected : [])
+                    .a11y(.chip, key: label(option))
                 }
             }
         }

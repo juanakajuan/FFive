@@ -47,6 +47,7 @@ struct MesoScheduleGrid: View {
                 store.unskip(key, of: meso)
                 onOpen(key)
             }
+            .a11y(.dialogTrainDay)
         }
     }
 
@@ -83,6 +84,7 @@ struct MesoScheduleGrid: View {
                 .contextMenu {
                     if meso.canSkip(key) {
                         Button("Skip Day", systemImage: "forward") { withAnimation { store.skip(key, of: meso) } }
+                            .a11y(.menuSkipDay)
                     }
                 }
             } else {

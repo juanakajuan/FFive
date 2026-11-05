@@ -1,17 +1,17 @@
 # unskip-day: train a skipped day of the current week after all, on-disk.
-# Before: skip-day.steps ran on this store (Week 1 · Days 2 and 4 skipped).
+# Before: skip-day.steps ran on this store (Week 1 Days 2 and 4 skipped).
 # After: ffive-verify store "select cast(ZSKIPPEDSESSIONS as text) from ZMESOCYCLE" lists only dayIndex 3, and
 #        ffive-verify store "select ZNAME, ZWEEK, ZDAYINDEX, ZENDDATE from ZWORKOUT where ZDAYINDEX = 1" has an open Lower A row.
 launch
 wait text "WEEK 1 DAY 3" timeout=20
-tap button "Schedule"
+tap #workout.schedule
 count button "forward.circle" "2"
 tap button "forward.circle"
 wait text "Train this day after all?"
-tap button "Train Day 2"
+tap #dialog.train-day
 wait text "WEEK 1 DAY 2"
 wait text "~Lower A"
 shot 01-unskipped-session
-tap button "Schedule"
+tap #workout.schedule
 count button "forward.circle" "1"
 shot 02-schedule

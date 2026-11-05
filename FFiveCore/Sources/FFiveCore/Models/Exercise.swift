@@ -4,22 +4,31 @@ import SwiftData
 @Model
 public final class Exercise {
     public internal(set) var name: String
+    public internal(set) var exerciseKey: String?
     public var order: Int
     public internal(set) var workout: Workout?
     @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
     public internal(set) var sets: [SetEntry] = []
-    public internal(set) var muscleRaw: String?
+    var muscleRaw: String?
     public internal(set) var note: String?
 
     public init(name: String, order: Int, muscle: Muscle? = nil) {
         self.name = name
+        self.exerciseKey = ExerciseID(folding: name).rawValue
         self.order = order
         self.muscleRaw = muscle?.rawValue
     }
 
+    public var key: ExerciseID { exerciseKey.map(ExerciseID.init(rawValue:)) ?? ExerciseID(folding: name) }
+
+    func rename(_ name: String) {
+        self.name = name
+        exerciseKey = ExerciseID(folding: name).rawValue
+    }
+
     public var sortedSets: [SetEntry] { sets.sorted { $0.order < $1.order } }
     public var isLogged: Bool { !sets.isEmpty && sets.allSatisfy(\.isDone) }
-    public var info: ExerciseInfo? { ExerciseCatalog.info(named: name) }
+    public var info: ExerciseInfo? { ExerciseCatalog.info(key) }
 
     /// Rows logged before muscles were stored resolve through the catalog.
     public internal(set) var muscle: Muscle? {
@@ -27,10 +36,10 @@ public final class Exercise {
         set { muscleRaw = newValue?.rawValue }
     }
 
-    public var repRange: ClosedRange<Int> { ExerciseCatalog.repRange(for: name) }
+    public var repRange: ClosedRange<Int> { ExerciseCatalog.repRange(for: key) }
 
     func increment(_ unit: WeightUnit) -> Double {
-        ExerciseCatalog.increment(for: name, unit: unit)
+        ExerciseCatalog.increment(for: key, unit: unit)
     }
 
     /// Appends a set shaped like the last one, so the lifter edits instead of retyping.

@@ -2,7 +2,17 @@ import SwiftUI
 import FFiveCore
 
 struct MoreView: View {
-    private enum Destination: Hashable { case progress, learn, settings }
+    private enum Destination: Hashable {
+        case progress, learn, settings
+
+        var a11y: A11y {
+            switch self {
+            case .progress: .moreProgress
+            case .learn: .moreLearn
+            case .settings: .moreSettings
+            }
+        }
+    }
 
     /// Demo launches into Progress land here; ProgressScreen then opens its own strength route.
     @State private var path = NavigationPath(DemoLaunch.take(.progress) || DemoLaunch.isPending(.strength) ? [Destination.progress] : [])
@@ -81,6 +91,7 @@ struct MoreView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
+        .a11y(destination.a11y)
     }
 }
 
