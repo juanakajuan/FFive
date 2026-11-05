@@ -192,10 +192,9 @@ struct ActiveWorkoutView: View {
             onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
             jointPain: jointPain(for: muscle),
             onShowHistory: { historyFor = exercise },
-            onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }
-        ) {
-            store.removeExercise(exercise, from: workout)
-        }
+            onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) },
+            onRemove: { store.removeExercise(exercise, from: workout) }
+        )
 
         if let muscle, workout.mesocycle != nil,
             exercises.lastIndex(where: { $0.muscle == muscle }) == index,
