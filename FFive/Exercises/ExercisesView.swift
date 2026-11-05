@@ -43,6 +43,7 @@ struct ExercisesView: View {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     SearchBox(text: $search)
+                        .a11y(.exercisesSearch)
                         .padding(.horizontal, Theme.gutter)
                         .padding(.bottom, 12)
                     FilterBar(label: muscle?.displayName ?? "Filters") {
@@ -60,6 +61,7 @@ struct ExercisesView: View {
                     ForEach(listings) { listing in
                         NavigationLink(value: listing) { row(listing) }
                             .buttonStyle(.plain)
+                            .a11y(.exercisesRow, key: listing.name)
                     }
                 }
             }

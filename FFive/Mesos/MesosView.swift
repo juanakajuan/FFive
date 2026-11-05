@@ -32,6 +32,7 @@ struct MesosView: View {
                 // Starting a block doesn't end the current one, so creation waits until it is ended.
                 HeaderAddButton(label: "New Mesocycle") { showingBuilder = true }
                     .disabled(current != nil)
+                    .a11y(.mesosNew)
             }
             .navigationDestination(for: Mesocycle.self) { MesoDetailView(meso: $0) }
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
@@ -40,6 +41,7 @@ struct MesosView: View {
                                 isPresented: Binding(get: { ending != nil }, set: { if !$0 { ending = nil } }),
                                 titleVisibility: .visible, presenting: ending) { meso in
                 Button("End Mesocycle", role: .destructive) { store.endMesocycle(meso) }
+                    .a11y(.dialogEndMesocycle)
             } message: { _ in
                 Text("Logged sessions stay in Progress. You can plan a new block right after.")
             }
@@ -74,12 +76,15 @@ struct MesosView: View {
                 .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .a11y(.mesosRow, key: meso.name)
 
             Menu {
                 if isCurrent {
                     Button("End Mesocycle", systemImage: "flag.checkered", role: .destructive) { ending = meso }
+                        .a11y(.menuEndMesocycle)
                 } else {
                     Button("View", systemImage: "eye") { path.append(meso) }
+                        .a11y(.menuView)
                 }
             } label: {
                 Image(systemName: "ellipsis")
@@ -90,6 +95,7 @@ struct MesosView: View {
                     .contentShape(Rectangle())
             }
             .accessibilityLabel("\(meso.name) menu")
+            .a11y(.mesosMenu, key: meso.name)
         }
         .padding(.horizontal, Theme.gutter)
         .frame(minHeight: 66)
@@ -106,6 +112,7 @@ struct MesosView: View {
                 .foregroundStyle(Theme.secondary)
                 .multilineTextAlignment(.center)
             FilledActionButton(title: "Plan a Mesocycle") { showingBuilder = true }
+                .a11y(.mesosPlan)
         }
         .padding(Theme.gutter * 2)
     }

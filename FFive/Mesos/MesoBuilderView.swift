@@ -26,6 +26,7 @@ struct MesoBuilderView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .a11y(.builderCancel)
                 }
             }
             .navigationDestination(for: Route.self, destination: editor)
@@ -50,6 +51,7 @@ struct MesoBuilderView: View {
                             TemplateListRow(template: template)
                         }
                         .buttonStyle(.plain)
+                        .a11y(.builderTemplate, key: template.name)
                         Rectangle().fill(Theme.hairline).frame(height: 1)
                     }
                     NavigationLink(value: Route.blank) {
@@ -64,6 +66,7 @@ struct MesoBuilderView: View {
                         .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
+                    .a11y(.builderBlank)
                 }
                 Text("You can rename days and change any exercise on the next screen.")
                     .font(Theme.caption)
@@ -113,6 +116,7 @@ struct MesoEditorView: View {
                 TextField("Mesocycle name", text: $draft.name, prompt: Text("Mesocycle name").foregroundStyle(Theme.secondary))
                     .builderField()
                     .builderRow()
+                    .a11y(.builderName)
             } header: {
                 header("Name")
             }
@@ -212,6 +216,7 @@ struct MesoEditorView: View {
                         .foregroundStyle(Theme.secondary)
                 }
                 FilledActionButton(title: "Start Mesocycle", isEnabled: draft.isStartable && activeMesos.isEmpty, action: start)
+                    .a11y(.builderStart)
             }
             .padding(.horizontal, Theme.gutter)
             .padding(.vertical, 10)

@@ -86,9 +86,11 @@ struct TrainView: View {
                         .foregroundStyle(Theme.secondary)
                     Button("Plan a Mesocycle") { showingBuilder = true }
                         .buttonStyle(.wideFilled)
+                        .a11y(.workoutPlan)
                         .padding(.top, 4)
                     Button("Quick Workout") { WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store) }
                         .buttonStyle(.wideOutlined)
+                        .a11y(.workoutQuick)
                     Text("Log a free-form session with no plan.")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondary)
@@ -114,9 +116,11 @@ struct TrainView: View {
                     .foregroundStyle(Theme.secondary)
                 Button("End Mesocycle") { confirmEnd = true }
                     .buttonStyle(.wideFilled)
+                    .a11y(.workoutEnd)
                     .padding(.top, 4)
                 Button("Quick Workout") { WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store) }
                     .buttonStyle(.wideOutlined)
+                    .a11y(.workoutQuick)
             }
             .padding(.horizontal, Theme.gutter)
             .padding(.bottom, 8)
@@ -127,11 +131,13 @@ struct TrainView: View {
             WorkoutHeader(title: Text("Block complete"), subtitle: Text(meso.name), progress: 1) {
                 Button { showingSchedule = true } label: { ActionIcon.calendar }
                     .accessibilityLabel("Schedule")
+                    .a11y(.workoutSchedule)
             }
         }
         .sheet(isPresented: $showingSchedule) { ScheduleSheet(meso: meso, week: meso.accumulationWeeks) }
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
             Button("End Mesocycle", role: .destructive) { WorkoutTabActions.end(meso, router: router, store: store) }
+                .a11y(.dialogEndMesocycle)
         } message: {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
         }
@@ -180,6 +186,7 @@ struct ScheduleSheet: View {
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Done") { dismiss() }
+                        .a11y(.sheetDone)
                 }
             }
         }

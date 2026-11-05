@@ -42,6 +42,7 @@ struct ExercisePickerView: View {
             VStack(spacing: 0) {
                 SearchBox(prompt: "Search or create exercise", text: $search)
                     .accessibilityAddTraits(.isSearchField)
+                    .a11y(.pickerSearch)
                     .padding(.horizontal, Theme.gutter)
                     .padding(.bottom, 12)
                 List {
@@ -91,6 +92,7 @@ struct ExercisePickerView: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .a11y(.pickerCancel)
                 }
             }
         }
@@ -120,6 +122,7 @@ struct ExercisePickerView: View {
         .buttonStyle(.plain)
         .accessibilityLabel("\(entry.name), \(entry.detail)")
         .accessibilityValue(entry.muscle.displayName)
+        .a11y(.pickerRow, key: entry.name)
     }
 
     @ViewBuilder

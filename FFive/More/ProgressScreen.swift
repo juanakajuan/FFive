@@ -141,6 +141,7 @@ struct ProgressScreen: View {
                     }
                 }
                 .themedRow()
+                .a11y(.strengthRow, key: item.name)
             }
             note("Estimated from your best set each session, counting the reps you left in reserve.")
         }
@@ -163,6 +164,7 @@ struct ProgressScreen: View {
                 HistoryRow(workout: workout)
             }
             .themedRow()
+            .a11y(.historyRow, key: workout.name)
         }
         .onDelete { offsets in
             for index in offsets { store.delete(history[index]) }
