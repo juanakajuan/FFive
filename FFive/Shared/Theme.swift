@@ -299,7 +299,7 @@ struct SectionHeading: View {
 /// A tab root's title row, drawn in the page like the design instead of as a navigation bar large title.
 struct ScreenHeader<Trailing: View>: ViewModifier {
     let title: String
-    @ViewBuilder var trailing: () -> Trailing
+    let trailing: Trailing
 
     func body(content: Content) -> some View {
         content
@@ -312,7 +312,7 @@ struct ScreenHeader<Trailing: View>: ViewModifier {
                         .foregroundStyle(Theme.text)
                         .accessibilityAddTraits(.isHeader)
                     Spacer()
-                    trailing()
+                    trailing
                 }
                 .padding(.horizontal, Theme.gutter)
                 .padding(.top, 8)
@@ -340,11 +340,11 @@ struct HeaderAddButton: View {
 }
 
 extension View {
-    func screenHeader(_ title: String, @ViewBuilder trailing: @escaping () -> some View) -> some View {
-        modifier(ScreenHeader(title: title, trailing: trailing))
+    func screenHeader(_ title: String, @ViewBuilder trailing: () -> some View) -> some View {
+        modifier(ScreenHeader(title: title, trailing: trailing()))
     }
 
     func screenHeader(_ title: String) -> some View {
-        modifier(ScreenHeader(title: title) { EmptyView() })
+        modifier(ScreenHeader(title: title, trailing: EmptyView()))
     }
 }
