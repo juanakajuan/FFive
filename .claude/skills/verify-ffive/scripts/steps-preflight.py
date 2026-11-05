@@ -8,6 +8,8 @@ CASE = re.compile(r'^\s*case\s+(\w+)\s*=\s*"([^"]+)"')
 FAMILY_SET = re.compile(r"static let (indexed|keyed): Set<A11y> = \[([^\]]*)\]")
 SLUG = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 BARE_INDEX = re.compile(r"#\d+")
+TARGET_VERBS = {"tap", "longpress", "type", "replace", "wait", "assert", "exists", "absent", "value", "selected", "unselected", "count", "scrollto"}
+PAYLOAD_VERBS = {"type", "replace", "value", "count"}
 Ids = namedtuple("Ids", "plain indexed keyed")
 
 
@@ -48,29 +50,51 @@ def tokenize(line):
     return words
 
 
+def target_error(words, ids):
+    """Why a step's target would not resolve the way it reads, or None. Mirrors DriverTests.run, resolveAll and index."""
+    if words[0] not in TARGET_VERBS:
+        return None
+    args = words[1:]
+    timeout = next((i for i, word in enumerate(args) if word.startswith("timeout=")), None)
+    if timeout is not None:
+        del args[timeout]
+    if words[0] in PAYLOAD_VERBS:
+        args = args[:-1]
+    if not args:
+        return None
+    if not args[0].startswith("#"):
+        stray = next((word for word in args[2:] if word.startswith("#") and not BARE_INDEX.fullmatch(word)), None)
+        return stray and f"{stray} after a label: only a #n index goes there"
+    identifier = args[0][1:]
+    if not is_valid(identifier, *ids):
+        known = sorted(ids.plain) + sorted(f"{f}.N" for f in ids.indexed) + sorted(f"{f}.<key>" for f in ids.keyed)
+        closest = difflib.get_close_matches(identifier, known, n=1, cutoff=0) or ["none"]
+        return f"unknown identifier {identifier}; closest {closest[0]}"
+    if len(args) > 1:
+        return f"{args[1]} after {args[0]}: an #id target takes nothing after it, not even a #n index"
+    return None
+
+
 def rewrite_launch(line, words):
     if "-animations" in words:
-        return re.sub(r"\s+-animations(?=\s|$)", "", line)
+        return re.sub(r'\s+"?-animations"?(?=\s|$)', "", line)
     if "-disableAnimations" in words:
         return line
     return line.rstrip() + " -disableAnimations"
 
 
 def main(steps_in, a11y_path, steps_out):
-    plain, indexed, keyed = load_ids(a11y_path)
-    display = sorted(plain) + sorted(f"{f}.N" for f in indexed) + sorted(f"{f}.<key>" for f in keyed)
+    ids = load_ids(a11y_path)
     out = []
     for number, line in enumerate(open(steps_in, encoding="utf-8").read().splitlines(), 1):
         words = tokenize(line.strip())
-        if words[:1] and words[0].startswith("#"):
+        if not words or line.strip().startswith("#"):
             out.append(line)
             continue
-        if len(words) > 1 and words[1].startswith("#") and not BARE_INDEX.fullmatch(words[1]):
-            identifier = words[1][1:]
-            if not is_valid(identifier, plain, indexed, keyed):
-                closest = difflib.get_close_matches(identifier, display, n=1, cutoff=0) or ["none"]
-                sys.exit(f"ffive-verify: step {number}: unknown identifier {identifier}; closest {closest[0]}")
-        out.append(rewrite_launch(line, words) if words[:1] == ["launch"] else line)
+        error = target_error(words, ids)
+        if error:
+            sys.exit(f"ffive-verify: step {number}: {error}")
+        out.append(rewrite_launch(line, words) if words[0] == "launch" else line)
     with open(steps_out, "w", encoding="utf-8") as f:
         f.write("\n".join(out) + "\n")
 

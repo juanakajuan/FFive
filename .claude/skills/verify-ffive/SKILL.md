@@ -65,9 +65,9 @@ Each drive runs one XCUITest (`xcodebuild test-without-building`). It prints one
 
 `--timeout <seconds>` caps a drive's wall time at 600 s by default. Ten seconds before the cap, the driver's watchdog appends `TIMEOUT during step <k>: <line>` to `steps.log`. A step that is polling (`wait`, `absent`, `exists`, `store-expect`, `defaults-expect`, and every action waiting for its target) fails right there, and the run writes `failure.png` and `failure.tree.txt` as for any failed step. A step stuck inside XCUITest, for example on its idle wait, runs on: the watchdog writes the tree and screenshot itself, and at the cap `drive` kills `xcodebuild` and the driver. Either way `drive` prints `FAIL` with `timed out` and exits with status 124. If the driver died before it wrote a tree, `failure.tree.txt` says so and `failure.png` comes from `simctl`.
 
-`drive` adds `-disableAnimations` to every `launch` step, so the app skips its animations and each tap lands on a settled screen. To drive with animations, write `launch -animations`. `drive` drops that token before the app sees it.
+`drive` adds `-disableAnimations` to every `launch` step, so the app skips its animations and each tap lands on a settled screen. To drive with animations, write `launch -animations`, quoted or not. `drive` drops that token before the app sees it.
 
-Before it touches the simulator, `drive` checks every `#<id>` in the steps against `A11y.swift`. It stops at the first unknown id and names the closest known one:
+Before it touches the simulator, `drive` checks the target of every step against `A11y.swift`, wherever options such as `timeout=` put it. It stops at the first unknown id and names the closest known one:
 
 ```
 ffive-verify: step 7: unknown identifier set.wieght.1; closest set.weight.N
@@ -81,7 +81,7 @@ Address every control by `#<id>`. The ids come from the `A11y` enum in `FFiveCor
 - Indexed ids add a 1-based index to a family, as in `#set.weight.3` (set 3's weight field) or `#exercise.menu.2` (the second card's menu). The enum's `indexed` set lists these families.
 - Keyed ids add the slug of a name to a family, as in `#picker.row.lateral-raise`. The slug is the name in lowercase, with every run of characters outside a-z and 0-9 turned into one hyphen and no hyphen at either end. `Upper/Lower, 4 Days` becomes `upper-lower-4-days`. The enum's `keyed` set lists these families.
 
-An id matches every element with that accessibility identifier, and an action takes the first one. An id takes no `#n` index.
+An id matches every element with that accessibility identifier, and an action takes the first one. An id takes no `#n` index, and `drive` rejects a step that adds one, as in `step 4: #1 after #set.weight.1: an #id target takes nothing after it, not even a #n index`.
 
 Use `<kind> "<label>"` for text assertions and for the few controls without an id:
 
