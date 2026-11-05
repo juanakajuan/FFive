@@ -122,9 +122,13 @@ private struct LoggedExerciseCard: View {
             ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
                 Rectangle().fill(Theme.hairline).frame(height: 1).padding(.horizontal, Theme.gutter)
                 HStack(spacing: 0) {
-                    Text("\(index + 1)")
-                        .foregroundStyle(Theme.secondary)
-                        .frame(width: 32, alignment: .leading)
+                    VStack(alignment: .leading, spacing: 0) {
+                        Text("\(index + 1)").foregroundStyle(Theme.secondary)
+                        if let tag = set.type.tag {
+                            Text(tag).font(Theme.caption.weight(.medium)).foregroundStyle(Theme.secondary).fixedSize()
+                        }
+                    }
+                    .frame(width: 32, alignment: .leading)
                     Text("\(formatWeight(set.weight)) \(unit.rawValue)").frame(maxWidth: .infinity)
                     Text("\(set.reps)").frame(maxWidth: .infinity)
                 }
@@ -133,7 +137,9 @@ private struct LoggedExerciseCard: View {
                 .padding(.horizontal, Theme.gutter)
                 .frame(minHeight: 44)
                 .accessibilityElement(children: .ignore)
-                .accessibilityLabel("Set \(index + 1), \(formatWeight(set.weight)) \(unit.rawValue) × \(set.reps)")
+                .accessibilityLabel(
+                    "Set \(index + 1)\(set.type.tag == nil ? "" : ", \(set.type.title)"), \(formatWeight(set.weight)) \(unit.rawValue) × \(set.reps)"
+                )
             }
         }
         .surfaceCard()

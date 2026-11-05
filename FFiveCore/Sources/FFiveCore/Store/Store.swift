@@ -91,6 +91,11 @@ public final class Store {
         commit()
     }
 
+    public func setType(_ type: SetType, of set: SetEntry) {
+        set.type = type
+        commit()
+    }
+
     public func addSet(to exercise: Exercise) {
         exercise.addSet()
         commit()

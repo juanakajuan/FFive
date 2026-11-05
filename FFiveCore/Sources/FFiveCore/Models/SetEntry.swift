@@ -10,6 +10,12 @@ public final class SetEntry {
     public internal(set) var exercise: Exercise?
     public var targetWeight: Double?
     public var targetReps: Int?
+    var typeRaw: String = SetType.regular.rawValue
+
+    public internal(set) var type: SetType {
+        get { SetType(rawValue: typeRaw) ?? .regular }
+        set { typeRaw = newValue.rawValue }
+    }
 
     public init(reps: Int, weight: Double, order: Int) {
         self.reps = reps
@@ -25,5 +31,5 @@ public final class SetEntry {
     }
 
     var target: SetTarget { SetTarget(weight: targetWeight, reps: targetReps) }
-    var logged: LoggedSet? { isDone ? LoggedSet(weight: weight, reps: reps) : nil }
+    var logged: LoggedSet? { isDone && type.countsTowardProgression ? LoggedSet(weight: weight, reps: reps) : nil }
 }
