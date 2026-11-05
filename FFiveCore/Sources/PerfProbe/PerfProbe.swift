@@ -9,6 +9,7 @@ struct PerfProbe {
     static let sizes = [0, budgetSize, scaleSize]
     static let budgetMillis = 20.0
     static let budgetScaleFactor = 3.0
+    static let coldScaleFactor = 4.0
     static let runs = 7
     static let writes = 100
     static let lifts: [(name: String, muscle: Muscle)] = [
@@ -26,16 +27,19 @@ struct PerfProbe {
         for size in sizes {
             let (store, meso) = seeded(finishedWorkouts: size)
             stores[size] = (store, meso)
-            var millis: [Double] = []
+            var cold: [Double] = []
             for _ in 0..<runs {
-                millis.append(clock.measure { _ = store.weeklyVolume(meso, week: 0) }.milliseconds)
+                store.commit()
+                cold.append(clock.measure { _ = store.weeklyVolume(meso, week: 0) }.milliseconds)
             }
-            let median = millis.sorted()[runs / 2]
-            medians[size] = median
-            colds[size] = millis[0]
-            print("perf-probe: weeklyVolume median \(format(median)) ms at \(size) finished workouts (\(runs) renders, first after a commit \(format(millis[0])) ms)")
+            var warm: [Double] = []
+            for _ in 0..<runs {
+                warm.append(clock.measure { _ = store.weeklyVolume(meso, week: 0) }.milliseconds)
+            }
+            medians[size] = median(warm)
+            colds[size] = median(cold)
+            print("perf-probe: weeklyVolume median \(format(medians[size]!)) ms at \(size) finished workouts, \(format(colds[size]!)) ms on the first render after a commit (\(runs) renders each)")
         }
-        print("perf-probe: snapshot build \(format(colds[budgetSize]!)) ms at \(budgetSize), \(format(colds[scaleSize]!)) ms at \(scaleSize) (the first render after a commit)")
 
         let (store, meso) = stores[budgetSize]!
         let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
@@ -44,19 +48,22 @@ struct PerfProbe {
         for index in 0..<writes {
             storeLog.append(clock.measure { store.log(set, done: index.isMultiple(of: 2)) }.milliseconds)
         }
-        print("perf-probe: set-done median \(format(storeLog.sorted()[writes / 2])) ms per write over \(writes) writes (store.log)")
+        print("perf-probe: set-done median \(format(median(storeLog))) ms per write over \(writes) writes (store.log)")
 
         guard enforceBudget else { return }
-        let at156 = medians[budgetSize]!
-        let atScale = medians[scaleSize]!
-        if at156 > budgetMillis {
-            print("perf-probe: FAIL weeklyVolume median \(format(at156)) ms at \(budgetSize) exceeds \(format(budgetMillis)) ms")
-            exit(1)
+        var failed = false
+        func gate(_ ok: Bool, _ message: String) {
+            guard !ok else { return }
+            print("perf-probe: FAIL \(message)")
+            failed = true
         }
-        if atScale > budgetScaleFactor * at156 {
-            print("perf-probe: FAIL weeklyVolume median \(format(atScale)) ms at \(scaleSize) exceeds \(format(budgetScaleFactor)) x the \(format(at156)) ms at \(budgetSize)")
-            exit(1)
-        }
+        gate(medians[budgetSize]! <= budgetMillis,
+             "weeklyVolume median \(format(medians[budgetSize]!)) ms at \(budgetSize) exceeds \(format(budgetMillis)) ms")
+        gate(medians[scaleSize]! <= budgetScaleFactor * medians[budgetSize]!,
+             "weeklyVolume median \(format(medians[scaleSize]!)) ms at \(scaleSize) exceeds \(format(budgetScaleFactor)) x the \(format(medians[budgetSize]!)) ms at \(budgetSize)")
+        gate(colds[scaleSize]! <= coldScaleFactor * colds[budgetSize]!,
+             "first render after a commit \(format(colds[scaleSize]!)) ms at \(scaleSize) exceeds \(format(coldScaleFactor)) x the \(format(colds[budgetSize]!)) ms at \(budgetSize)")
+        if failed { exit(1) }
     }
 
     /// A fresh store with `finishedWorkouts` sessions of the six lifts behind a 4-day draft that has no session built.
@@ -87,6 +94,10 @@ struct PerfProbe {
         try! store.startMesocycle(draft)
         let meso = try! context.fetch(Mesocycle.active).first!
         return (store, meso)
+    }
+
+    private static func median(_ millis: [Double]) -> Double {
+        millis.sorted()[millis.count / 2]
     }
 
     private static func format(_ millis: Double) -> String {

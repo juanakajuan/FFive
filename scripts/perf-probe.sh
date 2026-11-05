@@ -1,7 +1,16 @@
 #!/bin/sh
-# --trunk prints the numbers without enforcing the budget, so the same probe reads a baseline in an older checkout.
+# --trunk <rev> runs this checkout's probe against the FFiveCore of <rev>, without the budget, so one command
+# times trunk and head the same way.
 set -eu
 cd "$(dirname "$0")/.."
-flags=""
-[ "${1:-}" = "--trunk" ] && flags="--no-budget"
-swift run --quiet --package-path FFiveCore PerfProbe $flags
+if [ "${1:-}" = "--trunk" ]; then
+    rev=$(git rev-parse --verify "${2:?usage: perf-probe.sh [--trunk <rev>]}^{commit}")
+    dir="${TMPDIR:-/tmp}/ffive-perf-probe-$rev"
+    mkdir -p "$dir"
+    git archive "$rev" FFiveCore | tar -x -C "$dir"
+    cp -p FFiveCore/Sources/PerfProbe/PerfProbe.swift "$dir/FFiveCore/Sources/PerfProbe/PerfProbe.swift"
+    echo "perf-probe: FFiveCore at $rev"
+    swift run --quiet --package-path "$dir/FFiveCore" PerfProbe --no-budget
+else
+    swift run --quiet --package-path FFiveCore PerfProbe
+fi
