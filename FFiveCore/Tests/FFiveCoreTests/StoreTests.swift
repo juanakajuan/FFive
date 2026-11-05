@@ -51,6 +51,11 @@ final class StoreTests: XCTestCase {
         sets[0].reps = 11
         store.setType(.myorep, of: sets[0])
         store.log(sets[0], done: true)
+        sets[1].targetWeight = nil
+        sets[1].targetReps = nil
+        sets[1].weight = 100
+        sets[1].reps = 8
+        store.log(sets[1], done: true)
         workout.updateFeedback(for: .chest) { $0.pump = .moderate }
         let exerciseNames = workout.sortedExercises.map(\.name)
 
@@ -62,6 +67,8 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(sets[0].weight, target)
         XCTAssertEqual(sets[0].reps, 8)
         XCTAssertEqual(sets[0].type, .regular)
+        XCTAssertEqual(sets[1].weight, 0, "a set with no target goes back to an empty row")
+        XCTAssertEqual(sets[1].reps, 0)
         XCTAssertTrue(workout.feedback.isEmpty)
         XCTAssertEqual(try store.context.fetchCount(FetchDescriptor<MuscleFeedbackRecord>()), 0)
         XCTAssertNil(store.failure)

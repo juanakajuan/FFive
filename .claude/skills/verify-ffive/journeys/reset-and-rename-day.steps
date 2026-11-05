@@ -1,0 +1,45 @@
+# reset-and-rename-day: reset a logged block day, then rename the day and see it in the schedule grid.
+# Before: ffive-verify reset-data.
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+replace #builder.name "Verify Block"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+replace #set.weight.1 "100"
+replace #set.reps.1 "8"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+store-expect SetEntry isDone 1
+shot 01-logged
+tap #workout.menu
+tap #menu.reset
+wait #dialog.reset
+shot 02-reset-dialog
+tap #dialog.reset
+unselected #set.log.1
+shot 03-after-reset
+tap #workout.menu
+tap #menu.rename
+wait alert "Rename Day"
+shot 04-rename-alert
+replace field "Day name" "Push Day"
+sleep 1
+tap button "Save"
+absent alert "Rename Day"
+wait text "Push Day*Verify Block*"
+store-expect MesoDay name "Push Day"
+tap #workout.schedule
+wait any "Day 1, Push Day"
+shot 05-schedule-grid
+tap #sheet.done
+launch
+wait text "Push Day*Verify Block*" timeout=20
+unselected #set.log.1
+tap #workout.schedule
+wait any "Day 1, Push Day"
+shot 06-after-relaunch

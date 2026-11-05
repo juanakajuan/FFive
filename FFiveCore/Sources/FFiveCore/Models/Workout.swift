@@ -119,8 +119,8 @@ public final class Workout {
         for set in exercises.flatMap(\.sets) {
             set.isDone = false
             set.type = .regular
-            if let weight = set.targetWeight { set.weight = weight }
-            if let reps = set.targetReps { set.reps = reps }
+            set.weight = set.targetWeight ?? 0
+            set.reps = set.targetReps ?? 0
         }
         for record in feedback { context.delete(record) }
         feedback.removeAll()
