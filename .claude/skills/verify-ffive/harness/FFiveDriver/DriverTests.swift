@@ -2,8 +2,6 @@ import SQLite3
 import XCTest
 
 /// Runs a step file against the installed FFive app (`com.juanix.FFive`).
-/// `ffive-verify drive` passes the file as FFIVE_STEPS and the evidence folder as FFIVE_OUT, the app's
-/// store and preferences paths as FFIVE_STORE and FFIVE_DEFAULTS, and the watchdog delay as FFIVE_TREE_AT.
 /// The step language is documented in the skill's SKILL.md.
 final class DriverTests: XCTestCase {
     private let app = XCUIApplication(bundleIdentifier: "com.juanix.FFive")
@@ -12,13 +10,16 @@ final class DriverTests: XCTestCase {
     private var log: [String] = []
     private var currentStep = ""
     private var finished = false
+    private var timedOut = false
 
     func testRunSteps() throws {
         let stepsPath = try XCTUnwrap(environment["FFIVE_STEPS"], "FFIVE_STEPS is not set")
         out = URL(fileURLWithPath: try XCTUnwrap(environment["FFIVE_OUT"], "FFIVE_OUT is not set"))
         try FileManager.default.createDirectory(at: out, withIntermediateDirectories: true)
         continueAfterFailure = false
-        if let seconds = environment["FFIVE_TREE_AT"].flatMap(Double.init) { startWatchdog(after: seconds) }
+        if let deadline = environment["FFIVE_DEADLINE"].flatMap(Double.init) {
+            startWatchdog(at: Date(timeIntervalSince1970: deadline))
+        }
         defer { finished = true }
 
         let lines = try String(contentsOfFile: stepsPath, encoding: .utf8).components(separatedBy: .newlines)
@@ -28,23 +29,30 @@ final class DriverTests: XCTestCase {
             currentStep = "\(number + 1): \(line)"
             do {
                 try run(Self.tokenize(line))
-                record("ok   \(number + 1): \(line)")
+                append("ok   \(currentStep)")
             } catch {
-                // XCTFail stops the test, so everything worth keeping is written before it.
-                record("FAIL \(number + 1): \(line) -> \(error)")
-                save(app.debugDescription, as: "failure.tree.txt")
-                save(XCUIScreen.main.screenshot().pngRepresentation, as: "failure.png")
-                XCTFail("step \(number + 1) `\(line)` failed: \(error)")
+                record(XCTIssue(type: .assertionFailure, compactDescription: "\(error)"))
                 return
             }
         }
     }
 
-    private func startWatchdog(after seconds: Double) {
+    override func record(_ issue: XCTIssue) {
+        append("FAIL \(currentStep) -> \(issue.compactDescription)")
+        save(app.debugDescription, as: "failure.tree.txt")
+        save(XCUIScreen.main.screenshot().pngRepresentation, as: "failure.png")
+        super.record(issue)
+    }
+
+    private func startWatchdog(at deadline: Date) {
+        let pollingStepGrace: TimeInterval = 3
         Thread.detachNewThread { [self] in
-            Thread.sleep(forTimeInterval: seconds)
+            Thread.sleep(until: deadline)
             guard !finished else { return }
-            record("TIMEOUT after \(Int(seconds))s during step \(currentStep)")
+            timedOut = true
+            append("TIMEOUT during step \(currentStep)")
+            Thread.sleep(forTimeInterval: pollingStepGrace)
+            guard !finished else { return }
             save(app.debugDescription, as: "failure.tree.txt")
             save(XCUIScreen.main.screenshot().pngRepresentation, as: "failure.png")
         }
@@ -55,7 +63,8 @@ final class DriverTests: XCTestCase {
     private func run(_ words: [String]) throws {
         guard let verb = words.first else { return }
         var args = Array(words.dropFirst())
-        let timeout = Self.option("timeout", in: &args).flatMap(Double.init) ?? 5
+        // cfprefsd writes the preferences plist seconds after the app sets a value, longer when values change in quick succession.
+        let timeout = Self.option("timeout", in: &args).flatMap(Double.init) ?? (verb == "defaults-expect" ? 30 : 5)
         switch verb {
         case "launch":
             app.terminate()
@@ -76,8 +85,7 @@ final class DriverTests: XCTestCase {
         case "replace":
             let text = try Self.pop(&args, "text")
             let field = try onScreen(args, timeout)
-            // A centered tap can drop the cursor before the old text; tap the trailing edge so deletes clear it.
-            field.coordinate(withNormalizedOffset: CGVector(dx: 0.97, dy: 0.5)).tap()
+            try focusTrailingEdge(field, timeout)
             let current = field.value as? String ?? ""
             field.typeText(String(repeating: XCUIKeyboardKey.delete.rawValue, count: current.count + 4) + text)
         case "wait", "assert":
@@ -85,10 +93,8 @@ final class DriverTests: XCTestCase {
         case "exists":
             _ = try element(args, timeout)
         case "absent":
-            let query = try resolve(args)
-            let gone = NSPredicate(format: "exists == false")
-            let expectation = XCTNSPredicateExpectation(predicate: gone, object: query)
-            guard XCTWaiter.wait(for: [expectation], timeout: timeout) == .completed else { throw StepError("still present: \(args)") }
+            let found = try resolve(args)
+            try poll(timeout) { found.exists ? "still present: \(args)" : nil }
         case "value":
             let expected = try Self.pop(&args, "expected value")
             let found = try onScreen(args, timeout)
@@ -130,11 +136,21 @@ final class DriverTests: XCTestCase {
         }
     }
 
+    /// Taps the field as near its trailing edge as still focuses it, so the cursor lands after the old text and
+    /// deletes clear all of it. A centered tap can drop the cursor before the text, and the frame XCUITest
+    /// reports includes the field's padding, where a tap focuses nothing.
+    private func focusTrailingEdge(_ field: XCUIElement, _ timeout: Double) throws {
+        var dx = 0.97
+        try poll(timeout) {
+            if field.value(forKey: "hasKeyboardFocus") as? Bool == true { return nil }
+            field.coordinate(withNormalizedOffset: CGVector(dx: dx, dy: 0.5)).tap()
+            dx = max(dx - 0.1, 0.5)
+            return "no keyboard focus after taps along the trailing edge"
+        }
+    }
+
     // MARK: Queries
 
-    /// `#<id>` matches an accessibility identifier exactly. Otherwise `<kind> "<label>" [#n]`, where kind is
-    /// button, text, field, search, cell, tab, switch, image, nav, alert, or any, and the label matches the
-    /// accessibility label, identifier, or placeholder exactly; prefix it with `~` to match a substring.
     private func resolveAll(_ args: [String]) throws -> XCUIElementQuery {
         if let id = args.first, id.hasPrefix("#") {
             return app.descendants(matching: .any).matching(identifier: String(id.dropFirst()))
@@ -178,7 +194,7 @@ final class DriverTests: XCTestCase {
 
     private func element(_ args: [String], _ timeout: Double) throws -> XCUIElement {
         let found = try resolve(args)
-        guard found.waitForExistence(timeout: timeout) else { throw StepError("not found within \(timeout)s: \(args)") }
+        try poll(timeout) { found.exists ? nil : "not found within \(timeout)s: \(args)" }
         return found
     }
 
@@ -187,22 +203,21 @@ final class DriverTests: XCTestCase {
     private func onScreen(_ args: [String], _ timeout: Double) throws -> XCUIElement {
         let query = try resolveAll(args)
         let wanted = Self.index(args) ?? 0
-        let deadline = Date.now.addingTimeInterval(timeout)
-        repeat {
+        var found: XCUIElement?
+        try poll(timeout) {
             let visible = query.allElementsBoundByIndex.filter { $0.exists && $0.isHittable }
-            if visible.count > wanted { return visible[wanted] }
-            Thread.sleep(forTimeInterval: 0.25)
-        } while Date.now < deadline
-        throw StepError("not on screen within \(timeout)s: \(args)")
+            guard visible.count > wanted else { return "not on screen within \(timeout)s: \(args)" }
+            found = visible[wanted]
+            return nil
+        }
+        return try XCTUnwrap(found)
     }
 
-    // MARK: Store and preferences
-
-    /// Retries `mismatch` every 0.25 s until it returns nil or the timeout passes, then fails with its last reason.
     private func poll(_ timeout: Double, _ mismatch: () throws -> String?) throws {
         let deadline = Date.now.addingTimeInterval(timeout)
         while true {
             guard let reason = try mismatch() else { return }
+            if timedOut { throw StepError("drive timed out (--timeout): \(reason)") }
             guard Date.now < deadline else { throw StepError(reason) }
             Thread.sleep(forTimeInterval: 0.25)
         }
@@ -221,12 +236,12 @@ final class DriverTests: XCTestCase {
         }
         let store = try Store(path: path)
         defer { store.close() }
-        let tables = try store.strings("select name from sqlite_master where type = 'table' and name like 'Z%' and name not like 'Z\\_%' escape '\\' order by name")
+        let tables = try store.firstColumn("select name from sqlite_master where type = 'table' and name like 'Z%' and name not like 'Z\\_%' escape '\\' order by name")
         guard tables.contains(table) else { throw StepError("no table \(table); tables: \(tables.joined(separator: ", "))") }
-        let columns = try store.strings("select name from pragma_table_info('\(table)')")
+        let columns = try store.firstColumn("select name from pragma_table_info('\(table)')")
         guard columns.contains(column) else { throw StepError("no column \(column) in \(table); columns: \(columns.joined(separator: ", "))") }
-        if try store.strings("select count(*) from \(table) where \(column) \(condition)", binding: bound).first != "0" { return nil }
-        let values = try store.strings("select distinct \(column) from \(table) limit 10")
+        if try store.firstColumn("select count(*) from \(table) where \(column) \(condition)", binding: bound).first != "0" { return nil }
+        let values = try store.firstColumn("select distinct \(column) from \(table) limit 10")
         return "no \(model) row has \(field) \(condition.replacingOccurrences(of: "?", with: value)); values: \(values.joined(separator: ", "))"
     }
 
@@ -240,7 +255,7 @@ final class DriverTests: XCTestCase {
 
     // MARK: Plumbing
 
-    private func record(_ entry: String) {
+    private func append(_ entry: String) {
         log.append(entry)
         save(log.joined(separator: "\n") + "\n", as: "steps.log")
     }
@@ -280,7 +295,6 @@ final class DriverTests: XCTestCase {
     }
 }
 
-/// A read-only SQLite handle on the app's SwiftData store.
 private struct Store {
     enum Value {
         case number(Double)
@@ -299,8 +313,7 @@ private struct Store {
 
     func close() { sqlite3_close(db) }
 
-    /// The first column of every row as text, `null` for SQL null.
-    func strings(_ sql: String, binding value: Value? = nil) throws -> [String] {
+    func firstColumn(_ sql: String, binding value: Value? = nil) throws -> [String] {
         var statement: OpaquePointer?
         guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
             throw StepError("\(String(cString: sqlite3_errmsg(db))) in `\(sql)`")

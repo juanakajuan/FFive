@@ -1,28 +1,24 @@
 #!/usr/bin/env python3
-"""Checks every #id target in a steps file against A11y.swift and adds -disableAnimations to each launch.
-
-usage: steps-preflight.py <steps-in> <A11y.swift> <steps-out>
-Exits 1 with `ffive-verify: step <n>: unknown identifier <id>; closest <candidate>` on the first bad id.
-"""
 import difflib
 import re
 import sys
+from collections import namedtuple
 
 CASE = re.compile(r'^\s*case\s+(\w+)\s*=\s*"([^"]+)"')
 FAMILY_SET = re.compile(r"static let (indexed|keyed): Set<A11y> = \[([^\]]*)\]")
 SLUG = re.compile(r"[a-z0-9]+(-[a-z0-9]+)*")
 BARE_INDEX = re.compile(r"#\d+")
+Ids = namedtuple("Ids", "plain indexed keyed")
 
 
 def load_ids(a11y_path):
-    """Returns (plain ids, indexed families, keyed families) from A11y.swift."""
     source = open(a11y_path, encoding="utf-8").read()
     raw = {m.group(1): m.group(2) for m in map(CASE.match, source.splitlines()) if m}
     families = {"indexed": set(), "keyed": set()}
     for kind, members in FAMILY_SET.findall(source):
         families[kind] = {raw[name.strip().lstrip(".")] for name in members.split(",") if name.strip()}
     plain = set(raw.values()) - families["indexed"] - families["keyed"]
-    return plain, families["indexed"], families["keyed"]
+    return Ids(plain, families["indexed"], families["keyed"])
 
 
 def is_valid(identifier, plain, indexed, keyed):
@@ -35,7 +31,6 @@ def is_valid(identifier, plain, indexed, keyed):
 
 
 def tokenize(line):
-    """Splits on spaces, keeping "double quoted" runs together, like the driver."""
     words, current, quoted, started = [], "", False, False
     for character in line:
         if character == '"':

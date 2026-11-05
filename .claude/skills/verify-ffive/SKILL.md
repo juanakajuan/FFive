@@ -63,7 +63,7 @@ EOF
 
 Each drive runs one XCUITest (`xcodebuild test-without-building`). It prints one `ok`/`FAIL` line per step, then `PASS <run dir> (<n>s)` or `FAIL <run dir> (<n>s)` with the drive's wall time, and exits non-zero on failure. On failure the run dir also holds `failure.png` and `failure.tree.txt`, the screen and UI tree at the failing step.
 
-`--timeout <seconds>` caps a drive's wall time at 600 s by default. A drive that stalls, for example on XCUITest's idle wait, ends at the cap. Ten seconds before it, the driver writes `failure.png`, `failure.tree.txt`, and a `TIMEOUT after <n>s during step <k>: <line>` line in `steps.log`. At the cap, `drive` kills `xcodebuild` and the driver, prints `FAIL` with `timed out after <n>s`, and exits with status 124. If the driver died before it wrote a tree, `failure.tree.txt` says so and `failure.png` comes from `simctl`.
+`--timeout <seconds>` caps a drive's wall time at 600 s by default. Ten seconds before the cap, the driver's watchdog appends `TIMEOUT during step <k>: <line>` to `steps.log`. A step that is polling (`wait`, `absent`, `exists`, `store-expect`, `defaults-expect`, and every action waiting for its target) fails right there, and the run writes `failure.png` and `failure.tree.txt` as for any failed step. A step stuck inside XCUITest, for example on its idle wait, runs on: the watchdog writes the tree and screenshot itself, and at the cap `drive` kills `xcodebuild` and the driver. Either way `drive` prints `FAIL` with `timed out` and exits with status 124. If the driver died before it wrote a tree, `failure.tree.txt` says so and `failure.png` comes from `simctl`.
 
 `drive` adds `-disableAnimations` to every `launch` step, so the app skips its animations and each tap lands on a settled screen. To drive with animations, write `launch -animations`. `drive` drops that token before the app sees it.
 
@@ -98,7 +98,7 @@ Optional `timeout=<seconds>` changes the default 5 s wait for either target form
 | `terminate` | Terminates the app. |
 | `tap <target>`, `longpress <target>` | Acts on the first on-screen match. Long press is 1.2 s, which opens context menus. |
 | `type <target> "<text>"` | Taps the field and types. |
-| `replace <target> "<text>"` | Taps the trailing edge of the field, deletes its contents, and types. |
+| `replace <target> "<text>"` | Focuses the field with a tap as near its trailing edge as takes focus, deletes its contents, and types. |
 | `wait <target>` / `assert <target>` | Fails unless the element exists and is hittable within the timeout. An element off screen or under a sheet fails with `not on screen within <t>s`. |
 | `exists <target>` | Fails unless the element exists, on screen or not. Use it only when the element is meant to be off screen or covered. |
 | `absent <target>` | Fails unless the element disappears within the timeout. |
@@ -107,7 +107,7 @@ Optional `timeout=<seconds>` changes the default 5 s wait for either target form
 | `count <target> "<n>"` | Fails unless exactly n elements match. |
 | `scrollto <target>` | Swipes up until the element is on screen (12 swipes at most). |
 | `store-expect <Model> <field> <value> [timeout=<s>]` | Polls the on-disk store until some `<Model>` row has `<field>` equal to `<value>`. |
-| `defaults-expect <key> <value> [timeout=<s>]` | Polls the app's UserDefaults plist until `<key>` reads `<value>`. |
+| `defaults-expect <key> <value> [timeout=<s>]` | Polls the app's UserDefaults plist until `<key>` reads `<value>`, for 30 s by default. |
 | `swipe up/down/left/right` | Swipes the app. |
 | `shot <name>` | Screenshot to `<run>/<name>.png`. |
 | `tree <name>` | Full accessibility tree to `<run>/<name>.tree.txt`. |
@@ -120,7 +120,7 @@ Optional `timeout=<seconds>` changes the default 5 s wait for either target form
 - `not-null` passes when some row has a value, as in `store-expect Workout endDate not-null`.
 - Anything else compares as text. Quote it if it has spaces: `store-expect Mesocycle name "Verify Block"`.
 
-A failure names what the column holds, as in `no SetEntry row has weight = 25; values: 250.0`. A missing table or column fails with the list of the ones that exist. `-seedDemo` keeps its store in memory, so `store-expect` after a demo launch fails with `no on-disk store`. `defaults-expect` reads the plist `$V defaults` prints, and a failure names the stored value, as in `weightUnit is "lb", expected "kg"`.
+A failure names what the column holds, as in `no SetEntry row has weight = 25; values: 250.0`. A missing table or column fails with the list of the ones that exist. `-seedDemo` keeps its store in memory, so `store-expect` after a demo launch fails with `no on-disk store`. `defaults-expect` reads the plist `$V defaults` prints, and a failure names the stored value, as in `weightUnit is "lb", expected "kg"`. The system writes that plist a few seconds after the app changes a value, and later still when values change in quick succession, so the step waits up to 30 s instead of 5.
 
 Find ids in `A11y.swift`, and dump a tree (`tree x`) to see what is on screen. Ids and labels in this app:
 
@@ -200,7 +200,8 @@ $V sweep --dry-run    # print what sweep would delete or adopt
 - `drive` runs the build `launch` last installed. After editing Swift, run `launch` first, or `doctor` will report a stale install.
 - SwiftUI lists are lazy, so rows below the fold are absent from the tree, not just hidden. `scrollto` them before `wait`/`tap`.
 - Screens under a sheet or full-screen cover stay in the tree. `exists` can match them, but `wait` and `tap` cannot. Assert on the presented screen's `nav` title first.
-- Feedback and soreness chips expose selection only through color, with no selected trait. Prove an answer by its effect: the feedback header's `image "checkmark.circle.fill"` once all three are answered, or the soreness card going `absent`.
+- A control's own label is not hittable: the text inside a `Stepper` or `Button` hit-tests to the control. `wait` the control by its full label, as in `wait any "5 training weeks, then 1 deload week"`, not `wait text "5 training weeks"`.
+- Feedback and soreness chips carry the Selected trait. The feedback header's `image "checkmark.circle.fill"` appears once all three questions are answered, but the `scrollto` that reaches the last question pushes the header above the screen, so check it with `exists`, not `wait`. A soreness answer shows as its card going `absent`.
 - A `~substring` label takes the first match in tree order. `~Lateral Raise` hits "Behind-the-Back Cable Lateral Raise", so tap picker rows by id, as in `#picker.row.lateral-raise`.
 - The decimal pad has no return key. Tap `#keyboard.done` before tapping elements the keyboard covers.
 - `#workout.finish` is absent until every set of every exercise is logged. To finish early, delete the unlogged sets (`#set.menu.<n>`, `#menu.delete-set`) or exercises (`#exercise.menu.<n>`, `#menu.remove-exercise`), as a lifter would.

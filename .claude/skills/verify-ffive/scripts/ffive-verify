@@ -161,9 +161,11 @@ cmd_drive() {
     cp "$checked" "$run/steps.txt"
     local status=0 started=$SECONDS tree_at=$((timeout - 10))
     [[ $tree_at -ge 1 ]] || tree_at=1
+    # The driver's own terminate() of an app a previous drive left running can hang; simctl's never has.
+    xcrun simctl terminate "$UDID" "$bundle_id" 2>/dev/null || true
     TEST_RUNNER_FFIVE_STEPS="$run/steps.txt" TEST_RUNNER_FFIVE_OUT="$run" \
     TEST_RUNNER_FFIVE_STORE="$(store_path)" TEST_RUNNER_FFIVE_DEFAULTS="$(defaults_path)" \
-    TEST_RUNNER_FFIVE_TREE_AT="$tree_at" \
+    TEST_RUNNER_FFIVE_DEADLINE="$(( $(date +%s) + tree_at ))" \
         xcodebuild test-without-building -project "$skill/harness/FFiveDriver.xcodeproj" -scheme FFiveDriver \
         -destination "id=$UDID" -derivedDataPath "$driver_build" -resultBundlePath "$run/result.xcresult" \
         >"$run/xcodebuild.log" 2>&1 &
@@ -178,6 +180,7 @@ cmd_drive() {
         sleep 1
     done
     if [[ $status == 124 ]]; then wait "$pid" 2>/dev/null || true; else wait "$pid" || status=$?; fi
+    if [[ $status != 0 ]] && grep -q '^TIMEOUT' "$run/steps.log" 2>/dev/null; then status=124; fi
     if [[ $status == 124 && ! -f "$run/failure.tree.txt" ]]; then
         xcrun simctl io "$UDID" screenshot "$run/failure.png" >/dev/null 2>&1 || true
         echo "no tree: the driver was killed after ${timeout}s (--timeout); see failure.png and steps.log" >"$run/failure.tree.txt"
@@ -185,7 +188,7 @@ cmd_drive() {
     cat "$run/steps.log" 2>/dev/null || { tail -20 "$run/xcodebuild.log"; }
     local took="$((SECONDS - started))s"
     if [[ $status == 0 ]]; then echo "PASS $run ($took)"
-    elif [[ $status == 124 ]]; then echo "FAIL $run ($took; timed out after ${timeout}s, --timeout; see failure.png, failure.tree.txt, steps.log)"
+    elif [[ $status == 124 ]]; then echo "FAIL $run ($took; timed out, --timeout ${timeout}s; see failure.png, failure.tree.txt, steps.log)"
     else echo "FAIL $run ($took; see failure.png, failure.tree.txt, xcodebuild.log)"; fi
     return $status
 }

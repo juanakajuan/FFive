@@ -19,15 +19,17 @@ A lifter ends the active block early or once it is complete. Ending finishes the
 
 Preconditions:
 
-- Demo baseline (`launch -seedDemo`): Week 2 · Day 1 in progress with Squat logged, Week 1's Full Body A already in History.
-- Journey: `journeys/end-mesocycle.steps`. The demo store is in memory, so this proves the screens only. For persistence, end an on-disk block and check `ffive-verify store "select ZNAME, ZFINISHEDDATE from ZMESOCYCLE"`.
+- On-disk baseline: `ffive-verify reset-data`, so the Workout tab shows `Plan a Mesocycle`.
+- Journey: `ffive-verify drive .claude/skills/verify-ffive/journeys/end-mesocycle.steps --name end-mesocycle`. It plans "Ending Block" from the Full Body, 3 Days template, logs one Bench Press set, ends the block, and relaunches.
 
-- **End.** Steps: `wait text "WEEK 2 DAY 1" timeout=20`, `tap #workout.menu`, `tap #menu.end-mesocycle`, `tap #dialog.end-mesocycle`, `wait #workout.plan timeout=10`.
-- **History.** Steps: `tap #tab.more`, `tap #more.progress`, `tap #segment.history`, `count #history.row.full-body-a "2"`. Before ending, the count is 1.
+- **End.** Steps: `tap #workout.menu`, `tap #menu.end-mesocycle`, `tap #dialog.end-mesocycle`, `wait #workout.plan timeout=10`.
+- **Store.** Steps: `store-expect Mesocycle finishedDate null` before the end and `store-expect Mesocycle finishedDate not-null` after it, then `store-expect Workout endDate not-null` for the session the end finished. For the row, run `ffive-verify store "select ZNAME, ZFINISHEDDATE from ZMESOCYCLE"`.
+- **History.** Steps: `tap #tab.more`, `tap #more.progress`, `tap #segment.history`, `count #history.row.full-body-a "1"`. Before ending, History is empty.
 - **Mesos.** Steps: `tap #tab.mesos`, `wait any "Finished"`.
+- **Persistence.** A second `launch` lands on `#workout.plan` again: the block stays finished and no session reopens.
 
 ## Gotchas
 
 - The menu item and the dialog's confirmation button both read `End Mesocycle`. The journey taps them by id, `#menu.end-mesocycle` and then `#dialog.end-mesocycle`.
 - After ending, Progress's Volume pane still shows the finished block, not the "No mesocycle yet" empty state.
-- `wait #history.row.full-body-a` alone proves nothing: Week 1's session is already in History before the block ends.
+- Ending drops an open session with no logged set, so log one set first or History stays empty and `count` fails.
