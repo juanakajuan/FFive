@@ -32,7 +32,15 @@ public final class Store {
     }
 
     private var unit: WeightUnit { settings.weightUnit }
-    private var snapshot: PlanningSnapshot { PlanningSnapshot(context: context) }
+
+    /// Valid until the next commit, because finished history changes only through Store.
+    @ObservationIgnored private var cachedSnapshot: (revision: Int, snapshot: PlanningSnapshot)?
+    private var snapshot: PlanningSnapshot {
+        if let cachedSnapshot, cachedSnapshot.revision == revision { return cachedSnapshot.snapshot }
+        let built = PlanningSnapshot(context: context)
+        cachedSnapshot = (revision, built)
+        return built
+    }
 
     public func startMesocycle(_ draft: MesoDraft) throws {
         guard try context.fetchCount(Mesocycle.active) == 0 else { throw StoreError.anotherMesocycleIsActive }

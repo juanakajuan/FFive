@@ -213,6 +213,25 @@ final class StoreTests: XCTestCase {
         XCTAssertFalse(store.context.hasChanges, "every add is saved")
     }
 
+    func testSnapshotRefreshesAfterACommit() throws {
+        let (store, meso) = try startedStore()
+        XCTAssertGreaterThan(store.weeklyVolume(meso, week: 0).count, 0)
+
+        finishedBench(store)
+        let session = store.buildSession(meso, at: day1)
+
+        let oneRepMax = Progression.estimatedOneRepMax(weight: 100, reps: 8)
+        let key = ExerciseID(folding: "Bench Press")
+        let reps = Progression.startingReps(in: ExerciseCatalog.repRange(for: key))
+        let rir = try XCTUnwrap(meso.phase(week: 0).rir)
+        let load = Progression.load(forReps: reps, rir: rir, oneRepMax: oneRepMax,
+                                    increment: ExerciseCatalog.increment(for: key, unit: store.settings.weightUnit))
+        let targets = session.sortedExercises[0].sortedSets.map(\.target)
+        XCTAssertFalse(targets.isEmpty)
+        XCTAssertEqual(targets, Array(repeating: SetTarget(weight: load, reps: reps), count: targets.count), "a workout finished after a render feeds the next build")
+        XCTAssertNotEqual(targets.first, SetTarget.calibrate)
+    }
+
     func testAddAndDeleteSet() {
         let store = Store(inMemory: true)
         let workout = store.startQuickWorkout()

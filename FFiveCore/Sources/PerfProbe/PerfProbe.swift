@@ -21,6 +21,7 @@ struct PerfProbe {
         let enforceBudget = !CommandLine.arguments.contains("--no-budget")
         let clock = ContinuousClock()
         var medians: [Int: Double] = [:]
+        var colds: [Int: Double] = [:]
         var stores: [Int: (Store, Mesocycle)] = [:]
         for size in sizes {
             let (store, meso) = seeded(finishedWorkouts: size)
@@ -31,8 +32,10 @@ struct PerfProbe {
             }
             let median = millis.sorted()[runs / 2]
             medians[size] = median
-            print("perf-probe: weeklyVolume median \(format(median)) ms at \(size) finished workouts (\(runs) runs)")
+            colds[size] = millis[0]
+            print("perf-probe: weeklyVolume median \(format(median)) ms at \(size) finished workouts (\(runs) renders, first after a commit \(format(millis[0])) ms)")
         }
+        print("perf-probe: snapshot build \(format(colds[budgetSize]!)) ms at \(budgetSize), \(format(colds[scaleSize]!)) ms at \(scaleSize) (the first render after a commit)")
 
         let (store, meso) = stores[budgetSize]!
         let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
