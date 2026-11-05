@@ -70,7 +70,7 @@ struct ActiveWorkoutView: View {
                 ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
                     let muscle = exercise.muscle
                     if let muscle, let record = pendingSoreness[muscle],
-                        exercises.firstIndex(where: { $0.muscle == muscle }) == index
+                        exercises.firstIndex(where: { (other: Exercise) in other.muscle == muscle }) == index
                     {
                         SorenessCard(muscle: muscle, record: record) { soreness in
                             withAnimation {
@@ -92,7 +92,7 @@ struct ActiveWorkoutView: View {
                     }
 
                     if let muscle, workout.mesocycle != nil,
-                        exercises.lastIndex(where: { $0.muscle == muscle }) == index,
+                        exercises.lastIndex(where: { (other: Exercise) in other.muscle == muscle }) == index,
                         exercise.isLogged
                     {
                         FeedbackCard(
