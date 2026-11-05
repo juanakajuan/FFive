@@ -302,7 +302,8 @@ final class StoreTests: XCTestCase {
         let rir = try XCTUnwrap(meso.phase(week: 0).rir)
         let load = Progression.load(
             forReps: reps, rir: rir, oneRepMax: oneRepMax,
-            increment: ExerciseCatalog.increment(for: key, unit: store.settings.weightUnit))
+            increment: ExerciseCatalog.loading(for: key, bodyweight: nil).increment(store.settings.weightUnit),
+            offset: 0)
         XCTAssertNotEqual(SetTarget(weight: load, reps: reps), SetTarget.calibrate)
         return SetTarget(weight: load, reps: reps)
     }

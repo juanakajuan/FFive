@@ -73,12 +73,11 @@ public enum Equipment: String, CaseIterable, Codable {
 
     public var displayName: String { rawValue == "smith" ? "Smith Machine" : rawValue.capitalized }
 
-    /// Smallest sensible jump in load for this implement.
+    /// Smallest sensible jump in load for this implement. For bodyweight it is the step of added load.
     public func increment(_ unit: WeightUnit) -> Double {
         switch (self, unit) {
         case (.dumbbell, .lb): 5
         case (.dumbbell, .kg): 2
-        case (.bodyweight, _): 0
         case (_, .lb): 5
         case (_, .kg): 2.5
         }

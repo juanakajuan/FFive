@@ -96,7 +96,7 @@ struct ExerciseDetailView: View {
                     .foregroundStyle(Theme.secondary)
             }
             Spacer(minLength: 8)
-            Text("\(formatWeight(session.best.weight)) \(store.settings.weightUnit.rawValue) × \(session.best.reps)")
+            Text("\(session.best.weightText(unit: store.settings.weightUnit)) × \(session.best.reps)")
                 .font(Theme.body.monospacedDigit())
                 .foregroundStyle(Theme.text)
             Image(systemName: "chevron.right")

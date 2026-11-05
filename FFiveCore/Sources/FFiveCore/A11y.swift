@@ -25,6 +25,7 @@ public enum A11y: String, CaseIterable {
     case menuQuickWorkout = "menu.quick-workout"
     case menuWorkoutNote = "menu.workout-note"
     case menuRename = "menu.rename"
+    case menuBodyweight = "menu.bodyweight"
     case menuDiscard = "menu.discard"
     case menuReset = "menu.reset"
     case menuEndMesocycle = "menu.end-mesocycle"

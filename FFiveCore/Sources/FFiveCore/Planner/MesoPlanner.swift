@@ -61,9 +61,6 @@ public struct MuscleVolume: Identifiable {
 extension ExerciseCatalog {
     public static func repRange(for id: ExerciseID) -> ClosedRange<Int> { info(id)?.repRange ?? 8...12 }
 
-    static func increment(for id: ExerciseID, unit: WeightUnit) -> Double {
-        (info(id)?.equipment ?? .machine).increment(unit)
-    }
 }
 
 @MainActor
@@ -100,6 +97,7 @@ enum MesoPlanner {
         context.insert(workout)
         workout.week = key.week
         workout.dayIndex = key.dayIndex
+        workout.bodyweight = snapshot.bodyweight
         meso.workouts.append(workout)
         for (order, exercise) in planned.enumerated() {
             let model = Exercise(name: exercise.name, order: order, muscle: exercise.muscle)
@@ -135,7 +133,8 @@ enum MesoPlanner {
             guard let base, let baseRIR = base.phase?.rir else {
                 return templatePlan(meso, dayIndex: key.dayIndex, rir: rir, unit: unit, snapshot: snapshot)
             }
-            return progressedPlan(from: base, baseRIR: baseRIR, meso: meso, key: key, rir: rir, unit: unit)
+            return progressedPlan(
+                from: base, baseRIR: baseRIR, meso: meso, key: key, rir: rir, unit: unit, snapshot: snapshot)
         }
     }
 
@@ -150,14 +149,15 @@ enum MesoPlanner {
                 targets: freshTargets(
                     for: slot.key,
                     count: initialSetCount(of: slot, dayIndex: dayIndex, in: meso),
-                    rir: rir, unit: unit, snapshot: snapshot))
+                    rir: rir, unit: unit, snapshot: snapshot, bodyweight: snapshot.bodyweight))
         }
     }
 
     private static func progressedPlan(
         from base: Workout, baseRIR: Int, meso: Mesocycle, key: SessionKey,
-        rir: Int, unit: WeightUnit
+        rir: Int, unit: WeightUnit, snapshot: PlanningSnapshot
     ) -> [PlannedExercise] {
+        let bodyweight = base.bodyweight ?? snapshot.bodyweight
         let exercises = base.plannedExercises
         var counts = exercises.map { max(1, $0.sets.count) }
         for muscle in base.trainedMuscles {
@@ -174,6 +174,7 @@ enum MesoPlanner {
         return exercises.indices.map { index in
             let exercise = exercises[index]
             let sets = exercise.sortedSets
+            let loading = ExerciseCatalog.loading(for: exercise.key, bodyweight: bodyweight)
             return PlannedExercise(
                 name: exercise.name, key: exercise.key, muscle: exercise.muscle,
                 targets: Progression.nextTargets(
@@ -182,7 +183,8 @@ enum MesoPlanner {
                     previousRIR: baseRIR,
                     targetRIR: rir,
                     repRange: exercise.repRange,
-                    increment: exercise.increment(unit),
+                    increment: loading.increment(unit),
+                    offset: loading.offset ?? 0,
                     setCount: counts[index]))
         }
     }
@@ -214,16 +216,17 @@ enum MesoPlanner {
     }
 
     private static func freshTargets(
-        for key: ExerciseID, count: Int, rir: Int, unit: WeightUnit, snapshot: PlanningSnapshot
+        for key: ExerciseID, count: Int, rir: Int, unit: WeightUnit, snapshot: PlanningSnapshot,
+        bodyweight: Double?
     ) -> [SetTarget] {
-        guard let oneRepMax = snapshot.latestOneRepMax(of: key) else {
+        let loading = ExerciseCatalog.loading(for: key, bodyweight: bodyweight)
+        guard let offset = loading.offset, let oneRepMax = snapshot.latestOneRepMax(of: key) else {
             return Array(repeating: .calibrate, count: count)
         }
         let reps = Progression.startingReps(in: ExerciseCatalog.repRange(for: key))
         let load = Progression.load(
-            forReps: reps, rir: rir, oneRepMax: oneRepMax,
-            increment: ExerciseCatalog.increment(for: key, unit: unit))
-        return Array(repeating: load > 0 ? SetTarget(weight: load, reps: reps) : .calibrate, count: count)
+            forReps: reps, rir: rir, oneRepMax: oneRepMax, increment: loading.increment(unit), offset: offset)
+        return Array(repeating: load + offset > 0 ? SetTarget(weight: load, reps: reps) : .calibrate, count: count)
     }
 
     private static func firstWeekTargets(of key: ExerciseID, dayIndex: Int, in meso: Mesocycle) -> [SetTarget] {
@@ -268,7 +271,8 @@ enum MesoPlanner {
             of: exercise,
             with: freshTargets(
                 for: exercise.key, count: count, rir: workout.phase?.rir ?? deloadRIR,
-                unit: unit, snapshot: snapshot), in: context)
+                unit: unit, snapshot: snapshot, bodyweight: workout.bodyweight ?? snapshot.bodyweight),
+            in: context)
     }
 
     static func lastFinishedExercise(_ key: ExerciseID, in context: ModelContext) -> Exercise? {
@@ -291,7 +295,8 @@ enum MesoPlanner {
             of: exercise,
             with: freshTargets(
                 for: exercise.key, count: max(1, exercise.sets.count),
-                rir: workout.phase?.rir ?? deloadRIR, unit: unit, snapshot: snapshot),
+                rir: workout.phase?.rir ?? deloadRIR, unit: unit, snapshot: snapshot,
+                bodyweight: workout.bodyweight ?? snapshot.bodyweight),
             in: context)
     }
 

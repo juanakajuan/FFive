@@ -134,11 +134,11 @@ final class EngineTests: XCTestCase {
 
     func next(
         _ previous: [SetTarget], _ logged: [LoggedSet?], rir: (Int, Int) = (3, 2),
-        range: ClosedRange<Int> = 8...12, increment: Double = 5, sets: Int? = nil
+        range: ClosedRange<Int> = 8...12, increment: Double = 5, offset: Double = 0, sets: Int? = nil
     ) -> [SetTarget] {
         Progression.nextTargets(
             previousTargets: previous, logged: logged, previousRIR: rir.0, targetRIR: rir.1,
-            repRange: range, increment: increment, setCount: sets ?? previous.count)
+            repRange: range, increment: increment, offset: offset, setCount: sets ?? previous.count)
     }
 
     func testNextTargets() {
@@ -215,7 +215,7 @@ final class EngineTests: XCTestCase {
         expectClose("e1RM single", Progression.estimatedOneRepMax(weight: 200, reps: 1), 206.67)
         expect(
             "load for 9 reps at 3 RIR from a 133 e1RM",
-            Progression.load(forReps: 9, rir: 3, oneRepMax: 400.0 / 3, increment: 5), 95)
+            Progression.load(forReps: 9, rir: 3, oneRepMax: 400.0 / 3, increment: 5, offset: 0), 95)
         expect("reps at 95 with 3 RIR from a 133 e1RM", Progression.reps(atLoad: 95, rir: 3, oneRepMax: 400.0 / 3), 9)
         expect("starting reps sit between bottom and middle (8-12)", Progression.startingReps(in: 8...12), 9)
         expect("starting reps sit between bottom and middle (12-20)", Progression.startingReps(in: 12...20), 14)

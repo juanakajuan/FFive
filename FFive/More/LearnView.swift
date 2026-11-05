@@ -520,16 +520,10 @@ extension Learn {
                 ForEach(Equipment.allCases, id: \.self) { equipment in
                     GridRow {
                         Text(equipment.displayName)
-                        if equipment.increment(.lb) > 0 {
-                            Text(verbatim: "+\(equipment.increment(.lb).formatted())")
-                                .monospacedDigit()
-                            Text(verbatim: "+\(equipment.increment(.kg).formatted())")
-                                .monospacedDigit()
-                        } else {
-                            Text("Reps only")
-                                .foregroundStyle(Theme.secondary)
-                                .gridCellColumns(2)
-                        }
+                        Text(verbatim: "+\(equipment.increment(.lb).formatted())")
+                            .monospacedDigit()
+                        Text(verbatim: "+\(equipment.increment(.kg).formatted())")
+                            .monospacedDigit()
                     }
                 }
             }
