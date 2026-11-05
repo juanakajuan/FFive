@@ -1,3 +1,4 @@
+import FFiveCore
 import SwiftUI
 
 /// A body figure with one muscle group lit in its tint, seen from the front or the back.
