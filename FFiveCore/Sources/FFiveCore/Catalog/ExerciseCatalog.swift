@@ -187,7 +187,7 @@ public enum ExerciseCatalog {
 
     static let byID: [ExerciseID: ExerciseInfo] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
 
-    public static func info(_ id: ExerciseID) -> ExerciseInfo? {
+    static func info(_ id: ExerciseID) -> ExerciseInfo? {
         byID[id]
     }
 
