@@ -376,15 +376,14 @@ final class StoreTests: XCTestCase {
         XCTAssertGreaterThan(volumes.first { $0.muscle == .back }?.planned ?? 0, 0, "an unbuilt day counts what it would prescribe")
     }
 
-    /// A finished quick workout started at `start` that logged `lifts` (name, muscle, weight), one done set of 8 each.
     @discardableResult
-    func finished(_ store: Store, at start: Date, minutes: Double = 60, _ lifts: [(String, Muscle, Double)]) -> Workout {
+    func finished(_ store: Store, at start: Date, minutes: Double = 60, _ lifts: [(name: String, muscle: Muscle, weight: Double)]) -> Workout {
         let workout = Workout(name: "Logged", startDate: start)
         store.context.insert(workout)
         for (order, lift) in lifts.enumerated() {
-            let exercise = Exercise(name: lift.0, order: order, muscle: lift.1)
+            let exercise = Exercise(name: lift.name, order: order, muscle: lift.muscle)
             workout.exercises.append(exercise)
-            let set = SetEntry(reps: 8, weight: lift.2, order: 0)
+            let set = SetEntry(reps: 8, weight: lift.weight, order: 0)
             set.isDone = true
             exercise.sets.append(set)
         }

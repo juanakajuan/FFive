@@ -31,7 +31,6 @@ struct StatTile: View {
     }
 }
 
-/// This week's sessions and time, and every session, on the Workout tab and in Progress.
 struct StatsRow: View {
     let stats: WeekStats
 

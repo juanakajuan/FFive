@@ -12,8 +12,7 @@ public final class Store {
     public let container: ModelContainer
     public let settings: Settings
     let context: ModelContext
-    /// Bumped by every saved commit. A read that fetches touches it, so the view calling the read re-renders after a write.
-    public private(set) var revision = 0
+    private var revision = 0
     /// The error of the last commit that did not save, until a screen has shown it.
     public private(set) var failure: (any Error)?
 
@@ -129,7 +128,7 @@ public final class Store {
 
     /// Catalog exercises plus custom ones the lifter has logged with a muscle, by name.
     public func library(muscle: Muscle?, search: String) -> [ExerciseListing] {
-        _ = revision
+        observeCommits()
         var listings = ExerciseCatalog.all.map { ExerciseListing(id: $0.id, name: $0.name, muscle: $0.muscle, info: $0) }
         var seen = Set(listings.map(\.id))
         for exercise in (try? context.fetch(FetchDescriptor<Exercise>())) ?? [] {
@@ -149,7 +148,7 @@ public final class Store {
     }
 
     public func weekStats(now: Date = .now) -> WeekStats {
-        _ = revision
+        observeCommits()
         let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: now)?.start ?? now
         let thisWeek = (try? context.fetch(FetchDescriptor<Workout>(predicate: #Predicate { $0.endDate != nil && $0.startDate >= weekStart }))) ?? []
         return WeekStats(thisWeek: thisWeek.count,
@@ -159,7 +158,7 @@ public final class Store {
 
     /// Most recently trained exercise first. A session that logs one exercise twice gives one point, its stronger set.
     public func strengthSeries() -> [StrengthSeries] {
-        _ = revision
+        observeCommits()
         var finished = FetchDescriptor<Workout>(predicate: #Predicate { $0.endDate != nil }, sortBy: [SortDescriptor(\.startDate)])
         finished.relationshipKeyPathsForPrefetching = [\.exercises]
         var byKey: [ExerciseID: (name: String, muscle: Muscle?, points: [StrengthSeries.Point])] = [:]
@@ -188,9 +187,8 @@ public final class Store {
         workout.pendingSoreness
     }
 
-    /// The exercise's pinned note, which follows it into every later session.
     public func pinnedNote(on exercise: Exercise) -> String? {
-        _ = revision
+        observeCommits()
         return PinnedNote.find(named: exercise.name, in: context)?.text
     }
 
@@ -251,6 +249,11 @@ public final class Store {
         let written = exercises.count + slots.count
         if written > 0 { commit() }
         return written
+    }
+
+    /// Makes the view running this read re-render after the next saved commit.
+    private func observeCommits() {
+        _ = revision
     }
 
     func commit() {

@@ -3,7 +3,6 @@ import SwiftData
 import FFiveCore
 
 /// The block's week-by-day grid. Current-week days open or skip; finished days push their workout.
-/// Tapping a skipped day calls `onSkipped`, and the screen asks whether to train it with `trainAfterAllDialog`.
 struct MesoScheduleGrid: View {
     let meso: Mesocycle
     var onOpen: (SessionKey) -> Void
@@ -120,7 +119,6 @@ struct WeekVolumeCard: View {
 }
 
 extension View {
-    /// Asks whether to train a skipped day; answering yes unskips it and opens it. Attach it to the screen.
     func trainAfterAllDialog(_ key: Binding<SessionKey?>, of meso: Mesocycle, store: Store,
                              onOpen: @escaping (SessionKey) -> Void) -> some View {
         confirmationDialog("Train this day after all?",
