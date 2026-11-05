@@ -11,14 +11,15 @@ struct PlanningSnapshot {
     }
 
     init(context: ModelContext) {
-        let descriptor = FetchDescriptor<Exercise>(
-            predicate: #Predicate { $0.workout?.endDate != nil },
-            sortBy: [SortDescriptor(\.workout?.startDate, order: .reverse), SortDescriptor(\.order)])
+        var descriptor = Workout.history
+        descriptor.relationshipKeyPathsForPrefetching = [\.exercises]
         var latest: [ExerciseID: Double] = [:]
-        for exercise in (try? context.fetch(descriptor)) ?? [] {
-            let key = exercise.key
-            guard latest[key] == nil, let strongest = exercise.strongestSet else { continue }
-            latest[key] = strongest.oneRepMax
+        for workout in (try? context.fetch(descriptor)) ?? [] {
+            for exercise in workout.sortedExercises {
+                let key = exercise.key
+                guard latest[key] == nil, let strongest = exercise.strongestSet else { continue }
+                latest[key] = strongest.oneRepMax
+            }
         }
         self.latest = latest
     }
