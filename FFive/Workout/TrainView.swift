@@ -165,20 +165,20 @@ struct ScheduleSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(AppRouter.self) private var router
+    @Environment(Store.self) private var store
+    @State private var trainAfterAll: SessionKey?
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    MesoScheduleGrid(meso: meso) { key in
-                        router.openSession(key, in: meso)
-                        dismiss()
-                    }
+                    MesoScheduleGrid(meso: meso, onOpen: open, onSkipped: { trainAfterAll = $0 })
                     WeekVolumeCard(meso: meso, week: week)
                 }
                 .padding(Theme.gutter)
             }
             .background(Theme.page)
+            .trainAfterAllDialog($trainAfterAll, of: meso, store: store, onOpen: open)
             .navigationTitle(meso.name)
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
@@ -189,6 +189,11 @@ struct ScheduleSheet: View {
                 }
             }
         }
+    }
+
+    private func open(_ key: SessionKey) {
+        router.openSession(key, in: meso)
+        dismiss()
     }
 }
 

@@ -9,6 +9,7 @@ struct MesoDetailView: View {
     @Environment(Store.self) private var store
     @Environment(AppRouter.self) private var router
     @State private var confirmEnd = false
+    @State private var trainAfterAll: SessionKey?
 
     private var isActive: Bool { meso.finishedDate == nil }
 
@@ -18,9 +19,7 @@ struct MesoDetailView: View {
             VStack(spacing: Theme.gutter) {
                 header(week: week)
                 // Only the active block trains from the Workout tab, so a finished block's days don't open anything.
-                MesoScheduleGrid(meso: meso) { key in
-                    if isActive { router.openSession(key, in: meso) }
-                }
+                MesoScheduleGrid(meso: meso, onOpen: open, onSkipped: { trainAfterAll = $0 })
                 WeekVolumeCard(meso: meso, week: week)
                 if isActive {
                     Button("End Mesocycle", role: .destructive) { confirmEnd = true }
@@ -35,12 +34,17 @@ struct MesoDetailView: View {
         .background(Theme.page)
         .navigationTitle(meso.name)
         .navigationBarTitleDisplayMode(.inline)
+        .trainAfterAllDialog($trainAfterAll, of: meso, store: store, onOpen: open)
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
             Button("End Mesocycle", role: .destructive) { store.endMesocycle(meso) }
                 .a11y(.dialogEndMesocycle)
         } message: {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
         }
+    }
+
+    private func open(_ key: SessionKey) {
+        if isActive { router.openSession(key, in: meso) }
     }
 
     private func header(week: Int) -> some View {

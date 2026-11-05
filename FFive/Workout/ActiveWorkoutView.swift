@@ -19,6 +19,7 @@ struct ActiveWorkoutView: View {
     @State private var confirmEnd = false
     @State private var renameDraft: String?
     @State private var noteEdit: NoteEdit?
+    @State private var historyFor: Exercise?
     @State private var setsCompleted = 0
 
     private struct NoteEdit: Identifiable {
@@ -80,6 +81,7 @@ struct ActiveWorkoutView: View {
                                  phase: workout.phase,
                                  onSetCompleted: setCompleted,
                                  onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
+                                 onShowHistory: { historyFor = exercise },
                                  onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }) {
                         store.removeExercise(exercise, from: workout)
                     }
@@ -162,6 +164,7 @@ struct ActiveWorkoutView: View {
                 saveNote($0, to: edit.target)
             }
         }
+        .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
     }
 
     private func saveNote(_ text: String, to target: NoteEdit.Target) {
@@ -265,21 +268,22 @@ struct ExerciseCard: View {
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
     var onSwap: (() -> Void)?
+    var onShowHistory: () -> Void
     var onEditNote: (String) -> Void
     var onRemove: () -> Void
 
     @Environment(Store.self) private var store
     @Query private var pinnedNotes: [PinnedNote]
     @State private var showingCue = false
-    @State private var showingHistory = false
 
     init(exercise: Exercise, position: Int, phase: WeekPhase?, onSetCompleted: @escaping () -> Void,
-         onSwap: (() -> Void)? = nil, onEditNote: @escaping (String) -> Void, onRemove: @escaping () -> Void) {
+         onSwap: (() -> Void)? = nil, onShowHistory: @escaping () -> Void, onEditNote: @escaping (String) -> Void, onRemove: @escaping () -> Void) {
         self.exercise = exercise
         self.position = position
         self.phase = phase
         self.onSetCompleted = onSetCompleted
         self.onSwap = onSwap
+        self.onShowHistory = onShowHistory
         self.onEditNote = onEditNote
         self.onRemove = onRemove
         let name = exercise.name
@@ -347,7 +351,6 @@ struct ExerciseCard: View {
             }
         }
         .surfaceCard()
-        .sheet(isPresented: $showingHistory) { ExerciseHistorySheet(name: exercise.name) }
     }
 
     private var actions: some View {
@@ -361,7 +364,7 @@ struct ExerciseCard: View {
                 .accessibilityLabel("Technique cue")
                 .a11y(.exerciseCue, position)
             }
-            Button { showingHistory = true } label: { ActionIcon(systemName: "clock.arrow.circlepath") }
+            Button(action: onShowHistory) { ActionIcon(systemName: "clock.arrow.circlepath") }
                 .accessibilityLabel("History")
                 .a11y(.exerciseHistory, position)
             Menu {
