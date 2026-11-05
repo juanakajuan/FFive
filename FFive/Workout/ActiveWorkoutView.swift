@@ -19,6 +19,7 @@ struct ActiveWorkoutView: View {
     @State private var confirmEnd = false
     @State private var renameDraft: String?
     @State private var noteEdit: NoteEdit?
+    @State private var historyFor: Exercise?
     @State private var setsCompleted = 0
 
     private struct NoteEdit: Identifiable {
@@ -56,7 +57,7 @@ struct ActiveWorkoutView: View {
 
     var body: some View {
         let exercises = workout.sortedExercises
-        let pendingSoreness = workout.pendingSoreness
+        let pendingSoreness = store.pendingSoreness(in: workout)
         ScrollView {
             LazyVStack(spacing: 16) {
                 if let note = workout.note {
@@ -82,6 +83,7 @@ struct ActiveWorkoutView: View {
                         phase: workout.phase,
                         onSetCompleted: setCompleted,
                         onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
+                        onShowHistory: { historyFor = exercise },
                         onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }
                     ) {
                         store.removeExercise(exercise, from: workout)
@@ -174,6 +176,7 @@ struct ActiveWorkoutView: View {
                 saveNote($0, to: edit.target)
             }
         }
+        .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
     }
 
     private func saveNote(_ text: String, to target: NoteEdit.Target) {
@@ -285,33 +288,17 @@ struct ExerciseCard: View {
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
     var onSwap: (() -> Void)?
+    var onShowHistory: () -> Void
     var onEditNote: (String) -> Void
     var onRemove: () -> Void
 
     @Environment(Store.self) private var store
-    @Query private var pinnedNotes: [PinnedNote]
     @State private var showingCue = false
-    @State private var showingHistory = false
-
-    init(
-        exercise: Exercise, position: Int, phase: WeekPhase?, onSetCompleted: @escaping () -> Void,
-        onSwap: (() -> Void)? = nil, onEditNote: @escaping (String) -> Void, onRemove: @escaping () -> Void
-    ) {
-        self.exercise = exercise
-        self.position = position
-        self.phase = phase
-        self.onSetCompleted = onSetCompleted
-        self.onSwap = onSwap
-        self.onEditNote = onEditNote
-        self.onRemove = onRemove
-        let name = exercise.name
-        _pinnedNotes = Query(filter: #Predicate<PinnedNote> { $0.name == name })
-    }
 
     var body: some View {
         let unit = store.settings.weightUnit
         let sets = exercise.sortedSets
-        let pinned = pinnedNotes.first?.text
+        let pinned = store.pinnedNote(on: exercise)
         let note = pinned ?? exercise.note
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 12) {
@@ -325,7 +312,7 @@ struct ExerciseCard: View {
                         .foregroundStyle(Theme.secondary)
                 }
                 Spacer(minLength: 0)
-                actions
+                actions(note: note)
             }
             .padding(.horizontal, Theme.gutter)
 
@@ -367,10 +354,9 @@ struct ExerciseCard: View {
             }
         }
         .surfaceCard(tag: exercise.muscle)
-        .sheet(isPresented: $showingHistory) { ExerciseHistorySheet(name: exercise.name) }
     }
 
-    private var actions: some View {
+    private func actions(note: String?) -> some View {
         HStack(spacing: 16) {
             if exercise.info != nil {
                 Button {
@@ -381,13 +367,9 @@ struct ExerciseCard: View {
                 .accessibilityLabel("Technique cue")
                 .a11y(.exerciseCue, position)
             }
-            Button {
-                showingHistory = true
-            } label: {
-                ActionIcon(systemName: "clock.arrow.circlepath")
-            }
-            .accessibilityLabel("History")
-            .a11y(.exerciseHistory, position)
+            Button(action: onShowHistory) { ActionIcon(systemName: "clock.arrow.circlepath") }
+                .accessibilityLabel("History")
+                .a11y(.exerciseHistory, position)
             Menu {
                 if let onSwap {
                     Button("Swap Exercise", systemImage: "arrow.triangle.2.circlepath", action: onSwap)
@@ -396,7 +378,6 @@ struct ExerciseCard: View {
                 }
                 Button("Add Set", systemImage: "plus") { store.addSet(to: exercise) }
                     .a11y(.menuAddSet)
-                let note = pinnedNotes.first?.text ?? exercise.note
                 Button(note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
                     onEditNote(note ?? "")
                 }

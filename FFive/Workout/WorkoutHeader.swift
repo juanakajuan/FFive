@@ -7,7 +7,14 @@ struct WorkoutHeader<Trailing: View>: View {
     let subtitle: Text
     /// The share of the session's sets logged, from 0 to 1; nil draws only the hairline.
     var progress: Double?
-    @ViewBuilder var trailing: () -> Trailing
+    let trailing: Trailing
+
+    init(title: Text, subtitle: Text, progress: Double? = nil, @ViewBuilder trailing: () -> Trailing) {
+        self.title = title
+        self.subtitle = subtitle
+        self.progress = progress
+        self.trailing = trailing()
+    }
 
     var body: some View {
         HStack(spacing: 12) {
@@ -24,7 +31,7 @@ struct WorkoutHeader<Trailing: View>: View {
                     .lineLimit(1)
             }
             Spacer(minLength: 0)
-            HStack(spacing: 20, content: trailing)
+            HStack(spacing: 20) { trailing }
         }
         .padding(.horizontal, Theme.gutter)
         .padding(.top, 8)
@@ -93,11 +100,17 @@ struct WideButtonStyle: ButtonStyle {
 private struct WideButtonLabel<Label: View>: View {
     let kind: WideButtonStyle.Kind
     let isPressed: Bool
-    @ViewBuilder var label: () -> Label
+    let label: Label
     @Environment(\.isEnabled) private var isEnabled
 
+    init(kind: WideButtonStyle.Kind, isPressed: Bool, @ViewBuilder label: () -> Label) {
+        self.kind = kind
+        self.isPressed = isPressed
+        self.label = label()
+    }
+
     var body: some View {
-        label()
+        label
             .font(Theme.body.weight(.semibold))
             .foregroundStyle(kind == .filled ? Theme.page : Theme.text)
             .frame(maxWidth: .infinity, minHeight: 44)

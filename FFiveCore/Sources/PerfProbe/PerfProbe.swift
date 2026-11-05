@@ -48,6 +48,15 @@ struct PerfProbe {
         )
 
         let (store, meso) = stores[budgetSize]!
+        var strength: [Double] = []
+        for _ in 0..<rounds {
+            store.commit()
+            strength.append(time { _ = store.strengthSeries() })
+        }
+        print(
+            "perf-probe: strengthSeries median \(format(median(strength))) ms (min \(format(strength.min()!))) at \(budgetSize) finished workouts over \(rounds) reads, each after a commit"
+        )
+
         let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
         let set = session.sortedExercises[0].sortedSets[0]
         var storeLog: [Double] = []

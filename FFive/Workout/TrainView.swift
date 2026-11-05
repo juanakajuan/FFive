@@ -33,7 +33,6 @@ struct TrainView: View {
     @Environment(AppRouter.self) private var router
     @Query(Mesocycle.active) private var activeMesos: [Mesocycle]
     @Query(Workout.open) private var openWorkouts: [Workout]
-    @Query(Workout.history) private var finishedWorkouts: [Workout]
 
     @State private var showingBuilder = false
     @State private var showingSchedule = false
@@ -108,7 +107,7 @@ struct TrainView: View {
                 .padding(.bottom, 8)
                 .surfaceCard()
 
-                StatsRow(history: finishedWorkouts)
+                StatsRow(stats: store.weekStats())
                     .padding(.horizontal, Theme.gutter)
             }
         }
@@ -181,20 +180,20 @@ struct ScheduleSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(AppRouter.self) private var router
+    @Environment(Store.self) private var store
+    @State private var trainAfterAll: SessionKey?
 
     var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    MesoScheduleGrid(meso: meso) { key in
-                        router.openSession(key, in: meso)
-                        dismiss()
-                    }
+                    MesoScheduleGrid(meso: meso, onOpen: open, onSkipped: { trainAfterAll = $0 })
                     WeekVolumeCard(meso: meso, week: week)
                 }
                 .padding(Theme.gutter)
             }
             .background(Theme.page)
+            .trainAfterAllDialog($trainAfterAll, of: meso, store: store, onOpen: open)
             .navigationTitle(meso.name)
             .navigationBarTitleDisplayMode(.inline)
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
@@ -206,20 +205,10 @@ struct ScheduleSheet: View {
             }
         }
     }
-}
 
-struct StatsRow: View {
-    let history: [Workout]
-
-    var body: some View {
-        let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: .now)?.start ?? .now
-        let thisWeek = history.filter { $0.startDate >= weekStart }
-        HStack(spacing: 12) {
-            StatTile(title: "This Week", value: "\(thisWeek.count)", icon: "flame.fill")
-            StatTile(title: "Time", value: formatDuration(thisWeek.reduce(0) { $0 + $1.duration }), icon: "clock.fill")
-            StatTile(title: "All Time", value: "\(history.count)", icon: "trophy.fill")
-        }
-        .fixedSize(horizontal: false, vertical: true)
+    private func open(_ key: SessionKey) {
+        router.openSession(key, in: meso)
+        dismiss()
     }
 }
 

@@ -6,9 +6,9 @@ import SwiftUI
 struct MesoScheduleGrid: View {
     let meso: Mesocycle
     var onOpen: (SessionKey) -> Void
+    var onSkipped: (SessionKey) -> Void
 
     @Environment(Store.self) private var store
-    @State private var trainAfterAll: SessionKey?
 
     var body: some View {
         let next = meso.nextUp
@@ -42,17 +42,6 @@ struct MesoScheduleGrid: View {
             .foregroundStyle(Theme.secondary)
         }
         .scheduleCard()
-        .confirmationDialog(
-            "Train this day after all?",
-            isPresented: Binding(get: { trainAfterAll != nil }, set: { if !$0 { trainAfterAll = nil } }),
-            titleVisibility: .visible, presenting: trainAfterAll
-        ) { key in
-            Button("Train Day \(key.dayIndex + 1)") {
-                store.unskip(key, of: meso)
-                onOpen(key)
-            }
-            .a11y(.dialogTrainDay)
-        }
     }
 
     @ViewBuilder
@@ -69,7 +58,7 @@ struct MesoScheduleGrid: View {
         case .skipped:
             if isCurrentWeek {
                 Button {
-                    trainAfterAll = key
+                    onSkipped(key)
                 } label: {
                     cellIcon("forward.circle", Theme.secondary)
                 }
@@ -134,6 +123,25 @@ struct WeekVolumeCard: View {
                 .foregroundStyle(Theme.secondary)
         }
         .scheduleCard()
+    }
+}
+
+extension View {
+    func trainAfterAllDialog(
+        _ key: Binding<SessionKey?>, of meso: Mesocycle, store: Store,
+        onOpen: @escaping (SessionKey) -> Void
+    ) -> some View {
+        confirmationDialog(
+            "Train this day after all?",
+            isPresented: Binding(get: { key.wrappedValue != nil }, set: { if !$0 { key.wrappedValue = nil } }),
+            titleVisibility: .visible, presenting: key.wrappedValue
+        ) { key in
+            Button("Train Day \(key.dayIndex + 1)") {
+                store.unskip(key, of: meso)
+                onOpen(key)
+            }
+            .a11y(.dialogTrainDay)
+        }
     }
 }
 

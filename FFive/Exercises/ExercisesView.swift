@@ -1,44 +1,14 @@
 import FFiveCore
-import SwiftData
 import SwiftUI
 
-/// One exercise in the library: a catalog entry, or a custom one the lifter has logged.
-struct ExerciseListing: Hashable, Identifiable {
-    let id: ExerciseID
-    let name: String
-    let muscle: Muscle
-    let info: ExerciseInfo?
-
-    var equipment: String { info?.equipment.displayName ?? "Custom" }
-
-    static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
-    func hash(into hasher: inout Hasher) { hasher.combine(id) }
-}
-
 struct ExercisesView: View {
-    @Query private var logged: [Exercise]
+    @Environment(Store.self) private var store
 
     @State private var search = ""
     @State private var muscle: Muscle?
 
-    /// Catalog exercises plus custom ones the lifter has logged with a muscle, as in the exercise picker.
-    private var listings: [ExerciseListing] {
-        var result = ExerciseCatalog.all.map { ExerciseListing(id: $0.id, name: $0.name, muscle: $0.muscle, info: $0) }
-        var seen = Set(result.map(\.id))
-        for exercise in logged {
-            guard let muscle = exercise.muscle, seen.insert(exercise.key).inserted else { continue }
-            result.append(ExerciseListing(id: exercise.key, name: exercise.name, muscle: muscle, info: nil))
-        }
-        let query = search.trimmingCharacters(in: .whitespaces)
-        return
-            result
-            .filter { muscle == nil || $0.muscle == muscle }
-            .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
-            .sorted { $0.name.localizedCaseInsensitiveCompare($1.name) == .orderedAscending }
-    }
-
     var body: some View {
-        let listings = listings
+        let listings = store.library(muscle: muscle, search: search)
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -99,7 +69,9 @@ struct ExercisesView: View {
 }
 
 #Preview {
-    ExercisesView()
-        .modelContainer(AppStore.makeContainer(inMemory: true))
+    let store = Store(inMemory: true)
+    return ExercisesView()
+        .environment(store)
+        .modelContainer(store.container)
         .preferredColorScheme(.dark)
 }

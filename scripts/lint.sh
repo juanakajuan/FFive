@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name"
-never_baselined="view-writes no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name"
 
 scan() {
     for file in "$@"; do
@@ -36,6 +36,8 @@ scan() {
                     hit("no-stored-builder", i, "A stored builder closure froze pushed screens (1eeaf4d). Store the built view instead: `let content: Content`, set in `init(@ViewBuilder content: () -> Content)`.")
                 if (sp > 0 && s ~ /\.(alert|sheet|confirmationDialog|fullScreenCover)\(/ && name[sp] !~ /(View|Screen)$/)
                     hit("presentation-at-screen-root", i, "Present alerts, sheets, dialogs and covers from the screen struct (a name ending in View or Screen), not from a row or card in a lazy list (2bca9bb). Pass the row a closure that sets the screen state.")
+                if (sp > 0 && s ~ /@Query([^A-Za-z0-9_]|$)/ && name[sp] !~ /(View|Screen)$/)
+                    hit("no-query-in-child-views", i, "Only a screen struct (a name ending in View or Screen) declares @Query; a row or card fetching for itself runs one query per row (2bca9bb). Read it from a Store method, or query at the screen and pass the row the value.")
                 if (s ~ /@AppStorage/)
                     hit("no-appstorage-in-app", i, "Settings owns every preference. Read `store.settings.<name>` and assign to it instead of an @AppStorage key.")
                 if (s ~ /UserDefaults/ && path !~ /FFiveCore\/Sources\/FFiveCore\/Store\/Settings\.swift$/)

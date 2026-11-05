@@ -328,14 +328,15 @@ final class StoreTests: XCTestCase {
         store.finish(first)
         let next = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0))
         next.startDate = first.startDate + 86_400
-        let record = try XCTUnwrap(next.pendingSoreness[.chest], "the next chest day asks how the last one recovered")
+        let record = try XCTUnwrap(
+            store.pendingSoreness(in: next)[.chest], "the next chest day asks how the last one recovered")
 
         store.recordSoreness(.healedOnTime, on: record, during: next)
 
         XCTAssertEqual(
             first.feedbackRecord(for: .chest)?.value.soreness, .healedOnTime,
             "the answer lands on the session it describes")
-        XCTAssertTrue(next.pendingSoreness.isEmpty, "the prompt clears")
+        XCTAssertTrue(store.pendingSoreness(in: next).isEmpty, "the prompt clears")
         XCTAssertFalse(store.context.hasChanges)
     }
 
@@ -403,5 +404,100 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(volumes.first { $0.muscle == .chest }?.planned, session.sortedExercises[0].sets.count)
         XCTAssertGreaterThan(
             volumes.first { $0.muscle == .back }?.planned ?? 0, 0, "an unbuilt day counts what it would prescribe")
+    }
+
+    @discardableResult
+    func finished(
+        _ store: Store, at start: Date, minutes: Double = 60, _ lifts: [(name: String, muscle: Muscle, weight: Double)]
+    ) -> Workout {
+        let workout = Workout(name: "Logged", startDate: start)
+        store.context.insert(workout)
+        for (order, lift) in lifts.enumerated() {
+            let exercise = Exercise(name: lift.name, order: order, muscle: lift.muscle)
+            workout.exercises.append(exercise)
+            let set = SetEntry(reps: 8, weight: lift.weight, order: 0)
+            set.isDone = true
+            exercise.sets.append(set)
+        }
+        workout.endDate = start + minutes * 60
+        store.commit()
+        return workout
+    }
+
+    func testLibraryOrderIsStable() throws {
+        let store = Store(inMemory: true)
+        finished(
+            store, at: .now,
+            [
+                ("zercher squat", .quads, 60), ("Bench Press", .chest, 100), ("Cafe Curl", .biceps, 20),
+                ("Café Curl", .biceps, 20),
+            ])
+
+        let all = store.library(muscle: nil, search: "")
+        XCTAssertEqual(all.count, ExerciseCatalog.all.count + 2, "custom lifts join the catalog once per folded name")
+        XCTAssertTrue(all.contains { $0.name == "zercher squat" && $0.info == nil && $0.equipment == "Custom" })
+        XCTAssertEqual(
+            all.map(\.name), all.map(\.name).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending },
+            "names sort ignoring case, so a lowercase custom name sits among the rest")
+        XCTAssertEqual(all, store.library(muscle: nil, search: ""), "the same store gives the same order every time")
+
+        let quads = store.library(muscle: .quads, search: "")
+        XCTAssertTrue(quads.allSatisfy { $0.muscle == .quads })
+        XCTAssertEqual(
+            quads.map(\.id), all.filter { $0.muscle == .quads }.map(\.id), "a muscle filter keeps the full list's order"
+        )
+        XCTAssertEqual(
+            store.library(muscle: nil, search: "  ZERCHER ").map(\.name), ["zercher squat"],
+            "search trims and ignores case")
+    }
+
+    func testWeekStatsMatchHistory() throws {
+        let store = Store(inMemory: true)
+        let now = try XCTUnwrap(Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 4, hour: 12)))
+        let weekStart = try XCTUnwrap(Calendar.current.dateInterval(of: .weekOfYear, for: now)?.start)
+        XCTAssertEqual(store.weekStats(now: now), WeekStats(thisWeek: 0, time: 0, allTime: 0))
+
+        finished(store, at: weekStart + 60, minutes: 45, [("Bench Press", .chest, 100)])
+        finished(store, at: now - 3600, minutes: 30, [("Barbell Row", .back, 80)])
+        finished(store, at: weekStart - 60, minutes: 50, [("Bench Press", .chest, 100)])
+        store.startQuickWorkout()
+
+        let history = try store.context.fetch(Workout.history)
+        let thisWeek = history.filter { $0.startDate >= weekStart }
+        XCTAssertEqual(
+            store.weekStats(now: now),
+            WeekStats(thisWeek: thisWeek.count, time: thisWeek.reduce(0) { $0 + $1.duration }, allTime: history.count))
+        XCTAssertEqual(
+            store.weekStats(now: now), WeekStats(thisWeek: 2, time: 75 * 60, allTime: 3),
+            "an open workout and last week's session stay out of this week")
+    }
+
+    func testStrengthSeriesPointsKeepTheirIdentity() throws {
+        let store = Store(inMemory: true)
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        finished(store, at: start, [("Bench Press", .chest, 100), ("Barbell Row", .back, 80)])
+        finished(store, at: start + 86_400, [("Bench Press", .chest, 105), ("bench press", .chest, 110)])
+        finished(store, at: start + 2 * 86_400, [("Barbell Row", .back, 85)])
+
+        let series = store.strengthSeries()
+        XCTAssertEqual(series.map(\.name), ["Barbell Row", "Bench Press"], "most recently trained first")
+        let bench = try XCTUnwrap(series.first { $0.id == ExerciseID(folding: "Bench Press") })
+        XCTAssertEqual(bench.points.count, 2, "a session that logs a lift twice gives one point")
+        XCTAssertEqual(bench.points.last?.bestSet, "110 × 8", "the stronger of the two sets")
+        XCTAssertEqual(Set(bench.points.map(\.id)).count, bench.points.count)
+        XCTAssertEqual(store.strengthSeries(), series, "ids come from the lift and the date, so a re-read is equal")
+    }
+
+    func testPinnedNoteFollowsTheExercise() throws {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
+        let exercise = workout.exercises[0]
+        XCTAssertNil(store.pinnedNote(on: exercise))
+        store.setNote("Elbows in", on: exercise)
+        store.pinNote(on: exercise)
+        XCTAssertEqual(store.pinnedNote(on: exercise), "Elbows in")
+        store.unpinNote(on: exercise)
+        XCTAssertNil(store.pinnedNote(on: exercise))
     }
 }

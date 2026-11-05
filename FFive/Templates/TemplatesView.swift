@@ -71,10 +71,12 @@ struct TemplatesView: View {
 
 /// A raised, rounded card of rows, inset from the screen edges.
 struct TemplateGroup<Content: View>: View {
-    @ViewBuilder var content: () -> Content
+    let content: Content
+
+    init(@ViewBuilder content: () -> Content) { self.content = content() }
 
     var body: some View {
-        VStack(spacing: 0, content: content)
+        VStack(spacing: 0) { content }
             .padding(.horizontal, 12)
             .background(Theme.raised, in: RoundedRectangle(cornerRadius: 8))
             .padding(.horizontal, Theme.gutter)
