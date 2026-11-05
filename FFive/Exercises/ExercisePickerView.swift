@@ -13,22 +13,21 @@ struct ExercisePickerView: View {
     @State private var search = ""
 
     private struct Entry: Identifiable {
+        let id: ExerciseID
         let name: String
         let muscle: Muscle
         let detail: String
-        var id: String { name.lowercased() }
     }
 
     private var query: String { search.trimmingCharacters(in: .whitespaces) }
 
     /// Catalog exercises plus custom ones the lifter has logged with a muscle.
     private var entries: [Entry] {
-        var result = ExerciseCatalog.all.map { Entry(name: $0.name, muscle: $0.muscle, detail: $0.equipment.displayName) }
+        var result = ExerciseCatalog.all.map { Entry(id: $0.id, name: $0.name, muscle: $0.muscle, detail: $0.equipment.displayName) }
         var seen = Set(result.map(\.id))
         for exercise in logged {
-            guard let muscle = exercise.muscleRaw.flatMap(Muscle.init(rawValue:)),
-                  seen.insert(exercise.name.lowercased()).inserted else { continue }
-            result.append(Entry(name: exercise.name, muscle: muscle, detail: "Custom"))
+            guard let muscle = exercise.muscle, seen.insert(exercise.key).inserted else { continue }
+            result.append(Entry(id: exercise.key, name: exercise.name, muscle: muscle, detail: "Custom"))
         }
         return result
             .filter { muscle == nil || $0.muscle == muscle }
@@ -46,7 +45,7 @@ struct ExercisePickerView: View {
                     .padding(.horizontal, Theme.gutter)
                     .padding(.bottom, 12)
                 List {
-                    if !query.isEmpty && !entries.contains(where: { $0.name.caseInsensitiveCompare(query) == .orderedSame }) {
+                    if !query.isEmpty && !entries.contains(where: { $0.id == ExerciseID(folding: query) }) {
                         createRow
                             .themedRow()
                         Text("Custom exercises need the muscle they train so volume and progression can count them.")

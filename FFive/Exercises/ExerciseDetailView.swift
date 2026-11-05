@@ -12,8 +12,9 @@ struct ExerciseDetailView: View {
 
     init(listing: ExerciseListing) {
         self.listing = listing
+        let key = listing.id.rawValue
         let name = listing.name
-        _logged = Query(filter: #Predicate<Exercise> { $0.name == name })
+        _logged = Query(filter: #Predicate<Exercise> { $0.exerciseKey == key })
         _notes = Query(filter: #Predicate<PinnedNote> { $0.name == name })
     }
 
@@ -36,7 +37,7 @@ struct ExerciseDetailView: View {
 
     var body: some View {
         let history = history
-        let reps = ExerciseCatalog.repRange(for: listing.name)
+        let reps = ExerciseCatalog.repRange(for: listing.id)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 10) {
