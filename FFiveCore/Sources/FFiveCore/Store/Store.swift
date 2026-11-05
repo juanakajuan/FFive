@@ -102,7 +102,17 @@ public final class Store {
         if done, let workout = set.exercise?.workout, workout.mesocycle != nil, workout.completedSets == 0 {
             workout.startDate = .now
         }
-        set.isDone = done
+        set.status = done ? .done : .pending
+        commit()
+    }
+
+    public func skip(_ set: SetEntry, skipped: Bool) {
+        set.status = skipped ? .skipped : .pending
+        commit()
+    }
+
+    public func skipRemainingSets(of exercise: Exercise) {
+        exercise.skipRemainingSets()
         commit()
     }
 
@@ -144,6 +154,11 @@ public final class Store {
 
     public func recordSoreness(_ soreness: Soreness, on record: MuscleFeedbackRecord, during workout: Workout) {
         MesoPlanner.recordSoreness(soreness, on: record, during: workout, unit: unit, snapshot: snapshot, in: context)
+        commit()
+    }
+
+    public func updateFeedback(for muscle: Muscle, in workout: Workout, _ change: (inout MuscleFeedback) -> Void) {
+        workout.updateFeedback(for: muscle, change)
         commit()
     }
 

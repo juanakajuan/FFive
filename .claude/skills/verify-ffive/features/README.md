@@ -41,7 +41,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 ## Features
 
 - [Plan a mesocycle](./plan-mesocycle.md): pick a template, customize name and length, start the block, and see it on the Mesos tab (on disk).
-- [Train a planned session](./train-session.md): the block's session shows on the Workout tab; log sets against targets, give feedback and soreness, and finish (on disk and demo).
+- [Train a planned session](./train-session.md): the block's session shows on the Workout tab; log or skip sets against targets, give feedback and soreness, and finish (on disk and demo).
 - [Skip a day](./skip-day.md): skip from the workout menu or the schedule grid, then train it after all (on disk).
 - [End a mesocycle](./end-mesocycle.md): end the active block from the workout menu; the session reaches History, the block shows finished, and the store holds its finished date (on disk).
 - [Quick workout](./quick-workout.md): a free-form session with exercises from the picker (on disk).

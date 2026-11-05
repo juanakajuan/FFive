@@ -85,6 +85,7 @@ struct ActiveWorkoutView: View {
                         phase: workout.phase,
                         onSetCompleted: setCompleted,
                         onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
+                        jointPain: jointPain(for: muscle),
                         onShowHistory: { historyFor = exercise },
                         onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }
                     ) {
@@ -98,7 +99,7 @@ struct ActiveWorkoutView: View {
                         FeedbackCard(
                             muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()
                         ) { change in
-                            workout.updateFeedback(for: muscle, change)
+                            store.updateFeedback(for: muscle, in: workout, change)
                         }
                     }
                 }
@@ -189,6 +190,15 @@ struct ActiveWorkoutView: View {
             }
         }
         .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
+    }
+
+    /// The muscle's joint pain for this session, shared by its exercise menus and its feedback card.
+    /// Only block sessions collect feedback, so quick workouts get none.
+    private func jointPain(for muscle: Muscle?) -> Binding<JointPain?>? {
+        guard let muscle, workout.mesocycle != nil else { return nil }
+        return Binding(
+            get: { workout.feedbackRecord(for: muscle)?.value.jointPain },
+            set: { value in store.updateFeedback(for: muscle, in: workout) { $0.jointPain = value } })
     }
 
     private func saveNote(_ text: String, to target: NoteEdit.Target) {
@@ -306,6 +316,7 @@ struct ExerciseCard: View {
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
     var onSwap: (() -> Void)?
+    var jointPain: Binding<JointPain?>?
     var onShowHistory: () -> Void
     var onEditNote: (String) -> Void
     var onRemove: () -> Void
@@ -353,7 +364,7 @@ struct ExerciseCard: View {
                         text: "\(info.cue) \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps.",
                         systemImage: "lightbulb.fill")
                 }
-                if let phase, let set = sets.first(where: { !$0.isDone }) ?? sets.first {
+                if let phase, let set = sets.first(where: { $0.status == .pending }) ?? sets.first {
                     Callout(text: targetText(set, phase))
                 }
             }
@@ -396,6 +407,22 @@ struct ExerciseCard: View {
                 }
                 Button("Add Set", systemImage: "plus") { store.addSet(to: exercise) }
                     .a11y(.menuAddSet)
+                if exercise.sets.contains(where: { $0.status == .pending }) {
+                    Button("Skip Remaining Sets", systemImage: "forward.end") {
+                        store.skipRemainingSets(of: exercise)
+                    }
+                    .a11y(.menuSkipRemaining)
+                }
+                if let jointPain {
+                    Picker(selection: jointPain) {
+                        ForEach(JointPain.allCases, id: \.self) { Text($0.label).tag(Optional($0)) }
+                    } label: {
+                        Label("Joint Pain", systemImage: "bandage")
+                        if let pain = jointPain.wrappedValue { Text(pain.label) }
+                    }
+                    .pickerStyle(.menu)
+                    .a11y(.menuJointPain)
+                }
                 Button(note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
                     onEditNote(note ?? "")
                 }
@@ -476,6 +503,16 @@ struct SetRow: View {
             Menu {
                 Button("Add Set", systemImage: "plus", action: onAdd)
                     .a11y(.menuAddSet)
+                switch set.status {
+                case .pending:
+                    Button("Skip Set", systemImage: "forward.end") { store.skip(set, skipped: true) }
+                        .a11y(.menuSkipSet)
+                case .skipped:
+                    Button("Unskip Set", systemImage: "arrow.uturn.backward") { store.skip(set, skipped: false) }
+                        .a11y(.menuSkipSet)
+                case .done:
+                    EmptyView()
+                }
                 Picker("Set Type", selection: setType) {
                     ForEach(SetType.allCases) { Text($0.title).tag($0) }
                 }
@@ -501,6 +538,7 @@ struct SetRow: View {
             .a11y(.setWeight, number)
             .frame(width: SetColumns.field)
             .padding(.leading, 12)
+            .opacity(set.status == .skipped ? 0.4 : 1)
 
             TextField(
                 "Set \(number) reps", value: reps, format: .number,
@@ -515,6 +553,7 @@ struct SetRow: View {
             .a11y(.setReps, number)
             .frame(width: SetColumns.field)
             .padding(.leading, 16)
+            .opacity(set.status == .skipped ? 0.4 : 1)
 
             if let tag = set.type.tag {
                 Text(tag)
@@ -532,13 +571,14 @@ struct SetRow: View {
                 store.log(set, done: !set.isDone)
                 if set.isDone { onCompleted() }
             } label: {
-                LogCheckbox(isOn: set.isDone)
+                LogCheckbox(status: set.status)
                     .frame(width: 44, height: 44, alignment: .trailing)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Log set \(number)")
             .a11y(.setLog, number)
+            .accessibilityValue(set.status == .skipped ? "Skipped" : "")
             .accessibilityAddTraits(set.isDone ? .isSelected : [])
         }
         .padding(.horizontal, Theme.gutter)
