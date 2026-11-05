@@ -55,7 +55,7 @@ public struct MuscleVolume: Identifiable {
 extension ExerciseCatalog {
     public static func repRange(for name: String) -> ClosedRange<Int> { info(named: name)?.repRange ?? 8...12 }
 
-    public static func increment(for name: String, unit: WeightUnit) -> Double {
+    static func increment(for name: String, unit: WeightUnit) -> Double {
         (info(named: name)?.equipment ?? .machine).increment(unit)
     }
 }

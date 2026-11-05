@@ -271,7 +271,7 @@ final class StoreTests: XCTestCase {
         XCTAssertFalse(store.context.hasChanges)
     }
 
-    func testDeleteWorkoutIsTheOnlyDetachFromBlock() throws {
+    func testDeleteUnfinishedSessionDetachesItFromItsBlock() throws {
         let (store, meso) = try startedStore()
         let workout = store.buildSession(meso, at: day1)
         XCTAssertIdentical(workout.mesocycle, meso)

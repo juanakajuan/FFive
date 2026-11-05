@@ -3,12 +3,12 @@ import SwiftData
 
 @Model
 public final class Exercise {
-    public var name: String
+    public internal(set) var name: String
     public var order: Int
     public internal(set) var workout: Workout?
     @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
     public internal(set) var sets: [SetEntry] = []
-    public var muscleRaw: String?
+    public internal(set) var muscleRaw: String?
     public internal(set) var note: String?
 
     public init(name: String, order: Int, muscle: Muscle? = nil) {
@@ -22,14 +22,14 @@ public final class Exercise {
     public var info: ExerciseInfo? { ExerciseCatalog.info(named: name) }
 
     /// Rows logged before muscles were stored resolve through the catalog.
-    public var muscle: Muscle? {
+    public internal(set) var muscle: Muscle? {
         get { muscleRaw.flatMap(Muscle.init(rawValue:)) ?? info?.muscle }
         set { muscleRaw = newValue?.rawValue }
     }
 
     public var repRange: ClosedRange<Int> { ExerciseCatalog.repRange(for: name) }
 
-    public func increment(_ unit: WeightUnit) -> Double {
+    func increment(_ unit: WeightUnit) -> Double {
         ExerciseCatalog.increment(for: name, unit: unit)
     }
 
