@@ -5,9 +5,11 @@
 #   scripts/release-testflight.sh --local   archive and export an .ipa to build/release, no upload
 #   scripts/release-testflight.sh --version 1.1
 #                                           commit MARKETING_VERSION = 1.1 first, then release
+#   scripts/release-testflight.sh --bump patch|minor|major
+#                                           bump MARKETING_VERSION (1.0 -> 1.0.1, 1.1 or 2.0), commit, release
 #
 # The build number is a UTC timestamp on every run. The user-facing version only
-# changes with --version; bump it for a meaningful release, and always after a
+# changes with --version or --bump; bump it for a meaningful release, and always after a
 # version is approved on the App Store, which then rejects new builds of it.
 #
 # Auth: set ASC_KEY_ID and ASC_ISSUER_ID to use an App Store Connect API key
@@ -18,10 +20,11 @@ set -eu
 root="$(cd "$(dirname "$0")/.." && pwd)"
 project="$root/FFive.xcodeproj/project.pbxproj"
 team="$(sed -n 's/.*DEVELOPMENT_TEAM = \(.*\);/\1/p' "$project" | head -1)"
-usage="usage: $0 [--local] [--version X.Y[.Z]]"
+usage="usage: $0 [--local] [--version X.Y[.Z] | --bump patch|minor|major]"
 
 destination=upload
 new_version=""
+bump=""
 while [ $# -gt 0 ]; do
     case "$1" in
         --local) destination=export ;;
@@ -30,10 +33,32 @@ while [ $# -gt 0 ]; do
             new_version="$2"
             shift
             ;;
+        --bump)
+            [ $# -ge 2 ] || { echo "$usage" >&2; exit 2; }
+            case "$2" in patch|minor|major) bump="$2" ;; *) echo "$usage" >&2; exit 2 ;; esac
+            shift
+            ;;
         *) echo "$usage" >&2; exit 2 ;;
     esac
     shift
 done
+
+if [ -n "$new_version" ] && [ -n "$bump" ]; then
+    echo "error: pass --version or --bump, not both" >&2
+    exit 2
+fi
+
+if [ -n "$bump" ]; then
+    current="$(sed -n 's/.*MARKETING_VERSION = \(.*\);/\1/p' "$project" | head -1)"
+    new_version="$(echo "$current" | awk -F. -v part="$bump" '{
+        major = $1; minor = (NF >= 2 ? $2 : 0); patch = (NF >= 3 ? $3 : 0)
+        if (part == "major") { major++; minor = 0; patch = 0 }
+        else if (part == "minor") { minor++; patch = 0 }
+        else { patch++ }
+        if (patch > 0) print major "." minor "." patch; else print major "." minor
+    }')"
+    echo "==> bumping $bump: $current -> $new_version"
+fi
 
 if [ -n "$new_version" ] && ! echo "$new_version" | grep -Eq '^[0-9]+(\.[0-9]+){0,2}$'; then
     echo "error: --version must look like 1.1 or 1.1.2, got '$new_version'" >&2
