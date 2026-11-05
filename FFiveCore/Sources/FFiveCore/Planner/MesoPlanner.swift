@@ -263,7 +263,9 @@ enum MesoPlanner {
                 exercise.sets.append(SetEntry(reps: 10, weight: 0, order: 0))
             } else {
                 for (order, set) in previous.enumerated() {
-                    exercise.sets.append(SetEntry(reps: set.reps, weight: set.weight, order: order))
+                    let copy = SetEntry(reps: set.reps, weight: set.weight, order: order)
+                    copy.type = set.type
+                    exercise.sets.append(copy)
                 }
             }
             return

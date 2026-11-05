@@ -50,6 +50,7 @@ public final class Exercise {
         let set = SetEntry(reps: last?.reps ?? 10, weight: last?.weight ?? 0, order: (last?.order ?? -1) + 1)
         set.targetWeight = last?.targetWeight
         set.targetReps = last?.targetReps
+        set.type = last?.type ?? .regular
         sets.append(set)
     }
 
@@ -58,10 +59,10 @@ public final class Exercise {
         context.delete(set)
     }
 
-    /// The done, loaded set with the highest estimated 1RM, or nil when no set says anything about strength.
+    /// The done, loaded regular set with the highest estimated 1RM, or nil when no set says anything about strength.
     public var strongestSet: (entry: SetEntry, oneRepMax: Double)? {
         guard let rir = workout?.effortRIR else { return nil }
-        return sets.filter { $0.isDone && $0.weight > 0 && $0.reps > 0 }
+        return sets.filter { $0.isDone && $0.type.countsTowardProgression && $0.weight > 0 && $0.reps > 0 }
             .map { ($0, Progression.estimatedOneRepMax(weight: $0.weight, reps: $0.reps, rir: rir)) }
             .max { $0.1 < $1.1 }
     }

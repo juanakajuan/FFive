@@ -5,13 +5,13 @@ import UIKit
 /// The app's palette and type scale. Every screen draws from these tokens instead of system grouped colors.
 enum Theme {
     /// Behind cards on the workout screen.
-    static let page = Color(rgb: 0x131416)
+    static let page = Color(rgb: 0x0A0A0B)
     /// Cards, list screens, navigation bar, and tab bar.
-    static let surface = Color(rgb: 0x252627)
+    static let surface = Color(rgb: 0x161718)
     /// Filter bars, pills, and grouped cards that sit on `surface`.
-    static let raised = Color(rgb: 0x2F2F32)
+    static let raised = Color(rgb: 0x222326)
     /// Text fields and search fields.
-    static let field = Color(rgb: 0x131416)
+    static let field = Color(rgb: 0x0A0A0B)
     static let text = Color(rgb: 0xF3F5F7)
     static let secondary = Color(rgb: 0xF3F5F7).opacity(0.55)
     static let hairline = Color(rgb: 0xF4F6F8).opacity(0.1)
