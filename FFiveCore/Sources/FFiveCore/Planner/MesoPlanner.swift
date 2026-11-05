@@ -60,9 +60,9 @@ extension ExerciseCatalog {
     }
 }
 
-/// Owns every decision about what a mesocycle session prescribes. Views ask; they never compute progression.
+/// Owns every decision about what a mesocycle session prescribes.
 @MainActor
-public enum MesoPlanner {
+enum MesoPlanner {
     /// Deload sessions and exercises added during one load at the easiest accumulation effort.
     private static let deloadRIR = 3
 
@@ -217,7 +217,7 @@ public enum MesoPlanner {
 
     // MARK: - Session edits
 
-    public static func addExercise(named name: String, muscle: Muscle, to workout: Workout, unit: WeightUnit, in context: ModelContext) {
+    static func addExercise(named name: String, muscle: Muscle, to workout: Workout, unit: WeightUnit, in context: ModelContext) {
         let exercise = Exercise(name: name, order: (workout.exercises.map(\.order).max() ?? -1) + 1, muscle: muscle)
         workout.exercises.append(exercise)
         guard let meso = workout.mesocycle else {
@@ -238,7 +238,7 @@ public enum MesoPlanner {
                                                      unit: unit, context: context), in: context)
     }
 
-    public static func lastFinishedExercise(named name: String, in context: ModelContext) -> Exercise? {
+    static func lastFinishedExercise(named name: String, in context: ModelContext) -> Exercise? {
         let descriptor = FetchDescriptor<Exercise>(predicate: #Predicate { $0.name == name })
         return ((try? context.fetch(descriptor)) ?? [])
             .filter { $0.workout?.endDate != nil }
@@ -246,7 +246,7 @@ public enum MesoPlanner {
     }
 
     /// Swaps an untouched exercise for another, keeping its set count and re-deriving targets.
-    public static func swap(_ exercise: Exercise, to name: String, muscle: Muscle, unit: WeightUnit, in context: ModelContext) {
+    static func swap(_ exercise: Exercise, to name: String, muscle: Muscle, unit: WeightUnit, in context: ModelContext) {
         exercise.name = name
         exercise.muscle = muscle
         guard let workout = exercise.workout, workout.mesocycle != nil else { return }
@@ -266,25 +266,9 @@ public enum MesoPlanner {
 
     // MARK: - Feedback
 
-    /// Earlier sessions in this block still waiting to hear how a muscle recovered, keyed by muscle.
-    /// Soreness is only knowable once the muscle is trained again, so this session collects it.
-    public static func pendingSoreness(for workout: Workout) -> [Muscle: MuscleFeedbackRecord] {
-        guard let meso = workout.mesocycle, !workout.isFinished else { return [:] }
-        var pending: [Muscle: MuscleFeedbackRecord] = [:]
-        for muscle in workout.trainedMuscles {
-            let previous = meso.workouts
-                .filter { $0 !== workout && $0.isFinished && $0.startDate < workout.startDate && $0.trained(muscle) }
-                .max { $0.startDate < $1.startDate }
-            if let record = previous?.feedbackRecord(for: muscle), record.value.soreness == nil {
-                pending[muscle] = record
-            }
-        }
-        return pending
-    }
-
     /// Writes soreness back to the session it describes. When that session is the one this session was planned
     /// from and the muscle is still untouched, its set count is re-planned with the now-complete feedback.
-    public static func recordSoreness(_ soreness: Soreness, on record: MuscleFeedbackRecord, during workout: Workout,
+    static func recordSoreness(_ soreness: Soreness, on record: MuscleFeedbackRecord, during workout: Workout,
                                unit: WeightUnit, in context: ModelContext) {
         record.value.soreness = soreness
         guard let muscle = record.muscle, let meso = workout.mesocycle, let key = workout.key,
@@ -301,7 +285,7 @@ public enum MesoPlanner {
 
     /// Done and planned sets per muscle for one week. Days not built yet count at what they would prescribe,
     /// skipped days count nothing.
-    public static func weeklyVolume(_ meso: Mesocycle, week: Int, unit: WeightUnit, context: ModelContext) -> [MuscleVolume] {
+    static func weeklyVolume(_ meso: Mesocycle, week: Int, unit: WeightUnit, context: ModelContext) -> [MuscleVolume] {
         var done: [Muscle: Int] = [:]
         var planned: [Muscle: Int] = [:]
         for day in meso.days.indices {

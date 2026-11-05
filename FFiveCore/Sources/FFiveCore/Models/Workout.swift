@@ -77,6 +77,22 @@ public final class Workout {
         feedback.first { $0.muscleRaw == muscle.rawValue }
     }
 
+    /// Earlier sessions in this block still waiting to hear how a muscle recovered, keyed by muscle.
+    /// Soreness is only knowable once the muscle is trained again, so this session collects it.
+    public var pendingSoreness: [Muscle: MuscleFeedbackRecord] {
+        guard let mesocycle, !isFinished else { return [:] }
+        var pending: [Muscle: MuscleFeedbackRecord] = [:]
+        for muscle in trainedMuscles {
+            let previous = mesocycle.workouts
+                .filter { $0 !== self && $0.isFinished && $0.startDate < startDate && $0.trained(muscle) }
+                .max { $0.startDate < $1.startDate }
+            if let record = previous?.feedbackRecord(for: muscle), record.value.soreness == nil {
+                pending[muscle] = record
+            }
+        }
+        return pending
+    }
+
     public func updateFeedback(for muscle: Muscle, _ change: (inout MuscleFeedback) -> Void) {
         let record = feedbackRecord(for: muscle) ?? {
             let record = MuscleFeedbackRecord(muscle: muscle)
@@ -86,7 +102,7 @@ public final class Workout {
         change(&record.value)
     }
 
-    public func remove(_ exercise: Exercise, in context: ModelContext) {
+    func remove(_ exercise: Exercise, in context: ModelContext) {
         exercises.removeAll { $0 === exercise }
         context.delete(exercise)
     }

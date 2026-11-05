@@ -2,7 +2,7 @@ import SwiftUI
 import FFiveCore
 
 struct SettingsView: View {
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
+    @Environment(Store.self) private var store
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -40,7 +40,7 @@ struct SettingsView: View {
         }
         .background(Theme.surface)
         .navigationTitle("Settings")
-        .sensoryFeedback(.selection, trigger: unit)
+        .sensoryFeedback(.selection, trigger: store.settings.weightUnit)
     }
 
     private var divider: some View {
@@ -48,10 +48,10 @@ struct SettingsView: View {
     }
 
     private func unitRow(_ option: WeightUnit) -> some View {
-        let selected = option == unit
+        let selected = option == store.settings.weightUnit
         let title = "\(option.label) (\(option.rawValue))"
         return Button {
-            unit = option
+            store.settings.weightUnit = option
         } label: {
             HStack {
                 Text(title).font(Theme.body).foregroundStyle(Theme.text)
@@ -75,4 +75,5 @@ struct SettingsView: View {
 #Preview {
     NavigationStack { SettingsView() }
         .preferredColorScheme(.dark)
+        .environment(Store(inMemory: true))
 }

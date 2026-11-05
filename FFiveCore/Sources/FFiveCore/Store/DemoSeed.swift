@@ -10,7 +10,7 @@ public enum DemoSeed {
 
     public static func seed(into store: Store) {
         let context = store.context
-        let unit = UserDefaults.standard.string(forKey: "weightUnit").flatMap(WeightUnit.init(rawValue:)) ?? .lb
+        let unit = store.settings.weightUnit
         let now = Date.now
 
         quickWorkout("Morning Workout", at: now - 19 * day, [
@@ -41,7 +41,7 @@ public enum DemoSeed {
             let start = meso.startDate + Double(dayIndex) * 2 * day
             let workout = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: dayIndex), unit: unit, in: context)
             workout.startDate = start
-            let pending = MesoPlanner.pendingSoreness(for: workout)
+            let pending = workout.pendingSoreness
             for muscle in workout.trainedMuscles {
                 guard let record = pending[muscle] else { continue }
                 MesoPlanner.recordSoreness(sorenessAnswers[answer % sorenessAnswers.count], on: record, during: workout,
@@ -66,7 +66,7 @@ public enum DemoSeed {
         let current = MesoPlanner.workout(for: meso, at: SessionKey(week: 1, dayIndex: 0), unit: unit, in: context)
         current.startDate = now - 24 * 60
         if let first = current.trainedMuscles.first {
-            if let record = MesoPlanner.pendingSoreness(for: current)[first] {
+            if let record = current.pendingSoreness[first] {
                 MesoPlanner.recordSoreness(.healedOnTime, on: record, during: current, unit: unit, in: context)
             }
             for exercise in current.exercises(for: first) {

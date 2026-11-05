@@ -1,18 +1,12 @@
-import Foundation
-
-/// Screens a `-seedDemo` launch can open straight into, chosen with `-demoRoute <name>`.
-enum DemoRoute: String {
-    case train, builder, session, progress, strength
-}
+import FFiveCore
 
 enum DemoLaunch {
-    /// Demo launches run on an in-memory store and never touch the lifter's real data.
-    static let isEnabled = ProcessInfo.processInfo.arguments.contains("-seedDemo")
-    static let route: DemoRoute? = isEnabled
-        ? UserDefaults.standard.string(forKey: "demoRoute").flatMap(DemoRoute.init(rawValue:))
-        : nil
-
+    private(set) static var route: DemoRoute?
     private static var taken: Set<DemoRoute> = []
+
+    static func configure(_ mode: LaunchMode) {
+        route = mode.demoRoute
+    }
 
     /// True once, the first time a screen asks for the route it owns.
     static func take(_ candidate: DemoRoute) -> Bool {

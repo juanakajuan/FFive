@@ -33,8 +33,6 @@ struct TrainView: View {
     @Query(Workout.open) private var openWorkouts: [Workout]
     @Query(Workout.history) private var finishedWorkouts: [Workout]
 
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
-
     @State private var showingBuilder = false
     @State private var showingSchedule = false
     @State private var confirmEnd = false
@@ -68,7 +66,7 @@ struct TrainView: View {
             }
             .task(id: content) {
                 switch content {
-                case .unbuilt(let meso, let key): store.buildSession(meso, at: key, unit: unit)
+                case .unbuilt(let meso, let key): store.buildSession(meso, at: key)
                 case .session(let workout): store.show(workout)
                 default: break
                 }
@@ -162,7 +160,6 @@ struct ScheduleSheet: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(AppRouter.self) private var router
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
 
     var body: some View {
         NavigationStack {
@@ -172,7 +169,7 @@ struct ScheduleSheet: View {
                         router.openSession(key, in: meso)
                         dismiss()
                     }
-                    WeekVolumeCard(meso: meso, week: week, unit: unit)
+                    WeekVolumeCard(meso: meso, week: week)
                 }
                 .padding(Theme.gutter)
             }

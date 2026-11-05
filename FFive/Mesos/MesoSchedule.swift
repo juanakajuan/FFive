@@ -104,12 +104,11 @@ struct MesoScheduleGrid: View {
 struct WeekVolumeCard: View {
     let meso: Mesocycle
     let week: Int
-    let unit: WeightUnit
 
-    @Environment(\.modelContext) private var context
+    @Environment(Store.self) private var store
 
     var body: some View {
-        let volumes = MesoPlanner.weeklyVolume(meso, week: week, unit: unit, context: context)
+        let volumes = store.weeklyVolume(meso, week: week)
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text("This Week's Sets").font(Theme.cardTitle).foregroundStyle(Theme.text)

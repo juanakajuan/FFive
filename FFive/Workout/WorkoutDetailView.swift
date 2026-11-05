@@ -4,7 +4,8 @@ import FFiveCore
 
 struct WorkoutDetailView: View {
     let workout: Workout
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
+    @Environment(Store.self) private var store
+    private var unit: WeightUnit { store.settings.weightUnit }
 
     var body: some View {
         let feedback = workout.feedback.compactMap { record in record.muscle.map { ($0, record.value) } }

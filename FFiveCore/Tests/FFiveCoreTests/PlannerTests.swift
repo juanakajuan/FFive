@@ -77,12 +77,12 @@ final class PlannerTests: XCTestCase {
         let w0b = session(0, 1, at: t0 + 2 * day)
         expect("week 1 load comes from the latest e1RM in history (200x8 -> 190x7 at 3 RIR)",
                Set(targets(w0b, "Barbell Row")), [SetTarget(weight: 190, reps: 7)])
-        let pendingB = MesoPlanner.pendingSoreness(for: w0b)
+        let pendingB = w0b.pendingSoreness
         expect("soreness is asked for muscles trained earlier", Set(pendingB.keys), [.chest, .back])
         MesoPlanner.recordSoreness(.never, on: pendingB[.chest]!, during: w0b, unit: .lb, in: context)
         MesoPlanner.recordSoreness(.healedOnTime, on: pendingB[.back]!, during: w0b, unit: .lb, in: context)
         expect("soreness is written back to the earlier session", w0a.feedbackRecord(for: .chest)?.value.soreness, .never)
-        expect("answered soreness is no longer pending", MesoPlanner.pendingSoreness(for: w0b).isEmpty, true)
+        expect("answered soreness is no longer pending", w0b.pendingSoreness.isEmpty, true)
         log(w0b, calibration)
         w0b.updateFeedback(for: .chest) { $0 = MuscleFeedback(pump: .moderate, workload: .easy, jointPain: JointPain.none) }
         w0b.finish(in: context)
@@ -100,7 +100,7 @@ final class PlannerTests: XCTestCase {
                Set(targets(w1a, "Lat Pulldown")), [SetTarget(weight: 120, reps: 11)])
         expect("calves wait for soreness before progressing", counts(w1a)["Calf Raise"], 8)
 
-        let pendingW1A = MesoPlanner.pendingSoreness(for: w1a)
+        let pendingW1A = w1a.pendingSoreness
         let calves = pendingW1A[.calves]
         expect("once-a-week muscles ask for soreness from last week's same day", calves?.workout === w0a, true)
         expect("twice-a-week muscles ask about the most recent session", pendingW1A[.chest]?.workout === w0b, true)

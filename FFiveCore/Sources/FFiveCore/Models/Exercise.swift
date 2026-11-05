@@ -34,7 +34,7 @@ public final class Exercise {
     }
 
     /// Appends a set shaped like the last one, so the lifter edits instead of retyping.
-    public func addSet() {
+    func addSet() {
         let last = sortedSets.last
         let set = SetEntry(reps: last?.reps ?? 10, weight: last?.weight ?? 0, order: (last?.order ?? -1) + 1)
         set.targetWeight = last?.targetWeight
@@ -42,7 +42,7 @@ public final class Exercise {
         sets.append(set)
     }
 
-    public func remove(_ set: SetEntry, in context: ModelContext) {
+    func remove(_ set: SetEntry, in context: ModelContext) {
         sets.removeAll { $0 === set }
         context.delete(set)
     }

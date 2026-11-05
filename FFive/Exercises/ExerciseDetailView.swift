@@ -6,7 +6,7 @@ import FFiveCore
 struct ExerciseDetailView: View {
     let listing: ExerciseListing
 
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
+    @Environment(Store.self) private var store
     @Query private var logged: [Exercise]
     @Query private var notes: [PinnedNote]
 
@@ -95,7 +95,7 @@ struct ExerciseDetailView: View {
                     .foregroundStyle(Theme.secondary)
             }
             Spacer(minLength: 8)
-            Text("\(formatWeight(session.best.weight)) \(unit.rawValue) × \(session.best.reps)")
+            Text("\(formatWeight(session.best.weight)) \(store.settings.weightUnit.rawValue) × \(session.best.reps)")
                 .font(Theme.body.monospacedDigit())
                 .foregroundStyle(Theme.text)
             Image(systemName: "chevron.right")
