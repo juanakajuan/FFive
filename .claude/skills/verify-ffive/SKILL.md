@@ -70,7 +70,7 @@ Each drive runs one XCUITest (`xcodebuild test-without-building`). It prints one
 Before it touches the simulator, `drive` checks every `#<id>` in the steps against `A11y.swift`. It stops at the first unknown id and names the closest known one:
 
 ```
-ffive-verify: step 7: unknown identifier #set.wieght.1; closest set.weight.N
+ffive-verify: step 7: unknown identifier set.wieght.1; closest set.weight.N
 ```
 
 Step language: one step per line, `#` starts a comment line, and arguments with spaces go in double quotes. A target is `#<id>` or `<kind> "<label>"`.
