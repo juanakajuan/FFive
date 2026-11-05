@@ -239,10 +239,10 @@ final class StoreTests: XCTestCase {
     func testSnapshotRefreshesAfterAFailedSave() throws {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("nosave-\(UUID().uuidString).store")
         defer { try? FileManager.default.removeItem(at: url) }
-        _ = try ModelContainer(for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url))
+        try Store(container: ModelContainer(for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url)),
+                  settings: Settings()).startMesocycle(twoDayDraft())
         let readOnly = ModelConfiguration(schema: AppStore.schema, url: url, allowsSave: false)
         let store = Store(container: try ModelContainer(for: AppStore.schema, configurations: readOnly), settings: Settings())
-        try store.startMesocycle(twoDayDraft())
         let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
         XCTAssertGreaterThan(store.weeklyVolume(meso, week: 0).count, 0)
 
