@@ -27,7 +27,8 @@ public final class Exercise {
     }
 
     public var sortedSets: [SetEntry] { sets.sorted { $0.order < $1.order } }
-    public var isLogged: Bool { !sets.isEmpty && sets.allSatisfy(\.isDone) }
+    /// Every set is logged or skipped.
+    public var isLogged: Bool { !sets.isEmpty && !sets.contains { $0.status == .pending } }
     public var info: ExerciseInfo? { ExerciseCatalog.info(key) }
 
     /// Rows logged before muscles were stored resolve through the catalog.
@@ -49,6 +50,10 @@ public final class Exercise {
         set.targetWeight = last?.targetWeight
         set.targetReps = last?.targetReps
         sets.append(set)
+    }
+
+    func skipRemainingSets() {
+        for set in sets where set.status == .pending { set.status = .skipped }
     }
 
     func remove(_ set: SetEntry, in context: ModelContext) {

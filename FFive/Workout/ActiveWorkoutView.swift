@@ -335,7 +335,7 @@ struct ExerciseCard: View {
                         text: "\(info.cue) \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps.",
                         systemImage: "lightbulb.fill")
                 }
-                if let phase, let set = sets.first(where: { !$0.isDone }) ?? sets.first {
+                if let phase, let set = sets.first(where: { $0.status == .pending }) ?? sets.first {
                     Callout(text: targetText(set, phase))
                 }
             }
@@ -378,6 +378,12 @@ struct ExerciseCard: View {
                 }
                 Button("Add Set", systemImage: "plus") { store.addSet(to: exercise) }
                     .a11y(.menuAddSet)
+                if exercise.sets.contains(where: { $0.status == .pending }) {
+                    Button("Skip Remaining Sets", systemImage: "forward.end") {
+                        store.skipRemainingSets(of: exercise)
+                    }
+                    .a11y(.menuSkipRemaining)
+                }
                 Button(note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
                     onEditNote(note ?? "")
                 }
@@ -454,6 +460,13 @@ struct SetRow: View {
             Menu {
                 Button("Add Set", systemImage: "plus", action: onAdd)
                     .a11y(.menuAddSet)
+                if set.status == .skipped {
+                    Button("Unskip Set", systemImage: "arrow.uturn.backward") { store.skip(set, skipped: false) }
+                        .a11y(.menuSkipSet)
+                } else {
+                    Button("Skip Set", systemImage: "forward.end") { store.skip(set, skipped: true) }
+                        .a11y(.menuSkipSet)
+                }
                 Button("Delete Set", systemImage: "trash", role: .destructive, action: onDelete)
                     .a11y(.menuDeleteSet)
             } label: {
@@ -475,6 +488,7 @@ struct SetRow: View {
             .a11y(.setWeight, number)
             .frame(width: SetColumns.field)
             .padding(.leading, 12)
+            .opacity(set.status == .skipped ? 0.4 : 1)
 
             TextField(
                 "Set \(number) reps", value: reps, format: .number,
@@ -489,6 +503,7 @@ struct SetRow: View {
             .a11y(.setReps, number)
             .frame(width: SetColumns.field)
             .padding(.leading, 16)
+            .opacity(set.status == .skipped ? 0.4 : 1)
 
             Spacer(minLength: 0)
 
@@ -496,13 +511,14 @@ struct SetRow: View {
                 store.log(set, done: !set.isDone)
                 if set.isDone { onCompleted() }
             } label: {
-                LogCheckbox(isOn: set.isDone)
+                LogCheckbox(status: set.status)
                     .frame(width: 44, height: 44, alignment: .trailing)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
             .accessibilityLabel("Log set \(number)")
             .a11y(.setLog, number)
+            .accessibilityValue(set.status == .skipped ? "Skipped" : "")
             .accessibilityAddTraits(set.isDone ? .isSelected : [])
         }
         .padding(.horizontal, Theme.gutter)

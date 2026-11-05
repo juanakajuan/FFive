@@ -87,7 +87,17 @@ public final class Store {
         if done, let workout = set.exercise?.workout, workout.mesocycle != nil, workout.completedSets == 0 {
             workout.startDate = .now
         }
-        set.isDone = done
+        set.status = done ? .done : .pending
+        commit()
+    }
+
+    public func skip(_ set: SetEntry, skipped: Bool) {
+        set.status = skipped ? .skipped : .pending
+        commit()
+    }
+
+    public func skipRemainingSets(of exercise: Exercise) {
+        exercise.skipRemainingSets()
         commit()
     }
 

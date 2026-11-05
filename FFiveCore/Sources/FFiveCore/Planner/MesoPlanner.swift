@@ -329,7 +329,7 @@ enum MesoPlanner {
     // MARK: - Volume
 
     /// Done and planned sets per muscle for one week. Days not built yet count at what they would prescribe,
-    /// skipped days count nothing.
+    /// skipped days and skipped sets count nothing.
     static func weeklyVolume(_ meso: Mesocycle, week: Int, unit: WeightUnit, snapshot: PlanningSnapshot)
         -> [MuscleVolume]
     {
@@ -343,7 +343,7 @@ enum MesoPlanner {
             case .inProgress(let workout), .finished(let workout):
                 for exercise in workout.exercises {
                     guard let muscle = exercise.muscle else { continue }
-                    planned[muscle, default: 0] += exercise.sets.count
+                    planned[muscle, default: 0] += exercise.sets.filter { $0.status != .skipped }.count
                     done[muscle, default: 0] += exercise.sets.filter(\.isDone).count
                 }
             case .upcoming:

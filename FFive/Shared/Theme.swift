@@ -160,16 +160,29 @@ extension View {
 }
 
 /// The square log toggle at the end of each set row.
+/// Empty while pending, a green check once logged, a dashed box with a skip glyph once skipped.
 struct LogCheckbox: View {
-    let isOn: Bool
+    let status: SetStatus
 
     var body: some View {
-        RoundedRectangle(cornerRadius: 3)
-            .fill(isOn ? Theme.success : Color.clear)
-            .overlay(RoundedRectangle(cornerRadius: 3).stroke(isOn ? Theme.success : Theme.secondary, lineWidth: 2))
+        let shape = RoundedRectangle(cornerRadius: 3)
+        shape
+            .fill(status == .done ? Theme.success : Color.clear)
             .overlay {
-                if isOn {
+                switch status {
+                case .pending: shape.stroke(Theme.secondary, lineWidth: 2)
+                case .done: shape.stroke(Theme.success, lineWidth: 2)
+                case .skipped: shape.stroke(Theme.secondary, style: StrokeStyle(lineWidth: 2, dash: [3, 2]))
+                }
+            }
+            .overlay {
+                switch status {
+                case .pending: EmptyView()
+                case .done:
                     Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                case .skipped:
+                    Image(systemName: "forward.end.fill").font(.system(size: 10, weight: .bold))
+                        .foregroundStyle(Theme.secondary)
                 }
             }
             .frame(width: 24, height: 24)

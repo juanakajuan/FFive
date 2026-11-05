@@ -6,6 +6,7 @@ public final class SetEntry {
     public var reps: Int
     public var weight: Double
     public internal(set) var isDone: Bool = false
+    public private(set) var isSkipped: Bool = false
     public var order: Int
     public internal(set) var exercise: Exercise?
     public var targetWeight: Double?
@@ -24,6 +25,20 @@ public final class SetEntry {
         targetReps = target.reps
     }
 
+    /// Writes both stored flags, so a set is never done and skipped at once.
+    public internal(set) var status: SetStatus {
+        get { isDone ? .done : isSkipped ? .skipped : .pending }
+        set {
+            isDone = newValue == .done
+            isSkipped = newValue == .skipped
+        }
+    }
+
     var target: SetTarget { SetTarget(weight: targetWeight, reps: targetReps) }
     var logged: LoggedSet? { isDone ? LoggedSet(weight: weight, reps: reps) : nil }
+}
+
+/// A skipped set was let go on purpose: it no longer waits to be logged, and it says nothing about strength.
+public enum SetStatus: Equatable {
+    case pending, done, skipped
 }
