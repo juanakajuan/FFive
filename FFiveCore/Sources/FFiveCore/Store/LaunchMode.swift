@@ -6,14 +6,14 @@ public enum DemoRoute: String {
 }
 
 public struct LaunchMode: Equatable {
-    public enum Source: Equatable {
+    enum Source: Equatable {
         /// The lifter's own store on disk.
         case lifter
         /// `-seedDemo`: an in-memory store filled by `DemoSeed`, opened on `route` when one is named.
         case demo(route: DemoRoute?)
     }
 
-    public let source: Source
+    let source: Source
     /// `-disableAnimations`: the verify driver launches with it so taps land on settled screens.
     public let animationsDisabled: Bool
 

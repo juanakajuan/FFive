@@ -65,14 +65,14 @@ public enum A11y: String, CaseIterable {
     case historyRow = "history.row"
     case settingsUnit = "settings.unit"
 
-    public static let indexed: Set<A11y> = [.setWeight, .setReps, .setMenu, .setLog, .exerciseMenu, .exerciseCue, .exerciseHistory, .exercisePin]
-    public static let keyed: Set<A11y> = [.pickerRow, .exercisesRow, .builderTemplate, .mesosRow, .mesosMenu, .segment, .chip, .strengthRow, .historyRow, .settingsUnit]
+    static let indexed: Set<A11y> = [.setWeight, .setReps, .setMenu, .setLog, .exerciseMenu, .exerciseCue, .exerciseHistory, .exercisePin]
+    static let keyed: Set<A11y> = [.pickerRow, .exercisesRow, .builderTemplate, .mesosRow, .mesosMenu, .segment, .chip, .strengthRow, .historyRow, .settingsUnit]
 
-    public func indexed(_ index: Int) -> String { "\(rawValue).\(index)" }
-    public func keyed(_ key: String) -> String { "\(rawValue).\(A11y.slug(key))" }
+    func indexed(_ index: Int) -> String { "\(rawValue).\(index)" }
+    func keyed(_ key: String) -> String { "\(rawValue).\(A11y.slug(key))" }
 
     /// Lowercase, every run of characters outside a-z and 0-9 becomes one hyphen, no leading or trailing hyphen.
-    public static func slug(_ text: String) -> String {
+    static func slug(_ text: String) -> String {
         var out = ""
         var pendingHyphen = false
         for scalar in text.lowercased().unicodeScalars {
