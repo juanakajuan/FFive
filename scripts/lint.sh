@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app"
-never_baselined="view-writes no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app"
+rules="view-writes no-stored-builder presentation-at-screen-root no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed"
+never_baselined="view-writes no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed"
 
 scan() {
     for file in "$@"; do
@@ -42,6 +42,8 @@ scan() {
                     hit("no-userdefaults-in-app", i, "Only Settings.swift reads or writes UserDefaults. Add the preference to Settings and read it from there.")
                 if (s ~ /ProcessInfo/ && path !~ /FFiveCore\/Sources\/FFiveCore\/Store\/LaunchMode\.swift$/)
                     hit("no-processinfo-in-app", i, "Only LaunchMode.swift reads the launch arguments. FFiveApp parses LaunchMode once; take what you need from it.")
+                if (s ~ /\.accessibilityIdentifier\(/ && path !~ /FFiveCore\/Sources\/FFiveCore\/A11y\.swift$/)
+                    hit("a11y-ids-typed", i, "Identifiers come from the A11y enum: .a11y(.setWeight, number) or .a11y(.pickerRow, key: entry.name). Add a case to FFiveCore/Sources/FFiveCore/A11y.swift, never a string here.")
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {
