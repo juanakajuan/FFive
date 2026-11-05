@@ -343,24 +343,20 @@ final class StoreTests: XCTestCase {
         for slot in try writer.fetch(FetchDescriptor<DaySlot>()) { slot.exerciseKey = nil }
         try writer.save()
 
+        func rows(_ context: ModelContext, key: (String, String?) -> String? = { $1 }) throws -> [String] {
+            let exercises = try context.fetch(FetchDescriptor<Exercise>()).map { "exercise \($0.name): \(key($0.name, $0.exerciseKey) ?? "nil")" }
+            let slots = try context.fetch(FetchDescriptor<DaySlot>()).map { "slot \($0.exerciseName): \(key($0.exerciseName, $0.exerciseKey) ?? "nil")" }
+            return (exercises + slots).sorted()
+        }
+        let expected = try rows(writer) { name, _ in ExerciseID(folding: name).rawValue }
+        XCTAssertEqual(expected.count, 3)
+
         let store = Store(container: try container(), settings: Settings())
-        func keys(_ store: Store) throws -> [String?] {
-            try store.context.fetch(FetchDescriptor<Exercise>()).map(\.exerciseKey)
-                + store.context.fetch(FetchDescriptor<DaySlot>()).map(\.exerciseKey)
-        }
-        func names(_ store: Store) throws -> [String] {
-            try store.context.fetch(FetchDescriptor<Exercise>()).map(\.name)
-                + store.context.fetch(FetchDescriptor<DaySlot>()).map(\.exerciseName)
-        }
-        let backfilled = try keys(store)
-        XCTAssertEqual(backfilled.count, 3)
-        XCTAssertEqual(backfilled, try names(store).map { ExerciseID(folding: $0).rawValue }, "opening the store keys every row by its folded name")
+        XCTAssertEqual(try rows(store.context), expected, "opening the store keys every row by its folded name")
         XCTAssertFalse(store.context.hasChanges, "the backfill is saved")
         XCTAssertEqual(store.backfillExerciseKeys(), 0, "a second run writes nothing")
 
-        let reopened = Store(container: try container(), settings: Settings())
-        XCTAssertEqual(reopened.backfillExerciseKeys(), 0, "a fresh store over the same file writes nothing")
-        XCTAssertEqual(try keys(reopened), backfilled, "the keys are unchanged")
+        XCTAssertEqual(try rows(ModelContext(try container())), expected, "the keys are on disk")
     }
 
     func testWeeklyVolumeAndLastFinishedExercise() throws {
