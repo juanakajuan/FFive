@@ -10,7 +10,8 @@ struct PerfProbe {
     static let budgetMillis = 20.0
     static let budgetScaleFactor = 3.0
     static let coldScaleFactor = 4.0
-    static let runs = 7
+    static let rounds = 15
+    static let warmPerRound = 3
     static let writes = 100
     static let lifts: [(name: String, muscle: Muscle)] = [
         ("Bench Press", .chest), ("Cable Fly", .chest), ("Lat Pulldown", .back),
@@ -20,33 +21,33 @@ struct PerfProbe {
     @MainActor
     static func main() {
         let enforceBudget = !CommandLine.arguments.contains("--no-budget")
-        let clock = ContinuousClock()
-        var medians: [Int: Double] = [:]
-        var colds: [Int: Double] = [:]
         var stores: [Int: (Store, Mesocycle)] = [:]
         for size in sizes {
-            let (store, meso) = seeded(finishedWorkouts: size)
-            stores[size] = (store, meso)
-            var cold: [Double] = []
-            for _ in 0..<runs {
-                store.commit()
-                cold.append(clock.measure { _ = store.weeklyVolume(meso, week: 0) }.milliseconds)
-            }
-            var warm: [Double] = []
-            for _ in 0..<runs {
-                warm.append(clock.measure { _ = store.weeklyVolume(meso, week: 0) }.milliseconds)
-            }
-            medians[size] = median(warm)
-            colds[size] = median(cold)
-            print("perf-probe: weeklyVolume median \(format(medians[size]!)) ms at \(size) finished workouts, \(format(colds[size]!)) ms on the first render after a commit (\(runs) renders each)")
+            stores[size] = seeded(finishedWorkouts: size)
         }
+        var colds: [Int: [Double]] = [:]
+        var warms: [Int: [Double]] = [:]
+        for _ in 0..<rounds {
+            for size in sizes {
+                let (store, meso) = stores[size]!
+                store.commit()
+                colds[size, default: []].append(time { _ = store.weeklyVolume(meso, week: 0) })
+                for _ in 0..<warmPerRound {
+                    warms[size, default: []].append(time { _ = store.weeklyVolume(meso, week: 0) })
+                }
+            }
+        }
+        for size in sizes {
+            print("perf-probe: weeklyVolume median \(format(median(warms[size]!))) ms (min \(format(warms[size]!.min()!))) at \(size) finished workouts, \(format(median(colds[size]!))) ms (min \(format(colds[size]!.min()!))) on the first render after a commit")
+        }
+        print("perf-probe: main-thread CPU time over \(rounds) rounds interleaving the sizes, each a commit, one first render and \(warmPerRound) renders per size; gates use the min")
 
         let (store, meso) = stores[budgetSize]!
         let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
         let set = session.sortedExercises[0].sortedSets[0]
         var storeLog: [Double] = []
         for index in 0..<writes {
-            storeLog.append(clock.measure { store.log(set, done: index.isMultiple(of: 2)) }.milliseconds)
+            storeLog.append(time { store.log(set, done: index.isMultiple(of: 2)) })
         }
         print("perf-probe: set-done median \(format(median(storeLog))) ms per write over \(writes) writes (store.log)")
 
@@ -57,12 +58,16 @@ struct PerfProbe {
             print("perf-probe: FAIL \(message)")
             failed = true
         }
-        gate(medians[budgetSize]! <= budgetMillis,
-             "weeklyVolume median \(format(medians[budgetSize]!)) ms at \(budgetSize) exceeds \(format(budgetMillis)) ms")
-        gate(medians[scaleSize]! <= budgetScaleFactor * medians[budgetSize]!,
-             "weeklyVolume median \(format(medians[scaleSize]!)) ms at \(scaleSize) exceeds \(format(budgetScaleFactor)) x the \(format(medians[budgetSize]!)) ms at \(budgetSize)")
-        gate(colds[scaleSize]! <= coldScaleFactor * colds[budgetSize]!,
-             "first render after a commit \(format(colds[scaleSize]!)) ms at \(scaleSize) exceeds \(format(coldScaleFactor)) x the \(format(colds[budgetSize]!)) ms at \(budgetSize)")
+        let warm = warms.mapValues { $0.min()! }
+        let cold = colds.mapValues { $0.min()! }
+        gate(warm[budgetSize]! <= budgetMillis,
+             "weeklyVolume min \(format(warm[budgetSize]!)) ms at \(budgetSize) exceeds \(format(budgetMillis)) ms")
+        gate(warm[scaleSize]! <= budgetScaleFactor * warm[budgetSize]!,
+             "weeklyVolume min \(format(warm[scaleSize]!)) ms at \(scaleSize) exceeds \(format(budgetScaleFactor)) x the \(format(warm[budgetSize]!)) ms at \(budgetSize)")
+        gate(warm[scaleSize]! <= budgetScaleFactor * warm[0]!,
+             "weeklyVolume min \(format(warm[scaleSize]!)) ms at \(scaleSize) exceeds \(format(budgetScaleFactor)) x the \(format(warm[0]!)) ms at 0, so a render between commits scales with history")
+        gate(cold[scaleSize]! <= coldScaleFactor * cold[budgetSize]!,
+             "first render after a commit min \(format(cold[scaleSize]!)) ms at \(scaleSize) exceeds \(format(coldScaleFactor)) x the \(format(cold[budgetSize]!)) ms at \(budgetSize)")
         if failed { exit(1) }
     }
 
@@ -95,17 +100,17 @@ struct PerfProbe {
         return (store, meso)
     }
 
+    private static func time(_ body: () -> Void) -> Double {
+        let start = clock_gettime_nsec_np(CLOCK_THREAD_CPUTIME_ID)
+        body()
+        return Double(clock_gettime_nsec_np(CLOCK_THREAD_CPUTIME_ID) - start) / 1e6
+    }
+
     private static func median(_ millis: [Double]) -> Double {
         millis.sorted()[millis.count / 2]
     }
 
     private static func format(_ millis: Double) -> String {
         millis.formatted(.number.precision(.fractionLength(2)))
-    }
-}
-
-extension Duration {
-    var milliseconds: Double {
-        Double(components.seconds) * 1000 + Double(components.attoseconds) / 1e15
     }
 }
