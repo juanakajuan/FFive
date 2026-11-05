@@ -117,7 +117,7 @@ public enum DemoSeed {
             } else {
                 set.weight = Progression.roundDown(
                     converted(calibrationLoad(exercise.info?.equipment), unit),
-                    to: exercise.increment(unit))
+                    to: exercise.loading.increment(unit))
                 set.reps = Progression.startingReps(in: exercise.repRange) + 1
             }
             set.isDone = true

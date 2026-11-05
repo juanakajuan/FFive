@@ -506,6 +506,7 @@ final class PlannerTests: XCTestCase {
                 .value
         }
         func seed(_ workout: Workout, done: Bool, load: (Int) -> (Double, Int)) {
+            workout.bodyweight = 150
             for (order, info) in catalog.enumerated() {
                 let exercise = Exercise(name: info.name, order: order, muscle: info.muscle)
                 workout.exercises.append(exercise)

@@ -41,10 +41,6 @@ public final class Exercise {
 
     public var repRange: ClosedRange<Int> { ExerciseCatalog.repRange(for: key) }
 
-    func increment(_ unit: WeightUnit) -> Double {
-        ExerciseCatalog.increment(for: key, unit: unit)
-    }
-
     /// Appends a set shaped like the last one, so the lifter edits instead of retyping.
     func addSet() {
         let last = sortedSets.last
@@ -64,12 +60,18 @@ public final class Exercise {
         context.delete(set)
     }
 
-    /// The done, loaded regular set with the highest estimated 1RM, or nil when no set says anything about strength.
+    /// The done regular set with the highest estimated 1RM of its moved load, or nil when no set says anything
+    /// about strength. A bodyweight lift needs the workout's body weight to count.
     public var strongestSet: (entry: SetEntry, oneRepMax: Double)? {
         guard let rir = workout?.effortRIR else { return nil }
-        return sets.filter { $0.isDone && $0.type.countsTowardProgression && $0.weight > 0 && $0.reps > 0 }
-            .map { ($0, Progression.estimatedOneRepMax(weight: $0.weight, reps: $0.reps, rir: rir)) }
-            .max { $0.1 < $1.1 }
+        let loading = loading
+        return sets.compactMap { set -> (SetEntry, Double)? in
+            guard set.isDone, set.type.countsTowardProgression, set.reps > 0,
+                let moved = loading.movedLoad(of: set.weight), moved > 0
+            else { return nil }
+            return (set, Progression.estimatedOneRepMax(weight: moved, reps: set.reps, rir: rir))
+        }
+        .max { $0.1 < $1.1 }
     }
 }
 

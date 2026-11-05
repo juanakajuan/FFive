@@ -201,7 +201,7 @@ public final class Store {
             for (key, set) in best {
                 let point = StrengthSeries.Point(
                     id: .init(exercise: key, date: workout.startDate), value: set.oneRepMax,
-                    bestSet: "\(formatWeight(set.entry.weight)) × \(set.entry.reps)")
+                    bestSet: "\(set.entry.weightText()) × \(set.entry.reps)")
                 var series = byKey[key] ?? (name: "", muscle: set.exercise.muscle, points: [])
                 series.name = set.exercise.info?.name ?? set.exercise.name
                 series.points.append(point)
@@ -242,8 +242,15 @@ public final class Store {
     public func startQuickWorkout() -> Workout {
         let workout = Workout(name: Self.defaultWorkoutName())
         context.insert(workout)
+        workout.bodyweight = snapshot.bodyweight
         commit()
         return workout
+    }
+
+    /// A weight of 0 or less, or nil, clears it.
+    public func setBodyweight(_ weight: Double?, of workout: Workout) {
+        workout.setBodyweight(weight)
+        commit()
     }
 
     public func setNote(_ text: String, on workout: Workout) {

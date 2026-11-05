@@ -14,10 +14,16 @@ public final class Workout {
     @Relationship(deleteRule: .cascade, inverse: \MuscleFeedbackRecord.workout)
     public var feedback: [MuscleFeedbackRecord] = []
     public internal(set) var note: String?
+    /// The lifter's body weight for this session, in their weight unit. Bodyweight lifts log load added to it.
+    public internal(set) var bodyweight: Double?
 
     public init(name: String, startDate: Date = .now) {
         self.name = name
         self.startDate = startDate
+    }
+
+    func setBodyweight(_ weight: Double?) {
+        bodyweight = weight.flatMap { $0 > 0 ? $0 : nil }
     }
 
     func setNote(_ text: String) {
