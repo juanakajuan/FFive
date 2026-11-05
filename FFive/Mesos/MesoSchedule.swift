@@ -12,15 +12,24 @@ struct MesoScheduleGrid: View {
 
     var body: some View {
         let next = meso.nextUp
+        let dayNames = meso.dayNames
         VStack(alignment: .leading, spacing: 12) {
             Text("Schedule").font(Theme.cardTitle).foregroundStyle(Theme.text)
             Grid(horizontalSpacing: 6, verticalSpacing: 8) {
                 GridRow {
                     Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
                     ForEach(meso.days.indices, id: \.self) { day in
-                        Text("D\(day + 1)")
-                            .font(Theme.tag)
-                            .foregroundStyle(Theme.secondary)
+                        VStack(spacing: 2) {
+                            Text("D\(day + 1)").font(Theme.tag)
+                            Text(dayNames[day])
+                                .font(Theme.caption)
+                                .lineLimit(1)
+                                .minimumScaleFactor(0.7)
+                                .truncationMode(.tail)
+                        }
+                        .foregroundStyle(Theme.secondary)
+                        .accessibilityElement(children: .ignore)
+                        .accessibilityLabel("Day \(day + 1), \(dayNames[day])")
                     }
                 }
                 ForEach(0..<meso.totalWeeks, id: \.self) { week in

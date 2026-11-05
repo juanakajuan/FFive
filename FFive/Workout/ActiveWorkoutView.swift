@@ -17,6 +17,7 @@ struct ActiveWorkoutView: View {
     @State private var showingSchedule = false
     @State private var showingReorder = false
     @State private var confirmDiscard = false
+    @State private var confirmReset = false
     @State private var confirmEnd = false
     @State private var renameDraft: String?
     @State private var noteEdit: NoteEdit?
@@ -67,40 +68,7 @@ struct ActiveWorkoutView: View {
                         .accessibilityLabel("Workout note: \(note)")
                 }
                 ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
-                    let muscle = exercise.muscle
-                    if let muscle, let record = pendingSoreness[muscle],
-                        exercises.firstIndex(where: { $0.muscle == muscle }) == index
-                    {
-                        SorenessCard(muscle: muscle, record: record) { soreness in
-                            withAnimation {
-                                store.recordSoreness(soreness, on: record, during: workout)
-                            }
-                        }
-                    }
-
-                    ExerciseCard(
-                        exercise: exercise,
-                        position: index + 1,
-                        phase: workout.phase,
-                        onSetCompleted: setCompleted,
-                        onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
-                        jointPain: jointPain(for: muscle),
-                        onShowHistory: { historyFor = exercise },
-                        onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }
-                    ) {
-                        store.removeExercise(exercise, from: workout)
-                    }
-
-                    if let muscle, workout.mesocycle != nil,
-                        exercises.lastIndex(where: { $0.muscle == muscle }) == index,
-                        exercise.isLogged
-                    {
-                        FeedbackCard(
-                            muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()
-                        ) { change in
-                            store.updateFeedback(for: muscle, in: workout, change)
-                        }
-                    }
+                    exerciseRow(exercise, at: index, in: exercises, pendingSoreness: pendingSoreness)
                 }
             }
             .padding(.vertical, 16)
@@ -153,7 +121,13 @@ struct ActiveWorkoutView: View {
             Text(
                 workout.mesocycle == nil
                     ? "Its exercises and sets are deleted."
-                    : "Logged sets for this day are cleared and it starts over from the plan.")
+                    : "This day is rebuilt from the plan. Logged sets, swaps and added exercises are dropped.")
+        }
+        .confirmationDialog("Reset this workout?", isPresented: $confirmReset, titleVisibility: .visible) {
+            Button("Reset Workout", role: .destructive) { store.reset(workout) }
+                .a11y(.dialogReset)
+        } message: {
+            Text("Logged sets are cleared. Exercises and targets stay.")
         }
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
             if let activeMeso {
@@ -166,11 +140,14 @@ struct ActiveWorkoutView: View {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
         }
         .alert(
-            "Rename Workout", isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
+            workout.mesocycle == nil ? "Rename Workout" : "Rename Day",
+            isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
         ) {
-            TextField("Workout name", text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
+            TextField(
+                workout.mesocycle == nil ? "Workout name" : "Day name",
+                text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
             Button("Save") {
-                if let name = renameDraft?.trimmingCharacters(in: .whitespaces), !name.isEmpty { workout.name = name }
+                if let name = renameDraft { store.rename(workout, to: name) }
             }
             Button("Cancel", role: .cancel) {}
         }
@@ -189,6 +166,46 @@ struct ActiveWorkoutView: View {
         return Binding(
             get: { workout.feedbackRecord(for: muscle)?.value.jointPain },
             set: { value in store.updateFeedback(for: muscle, in: workout) { $0.jointPain = value } })
+    }
+
+    @ViewBuilder
+    private func exerciseRow(
+        _ exercise: Exercise, at index: Int, in exercises: [Exercise],
+        pendingSoreness: [Muscle: MuscleFeedbackRecord]
+    ) -> some View {
+        let muscle = exercise.muscle
+        if let muscle, let record = pendingSoreness[muscle],
+            exercises.firstIndex(where: { $0.muscle == muscle }) == index
+        {
+            SorenessCard(muscle: muscle, record: record) { soreness in
+                withAnimation {
+                    store.recordSoreness(soreness, on: record, during: workout)
+                }
+            }
+        }
+
+        ExerciseCard(
+            exercise: exercise,
+            position: index + 1,
+            phase: workout.phase,
+            onSetCompleted: setCompleted,
+            onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
+            jointPain: jointPain(for: muscle),
+            onShowHistory: { historyFor = exercise },
+            onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) },
+            onRemove: { store.removeExercise(exercise, from: workout) }
+        )
+
+        if let muscle, workout.mesocycle != nil,
+            exercises.lastIndex(where: { $0.muscle == muscle }) == index,
+            exercise.isLogged
+        {
+            FeedbackCard(
+                muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()
+            ) { change in
+                store.updateFeedback(for: muscle, in: workout, change)
+            }
+        }
     }
 
     private func saveNote(_ text: String, to target: NoteEdit.Target) {
@@ -258,9 +275,11 @@ struct ActiveWorkoutView: View {
             noteEdit = NoteEdit(target: .day, draft: workout.note ?? "")
         }
         .a11y(.menuWorkoutNote)
-        if workout.mesocycle == nil {
-            Button("Rename", systemImage: "pencil") { renameDraft = workout.name }
-                .a11y(.menuRename)
+        Button(workout.mesocycle == nil ? "Rename" : "Rename Day", systemImage: "pencil") { renameDraft = workout.name }
+            .a11y(.menuRename)
+        if workout.mesocycle != nil, workout.setProgress > 0 {
+            Button("Reset Workout", systemImage: "arrow.counterclockwise", role: .destructive) { confirmReset = true }
+                .a11y(.menuReset)
         }
         Button("Discard Workout", systemImage: "trash", role: .destructive) { confirmDiscard = true }
             .a11y(.menuDiscard)

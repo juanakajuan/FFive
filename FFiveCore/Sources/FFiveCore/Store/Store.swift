@@ -58,6 +58,21 @@ public final class Store {
         commit()
     }
 
+    public func reset(_ workout: Workout) {
+        workout.reset(in: context)
+        commit()
+    }
+
+    public func rename(_ workout: Workout, to name: String) {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        if let meso = workout.mesocycle, let dayIndex = workout.dayIndex {
+            meso.renameDay(dayIndex, to: name)
+        }
+        workout.name = name
+        commit()
+    }
+
     public func unskip(_ key: SessionKey, of meso: Mesocycle) {
         meso.unskip(key)
         commit()

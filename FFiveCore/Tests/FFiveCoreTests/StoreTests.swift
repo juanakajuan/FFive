@@ -40,6 +40,81 @@ final class StoreTests: XCTestCase {
         XCTAssertNil(store.failure)
     }
 
+    func testResetClearsLoggedSetsAndKeepsThePrescription() throws {
+        let (store, meso) = try startedStore()
+        let workout = store.buildSession(meso, at: day1)
+        let sets = workout.sortedExercises.flatMap(\.sortedSets)
+        let target = 60.0
+        sets[0].targetWeight = target
+        sets[0].targetReps = 8
+        sets[0].weight = target + 10
+        sets[0].reps = 11
+        store.setType(.myorep, of: sets[0])
+        store.log(sets[0], done: true)
+        sets[1].targetWeight = nil
+        sets[1].targetReps = nil
+        sets[1].weight = 100
+        sets[1].reps = 8
+        store.log(sets[1], done: true)
+        store.skip(sets[2], skipped: true)
+        workout.updateFeedback(for: .chest) { $0.pump = .moderate }
+        let exerciseNames = workout.sortedExercises.map(\.name)
+
+        store.reset(workout)
+
+        XCTAssertEqual(workout.completedSets, 0)
+        XCTAssertEqual(workout.sortedExercises.map(\.name), exerciseNames)
+        XCTAssertEqual(workout.sortedExercises.flatMap(\.sortedSets).count, sets.count)
+        XCTAssertEqual(sets[0].weight, target)
+        XCTAssertEqual(sets[0].reps, 8)
+        XCTAssertEqual(sets[0].type, .regular)
+        XCTAssertEqual(sets[1].weight, 0, "a set with no target goes back to an empty row")
+        XCTAssertEqual(sets[1].reps, 0)
+        XCTAssertEqual(sets[2].status, .pending, "a skipped set waits to be logged again")
+        XCTAssertTrue(workout.feedback.isEmpty)
+        XCTAssertEqual(try store.context.fetchCount(FetchDescriptor<MuscleFeedbackRecord>()), 0)
+        XCTAssertNil(store.failure)
+    }
+
+    func testRenamingAMesoWorkoutRenamesItsDayEverywhere() throws {
+        let (store, meso) = try startedStore()
+        let first = store.buildSession(meso, at: day1)
+        let other = store.buildSession(meso, at: day2)
+
+        store.rename(first, to: "  Push  ")
+
+        XCTAssertEqual(first.name, "Push")
+        XCTAssertEqual(meso.dayNames, ["Push", "B"])
+        XCTAssertEqual(other.name, "B")
+        let later = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0))
+        XCTAssertEqual(later.name, "Push", "later weeks are built with the new name")
+        store.rename(later, to: "Pull")
+        XCTAssertEqual(first.name, "Pull", "sessions of the same day agree")
+    }
+
+    func testRenamingAQuickWorkoutChangesOnlyIt() throws {
+        let (store, meso) = try startedStore()
+        let day = store.buildSession(meso, at: day1)
+        let quick = Workout(name: "Quick")
+        store.context.insert(quick)
+
+        store.rename(quick, to: "Arms")
+
+        XCTAssertEqual(quick.name, "Arms")
+        XCTAssertEqual(day.name, "A")
+        XCTAssertEqual(meso.dayNames, ["A", "B"])
+    }
+
+    func testRenameIgnoresEmptyNames() throws {
+        let (store, meso) = try startedStore()
+        let workout = store.buildSession(meso, at: day1)
+
+        store.rename(workout, to: "   ")
+
+        XCTAssertEqual(workout.name, "A")
+        XCTAssertEqual(meso.dayNames, ["A", "B"])
+    }
+
     func testSecondStartIsRefused() throws {
         let (store, _) = try startedStore()
 

@@ -113,6 +113,19 @@ public final class Workout {
         context.delete(exercise)
     }
 
+    /// Clears everything logged and keeps the prescription: sets go back to their targets, and the
+    /// feedback given for the day goes with the sets it described.
+    func reset(in context: ModelContext) {
+        for set in exercises.flatMap(\.sets) {
+            set.status = .pending
+            set.type = .regular
+            set.weight = set.targetWeight ?? 0
+            set.reps = set.targetReps ?? 0
+        }
+        for record in feedback { context.delete(record) }
+        feedback.removeAll()
+    }
+
     /// Free-form sessions drop what was never done. Mesocycle sessions keep the full prescription,
     /// because next week's plan is built from it and an untouched set means "repeat the target".
     func finish(in context: ModelContext) {
