@@ -1,12 +1,12 @@
 # Reset a workout and rename a day
 
-`Reset Workout` in the workout menu clears every logged set of the open block day. Each set goes back to its prescription: unchecked, type Regular, weight and reps at the target, or empty when the set has no target. The exercise list, swaps, and added sets stay, and the day's muscle feedback is deleted. `Discard Workout` differs: it deletes the day and rebuilds it from the plan.
+`Reset Workout` in the workout menu clears every logged set of the open block day. Each set goes back to its prescription: neither logged nor skipped, type Regular, weight and reps at the target, or empty when the set has no target. The exercise list, swaps, and added sets stay, and the day's muscle feedback is deleted. `Discard Workout` differs: it deletes the day and rebuilds it from the plan.
 
 `Rename Day` renames the block day. The new name lands on the `MesoDay`, on every session of that day already built, and on later weeks built from it. The schedule grid header shows each day's name under `D<n>`. On a quick workout the same item reads `Rename` and renames only that workout.
 
 ## Sub-features
 
-- `reset-menu` shows `Reset Workout` only on a block day with at least one logged set.
+- `reset-menu` shows `Reset Workout` only on a block day with at least one logged or skipped set.
 - `reset-confirm` asks in `#dialog.reset` before clearing.
 - `rename-day` renames the day everywhere; a blank name is ignored.
 - `grid-day-names` labels the grid header `Day <n>, <name>`.
