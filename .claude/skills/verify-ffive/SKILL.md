@@ -113,14 +113,15 @@ Optional `timeout=<seconds>` changes the default 5 s wait for either target form
 | `tree <name>` | Full accessibility tree to `<run>/<name>.tree.txt`. |
 | `sleep <s>` | Fixed wait. Use only for exploration and prefer `wait`. |
 
-`store-expect` reads the same store as `$V store`, read-only. The table is `Z` plus the model name in uppercase, and the column is `Z` plus the field name in uppercase. The value takes four forms:
+`store-expect` reads the same store as `$V store`, read-only. The table is `Z` plus the model name in uppercase, and the column is `Z` plus the field name in uppercase. The value takes three forms:
 
-- A decimal number compares as a number. `store-expect SetEntry weight 25` passes on `25.0` and fails on `250.0`. A Bool field holds `1` or `0`.
+- A value compares the way the column stores it. In a number column `store-expect SetEntry weight 25` passes on `25.0` and fails on `250.0`. In a text column `store-expect Mesocycle name 2024` compares the string `2024`. A Bool field holds `1` or `0`. Quote a value with spaces, as in `store-expect Mesocycle name "Verify Block"`.
 - `null` passes when some row has no value in the field.
 - `not-null` passes when some row has a value, as in `store-expect Workout endDate not-null`.
-- Anything else compares as text. Quote it if it has spaces: `store-expect Mesocycle name "Verify Block"`.
 
-A failure names what the column holds, as in `no SetEntry row has weight = 25; values: 250.0`. A missing table or column fails with the list of the ones that exist. `-seedDemo` keeps its store in memory, so `store-expect` after a demo launch fails with `no on-disk store`. `defaults-expect` reads the plist `$V defaults` prints, and a failure names the stored value, as in `weightUnit is "lb", expected "kg"`. The system writes that plist a few seconds after the app changes a value, and later still when values change in quick succession, so the step waits up to 30 s instead of 5.
+The step passes when any row matches, not a particular one. A row left by an earlier drive satisfies it, so a journey that asserts a fresh write starts from `$V reset-data`.
+
+A failure names what the column holds, as in `no SetEntry row has weight = 25; values: 250.0`. A missing table or column fails at once with the list of the ones that exist. While the app holds the store locked, the step keeps polling, and at the timeout it fails naming the lock, as in `store is locked (SQLITE_BUSY: database is locked)`. `-seedDemo` keeps its store in memory, so `store-expect` while the last `launch` had `-seedDemo` fails at once with `the demo store is in memory`. `defaults-expect` reads the plist `$V defaults` prints, and a failure names the stored value, as in `weightUnit is "lb", expected "kg"`. The system writes that plist a few seconds after the app changes a value, and later still when values change in quick succession, so the step waits up to 30 s instead of 5.
 
 Find ids in `A11y.swift`, and dump a tree (`tree x`) to see what is on screen. Ids and labels in this app:
 

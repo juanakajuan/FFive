@@ -1,4 +1,3 @@
-import SQLite3
 import XCTest
 
 /// Runs a step file against the installed FFive app (`com.juanix.FFive`).
@@ -11,6 +10,7 @@ final class DriverTests: XCTestCase {
     private var currentStep = ""
     private var finished = false
     private var timedOut = false
+    private var launchedDemo = false
 
     func testRunSteps() throws {
         let stepsPath = try XCTUnwrap(environment["FFIVE_STEPS"], "FFIVE_STEPS is not set")
@@ -68,6 +68,7 @@ final class DriverTests: XCTestCase {
         switch verb {
         case "launch":
             app.terminate()
+            launchedDemo = args.contains("-seedDemo")
             app.launchArguments = args
             app.launch()
             guard app.wait(for: .runningForeground, timeout: 15) else { throw StepError("app did not reach the foreground") }
@@ -121,7 +122,9 @@ final class DriverTests: XCTestCase {
             }
         case "store-expect":
             guard args.count == 3 else { throw StepError("expected `store-expect <Model> <field> <value>`, got \(args)") }
-            try poll(timeout) { try storeMismatch(model: args[0], field: args[1], value: args[2]) }
+            guard !launchedDemo else { throw StepError("store-expect after `launch -seedDemo`: the demo store is in memory, so no on-disk store holds its data") }
+            guard let path = environment["FFIVE_STORE"] else { throw StepError("FFIVE_STORE is not set") }
+            try poll(timeout) { try storeMismatch(path: path, model: args[0], field: args[1], value: args[2]) }
         case "defaults-expect":
             guard args.count == 2 else { throw StepError("expected `defaults-expect <key> <value>`, got \(args)") }
             try poll(timeout) { try defaultsMismatch(key: args[0], expected: args[1]) }
@@ -223,28 +226,6 @@ final class DriverTests: XCTestCase {
         }
     }
 
-    private func storeMismatch(model: String, field: String, value: String) throws -> String? {
-        guard let path = environment["FFIVE_STORE"] else { throw StepError("FFIVE_STORE is not set") }
-        guard FileManager.default.fileExists(atPath: path) else {
-            return "no on-disk store at \(path); -seedDemo launches are in memory"
-        }
-        let table = "Z" + model.uppercased(), column = "Z" + field.uppercased()
-        let (condition, bound): (String, Store.Value?) = switch value {
-        case "null": ("is null", nil)
-        case "not-null": ("is not null", nil)
-        default: Double(value).map { ("= ?", .number($0)) } ?? ("= ?", .text(value))
-        }
-        let store = try Store(path: path)
-        defer { store.close() }
-        let tables = try store.firstColumn("select name from sqlite_master where type = 'table' and name like 'Z%' and name not like 'Z\\_%' escape '\\' order by name")
-        guard tables.contains(table) else { throw StepError("no table \(table); tables: \(tables.joined(separator: ", "))") }
-        let columns = try store.firstColumn("select name from pragma_table_info('\(table)')")
-        guard columns.contains(column) else { throw StepError("no column \(column) in \(table); columns: \(columns.joined(separator: ", "))") }
-        if try store.firstColumn("select count(*) from \(table) where \(column) \(condition)", binding: bound).first != "0" { return nil }
-        let values = try store.firstColumn("select distinct \(column) from \(table) limit 10")
-        return "no \(model) row has \(field) \(condition.replacingOccurrences(of: "?", with: value)); values: \(values.joined(separator: ", "))"
-    }
-
     private func defaultsMismatch(key: String, expected: String) throws -> String? {
         guard let path = environment["FFIVE_DEFAULTS"] else { throw StepError("FFIVE_DEFAULTS is not set") }
         guard let data = FileManager.default.contents(atPath: path) else { return "no preferences written yet at \(path)" }
@@ -292,43 +273,6 @@ final class DriverTests: XCTestCase {
     static func option(_ name: String, in args: inout [String]) -> String? {
         guard let index = args.firstIndex(where: { $0.hasPrefix("\(name)=") }) else { return nil }
         return String(args.remove(at: index).dropFirst(name.count + 1))
-    }
-}
-
-private struct Store {
-    enum Value {
-        case number(Double)
-        case text(String)
-    }
-
-    private let db: OpaquePointer
-
-    init(path: String) throws {
-        var handle: OpaquePointer?
-        guard sqlite3_open_v2(path, &handle, SQLITE_OPEN_READONLY, nil) == SQLITE_OK, let handle else {
-            throw StepError("cannot open store at \(path): \(handle.map { String(cString: sqlite3_errmsg($0)) } ?? "no handle")")
-        }
-        db = handle
-    }
-
-    func close() { sqlite3_close(db) }
-
-    func firstColumn(_ sql: String, binding value: Value? = nil) throws -> [String] {
-        var statement: OpaquePointer?
-        guard sqlite3_prepare_v2(db, sql, -1, &statement, nil) == SQLITE_OK else {
-            throw StepError("\(String(cString: sqlite3_errmsg(db))) in `\(sql)`")
-        }
-        defer { sqlite3_finalize(statement) }
-        switch value {
-        case .number(let number): sqlite3_bind_double(statement, 1, number)
-        case .text(let text): sqlite3_bind_text(statement, 1, text, -1, unsafeBitCast(-1, to: sqlite3_destructor_type.self))
-        case nil: break
-        }
-        var rows: [String] = []
-        while sqlite3_step(statement) == SQLITE_ROW {
-            rows.append(sqlite3_column_text(statement, 0).map { String(cString: $0) } ?? "null")
-        }
-        return rows
     }
 }
 
