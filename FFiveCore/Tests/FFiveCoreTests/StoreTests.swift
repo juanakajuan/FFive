@@ -213,6 +213,52 @@ final class StoreTests: XCTestCase {
         XCTAssertFalse(store.context.hasChanges, "every add is saved")
     }
 
+    func benchTarget(_ store: Store, _ meso: Mesocycle) throws -> SetTarget {
+        let oneRepMax = Progression.estimatedOneRepMax(weight: 100, reps: 8)
+        let key = ExerciseID(folding: "Bench Press")
+        let reps = Progression.startingReps(in: ExerciseCatalog.repRange(for: key))
+        let rir = try XCTUnwrap(meso.phase(week: 0).rir)
+        let load = Progression.load(forReps: reps, rir: rir, oneRepMax: oneRepMax,
+                                    increment: ExerciseCatalog.increment(for: key, unit: store.settings.weightUnit))
+        XCTAssertNotEqual(SetTarget(weight: load, reps: reps), SetTarget.calibrate)
+        return SetTarget(weight: load, reps: reps)
+    }
+
+    func testSnapshotRefreshesAfterACommit() throws {
+        let (store, meso) = try startedStore()
+        XCTAssertGreaterThan(store.weeklyVolume(meso, week: 0).count, 0)
+
+        finishedBench(store)
+        let session = store.buildSession(meso, at: day1)
+
+        let targets = session.sortedExercises[0].sortedSets.map(\.target)
+        XCTAssertFalse(targets.isEmpty)
+        XCTAssertEqual(targets, Array(repeating: try benchTarget(store, meso), count: targets.count), "a workout finished after a render feeds the next build")
+    }
+
+    func testSnapshotRefreshesAfterAFailedSave() throws {
+        if #unavailable(macOS 27) {
+            throw XCTSkip("SwiftData before macOS 27 traps resolving a row whose save failed (ModelContext.swift:3256)")
+        }
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("nosave-\(UUID().uuidString).store")
+        defer { try? FileManager.default.removeItem(at: url) }
+        try Store(container: ModelContainer(for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url)),
+                  settings: Settings()).startMesocycle(twoDayDraft())
+        let readOnly = ModelConfiguration(schema: AppStore.schema, url: url, allowsSave: false)
+        let store = Store(container: try ModelContainer(for: AppStore.schema, configurations: readOnly), settings: Settings())
+        let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
+        XCTAssertGreaterThan(store.weeklyVolume(meso, week: 0).count, 0)
+
+        finishedBench(store)
+        XCTAssertNotNil(store.failure, "a store that cannot save fails every commit")
+        let session = store.buildSession(meso, at: day1)
+
+        let targets = session.sortedExercises[0].sortedSets.map(\.target)
+        XCTAssertFalse(targets.isEmpty)
+        XCTAssertEqual(targets, Array(repeating: try benchTarget(store, meso), count: targets.count),
+                       "a workout the context holds feeds the next build even when its save failed")
+    }
+
     func testAddAndDeleteSet() {
         let store = Store(inMemory: true)
         let workout = store.startQuickWorkout()
@@ -284,11 +330,40 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(try store.context.fetchCount(FetchDescriptor<Workout>()), 0)
     }
 
+    func testBackfillIsIdempotent() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("backfill-\(UUID().uuidString).store")
+        defer { try? FileManager.default.removeItem(at: url) }
+        func container() throws -> ModelContainer {
+            try ModelContainer(for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url))
+        }
+        let writer = ModelContext(try container())
+        writer.insert(Exercise(name: "Bench Press", order: 0, muscle: .chest))
+        MesoPlanner.start(twoDayDraft(), in: writer)
+        for exercise in try writer.fetch(FetchDescriptor<Exercise>()) { exercise.exerciseKey = nil }
+        for slot in try writer.fetch(FetchDescriptor<DaySlot>()) { slot.exerciseKey = nil }
+        try writer.save()
+
+        func rows(_ context: ModelContext, key: (String, String?) -> String? = { $1 }) throws -> [String] {
+            let exercises = try context.fetch(FetchDescriptor<Exercise>()).map { "exercise \($0.name): \(key($0.name, $0.exerciseKey) ?? "nil")" }
+            let slots = try context.fetch(FetchDescriptor<DaySlot>()).map { "slot \($0.exerciseName): \(key($0.exerciseName, $0.exerciseKey) ?? "nil")" }
+            return (exercises + slots).sorted()
+        }
+        let expected = try rows(writer) { name, _ in ExerciseID(folding: name).rawValue }
+        XCTAssertEqual(expected.count, 3)
+
+        let store = Store(container: try container(), settings: Settings())
+        XCTAssertEqual(try rows(store.context), expected, "opening the store keys every row by its folded name")
+        XCTAssertFalse(store.context.hasChanges, "the backfill is saved")
+        XCTAssertEqual(store.backfillExerciseKeys(), 0, "a second run writes nothing")
+
+        XCTAssertEqual(try rows(ModelContext(try container())), expected, "the keys are on disk")
+    }
+
     func testWeeklyVolumeAndLastFinishedExercise() throws {
         let store = Store(inMemory: true)
-        XCTAssertNil(store.lastFinishedExercise(named: "Bench Press"))
+        XCTAssertNil(store.lastFinishedExercise(ExerciseID(folding: "Bench Press")))
         finishedBench(store)
-        XCTAssertEqual(store.lastFinishedExercise(named: "Bench Press")?.sortedSets.filter(\.isDone).count, 2)
+        XCTAssertEqual(store.lastFinishedExercise(ExerciseID(folding: "Bench Press"))?.sortedSets.filter(\.isDone).count, 2)
 
         try store.startMesocycle(twoDayDraft())
         let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)

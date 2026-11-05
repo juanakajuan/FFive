@@ -185,20 +185,21 @@ public enum ExerciseCatalog {
         ),
     ]
 
-    public static func info(named name: String) -> ExerciseInfo? {
-        all.first { $0.name.caseInsensitiveCompare(name) == .orderedSame }
+    static let byID: [ExerciseID: ExerciseInfo] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
+
+    static func info(_ id: ExerciseID) -> ExerciseInfo? {
+        byID[id]
     }
 
-    public static func exercises(for muscle: Muscle) -> [ExerciseInfo] {
-        all.filter { $0.muscle == muscle }
+    static func resolve(_ name: String) -> TemplateSlot? {
+        info(ExerciseID(folding: name)).map { TemplateSlot(muscle: $0.muscle, exercise: name) }
     }
 
     private static func x(_ name: String, _ muscle: Muscle, _ equipment: Equipment, _ reps: ClosedRange<Int>, _ cue: String) -> ExerciseInfo {
         ExerciseInfo(name: name, muscle: muscle, equipment: equipment, repRange: reps, cue: cue)
     }
 
-    /// Slot muscles come from the catalog so a template can never disagree with it.
     private static func day(_ name: String, _ exercises: [String]) -> TemplateDay {
-        TemplateDay(name: name, slots: exercises.map { TemplateSlot(muscle: info(named: $0)!.muscle, exercise: $0) })
+        TemplateDay(name: name, exerciseNames: exercises, slots: exercises.compactMap(resolve))
     }
 }

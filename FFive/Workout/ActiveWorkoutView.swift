@@ -477,7 +477,7 @@ struct ExerciseHistorySheet: View {
 
     var body: some View {
         let unit = store.settings.weightUnit
-        let last = store.lastFinishedExercise(named: name)
+        let last = store.lastFinishedExercise(ExerciseID(folding: name))
         let sets = last?.sortedSets.filter(\.isDone) ?? []
         NavigationStack {
             ScrollView {

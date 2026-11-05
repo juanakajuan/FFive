@@ -12,6 +12,7 @@ public enum DemoSeed {
         let context = store.context
         let unit = store.settings.weightUnit
         let now = Date.now
+        func snapshot() -> PlanningSnapshot { PlanningSnapshot(context: context) }
 
         quickWorkout("Morning Workout", at: now - 19 * day, [
             ("Bench Press", .chest, [(155, 8), (155, 7), (155, 6)]),
@@ -39,13 +40,14 @@ public enum DemoSeed {
         var answer = 0
         for dayIndex in meso.days.indices {
             let start = meso.startDate + Double(dayIndex) * 2 * day
-            let workout = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: dayIndex), unit: unit, in: context)
+            let workout = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: dayIndex), unit: unit,
+                                              snapshot: snapshot(), in: context)
             workout.startDate = start
             let pending = workout.pendingSoreness
             for muscle in workout.trainedMuscles {
                 guard let record = pending[muscle] else { continue }
                 MesoPlanner.recordSoreness(sorenessAnswers[answer % sorenessAnswers.count], on: record, during: workout,
-                                           unit: unit, in: context)
+                                           unit: unit, snapshot: snapshot(), in: context)
                 answer += 1
             }
             for (index, exercise) in workout.sortedExercises.enumerated() {
@@ -63,11 +65,12 @@ public enum DemoSeed {
             workout.endDate = start + 64 * 60
         }
 
-        let current = MesoPlanner.workout(for: meso, at: SessionKey(week: 1, dayIndex: 0), unit: unit, in: context)
+        let current = MesoPlanner.workout(for: meso, at: SessionKey(week: 1, dayIndex: 0), unit: unit,
+                                          snapshot: snapshot(), in: context)
         current.startDate = now - 24 * 60
         if let first = current.trainedMuscles.first {
             if let record = current.pendingSoreness[first] {
-                MesoPlanner.recordSoreness(.healedOnTime, on: record, during: current, unit: unit, in: context)
+                MesoPlanner.recordSoreness(.healedOnTime, on: record, during: current, unit: unit, snapshot: snapshot(), in: context)
             }
             for exercise in current.exercises(for: first) {
                 logAllSets(of: exercise, beatTargetBy: 0, unit: unit)
