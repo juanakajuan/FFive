@@ -213,6 +213,18 @@ final class StoreTests: XCTestCase {
         XCTAssertFalse(store.context.hasChanges, "every add is saved")
     }
 
+    /// The week-0 Bench Press target a block prescribes from one finished 100 x 8 session.
+    func benchTarget(_ store: Store, _ meso: Mesocycle) throws -> SetTarget {
+        let oneRepMax = Progression.estimatedOneRepMax(weight: 100, reps: 8)
+        let key = ExerciseID(folding: "Bench Press")
+        let reps = Progression.startingReps(in: ExerciseCatalog.repRange(for: key))
+        let rir = try XCTUnwrap(meso.phase(week: 0).rir)
+        let load = Progression.load(forReps: reps, rir: rir, oneRepMax: oneRepMax,
+                                    increment: ExerciseCatalog.increment(for: key, unit: store.settings.weightUnit))
+        XCTAssertNotEqual(SetTarget(weight: load, reps: reps), SetTarget.calibrate)
+        return SetTarget(weight: load, reps: reps)
+    }
+
     func testSnapshotRefreshesAfterACommit() throws {
         let (store, meso) = try startedStore()
         XCTAssertGreaterThan(store.weeklyVolume(meso, week: 0).count, 0)
@@ -220,16 +232,29 @@ final class StoreTests: XCTestCase {
         finishedBench(store)
         let session = store.buildSession(meso, at: day1)
 
-        let oneRepMax = Progression.estimatedOneRepMax(weight: 100, reps: 8)
-        let key = ExerciseID(folding: "Bench Press")
-        let reps = Progression.startingReps(in: ExerciseCatalog.repRange(for: key))
-        let rir = try XCTUnwrap(meso.phase(week: 0).rir)
-        let load = Progression.load(forReps: reps, rir: rir, oneRepMax: oneRepMax,
-                                    increment: ExerciseCatalog.increment(for: key, unit: store.settings.weightUnit))
         let targets = session.sortedExercises[0].sortedSets.map(\.target)
         XCTAssertFalse(targets.isEmpty)
-        XCTAssertEqual(targets, Array(repeating: SetTarget(weight: load, reps: reps), count: targets.count), "a workout finished after a render feeds the next build")
-        XCTAssertNotEqual(targets.first, SetTarget.calibrate)
+        XCTAssertEqual(targets, Array(repeating: try benchTarget(store, meso), count: targets.count), "a workout finished after a render feeds the next build")
+    }
+
+    func testSnapshotRefreshesAfterAFailedSave() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("nosave-\(UUID().uuidString).store")
+        defer { try? FileManager.default.removeItem(at: url) }
+        _ = try ModelContainer(for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url))
+        let readOnly = ModelConfiguration(schema: AppStore.schema, url: url, allowsSave: false)
+        let store = Store(container: try ModelContainer(for: AppStore.schema, configurations: readOnly), settings: Settings())
+        try store.startMesocycle(twoDayDraft())
+        let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
+        XCTAssertGreaterThan(store.weeklyVolume(meso, week: 0).count, 0)
+
+        finishedBench(store)
+        XCTAssertNotNil(store.failure, "a store that cannot save fails every commit")
+        let session = store.buildSession(meso, at: day1)
+
+        let targets = session.sortedExercises[0].sortedSets.map(\.target)
+        XCTAssertFalse(targets.isEmpty)
+        XCTAssertEqual(targets, Array(repeating: try benchTarget(store, meso), count: targets.count),
+                       "a workout the context holds feeds the next build even when its save failed")
     }
 
     func testAddAndDeleteSet() {

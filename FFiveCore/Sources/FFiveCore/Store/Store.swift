@@ -33,12 +33,12 @@ public final class Store {
 
     private var unit: WeightUnit { settings.weightUnit }
 
-    /// Valid until the next commit, because finished history changes only through Store.
-    @ObservationIgnored private var cachedSnapshot: (revision: Int, snapshot: PlanningSnapshot)?
+    /// Dropped by every commit, saved or not, because the context holds the change either way.
+    @ObservationIgnored private var cachedSnapshot: PlanningSnapshot?
     private var snapshot: PlanningSnapshot {
-        if let cachedSnapshot, cachedSnapshot.revision == revision { return cachedSnapshot.snapshot }
+        if let cachedSnapshot { return cachedSnapshot }
         let built = PlanningSnapshot(context: context)
-        cachedSnapshot = (revision, built)
+        cachedSnapshot = built
         return built
     }
 
@@ -187,6 +187,7 @@ public final class Store {
     }
 
     func commit() {
+        cachedSnapshot = nil
         do {
             try context.save()
             revision += 1
