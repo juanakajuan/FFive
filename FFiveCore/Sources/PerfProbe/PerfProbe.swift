@@ -43,12 +43,15 @@ struct PerfProbe {
         let clock = ContinuousClock()
         var millis: [Double] = []
         for _ in 0..<runs {
-            let elapsed = clock.measure { _ = MesoPlanner.weeklyVolume(meso, week: 0, unit: .lb, context: context) }
+            let elapsed = clock.measure {
+                _ = MesoPlanner.weeklyVolume(meso, week: 0, unit: .lb, snapshot: PlanningSnapshot(context: context))
+            }
             millis.append(elapsed.milliseconds)
         }
         print("perf-probe: weeklyVolume median \(Int(millis.sorted()[runs / 2].rounded())) ms over \(runs) runs, \(historyCount) finished workouts")
 
-        let session = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb, in: context)
+        let session = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb,
+                                          snapshot: PlanningSnapshot(context: context), in: context)
         try? context.save()
         let set = session.sortedExercises[0].sortedSets[0]
         var toggleSave: [Double] = []

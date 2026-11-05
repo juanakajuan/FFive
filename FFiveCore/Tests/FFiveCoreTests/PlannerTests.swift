@@ -11,6 +11,8 @@ final class PlannerTests: XCTestCase {
     let day: TimeInterval = 86_400
     let t0 = Date(timeIntervalSince1970: 1_800_000_000)
 
+    func snapshot(_ context: ModelContext) -> PlanningSnapshot { PlanningSnapshot(context: context) }
+
     func testMesocycleLifecycle() {
         let context = ModelContext(AppStore.makeContainer(inMemory: true))
 
@@ -34,7 +36,8 @@ final class PlannerTests: XCTestCase {
         expect("start drops days with no exercises", meso.days.count, 2)
 
         func session(_ week: Int, _ dayIndex: Int, at date: Date) -> Workout {
-            let workout = MesoPlanner.workout(for: meso, at: SessionKey(week: week, dayIndex: dayIndex), unit: .lb, in: context)
+            let workout = MesoPlanner.workout(for: meso, at: SessionKey(week: week, dayIndex: dayIndex), unit: .lb,
+                                              snapshot: snapshot(context), in: context)
             workout.startDate = date
             return workout
         }
@@ -79,15 +82,15 @@ final class PlannerTests: XCTestCase {
                Set(targets(w0b, "Barbell Row")), [SetTarget(weight: 190, reps: 7)])
         let pendingB = w0b.pendingSoreness
         expect("soreness is asked for muscles trained earlier", Set(pendingB.keys), [.chest, .back])
-        MesoPlanner.recordSoreness(.never, on: pendingB[.chest]!, during: w0b, unit: .lb, in: context)
-        MesoPlanner.recordSoreness(.healedOnTime, on: pendingB[.back]!, during: w0b, unit: .lb, in: context)
+        MesoPlanner.recordSoreness(.never, on: pendingB[.chest]!, during: w0b, unit: .lb, snapshot: snapshot(context), in: context)
+        MesoPlanner.recordSoreness(.healedOnTime, on: pendingB[.back]!, during: w0b, unit: .lb, snapshot: snapshot(context), in: context)
         expect("soreness is written back to the earlier session", w0a.feedbackRecord(for: .chest)?.value.soreness, .never)
         expect("answered soreness is no longer pending", w0b.pendingSoreness.isEmpty, true)
         log(w0b, calibration)
         w0b.updateFeedback(for: .chest) { $0 = MuscleFeedback(pump: .moderate, workload: .easy, jointPain: JointPain.none) }
         w0b.finish(in: context)
 
-        let doneW0 = MesoPlanner.weeklyVolume(meso, week: 0, unit: .lb, context: context).first { $0.muscle == .chest }
+        let doneW0 = MesoPlanner.weeklyVolume(meso, week: 0, unit: .lb, snapshot: snapshot(context)).first { $0.muscle == .chest }
         expect("weekly volume counts done chest sets across both days", doneW0?.done, 11)
 
         let w1a = session(1, 0, at: t0 + 7 * day)
@@ -104,9 +107,9 @@ final class PlannerTests: XCTestCase {
         let calves = pendingW1A[.calves]
         expect("once-a-week muscles ask for soreness from last week's same day", calves?.workout === w0a, true)
         expect("twice-a-week muscles ask about the most recent session", pendingW1A[.chest]?.workout === w0b, true)
-        MesoPlanner.recordSoreness(.never, on: pendingW1A[.chest]!, during: w1a, unit: .lb, in: context)
+        MesoPlanner.recordSoreness(.never, on: pendingW1A[.chest]!, during: w1a, unit: .lb, snapshot: snapshot(context), in: context)
         expect("soreness for another day's session leaves this plan alone", counts(w1a)["Bench Press"], 5)
-        MesoPlanner.recordSoreness(.never, on: calves!, during: w1a, unit: .lb, in: context)
+        MesoPlanner.recordSoreness(.never, on: calves!, during: w1a, unit: .lb, snapshot: snapshot(context), in: context)
         expect("answering soreness re-plans the untouched muscle (never sore + easy -> +3)", counts(w1a)["Calf Raise"], 11)
 
         let bench = w1a.sortedExercises.first { $0.name == "Bench Press" }!
@@ -153,7 +156,7 @@ final class PlannerTests: XCTestCase {
         ]
         func key(_ week: Int, _ dayIndex: Int) -> SessionKey { SessionKey(week: week, dayIndex: dayIndex) }
         func session(_ week: Int, _ dayIndex: Int) -> Workout {
-            MesoPlanner.workout(for: meso, at: key(week, dayIndex), unit: .lb, in: context)
+            MesoPlanner.workout(for: meso, at: key(week, dayIndex), unit: .lb, snapshot: snapshot(context), in: context)
         }
         func log(_ workout: Workout) {
             for exercise in workout.exercises {
@@ -164,7 +167,7 @@ final class PlannerTests: XCTestCase {
             }
         }
         func planned(_ week: Int, _ dayIndex: Int, _ name: String) -> Int? {
-            MesoPlanner.plan(meso, at: key(week, dayIndex), unit: .lb, context: context).first { $0.name == name }?.targets.count
+            MesoPlanner.plan(meso, at: key(week, dayIndex), unit: .lb, snapshot: snapshot(context)).first { $0.name == name }?.targets.count
         }
         func targets(_ workout: Workout, _ name: String) -> Set<SetTarget> {
             Set(workout.sortedExercises.first { $0.name == name }!.sortedSets.map(\.target))
@@ -190,7 +193,7 @@ final class PlannerTests: XCTestCase {
         meso.skip(key(1, 0), in: context)
         expect("skip: skipping twice records the key once", meso.skippedSessions, [key(1, 0)])
         expect("skip: the skipped day frees its MRV room (+3 in full)", planned(1, 1, "Incline Dumbbell Press"), 8)
-        let chest = MesoPlanner.weeklyVolume(meso, week: 1, unit: .lb, context: context).first { $0.muscle == .chest }
+        let chest = MesoPlanner.weeklyVolume(meso, week: 1, unit: .lb, snapshot: snapshot(context)).first { $0.muscle == .chest }
         expect("skip: weekly volume counts the skipped day as 0 sets", chest.map { [$0.planned, $0.done] }, [8, 0])
 
         let w1b = session(1, 1)
@@ -262,15 +265,88 @@ final class PlannerTests: XCTestCase {
         draft.days = [.init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest)]),
                       .init(name: "B", slots: [.init(exercise: "Barbell Row", muscle: .back)])]
         let meso = MesoPlanner.start(draft, in: context)
-        let started = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb, in: context)
+        let started = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb, snapshot: .empty, in: context)
         started.sortedExercises[0].sortedSets[0].isDone = true
-        let untouched = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: 1), unit: .lb, in: context)
+        let untouched = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: 1), unit: .lb, snapshot: .empty, in: context)
 
         meso.end(in: context)
         expect("end: the block gets a finished date", meso.finishedDate != nil, true)
         expect("end: an open session with a logged set is finished so it reaches history", started.isFinished, true)
         expect("end: its logged set is kept", started.completedSets, 1)
         expect("end: an untouched open session is dropped", untouched.isDeleted && meso.workout(at: SessionKey(week: 0, dayIndex: 1)) == nil, true)
+    }
+
+    /// The snapshot reads every catalog exercise the way trunk's per-exercise fetch did, except that an open
+    /// session's done sets no longer count until it is finished.
+    func testSnapshotMatchesPerExerciseFetch() {
+        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        let catalog = ExerciseCatalog.all
+
+        func oracle(_ name: String) -> Double? {
+            let descriptor = FetchDescriptor<Exercise>(predicate: #Predicate { $0.name == name })
+            let matches = (try? context.fetch(descriptor)) ?? []
+            return matches
+                .compactMap { exercise in exercise.strongestSet.map { (date: exercise.workout?.startDate ?? .distantPast, value: $0.oneRepMax) } }
+                .max { $0.date < $1.date }?
+                .value
+        }
+        func seed(_ workout: Workout, done: Bool, load: (Int) -> (Double, Int)) {
+            for (order, info) in catalog.enumerated() {
+                let exercise = Exercise(name: info.name, order: order, muscle: info.muscle)
+                workout.exercises.append(exercise)
+                for setOrder in 0..<2 {
+                    let (weight, reps) = load(order + setOrder)
+                    let set = SetEntry(reps: reps, weight: weight, order: setOrder)
+                    set.isDone = done
+                    exercise.sets.append(set)
+                }
+            }
+        }
+        for session in 0..<3 {
+            let workout = Workout(name: "Session \(session)", startDate: t0 + Double(session) * day)
+            context.insert(workout)
+            seed(workout, done: true) { n in (Double(40 + (n * 7 + session * 13) % 120), 4 + (n + session) % 9) }
+            workout.endDate = workout.startDate + 3600
+        }
+        let undone = Workout(name: "Nothing logged", startDate: t0 + 3 * day)
+        context.insert(undone)
+        seed(undone, done: false) { _ in (300, 10) }
+        undone.endDate = undone.startDate + 3600
+
+        var draft = MesoDraft(template: nil)
+        draft.days = [.init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest)])]
+        let meso = MesoPlanner.start(draft, in: context)
+        let deload = Workout(name: "Deload", startDate: t0 + 4 * day)
+        context.insert(deload)
+        deload.week = meso.accumulationWeeks
+        deload.dayIndex = 0
+        meso.workouts.append(deload)
+        seed(deload, done: true) { _ in (400, 10) }
+        deload.endDate = deload.startDate + 3600
+        expect("the deload session says nothing about strength", deload.effortRIR, nil)
+
+        let before = snapshot(context)
+        for info in catalog {
+            expect("snapshot matches the per-exercise fetch for \(info.name)", before.latestOneRepMax(of: info.id), oracle(info.name))
+            expect("history exists for \(info.name)", before.latestOneRepMax(of: info.id) != nil, true)
+        }
+        for name in ["Mystery Lift", "Nothing"] {
+            expect("no history reads nil for \(name)", before.latestOneRepMax(of: ExerciseID(folding: name)), nil)
+            expect("the oracle agrees for \(name)", oracle(name), nil)
+        }
+
+        let open = Workout(name: "Open", startDate: t0 + 5 * day)
+        context.insert(open)
+        let bench = Exercise(name: "Bench Press", order: 0, muscle: .chest)
+        open.exercises.append(bench)
+        let heavy = SetEntry(reps: 10, weight: 500, order: 0)
+        heavy.isDone = true
+        bench.sets.append(heavy)
+        let benchID = ExerciseID(folding: "Bench Press")
+        expect("an open session's done set moves the per-exercise fetch", oracle("Bench Press"),
+               Progression.estimatedOneRepMax(weight: 500, reps: 10, rir: 0))
+        expect("but not the snapshot, which reads finished history only",
+               snapshot(context).latestOneRepMax(of: benchID), before.latestOneRepMax(of: benchID))
     }
 
     func testNote() {

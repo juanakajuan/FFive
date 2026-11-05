@@ -30,6 +30,8 @@ final class CatalogTests: XCTestCase {
         let later = finishedSession(store, "bench press", muscle: .chest, weight: 90, reps: 8, at: t0 + 86_400)
 
         XCTAssertEqual(first.key, later.key, "both spellings share one key")
+        XCTAssertEqual(PlanningSnapshot(context: store.context).latestOneRepMax(of: ExerciseID(folding: "BENCH PRESS")),
+                       Progression.estimatedOneRepMax(weight: 90, reps: 8, rir: 0), "planning reads the later row's 1RM")
         XCTAssertEqual(store.lastFinishedExercise(ExerciseID(folding: "Bench Press"))?.name, "bench press",
                        "the last time it was done is the lowercase row")
     }
