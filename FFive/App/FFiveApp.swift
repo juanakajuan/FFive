@@ -7,8 +7,10 @@ struct FFiveApp: App {
     let store: Store
 
     init() {
-        store = Store(inMemory: DemoLaunch.isEnabled)
-        if DemoLaunch.isEnabled { DemoSeed.seed(into: store) }
+        let mode = LaunchMode()
+        DemoLaunch.configure(mode)
+        store = Store(inMemory: mode.isDemo)
+        if mode.isDemo { DemoSeed.seed(into: store) }
         Theme.applyNavigationBarAppearance()
     }
 

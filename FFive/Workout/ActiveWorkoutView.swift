@@ -10,10 +10,8 @@ struct ActiveWorkoutView: View {
     let activeMeso: Mesocycle?
     let openQuickWorkout: Workout?
 
-    @Environment(\.modelContext) private var context
     @Environment(Store.self) private var store
     @Environment(AppRouter.self) private var router
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
 
     @State private var picker: PickerRequest?
     @State private var showingSchedule = false
@@ -58,7 +56,7 @@ struct ActiveWorkoutView: View {
 
     var body: some View {
         let exercises = workout.sortedExercises
-        let pendingSoreness = MesoPlanner.pendingSoreness(for: workout)
+        let pendingSoreness = workout.pendingSoreness
         ScrollView {
             LazyVStack(spacing: 16) {
                 if let note = workout.note {
@@ -72,18 +70,17 @@ struct ActiveWorkoutView: View {
                        exercises.firstIndex(where: { $0.muscle == muscle }) == index {
                         SorenessCard(muscle: muscle, record: record) { soreness in
                             withAnimation {
-                                MesoPlanner.recordSoreness(soreness, on: record, during: workout, unit: unit, in: context)
+                                store.recordSoreness(soreness, on: record, during: workout)
                             }
                         }
                     }
 
                     ExerciseCard(exercise: exercise,
-                                 unit: unit,
                                  phase: workout.phase,
                                  onSetCompleted: setCompleted,
                                  onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
                                  onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }) {
-                        workout.remove(exercise, in: context)
+                        store.removeExercise(exercise, from: workout)
                     }
 
                     if let muscle, workout.mesocycle != nil,
@@ -125,7 +122,7 @@ struct ActiveWorkoutView: View {
                 ExercisePickerView { name, muscle in addExercise(name, muscle: muscle) }
             case .swap(let exercise):
                 ExercisePickerView(title: "Swap \(exercise.name)", muscle: exercise.muscle) { name, muscle in
-                    MesoPlanner.swap(exercise, to: name, muscle: muscle, unit: unit, in: context)
+                    store.swapExercise(exercise, to: name, muscle: muscle)
                 }
             }
         }
@@ -239,7 +236,7 @@ struct ActiveWorkoutView: View {
     }
 
     private func addExercise(_ name: String, muscle: Muscle) {
-        MesoPlanner.addExercise(named: name, muscle: muscle, to: workout, unit: unit, in: context)
+        store.addExercise(named: name, muscle: muscle, to: workout)
     }
 }
 
@@ -250,23 +247,20 @@ private enum SetColumns {
 
 struct ExerciseCard: View {
     let exercise: Exercise
-    let unit: WeightUnit
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
     var onSwap: (() -> Void)?
     var onEditNote: (String) -> Void
     var onRemove: () -> Void
 
-    @Environment(\.modelContext) private var context
     @Environment(Store.self) private var store
     @Query private var pinnedNotes: [PinnedNote]
     @State private var showingCue = false
     @State private var showingHistory = false
 
-    init(exercise: Exercise, unit: WeightUnit, phase: WeekPhase?, onSetCompleted: @escaping () -> Void,
+    init(exercise: Exercise, phase: WeekPhase?, onSetCompleted: @escaping () -> Void,
          onSwap: (() -> Void)? = nil, onEditNote: @escaping (String) -> Void, onRemove: @escaping () -> Void) {
         self.exercise = exercise
-        self.unit = unit
         self.phase = phase
         self.onSetCompleted = onSetCompleted
         self.onSwap = onSwap
@@ -277,6 +271,7 @@ struct ExerciseCard: View {
     }
 
     var body: some View {
+        let unit = store.settings.weightUnit
         let sets = exercise.sortedSets
         let pinned = pinnedNotes.first?.text
         let note = pinned ?? exercise.note
@@ -330,12 +325,12 @@ struct ExerciseCard: View {
                 ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
                     if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
                     SetRow(set: set, number: index + 1, unit: unit, rir: phase?.rir,
-                           onCompleted: onSetCompleted, onAdd: exercise.addSet) { exercise.remove(set, in: context) }
+                           onCompleted: onSetCompleted, onAdd: { store.addSet(to: exercise) }) { store.deleteSet(set, from: exercise) }
                 }
             }
         }
         .surfaceCard()
-        .sheet(isPresented: $showingHistory) { ExerciseHistorySheet(name: exercise.name, unit: unit) }
+        .sheet(isPresented: $showingHistory) { ExerciseHistorySheet(name: exercise.name) }
     }
 
     private var actions: some View {
@@ -355,7 +350,7 @@ struct ExerciseCard: View {
                     Button("Swap Exercise", systemImage: "arrow.triangle.2.circlepath", action: onSwap)
                         .disabled(exercise.sets.contains(where: \.isDone))
                 }
-                Button("Add Set", systemImage: "plus", action: exercise.addSet)
+                Button("Add Set", systemImage: "plus") { store.addSet(to: exercise) }
                 let note = pinnedNotes.first?.text ?? exercise.note
                 Button(note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
                     onEditNote(note ?? "")
@@ -394,7 +389,7 @@ struct ExerciseCard: View {
             let effort = phase.rir.map { "at \($0) RIR" } ?? "kept light"
             return "Calibrate · \(range.lowerBound)–\(range.upperBound) reps \(effort)"
         }
-        guard let reps = set.targetReps else { return "Target \(formatWeight(weight)) \(unit.rawValue)" }
+        guard let reps = set.targetReps else { return "Target \(formatWeight(weight)) \(store.settings.weightUnit.rawValue)" }
         return weight == 0 ? "Target \(reps) reps" : "Target \(formatWeight(weight)) × \(reps)"
     }
 }
@@ -407,6 +402,8 @@ struct SetRow: View {
     var onCompleted: () -> Void
     var onAdd: () -> Void
     var onDelete: () -> Void
+
+    @Environment(Store.self) private var store
 
     private enum Field { case weight, reps }
     @FocusState private var focus: Field?
@@ -455,7 +452,7 @@ struct SetRow: View {
             Spacer(minLength: 0)
 
             Button {
-                set.isDone.toggle()
+                store.log(set, done: !set.isDone)
                 if set.isDone { onCompleted() }
             } label: {
                 LogCheckbox(isOn: set.isDone)
@@ -474,13 +471,13 @@ struct SetRow: View {
 /// The sets logged for an exercise the last time it was trained.
 struct ExerciseHistorySheet: View {
     let name: String
-    let unit: WeightUnit
 
-    @Environment(\.modelContext) private var context
+    @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
 
     var body: some View {
-        let last = MesoPlanner.lastFinishedExercise(named: name, in: context)
+        let unit = store.settings.weightUnit
+        let last = store.lastFinishedExercise(named: name)
         let sets = last?.sortedSets.filter(\.isDone) ?? []
         NavigationStack {
             ScrollView {

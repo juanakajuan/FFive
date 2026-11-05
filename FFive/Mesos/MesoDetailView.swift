@@ -8,7 +8,6 @@ struct MesoDetailView: View {
 
     @Environment(Store.self) private var store
     @Environment(AppRouter.self) private var router
-    @AppStorage("weightUnit") private var unit: WeightUnit = .lb
     @State private var confirmEnd = false
 
     private var isActive: Bool { meso.finishedDate == nil }
@@ -22,7 +21,7 @@ struct MesoDetailView: View {
                 MesoScheduleGrid(meso: meso) { key in
                     if isActive { router.openSession(key, in: meso) }
                 }
-                WeekVolumeCard(meso: meso, week: week, unit: unit)
+                WeekVolumeCard(meso: meso, week: week)
                 if isActive {
                     Button("End Mesocycle", role: .destructive) { confirmEnd = true }
                         .font(.system(size: 16, weight: .semibold))
