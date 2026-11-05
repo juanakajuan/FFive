@@ -4,13 +4,13 @@ import SwiftData
 @Model
 public final class Mesocycle {
     public var name: String = ""
-    public var startDate: Date = Date.now
+    public internal(set) var startDate: Date = Date.now
     public var accumulationWeeks: Int = 4
-    public var finishedDate: Date?
+    public internal(set) var finishedDate: Date?
     @Relationship(deleteRule: .cascade, inverse: \MesoDay.mesocycle)
-    public var days: [MesoDay] = []
+    public internal(set) var days: [MesoDay] = []
     @Relationship(deleteRule: .nullify, inverse: \Workout.mesocycle)
-    public var workouts: [Workout] = []
+    public internal(set) var workouts: [Workout] = []
     var skippedSessions: [SessionKey] = []
 
     init(name: String, accumulationWeeks: Int, startDate: Date = .now) {
@@ -64,7 +64,7 @@ public final class Mesocycle {
 
     /// Drops an untouched session from the block so the plan moves on. Next week's same day builds from
     /// the last session actually trained, so a skipped day has no workout row.
-    public func skip(_ key: SessionKey, in context: ModelContext) {
+    func skip(_ key: SessionKey, in context: ModelContext) {
         guard canSkip(key) else { return }
         if case .inProgress(let workout) = status(at: key) {
             workouts.removeAll { $0 === workout }
@@ -73,13 +73,13 @@ public final class Mesocycle {
         if !skippedSessions.contains(key) { skippedSessions.append(key) }
     }
 
-    public func unskip(_ key: SessionKey) {
+    func unskip(_ key: SessionKey) {
         skippedSessions.removeAll { $0 == key }
     }
 
     /// Ends the block. Open sessions with logged sets are finished so they reach history; untouched ones,
     /// such as a day built only because it was shown, are dropped.
-    public func end(in context: ModelContext) {
+    func end(in context: ModelContext) {
         for workout in workouts where !workout.isFinished {
             if workout.completedSets > 0 {
                 workout.finish(in: context)
@@ -89,5 +89,11 @@ public final class Mesocycle {
             }
         }
         finishedDate = .now
+    }
+}
+
+extension Mesocycle {
+    public static var active: FetchDescriptor<Mesocycle> {
+        FetchDescriptor(predicate: #Predicate { $0.finishedDate == nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
     }
 }

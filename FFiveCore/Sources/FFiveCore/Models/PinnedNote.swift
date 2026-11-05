@@ -3,8 +3,8 @@ import SwiftData
 
 @Model
 public final class PinnedNote {
-    public var name: String = ""
-    public var text: String = ""
+    public internal(set) var name: String = ""
+    public internal(set) var text: String = ""
 
     init(name: String, text: String) {
         self.name = name

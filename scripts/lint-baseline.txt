@@ -6,21 +6,3 @@ no-stored-builder FFive/Workout/WorkoutHeader.swift: @ViewBuilder var label: () 
 no-stored-builder FFive/Workout/WorkoutHeader.swift: @ViewBuilder var trailing: () -> Trailing
 presentation-at-screen-root FFive/Mesos/MesoSchedule.swift: .confirmationDialog("Train this day after all?",
 presentation-at-screen-root FFive/Workout/ActiveWorkoutView.swift: .sheet(isPresented: $showingHistory) { ExerciseHistorySheet(name: exercise.name, unit: unit) }
-view-writes FFive/Mesos/MesoBuilderView.swift: try? context.save()
-view-writes FFive/Mesos/MesoDetailView.swift: try? context.save()
-view-writes FFive/Mesos/MesoSchedule.swift: try? context.save()
-view-writes FFive/Mesos/MesosView.swift: try? context.save()
-view-writes FFive/More/ProgressScreen.swift: for index in offsets { context.delete(history[index]) }
-view-writes FFive/Workout/ActiveWorkoutView.swift: context.delete(exercise)
-view-writes FFive/Workout/ActiveWorkoutView.swift: context.delete(set)
-view-writes FFive/Workout/ActiveWorkoutView.swift: context.delete(workout)
-view-writes FFive/Workout/ActiveWorkoutView.swift: try? context.save()
-view-writes FFive/Workout/ActiveWorkoutView.swift: try? context.save()
-view-writes FFive/Workout/ActiveWorkoutView.swift: try? context.save()
-view-writes FFive/Workout/ActiveWorkoutView.swift: try? context.save()
-view-writes FFive/Workout/ActiveWorkoutView.swift: try? context.save()
-view-writes FFive/Workout/ActiveWorkoutView.swift: try? context.save()
-view-writes FFive/Workout/TrainView.swift: context.insert(Workout(name: defaultWorkoutName()))
-view-writes FFive/Workout/TrainView.swift: try? context.save()
-view-writes FFive/Workout/TrainView.swift: try? context.save()
-view-writes FFive/Workout/TrainView.swift: try? context.save()

@@ -1,41 +1,15 @@
 import Foundation
 import SwiftData
-import FFiveCore
-
-/// Screens a `-seedDemo` launch can open straight into, chosen with `-demoRoute <name>`.
-enum DemoRoute: String {
-    case train, builder, session, progress, strength
-}
-
-enum DemoLaunch {
-    /// Demo launches run on an in-memory store and never touch the lifter's real data.
-    static let isEnabled = ProcessInfo.processInfo.arguments.contains("-seedDemo")
-    static let route: DemoRoute? = isEnabled
-        ? UserDefaults.standard.string(forKey: "demoRoute").flatMap(DemoRoute.init(rawValue:))
-        : nil
-
-    private static var taken: Set<DemoRoute> = []
-
-    /// True once, the first time a screen asks for the route it owns.
-    static func take(_ candidate: DemoRoute) -> Bool {
-        guard route == candidate else { return false }
-        return taken.insert(candidate).inserted
-    }
-
-    /// True while the route is still waiting for its screen, without claiming it.
-    static func isPending(_ candidate: DemoRoute) -> Bool {
-        route == candidate && !taken.contains(candidate)
-    }
-}
 
 /// Seeds two free-form sessions, then a 4-week block on the first template with week 1 fully logged,
 /// week 2 day 1 under way, and week 2's last day skipped. Everything runs through the planner so the demo
 /// shows real prescriptions.
 @MainActor
-enum DemoSeed {
+public enum DemoSeed {
     private static let day: TimeInterval = 86_400
 
-    static func seed(_ context: ModelContext) {
+    public static func seed(into store: Store) {
+        let context = store.context
         let unit = UserDefaults.standard.string(forKey: "weightUnit").flatMap(WeightUnit.init(rawValue:)) ?? .lb
         let now = Date.now
 
@@ -51,7 +25,7 @@ enum DemoSeed {
         ], unit: unit, context: context)
 
         guard let template = ExerciseCatalog.templates.first else {
-            try? context.save()
+            store.commit()
             return
         }
         let meso = MesoPlanner.start(MesoDraft(template: template), in: context)
@@ -102,7 +76,7 @@ enum DemoSeed {
         if let lastDay = meso.days.indices.last, lastDay > 0 {
             meso.skip(SessionKey(week: 1, dayIndex: lastDay), in: context)
         }
-        try? context.save()
+        store.commit()
     }
 
     private static func quickWorkout(_ name: String, at start: Date, _ exercises: [(String, Muscle, [(Double, Int)])],

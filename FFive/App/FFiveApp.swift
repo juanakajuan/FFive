@@ -4,11 +4,11 @@ import FFiveCore
 
 @main
 struct FFiveApp: App {
-    let container: ModelContainer
+    let store: Store
 
     init() {
-        container = AppStore.makeContainer(inMemory: DemoLaunch.isEnabled)
-        if DemoLaunch.isEnabled { DemoSeed.seed(container.mainContext) }
+        store = Store(inMemory: DemoLaunch.isEnabled)
+        if DemoLaunch.isEnabled { DemoSeed.seed(into: store) }
         Theme.applyNavigationBarAppearance()
     }
 
@@ -16,7 +16,8 @@ struct FFiveApp: App {
         WindowGroup {
             RootView()
                 .preferredColorScheme(.dark)
+                .environment(store)
         }
-        .modelContainer(container)
+        .modelContainer(store.container)
     }
 }
