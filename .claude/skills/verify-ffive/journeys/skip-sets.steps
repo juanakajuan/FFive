@@ -1,0 +1,49 @@
+# skip-sets: skip one set from its menu, skip the rest of every card, finish, and reload.
+# Before: ffive-verify reset-data, then journeys/plan-mesocycle.steps.
+# After: ffive-verify store "select ZISDONE, ZISSKIPPED from ZSETENTRY"
+launch
+wait text "WEEK 1 DAY 1" timeout=20
+replace #set.weight.1 "135"
+replace #set.reps.1 "8"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+tap #set.menu.2
+tap #menu.skip-set
+value #set.log.2 "Skipped"
+unselected #set.log.2
+store-expect SetEntry isSkipped 1
+shot 01-one-set-skipped
+absent #workout.finish
+tap #set.menu.2
+tap #menu.skip-set
+value #set.log.2 ""
+tap #set.menu.2
+tap #menu.skip-set
+tap #exercise.menu.1
+tap #menu.skip-remaining
+shot 02-card-skipped
+absent #workout.finish
+scrollto #exercise.menu.2
+tap #exercise.menu.2
+tap #menu.skip-remaining
+scrollto #exercise.menu.3
+tap #exercise.menu.3
+tap #menu.skip-remaining
+scrollto #exercise.menu.4
+tap #exercise.menu.4
+tap #menu.skip-remaining
+scrollto #exercise.menu.5
+tap #exercise.menu.5
+tap #menu.skip-remaining
+scrollto #exercise.menu.6
+tap #exercise.menu.6
+tap #menu.skip-remaining
+wait #workout.finish
+shot 03-finish-shown
+launch
+wait text "WEEK 1 DAY 1" timeout=20
+value #set.log.2 "Skipped"
+wait #workout.finish
+shot 04-after-relaunch
+tap #workout.finish

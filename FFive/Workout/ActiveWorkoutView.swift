@@ -460,12 +460,15 @@ struct SetRow: View {
             Menu {
                 Button("Add Set", systemImage: "plus", action: onAdd)
                     .a11y(.menuAddSet)
-                if set.status == .skipped {
-                    Button("Unskip Set", systemImage: "arrow.uturn.backward") { store.skip(set, skipped: false) }
-                        .a11y(.menuSkipSet)
-                } else {
+                switch set.status {
+                case .pending:
                     Button("Skip Set", systemImage: "forward.end") { store.skip(set, skipped: true) }
                         .a11y(.menuSkipSet)
+                case .skipped:
+                    Button("Unskip Set", systemImage: "arrow.uturn.backward") { store.skip(set, skipped: false) }
+                        .a11y(.menuSkipSet)
+                case .done:
+                    EmptyView()
                 }
                 Button("Delete Set", systemImage: "trash", role: .destructive, action: onDelete)
                     .a11y(.menuDeleteSet)
