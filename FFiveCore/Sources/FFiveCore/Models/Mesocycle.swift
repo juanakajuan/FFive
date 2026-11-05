@@ -20,6 +20,15 @@ public final class Mesocycle {
     }
 
     var sortedDays: [MesoDay] { days.sorted { $0.order < $1.order } }
+    public var dayNames: [String] { sortedDays.map(\.name) }
+
+    /// Later weeks are built from the day's name, so renaming it also relabels the sessions already built.
+    func renameDay(_ dayIndex: Int, to name: String) {
+        let days = sortedDays
+        guard days.indices.contains(dayIndex) else { return }
+        days[dayIndex].name = name
+        for workout in workouts where workout.dayIndex == dayIndex { workout.name = name }
+    }
     /// Accumulation weeks plus the deload.
     public var totalWeeks: Int { accumulationWeeks + 1 }
 

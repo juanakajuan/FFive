@@ -109,7 +109,7 @@ public final class Workout {
         return pending
     }
 
-    public func updateFeedback(for muscle: Muscle, _ change: (inout MuscleFeedback) -> Void) {
+    func updateFeedback(for muscle: Muscle, _ change: (inout MuscleFeedback) -> Void) {
         let record =
             feedbackRecord(for: muscle)
             ?? {
@@ -123,6 +123,19 @@ public final class Workout {
     func remove(_ exercise: Exercise, in context: ModelContext) {
         exercises.removeAll { $0 === exercise }
         context.delete(exercise)
+    }
+
+    /// Clears everything logged and keeps the prescription: sets go back to their targets, and the
+    /// feedback given for the day goes with the sets it described.
+    func reset(in context: ModelContext) {
+        for set in exercises.flatMap(\.sets) {
+            set.status = .pending
+            set.type = .regular
+            set.weight = set.targetWeight ?? 0
+            set.reps = set.targetReps ?? 0
+        }
+        for record in feedback { context.delete(record) }
+        feedback.removeAll()
     }
 
     /// Free-form sessions drop what was never done. Mesocycle sessions keep the full prescription,

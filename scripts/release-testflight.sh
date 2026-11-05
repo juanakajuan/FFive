@@ -1,16 +1,14 @@
 #!/bin/sh
 # Archives FFive from the committed HEAD and uploads it to TestFlight.
 #
-#   scripts/release-testflight.sh           archive and upload
-#   scripts/release-testflight.sh --local   archive and export an .ipa to build/release, no upload
 #   scripts/release-testflight.sh --version 1.1
-#                                           commit MARKETING_VERSION = 1.1 first, then release
+#                                           commit MARKETING_VERSION = 1.1 first, then archive and upload
 #   scripts/release-testflight.sh --bump patch|minor|major
-#                                           bump MARKETING_VERSION (1.0 -> 1.0.1, 1.1 or 2.0), commit, release
+#                                           bump MARKETING_VERSION (1.0 -> 1.0.1, 1.1 or 2.0), commit, upload
+#   scripts/release-testflight.sh --local   archive and export an .ipa to build/release, no upload
 #
-# The build number is a UTC timestamp on every run. The user-facing version only
-# changes with --version or --bump; bump it for a meaningful release, and always after a
-# version is approved on the App Store, which then rejects new builds of it.
+# Every upload carries a new release number: --version or --bump is required unless
+# --local. The build number is a UTC timestamp on every run.
 #
 # Auth: set ASC_KEY_ID and ASC_ISSUER_ID to use an App Store Connect API key
 # (ASC_KEY_PATH defaults to ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8).
@@ -20,7 +18,7 @@ set -eu
 root="$(cd "$(dirname "$0")/.." && pwd)"
 project="$root/FFive.xcodeproj/project.pbxproj"
 team="$(sed -n 's/.*DEVELOPMENT_TEAM = \(.*\);/\1/p' "$project" | head -1)"
-usage="usage: $0 [--local] [--version X.Y[.Z] | --bump patch|minor|major]"
+usage="usage: $0 --version X.Y[.Z] | --bump patch|minor|major | --local"
 
 destination=upload
 new_version=""
@@ -48,6 +46,12 @@ if [ -n "$new_version" ] && [ -n "$bump" ]; then
     exit 2
 fi
 
+if [ "$destination" = upload ] && [ -z "$new_version" ] && [ -z "$bump" ]; then
+    echo "error: every upload needs a release number; pass --version X.Y[.Z] or --bump patch|minor|major" >&2
+    echo "$usage" >&2
+    exit 2
+fi
+
 if [ -n "$bump" ]; then
     current="$(sed -n 's/.*MARKETING_VERSION = \(.*\);/\1/p' "$project" | head -1)"
     new_version="$(echo "$current" | awk -F. -v part="$bump" '{
@@ -72,12 +76,12 @@ fi
 
 if [ -n "$new_version" ]; then
     sed -i '' "s/MARKETING_VERSION = .*;/MARKETING_VERSION = $new_version;/" "$project"
-    if [ -n "$(git -C "$root" status --porcelain)" ]; then
-        git -C "$root" commit -q -m "chore: bump version to $new_version" -- "$project"
-        echo "==> committed version $new_version"
-    else
-        echo "==> version is already $new_version"
+    if [ -z "$(git -C "$root" status --porcelain)" ]; then
+        echo "error: version is already $new_version; every upload needs a new release number" >&2
+        exit 2
     fi
+    git -C "$root" commit -q -m "chore: bump version to $new_version" -- "$project"
+    echo "==> committed version $new_version"
 fi
 
 auth=""
