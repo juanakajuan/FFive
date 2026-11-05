@@ -69,6 +69,7 @@ struct SettingsView: View {
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .accessibilityAddTraits(selected ? .isSelected : [])
+        .a11y(.settingsUnit, key: option.rawValue)
     }
 }
 

@@ -16,6 +16,16 @@ enum AppTab: CaseIterable, Hashable {
         }
     }
 
+    var a11y: A11y {
+        switch self {
+        case .workout: .tabWorkout
+        case .mesos: .tabMesos
+        case .templates: .tabTemplates
+        case .exercises: .tabExercises
+        case .more: .tabMore
+        }
+    }
+
     func icon(selected: Bool) -> String {
         switch self {
         case .workout: selected ? "calendar.circle.fill" : "calendar"
@@ -101,6 +111,7 @@ private struct TabBar: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(tab.title)
+                .a11y(tab.a11y)
                 .accessibilityAddTraits(selected ? .isSelected : [])
             }
         }
