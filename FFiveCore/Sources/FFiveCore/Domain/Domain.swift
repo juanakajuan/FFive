@@ -86,6 +86,7 @@ public enum Equipment: String, CaseIterable, Codable {
 }
 
 public struct ExerciseInfo: Identifiable, Hashable {
+    public let id: ExerciseID
     public let name: String
     public let muscle: Muscle
     public let equipment: Equipment
@@ -93,7 +94,14 @@ public struct ExerciseInfo: Identifiable, Hashable {
     /// One-line technique or stimulus-to-fatigue cue shown in the session.
     public let cue: String
 
-    public var id: String { name }
+    init(name: String, muscle: Muscle, equipment: Equipment, repRange: ClosedRange<Int>, cue: String) {
+        id = ExerciseID(folding: name)
+        self.name = name
+        self.muscle = muscle
+        self.equipment = equipment
+        self.repRange = repRange
+        self.cue = cue
+    }
 }
 
 // MARK: - Session feedback
@@ -150,6 +158,8 @@ public struct TemplateSlot: Hashable {
 
 public struct TemplateDay: Hashable {
     public let name: String
+    /// The names as written in the template, so a test can see a slot the catalog dropped.
+    let exerciseNames: [String]
     public let slots: [TemplateSlot]
 }
 

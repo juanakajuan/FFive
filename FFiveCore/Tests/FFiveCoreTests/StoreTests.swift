@@ -284,11 +284,44 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(try store.context.fetchCount(FetchDescriptor<Workout>()), 0)
     }
 
+    func testBackfillIsIdempotent() throws {
+        let url = FileManager.default.temporaryDirectory.appendingPathComponent("backfill-\(UUID().uuidString).store")
+        defer { try? FileManager.default.removeItem(at: url) }
+        func container() throws -> ModelContainer {
+            try ModelContainer(for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url))
+        }
+        let writer = ModelContext(try container())
+        writer.insert(Exercise(name: "Bench Press", order: 0, muscle: .chest))
+        MesoPlanner.start(twoDayDraft(), in: writer)
+        for exercise in try writer.fetch(FetchDescriptor<Exercise>()) { exercise.exerciseKey = nil }
+        for slot in try writer.fetch(FetchDescriptor<DaySlot>()) { slot.exerciseKey = nil }
+        try writer.save()
+
+        let store = Store(container: try container(), settings: Settings())
+        func keys(_ store: Store) throws -> [String?] {
+            try store.context.fetch(FetchDescriptor<Exercise>()).map(\.exerciseKey)
+                + store.context.fetch(FetchDescriptor<DaySlot>()).map(\.exerciseKey)
+        }
+        func names(_ store: Store) throws -> [String] {
+            try store.context.fetch(FetchDescriptor<Exercise>()).map(\.name)
+                + store.context.fetch(FetchDescriptor<DaySlot>()).map(\.exerciseName)
+        }
+        let backfilled = try keys(store)
+        XCTAssertEqual(backfilled.count, 3)
+        XCTAssertEqual(backfilled, try names(store).map { ExerciseID(folding: $0).rawValue }, "opening the store keys every row by its folded name")
+        XCTAssertFalse(store.context.hasChanges, "the backfill is saved")
+        XCTAssertEqual(store.backfillExerciseKeys(), 0, "a second run writes nothing")
+
+        let reopened = Store(container: try container(), settings: Settings())
+        XCTAssertEqual(reopened.backfillExerciseKeys(), 0, "a fresh store over the same file writes nothing")
+        XCTAssertEqual(try keys(reopened), backfilled, "the keys are unchanged")
+    }
+
     func testWeeklyVolumeAndLastFinishedExercise() throws {
         let store = Store(inMemory: true)
-        XCTAssertNil(store.lastFinishedExercise(named: "Bench Press"))
+        XCTAssertNil(store.lastFinishedExercise(ExerciseID(folding: "Bench Press")))
         finishedBench(store)
-        XCTAssertEqual(store.lastFinishedExercise(named: "Bench Press")?.sortedSets.filter(\.isDone).count, 2)
+        XCTAssertEqual(store.lastFinishedExercise(ExerciseID(folding: "Bench Press"))?.sortedSets.filter(\.isDone).count, 2)
 
         try store.startMesocycle(twoDayDraft())
         let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)

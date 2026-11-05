@@ -16,10 +16,15 @@ public final class Store {
     /// The error of the last commit that did not save, until a screen has shown it.
     public private(set) var failure: (any Error)?
 
-    public init(inMemory: Bool, settings: Settings) {
-        container = AppStore.makeContainer(inMemory: inMemory)
+    public convenience init(inMemory: Bool, settings: Settings) {
+        self.init(container: AppStore.makeContainer(inMemory: inMemory), settings: settings)
+    }
+
+    init(container: ModelContainer, settings: Settings) {
+        self.container = container
         context = container.mainContext
         self.settings = settings
+        backfillExerciseKeys()
     }
 
     public convenience init(inMemory: Bool) {
@@ -108,8 +113,8 @@ public final class Store {
         commit()
     }
 
-    public func lastFinishedExercise(named name: String) -> Exercise? {
-        MesoPlanner.lastFinishedExercise(named: name, in: context)
+    public func lastFinishedExercise(_ key: ExerciseID) -> Exercise? {
+        MesoPlanner.lastFinishedExercise(key, in: context)
     }
 
     public func finish(_ workout: Workout) {
@@ -158,6 +163,18 @@ public final class Store {
 
     public func dismissFailure() {
         failure = nil
+    }
+
+    /// Rows written before the key column existed get their folded name, once per store.
+    @discardableResult
+    func backfillExerciseKeys() -> Int {
+        let exercises = (try? context.fetch(FetchDescriptor<Exercise>(predicate: #Predicate { $0.exerciseKey == nil }))) ?? []
+        for exercise in exercises { exercise.exerciseKey = ExerciseID(folding: exercise.name).rawValue }
+        let slots = (try? context.fetch(FetchDescriptor<DaySlot>(predicate: #Predicate { $0.exerciseKey == nil }))) ?? []
+        for slot in slots { slot.exerciseKey = ExerciseID(folding: slot.exerciseName).rawValue }
+        let written = exercises.count + slots.count
+        if written > 0 { commit() }
+        return written
     }
 
     func commit() {

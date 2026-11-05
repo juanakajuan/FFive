@@ -193,27 +193,30 @@ struct StrengthSeries: Identifiable, Hashable {
         let bestSet: String
     }
 
+    let id: ExerciseID
     let name: String
     let muscle: Muscle?
     let points: [Point]
 
-    var id: String { name }
     var latest: Double { points.last?.value ?? 0 }
     var change: Double { latest - (points.first?.value ?? 0) }
 
     /// One point per finished session per exercise, most recently trained exercise first.
     static func all(from workouts: [Workout]) -> [StrengthSeries] {
-        var byName: [String: (muscle: Muscle?, points: [Point])] = [:]
+        var byKey: [ExerciseID: (name: String, muscle: Muscle?, points: [Point])] = [:]
         for workout in workouts.sorted(by: { $0.startDate < $1.startDate }) {
             for exercise in workout.exercises {
                 guard let best = exercise.strongestSet else { continue }
                 let point = Point(date: workout.startDate, value: best.oneRepMax,
                                   bestSet: "\(formatWeight(best.entry.weight)) × \(best.entry.reps)")
-                byName[exercise.name, default: (exercise.muscle, [])].points.append(point)
+                var series = byKey[exercise.key] ?? (name: "", muscle: exercise.muscle, points: [])
+                series.name = exercise.info?.name ?? exercise.name
+                series.points.append(point)
+                byKey[exercise.key] = series
             }
         }
-        return byName
-            .map { StrengthSeries(name: $0.key, muscle: $0.value.muscle, points: $0.value.points) }
+        return byKey
+            .map { StrengthSeries(id: $0.key, name: $0.value.name, muscle: $0.value.muscle, points: $0.value.points) }
             .sorted { ($0.points.last?.date ?? .distantPast) > ($1.points.last?.date ?? .distantPast) }
     }
 }
