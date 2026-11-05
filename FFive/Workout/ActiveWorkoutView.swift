@@ -102,11 +102,10 @@ struct ActiveWorkoutView: View {
         .safeAreaInset(edge: .bottom, spacing: 0) {
             if workout.isFullyLogged {
                 Button("Finish Workout", action: finish)
-                    .buttonStyle(.wideFilled)
+                    .buttonStyle(.floating)
                     .a11y(.workoutFinish)
                     .padding(.horizontal, Theme.gutter)
                     .padding(.vertical, 12)
-                    .background(Theme.page)
                     .transition(.move(edge: .bottom).combined(with: .opacity))
             }
         }
@@ -281,10 +280,6 @@ struct ExerciseCard: View {
         let pinned = store.pinnedNote(on: exercise)
         let note = pinned ?? exercise.note
         VStack(alignment: .leading, spacing: 0) {
-            if let muscle = exercise.muscle {
-                MuscleTag(muscle: muscle).padding(.horizontal, Theme.gutter)
-            }
-
             HStack(alignment: .top, spacing: 12) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(exercise.name)
@@ -299,7 +294,6 @@ struct ExerciseCard: View {
                 actions(note: note)
             }
             .padding(.horizontal, Theme.gutter)
-            .padding(.top, 10)
 
             VStack(spacing: 8) {
                 if let note {
@@ -335,7 +329,7 @@ struct ExerciseCard: View {
                 }
             }
         }
-        .surfaceCard()
+        .surfaceCard(tag: exercise.muscle)
     }
 
     private func actions(note: String?) -> some View {
@@ -550,7 +544,6 @@ struct SorenessCard: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
-            MuscleTag(muscle: muscle)
             VStack(alignment: .leading, spacing: 2) {
                 Text("How did your \(muscle.displayName.lowercased()) recover?")
                     .font(Theme.cardTitle)
@@ -566,7 +559,7 @@ struct SorenessCard: View {
         }
         .padding(.horizontal, Theme.gutter)
         .padding(.bottom, 8)
-        .surfaceCard()
+        .surfaceCard(tag: muscle)
     }
 }
 
@@ -580,12 +573,9 @@ struct FeedbackCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 8) {
-                    MuscleTag(muscle: muscle)
-                    Text("How did \(muscle.displayName.lowercased()) feel today?")
-                        .font(Theme.cardTitle)
-                        .foregroundStyle(Theme.text)
-                }
+                Text("How did \(muscle.displayName.lowercased()) feel today?")
+                    .font(Theme.cardTitle)
+                    .foregroundStyle(Theme.text)
                 Spacer()
                 if isComplete {
                     Image(systemName: "checkmark.circle.fill")
@@ -608,7 +598,7 @@ struct FeedbackCard: View {
         }
         .padding(.horizontal, Theme.gutter)
         .padding(.bottom, 8)
-        .surfaceCard()
+        .surfaceCard(tag: muscle)
     }
 }
 

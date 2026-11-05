@@ -20,6 +20,7 @@ enum Theme {
     static let noteFill = Color(rgb: 0x746539)
     static let success = Color(rgb: 0x2E8B62)
     static let danger = Color(rgb: 0xE5484D)
+    static let accent = Color(rgb: 0x2F6FEB)
 
     static let cornerRadius: CGFloat = 4
     static let gutter: CGFloat = 16
@@ -79,19 +80,21 @@ struct MuscleTag: View {
 
     var body: some View {
         HStack(spacing: 6) {
-            Image(systemName: "line.3.horizontal")
-                .font(.system(size: 11, weight: .bold))
-                .rotationEffect(.degrees(90))
-                .foregroundStyle(muscle.tint)
-                .accessibilityHidden(true)
+            MuscleIcon(muscle: muscle)
             Text(muscle.displayName)
                 .font(Theme.tag)
                 .textCase(.uppercase)
                 .foregroundStyle(Theme.text)
         }
         .padding(.horizontal, 8)
-        .padding(.vertical, 3)
-        .background(muscle.tint.opacity(0.314), in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+        .padding(.vertical, 2)
+        .background {
+            // Opaque, so a tag hanging over a card's edge hides the edge behind it.
+            RoundedRectangle(cornerRadius: Theme.cornerRadius)
+                .fill(Theme.surface)
+                .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius).fill(muscle.tint.opacity(0.314)))
+        }
+        .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius).stroke(muscle.tint.opacity(0.6), lineWidth: 1))
         .fixedSize()
     }
 }
@@ -139,6 +142,18 @@ struct ThemedField: ViewModifier {
 
 extension View {
     func surfaceCard() -> some View { modifier(SurfaceCard()) }
+
+    /// A `surfaceCard` with the muscle's tag hanging off its top edge, the edge crossing the tag's midpoint.
+    func surfaceCard(tag muscle: Muscle?) -> some View {
+        ZStack(alignment: .topLeading) {
+            surfaceCard()
+            if let muscle {
+                MuscleTag(muscle: muscle)
+                    .alignmentGuide(.top) { $0.height / 2 }
+                    .padding(.leading, Theme.gutter)
+            }
+        }
+    }
     func themedField(height: CGFloat = 32) -> some View { modifier(ThemedField(height: height)) }
 }
 
