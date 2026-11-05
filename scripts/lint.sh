@@ -42,8 +42,8 @@ scan() {
                     hit("no-userdefaults-in-app", i, "Only Settings.swift reads or writes UserDefaults. Add the preference to Settings and read it from there.")
                 if (s ~ /ProcessInfo/ && path !~ /FFiveCore\/Sources\/FFiveCore\/Store\/LaunchMode\.swift$/)
                     hit("no-processinfo-in-app", i, "Only LaunchMode.swift reads the launch arguments. FFiveApp parses LaunchMode once; take what you need from it.")
-                if (path !~ /Catalog\/ExerciseID\.swift$/ && (s ~ /(FetchDescriptor|Predicate)<Exercise>.*\.name[ \t]*==/ || s ~ /[eE]xercise\.name[ \t]*[=!]=/ || s ~ /[=!]=[ \t]*[A-Za-z_.$0-9]*[eE]xercise\.name/ || s ~ /\[[A-Za-z_.$0-9]*[eE]xercise\.name[ \t]*[,\]]/ || s ~ /info\(named:/))
-                    hit("exercise-identity-by-name", i, "Exercise identity is ExerciseID, not the name string. Compare or key by exercise.key (or ExerciseID(folding: name) at an input boundary), fetch by exerciseKey, and look the catalog up with ExerciseCatalog.info(_:).")
+                if (path !~ /Catalog\/ExerciseID\.swift$/ && (s ~ /(FetchDescriptor|Predicate)<Exercise>.*\.name[ \t]*==/ || s ~ /[eE]xercise\.name[ \t]*[=!]=/ || s ~ /[=!]=[ \t]*[A-Za-z_.$0-9]*[eE]xercise\.name/ || s ~ /\[[A-Za-z_.$0-9]*[eE]xercise\.name[ \t]*[,\]]/ || s ~ /[eE]xercises[ \t]*\.[A-Za-z]+[ \t]*(\([ \t]*where:[ \t]*)?\{[ \t]*\$0\.name[ \t]*[=!]=/ || s ~ /(^|[^A-Za-z0-9_])name\.(lowercased\(\)|uppercased\(\)|caseInsensitiveCompare\()/ || s ~ /info\(named:/))
+                    hit("exercise-identity-by-name", i, "Exercise identity is ExerciseID, not the name string. Compare or key by exercise.key (or ExerciseID(folding: name) at an input boundary), fetch by exerciseKey, and look the catalog up with ExerciseCatalog.info(_:). Never fold a name by hand with lowercased() or caseInsensitiveCompare; ExerciseID(folding:) is the one folding.")
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {
