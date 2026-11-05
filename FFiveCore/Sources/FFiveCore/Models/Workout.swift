@@ -117,7 +117,7 @@ public final class Workout {
     /// feedback given for the day goes with the sets it described.
     func reset(in context: ModelContext) {
         for set in exercises.flatMap(\.sets) {
-            set.isDone = false
+            set.status = .pending
             set.type = .regular
             set.weight = set.targetWeight ?? 0
             set.reps = set.targetReps ?? 0

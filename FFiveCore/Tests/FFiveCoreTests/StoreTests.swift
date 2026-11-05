@@ -56,6 +56,7 @@ final class StoreTests: XCTestCase {
         sets[1].weight = 100
         sets[1].reps = 8
         store.log(sets[1], done: true)
+        store.skip(sets[2], skipped: true)
         workout.updateFeedback(for: .chest) { $0.pump = .moderate }
         let exerciseNames = workout.sortedExercises.map(\.name)
 
@@ -69,6 +70,7 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(sets[0].type, .regular)
         XCTAssertEqual(sets[1].weight, 0, "a set with no target goes back to an empty row")
         XCTAssertEqual(sets[1].reps, 0)
+        XCTAssertEqual(sets[2].status, .pending, "a skipped set waits to be logged again")
         XCTAssertTrue(workout.feedback.isEmpty)
         XCTAssertEqual(try store.context.fetchCount(FetchDescriptor<MuscleFeedbackRecord>()), 0)
         XCTAssertNil(store.failure)

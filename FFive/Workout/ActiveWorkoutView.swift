@@ -270,7 +270,7 @@ struct ActiveWorkoutView: View {
         .a11y(.menuWorkoutNote)
         Button(workout.mesocycle == nil ? "Rename" : "Rename Day", systemImage: "pencil") { renameDraft = workout.name }
             .a11y(.menuRename)
-        if workout.mesocycle != nil, workout.completedSets > 0 {
+        if workout.mesocycle != nil, workout.setProgress > 0 {
             Button("Reset Workout", systemImage: "arrow.counterclockwise", role: .destructive) { confirmReset = true }
                 .a11y(.menuReset)
         }
