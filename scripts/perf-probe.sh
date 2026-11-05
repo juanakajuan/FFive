@@ -1,6 +1,4 @@
 #!/bin/sh
-# --trunk <rev> runs this checkout's probe against the FFiveCore of <rev>, without the budget, so one command
-# times trunk and head the same way.
 set -eu
 cd "$(dirname "$0")/.."
 if [ "${1:-}" = "--trunk" ]; then

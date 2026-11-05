@@ -191,7 +191,6 @@ public enum ExerciseCatalog {
         byID[id]
     }
 
-    /// Slot muscles come from the catalog so a template can never disagree with it.
     static func resolve(_ name: String) -> TemplateSlot? {
         info(ExerciseID(folding: name)).map { TemplateSlot(muscle: $0.muscle, exercise: name) }
     }

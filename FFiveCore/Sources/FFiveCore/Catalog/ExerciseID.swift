@@ -1,6 +1,5 @@
 import Foundation
 
-/// Exercise identity. Folding at creation is what lets `bench press` and `Bench Press` share one history.
 public struct ExerciseID: Hashable, Sendable {
     public let rawValue: String
 

@@ -18,6 +18,5 @@ public final class DaySlot {
 
     public var muscle: Muscle? { Muscle(rawValue: muscleRaw) }
 
-    /// Rows written before the key column existed fold their name until the store backfills them.
     var key: ExerciseID { exerciseKey.map(ExerciseID.init(rawValue:)) ?? ExerciseID(folding: exerciseName) }
 }

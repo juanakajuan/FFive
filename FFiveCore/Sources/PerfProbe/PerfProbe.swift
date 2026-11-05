@@ -66,7 +66,6 @@ struct PerfProbe {
         if failed { exit(1) }
     }
 
-    /// A fresh store with `finishedWorkouts` sessions of the six lifts behind a 4-day draft that has no session built.
     @MainActor
     private static func seeded(finishedWorkouts: Int) -> (Store, Mesocycle) {
         let store = Store(inMemory: true)

@@ -19,7 +19,6 @@ public final class Exercise {
         self.muscleRaw = muscle?.rawValue
     }
 
-    /// Rows written before the key column existed fold their name until the store backfills them.
     public var key: ExerciseID { exerciseKey.map(ExerciseID.init(rawValue:)) ?? ExerciseID(folding: name) }
 
     func rename(_ name: String) {

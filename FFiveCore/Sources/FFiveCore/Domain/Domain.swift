@@ -158,7 +158,6 @@ public struct TemplateSlot: Hashable {
 
 public struct TemplateDay: Hashable {
     public let name: String
-    /// The names as written in the template, so a test can see a slot the catalog dropped.
     let exerciseNames: [String]
     public let slots: [TemplateSlot]
 }

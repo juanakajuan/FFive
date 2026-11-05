@@ -4,7 +4,6 @@ import XCTest
 
 @MainActor
 final class CatalogTests: XCTestCase {
-    /// Finishes a quick workout with one exercise logged at `weight` x `reps`, through the store only.
     @discardableResult
     func finishedSession(_ store: Store, _ name: String, muscle: Muscle, weight: Double, reps: Int, at start: Date) -> Exercise {
         let workout = store.startQuickWorkout()

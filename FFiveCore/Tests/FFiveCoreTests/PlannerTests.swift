@@ -276,8 +276,6 @@ final class PlannerTests: XCTestCase {
         expect("end: an untouched open session is dropped", untouched.isDeleted && meso.workout(at: SessionKey(week: 0, dayIndex: 1)) == nil, true)
     }
 
-    /// The snapshot reads every catalog exercise the way trunk's per-exercise fetch did, except that an open
-    /// session's done sets no longer count until it is finished.
     func testSnapshotMatchesPerExerciseFetch() {
         let context = ModelContext(AppStore.makeContainer(inMemory: true))
         let catalog = ExerciseCatalog.all

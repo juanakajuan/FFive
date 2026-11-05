@@ -1,8 +1,6 @@
 import Foundation
 import SwiftData
 
-/// The latest estimated 1RM per exercise, read from finished history in one fetch so a plan never fetches
-/// per exercise. Open sessions are left out on purpose: a lift counts once its session is finished.
 struct PlanningSnapshot {
     private let latest: [ExerciseID: Double]
 

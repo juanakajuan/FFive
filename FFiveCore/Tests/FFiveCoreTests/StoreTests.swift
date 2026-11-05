@@ -213,7 +213,6 @@ final class StoreTests: XCTestCase {
         XCTAssertFalse(store.context.hasChanges, "every add is saved")
     }
 
-    /// The week-0 Bench Press target a block prescribes from one finished 100 x 8 session.
     func benchTarget(_ store: Store, _ meso: Mesocycle) throws -> SetTarget {
         let oneRepMax = Progression.estimatedOneRepMax(weight: 100, reps: 8)
         let key = ExerciseID(folding: "Bench Press")

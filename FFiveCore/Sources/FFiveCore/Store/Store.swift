@@ -174,7 +174,6 @@ public final class Store {
         failure = nil
     }
 
-    /// Rows written before the key column existed get their folded name, once per store.
     @discardableResult
     func backfillExerciseKeys() -> Int {
         let exercises = (try? context.fetch(FetchDescriptor<Exercise>(predicate: #Predicate { $0.exerciseKey == nil }))) ?? []
