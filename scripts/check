@@ -14,6 +14,7 @@ run() {
     fi
 }
 
+run scripts/format.sh --lint
 run scripts/lint.sh --self-test
 run scripts/lint.sh
 run scripts/typecheck-app.sh

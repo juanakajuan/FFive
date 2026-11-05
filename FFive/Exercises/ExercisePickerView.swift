@@ -1,5 +1,5 @@
-import SwiftUI
 import FFiveCore
+import SwiftUI
 
 struct ExercisePickerView: View {
     var title = "Add Exercise"
@@ -59,9 +59,10 @@ struct ExercisePickerView: View {
             .background(Theme.surface)
             .overlay {
                 if entries.isEmpty && query.isEmpty {
-                    ContentUnavailableView("Search to add an exercise",
-                                           systemImage: "magnifyingglass",
-                                           description: Text("Type a name to create your own, then choose the muscle it trains."))
+                    ContentUnavailableView(
+                        "Search to add an exercise",
+                        systemImage: "magnifyingglass",
+                        description: Text("Type a name to create your own, then choose the muscle it trains."))
                 }
             }
             .navigationTitle(title)
@@ -76,7 +77,9 @@ struct ExercisePickerView: View {
     }
 
     private func row(_ entry: ExerciseListing) -> some View {
-        Button { pick(entry.name, entry.muscle) } label: {
+        Button {
+            pick(entry.name, entry.muscle)
+        } label: {
             HStack(spacing: 12) {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(entry.name)
@@ -115,8 +118,12 @@ struct ExercisePickerView: View {
         }
         .contentShape(Rectangle())
         if let muscle {
-            Button { pick(query, muscle) } label: { label }
-                .buttonStyle(.plain)
+            Button {
+                pick(query, muscle)
+            } label: {
+                label
+            }
+            .buttonStyle(.plain)
         } else {
             Menu {
                 Section("Which muscle does it train?") {

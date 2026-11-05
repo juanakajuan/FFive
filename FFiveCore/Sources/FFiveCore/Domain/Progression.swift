@@ -35,9 +35,9 @@ public enum Progression {
     /// Rows are `Soreness`, columns are `Workload`, both indexed by raw value.
     private static let setDeltaTable: [[Int]] = [
         //  easy good hard tooMuch
-        [3, 2, 1, 0],    // never
-        [2, 1, 1, 0],    // healedEarly
-        [1, 0, 0, -1],   // healedOnTime
+        [3, 2, 1, 0],  // never
+        [2, 1, 1, 0],  // healedEarly
+        [1, 0, 0, -1],  // healedOnTime
         [0, 0, -1, -1],  // stillSore
     ]
 
@@ -72,7 +72,9 @@ public enum Progression {
             }
         } else {
             for _ in 0..<(-delta) {
-                guard let index = result.indices.filter({ result[$0] > 1 }).max(by: { result[$0] < result[$1] }) else { break }
+                guard let index = result.indices.filter({ result[$0] > 1 }).max(by: { result[$0] < result[$1] }) else {
+                    break
+                }
                 result[index] -= 1
             }
         }
@@ -91,13 +93,15 @@ public enum Progression {
     /// Holds load and adds the reps freed by the lower RIR; once reps pass the top of `repRange`,
     /// adds `increment` and re-derives reps from estimated 1RM. A set that fell 2+ reps short of its
     /// target repeats its target. Missing logs repeat the previous target.
-    static func nextTargets(previousTargets: [SetTarget],
-                            logged: [LoggedSet?],
-                            previousRIR: Int,
-                            targetRIR: Int,
-                            repRange: ClosedRange<Int>,
-                            increment: Double,
-                            setCount: Int) -> [SetTarget] {
+    static func nextTargets(
+        previousTargets: [SetTarget],
+        logged: [LoggedSet?],
+        previousRIR: Int,
+        targetRIR: Int,
+        repRange: ClosedRange<Int>,
+        increment: Double,
+        setCount: Int
+    ) -> [SetTarget] {
         let progressed = previousTargets.indices.map { index -> SetTarget in
             let target = previousTargets[index]
             guard index < logged.count, let log = logged[index] else { return target }

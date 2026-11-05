@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 /// An exercise's catalog facts and every finished session that logged it.
 struct ExerciseDetailView: View {
@@ -28,7 +28,7 @@ struct ExerciseDetailView: View {
     private var history: [Session] {
         logged.compactMap { exercise in
             guard let workout = exercise.workout, workout.isFinished,
-                  let best = exercise.sets.filter(\.isDone).max(by: { ($0.weight, $0.reps) < ($1.weight, $1.reps) })
+                let best = exercise.sets.filter(\.isDone).max(by: { ($0.weight, $0.reps) < ($1.weight, $1.reps) })
             else { return nil }
             return Session(workout: workout, best: best)
         }
@@ -88,9 +88,11 @@ struct ExerciseDetailView: View {
     private func historyRow(_ session: Session) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(session.workout.startDate, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day().year())
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.text)
+                Text(
+                    session.workout.startDate, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day().year()
+                )
+                .font(Theme.body)
+                .foregroundStyle(Theme.text)
                 Text(session.workout.name)
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)

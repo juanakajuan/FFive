@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 struct MesosView: View {
     @Environment(Store.self) private var store
@@ -37,9 +37,11 @@ struct MesosView: View {
             .navigationDestination(for: Mesocycle.self) { MesoDetailView(meso: $0) }
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
             .sheet(isPresented: $showingBuilder) { MesoBuilderView() }
-            .confirmationDialog("End this mesocycle?",
-                                isPresented: Binding(get: { ending != nil }, set: { if !$0 { ending = nil } }),
-                                titleVisibility: .visible, presenting: ending) { meso in
+            .confirmationDialog(
+                "End this mesocycle?",
+                isPresented: Binding(get: { ending != nil }, set: { if !$0 { ending = nil } }),
+                titleVisibility: .visible, presenting: ending
+            ) { meso in
                 Button("End Mesocycle", role: .destructive) { store.endMesocycle(meso) }
                     .a11y(.dialogEndMesocycle)
             } message: { _ in
@@ -51,16 +53,20 @@ struct MesosView: View {
     private func row(_ meso: Mesocycle) -> some View {
         let isCurrent = meso === current
         return HStack(spacing: 12) {
-            Button { path.append(meso) } label: {
+            Button {
+                path.append(meso)
+            } label: {
                 HStack(spacing: 12) {
                     VStack(alignment: .leading, spacing: 4) {
                         Text(meso.name)
                             .font(Theme.cardTitle)
                             .foregroundStyle(Theme.text)
                             .lineLimit(1)
-                        Text("\(Text("\(meso.totalWeeks)").foregroundStyle(Theme.text)) WEEKS - \(Text("\(meso.days.count)").foregroundStyle(Theme.text)) DAYS/WEEK")
-                            .font(.system(size: 12.5, weight: .medium))
-                            .foregroundStyle(Theme.secondary)
+                        Text(
+                            "\(Text("\(meso.totalWeeks)").foregroundStyle(Theme.text)) WEEKS - \(Text("\(meso.days.count)").foregroundStyle(Theme.text)) DAYS/WEEK"
+                        )
+                        .font(.system(size: 12.5, weight: .medium))
+                        .foregroundStyle(Theme.secondary)
                     }
                     Spacer(minLength: 8)
                     if isCurrent {

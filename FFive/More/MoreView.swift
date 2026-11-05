@@ -1,5 +1,5 @@
-import SwiftUI
 import FFiveCore
+import SwiftUI
 
 struct MoreView: View {
     private enum Destination: Hashable {
@@ -15,7 +15,8 @@ struct MoreView: View {
     }
 
     /// Demo launches into Progress land here; ProgressScreen then opens its own strength route.
-    @State private var path = NavigationPath(DemoLaunch.take(.progress) || DemoLaunch.isPending(.strength) ? [Destination.progress] : [])
+    @State private var path = NavigationPath(
+        DemoLaunch.take(.progress) || DemoLaunch.isPending(.strength) ? [Destination.progress] : [])
 
     private var version: String {
         let info = Bundle.main.infoDictionary

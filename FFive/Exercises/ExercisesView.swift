@@ -1,5 +1,5 @@
-import SwiftUI
 import FFiveCore
+import SwiftUI
 
 struct ExercisesView: View {
     @Environment(Store.self) private var store

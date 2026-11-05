@@ -1,5 +1,5 @@
-import SwiftUI
 import FFiveCore
+import SwiftUI
 
 struct SettingsView: View {
     @Environment(Store.self) private var store
@@ -21,10 +21,12 @@ struct SettingsView: View {
                         unitRow(option)
                     }
                 }
-                Text("New prescriptions use this unit and its smallest jump: 5 lb, or 2.5 kg (2 kg for dumbbells). Loads you already logged keep their numbers and aren't converted.")
-                    .font(Theme.detail)
-                    .foregroundStyle(Theme.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
+                Text(
+                    "New prescriptions use this unit and its smallest jump: 5 lb, or 2.5 kg (2 kg for dumbbells). Loads you already logged keep their numbers and aren't converted."
+                )
+                .font(Theme.detail)
+                .foregroundStyle(Theme.secondary)
+                .fixedSize(horizontal: false, vertical: true)
 
                 SectionHeading(text: "About")
                     .padding(.top, 20)

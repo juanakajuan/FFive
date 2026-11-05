@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 @main
 struct FFiveApp: App {
@@ -21,7 +21,12 @@ struct FFiveApp: App {
         WindowGroup {
             RootView()
                 .preferredColorScheme(.dark)
-                .transaction { if animationsDisabled { $0.disablesAnimations = true; $0.animation = nil } }
+                .transaction {
+                    if animationsDisabled {
+                        $0.disablesAnimations = true
+                        $0.animation = nil
+                    }
+                }
                 .environment(store)
         }
         .modelContainer(store.container)

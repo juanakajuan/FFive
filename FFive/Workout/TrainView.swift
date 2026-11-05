@@ -1,6 +1,6 @@
-import SwiftUI
-import SwiftData
 import FFiveCore
+import SwiftData
+import SwiftUI
 
 /// What the Workout tab shows. Resolving it only reads stored state; building a block day happens in `.task(id:)`.
 enum WorkoutTabContent: Equatable {
@@ -13,7 +13,9 @@ enum WorkoutTabContent: Equatable {
 
     static func resolve(meso: Mesocycle?, focus: SessionFocus?, quickWorkout: Workout?) -> WorkoutTabContent {
         guard let meso else { return quickWorkout.map(Self.session) ?? .empty }
-        if let focus, focus.meso == meso.persistentModelID, meso.allKeys.contains(focus.key), meso.status(at: focus.key).isOpen {
+        if let focus, focus.meso == meso.persistentModelID, meso.allKeys.contains(focus.key),
+            meso.status(at: focus.key).isOpen
+        {
             return day(focus.key, of: meso)
         }
         if let quickWorkout { return .session(quickWorkout) }
@@ -39,13 +41,16 @@ struct TrainView: View {
     private var openQuickWorkout: Workout? { openWorkouts.first { $0.mesocycle == nil } }
 
     var body: some View {
-        let content = WorkoutTabContent.resolve(meso: activeMesos.first, focus: router.focus, quickWorkout: openQuickWorkout)
+        let content = WorkoutTabContent.resolve(
+            meso: activeMesos.first, focus: router.focus, quickWorkout: openQuickWorkout)
         NavigationStack {
             Group {
                 switch content {
                 case .session(let workout):
-                    ActiveWorkoutView(workout: workout, activeMeso: activeMesos.first, openQuickWorkout: openQuickWorkout)
-                        .id(workout.persistentModelID)
+                    ActiveWorkoutView(
+                        workout: workout, activeMeso: activeMesos.first, openQuickWorkout: openQuickWorkout
+                    )
+                    .id(workout.persistentModelID)
                 case .unbuilt:
                     Color.clear
                 case .blockComplete(let meso):
@@ -80,16 +85,20 @@ struct TrainView: View {
                     Text("Train in mesocycles")
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(Theme.text)
-                    Text("Plan a block of 3 to 6 hard weeks and a deload. Every week, your sets, loads, and reps adjust to how the last sessions felt.")
-                        .font(Theme.detail)
-                        .foregroundStyle(Theme.secondary)
+                    Text(
+                        "Plan a block of 3 to 6 hard weeks and a deload. Every week, your sets, loads, and reps adjust to how the last sessions felt."
+                    )
+                    .font(Theme.detail)
+                    .foregroundStyle(Theme.secondary)
                     Button("Plan a Mesocycle") { showingBuilder = true }
                         .buttonStyle(.wideFilled)
                         .a11y(.workoutPlan)
                         .padding(.top, 4)
-                    Button("Quick Workout") { WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store) }
-                        .buttonStyle(.wideOutlined)
-                        .a11y(.workoutQuick)
+                    Button("Quick Workout") {
+                        WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store)
+                    }
+                    .buttonStyle(.wideOutlined)
+                    .a11y(.workoutQuick)
                     Text("Log a free-form session with no plan.")
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondary)
@@ -117,9 +126,11 @@ struct TrainView: View {
                     .buttonStyle(.wideFilled)
                     .a11y(.workoutEnd)
                     .padding(.top, 4)
-                Button("Quick Workout") { WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store) }
-                    .buttonStyle(.wideOutlined)
-                    .a11y(.workoutQuick)
+                Button("Quick Workout") {
+                    WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store)
+                }
+                .buttonStyle(.wideOutlined)
+                .a11y(.workoutQuick)
             }
             .padding(.horizontal, Theme.gutter)
             .padding(.bottom, 8)
@@ -128,9 +139,13 @@ struct TrainView: View {
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             WorkoutHeader(title: Text("Block complete"), subtitle: Text(meso.name), progress: 1) {
-                Button { showingSchedule = true } label: { ActionIcon.calendar }
-                    .accessibilityLabel("Schedule")
-                    .a11y(.workoutSchedule)
+                Button {
+                    showingSchedule = true
+                } label: {
+                    ActionIcon.calendar
+                }
+                .accessibilityLabel("Schedule")
+                .a11y(.workoutSchedule)
             }
         }
         .sheet(isPresented: $showingSchedule) { ScheduleSheet(meso: meso, week: meso.accumulationWeeks) }

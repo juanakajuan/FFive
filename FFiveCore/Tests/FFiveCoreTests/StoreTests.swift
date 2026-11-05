@@ -1,5 +1,6 @@
 import SwiftData
 import XCTest
+
 @testable import FFiveCore
 
 @MainActor
@@ -9,8 +10,10 @@ final class StoreTests: XCTestCase {
 
     func twoDayDraft() -> MesoDraft {
         var draft = MesoDraft(template: nil)
-        draft.days = [.init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest)]),
-                      .init(name: "B", slots: [.init(exercise: "Barbell Row", muscle: .back)])]
+        draft.days = [
+            .init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest)]),
+            .init(name: "B", slots: [.init(exercise: "Barbell Row", muscle: .back)]),
+        ]
         return draft
     }
 
@@ -43,7 +46,8 @@ final class StoreTests: XCTestCase {
         XCTAssertThrowsError(try store.startMesocycle(twoDayDraft())) { error in
             XCTAssertEqual(error as? StoreError, .anotherMesocycleIsActive)
         }
-        XCTAssertEqual(try store.context.fetchCount(FetchDescriptor<Mesocycle>()), 1, "the refused start inserts nothing")
+        XCTAssertEqual(
+            try store.context.fetchCount(FetchDescriptor<Mesocycle>()), 1, "the refused start inserts nothing")
     }
 
     func testDeleteWorkoutDetachesFromBlock() throws {
@@ -105,7 +109,9 @@ final class StoreTests: XCTestCase {
         store.setNote("Elbows in", on: first)
 
         store.pinNote(on: first)
-        XCTAssertEqual(try pinned(store, "Bench Press"), ["Elbows in"], "every Bench Press card and the exercise page read the pin")
+        XCTAssertEqual(
+            try pinned(store, "Bench Press"), ["Elbows in"], "every Bench Press card and the exercise page read the pin"
+        )
         XCTAssertNil(first.note, "the row copy is cleared so the note shows once")
         XCTAssertFalse(store.context.hasChanges, "the pin is saved")
 
@@ -202,14 +208,16 @@ final class StoreTests: XCTestCase {
         let quick = store.startQuickWorkout()
         store.addExercise(named: "Bench Press", muscle: .chest, to: quick)
         let prefilled = try XCTUnwrap(quick.sortedExercises.last)
-        XCTAssertEqual(prefilled.sortedSets.map { ($0.weight, $0.reps) }.map { "\($0.0)x\($0.1)" }, ["100.0x8", "100.0x8"],
-                       "a quick workout prefills last time's done sets")
+        XCTAssertEqual(
+            prefilled.sortedSets.map { ($0.weight, $0.reps) }.map { "\($0.0)x\($0.1)" }, ["100.0x8", "100.0x8"],
+            "a quick workout prefills last time's done sets")
         XCTAssertTrue(prefilled.sets.allSatisfy { $0.targetWeight == nil && !$0.isDone })
 
         store.addExercise(named: "Face Pull", muscle: .rearDelts, to: quick)
         let fresh = try XCTUnwrap(quick.sortedExercises.last)
-        XCTAssertEqual(fresh.sortedSets.map { ($0.weight, $0.reps) }.map { "\($0.0)x\($0.1)" }, ["0.0x10"],
-                       "an exercise never done before gets one empty set")
+        XCTAssertEqual(
+            fresh.sortedSets.map { ($0.weight, $0.reps) }.map { "\($0.0)x\($0.1)" }, ["0.0x10"],
+            "an exercise never done before gets one empty set")
         XCTAssertFalse(store.context.hasChanges, "every add is saved")
     }
 
@@ -218,8 +226,9 @@ final class StoreTests: XCTestCase {
         let key = ExerciseID(folding: "Bench Press")
         let reps = Progression.startingReps(in: ExerciseCatalog.repRange(for: key))
         let rir = try XCTUnwrap(meso.phase(week: 0).rir)
-        let load = Progression.load(forReps: reps, rir: rir, oneRepMax: oneRepMax,
-                                    increment: ExerciseCatalog.increment(for: key, unit: store.settings.weightUnit))
+        let load = Progression.load(
+            forReps: reps, rir: rir, oneRepMax: oneRepMax,
+            increment: ExerciseCatalog.increment(for: key, unit: store.settings.weightUnit))
         XCTAssertNotEqual(SetTarget(weight: load, reps: reps), SetTarget.calibrate)
         return SetTarget(weight: load, reps: reps)
     }
@@ -233,7 +242,9 @@ final class StoreTests: XCTestCase {
 
         let targets = session.sortedExercises[0].sortedSets.map(\.target)
         XCTAssertFalse(targets.isEmpty)
-        XCTAssertEqual(targets, Array(repeating: try benchTarget(store, meso), count: targets.count), "a workout finished after a render feeds the next build")
+        XCTAssertEqual(
+            targets, Array(repeating: try benchTarget(store, meso), count: targets.count),
+            "a workout finished after a render feeds the next build")
     }
 
     func testSnapshotRefreshesAfterAFailedSave() throws {
@@ -242,10 +253,14 @@ final class StoreTests: XCTestCase {
         }
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("nosave-\(UUID().uuidString).store")
         defer { try? FileManager.default.removeItem(at: url) }
-        try Store(container: ModelContainer(for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url)),
-                  settings: Settings()).startMesocycle(twoDayDraft())
+        try Store(
+            container: ModelContainer(
+                for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url)),
+            settings: Settings()
+        ).startMesocycle(twoDayDraft())
         let readOnly = ModelConfiguration(schema: AppStore.schema, url: url, allowsSave: false)
-        let store = Store(container: try ModelContainer(for: AppStore.schema, configurations: readOnly), settings: Settings())
+        let store = Store(
+            container: try ModelContainer(for: AppStore.schema, configurations: readOnly), settings: Settings())
         let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
         XCTAssertGreaterThan(store.weeklyVolume(meso, week: 0).count, 0)
 
@@ -255,8 +270,9 @@ final class StoreTests: XCTestCase {
 
         let targets = session.sortedExercises[0].sortedSets.map(\.target)
         XCTAssertFalse(targets.isEmpty)
-        XCTAssertEqual(targets, Array(repeating: try benchTarget(store, meso), count: targets.count),
-                       "a workout the context holds feeds the next build even when its save failed")
+        XCTAssertEqual(
+            targets, Array(repeating: try benchTarget(store, meso), count: targets.count),
+            "a workout the context holds feeds the next build even when its save failed")
     }
 
     func testAddAndDeleteSet() {
@@ -268,7 +284,9 @@ final class StoreTests: XCTestCase {
         exercise.sets[0].reps = 5
 
         store.addSet(to: exercise)
-        XCTAssertEqual(exercise.sortedSets.map { "\($0.weight)x\($0.reps)" }, ["225.0x5", "225.0x5"], "the new set copies the last one")
+        XCTAssertEqual(
+            exercise.sortedSets.map { "\($0.weight)x\($0.reps)" }, ["225.0x5", "225.0x5"],
+            "the new set copies the last one")
         XCTAssertFalse(store.context.hasChanges)
 
         store.deleteSet(exercise.sortedSets[0], from: exercise)
@@ -290,13 +308,15 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(row.name, "Bench Press")
         XCTAssertEqual(row.muscle, .chest)
         XCTAssertEqual(row.sets.count, before, "a swap keeps the set count")
-        XCTAssertTrue(row.sets.allSatisfy { $0.targetWeight != nil }, "targets come from the lifter's Bench Press history")
+        XCTAssertTrue(
+            row.sets.allSatisfy { $0.targetWeight != nil }, "targets come from the lifter's Bench Press history")
         XCTAssertFalse(store.context.hasChanges)
 
         store.removeExercise(row, from: session)
         XCTAssertTrue(session.exercises.isEmpty)
-        XCTAssertEqual(try store.context.fetch(FetchDescriptor<Exercise>(predicate: #Predicate { $0.workout == nil })).count, 0,
-                       "the removed exercise and its sets leave the store, none is orphaned")
+        XCTAssertEqual(
+            try store.context.fetch(FetchDescriptor<Exercise>(predicate: #Predicate { $0.workout == nil })).count, 0,
+            "the removed exercise and its sets leave the store, none is orphaned")
         XCTAssertFalse(store.context.hasChanges)
     }
 
@@ -308,11 +328,14 @@ final class StoreTests: XCTestCase {
         store.finish(first)
         let next = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0))
         next.startDate = first.startDate + 86_400
-        let record = try XCTUnwrap(store.pendingSoreness(in: next)[.chest], "the next chest day asks how the last one recovered")
+        let record = try XCTUnwrap(
+            store.pendingSoreness(in: next)[.chest], "the next chest day asks how the last one recovered")
 
         store.recordSoreness(.healedOnTime, on: record, during: next)
 
-        XCTAssertEqual(first.feedbackRecord(for: .chest)?.value.soreness, .healedOnTime, "the answer lands on the session it describes")
+        XCTAssertEqual(
+            first.feedbackRecord(for: .chest)?.value.soreness, .healedOnTime,
+            "the answer lands on the session it describes")
         XCTAssertTrue(store.pendingSoreness(in: next).isEmpty, "the prompt clears")
         XCTAssertFalse(store.context.hasChanges)
     }
@@ -334,7 +357,8 @@ final class StoreTests: XCTestCase {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("backfill-\(UUID().uuidString).store")
         defer { try? FileManager.default.removeItem(at: url) }
         func container() throws -> ModelContainer {
-            try ModelContainer(for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url))
+            try ModelContainer(
+                for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url))
         }
         let writer = ModelContext(try container())
         writer.insert(Exercise(name: "Bench Press", order: 0, muscle: .chest))
@@ -344,8 +368,12 @@ final class StoreTests: XCTestCase {
         try writer.save()
 
         func rows(_ context: ModelContext, key: (String, String?) -> String? = { $1 }) throws -> [String] {
-            let exercises = try context.fetch(FetchDescriptor<Exercise>()).map { "exercise \($0.name): \(key($0.name, $0.exerciseKey) ?? "nil")" }
-            let slots = try context.fetch(FetchDescriptor<DaySlot>()).map { "slot \($0.exerciseName): \(key($0.exerciseName, $0.exerciseKey) ?? "nil")" }
+            let exercises = try context.fetch(FetchDescriptor<Exercise>()).map {
+                "exercise \($0.name): \(key($0.name, $0.exerciseKey) ?? "nil")"
+            }
+            let slots = try context.fetch(FetchDescriptor<DaySlot>()).map {
+                "slot \($0.exerciseName): \(key($0.exerciseName, $0.exerciseKey) ?? "nil")"
+            }
             return (exercises + slots).sorted()
         }
         let expected = try rows(writer) { name, _ in ExerciseID(folding: name).rawValue }
@@ -363,7 +391,8 @@ final class StoreTests: XCTestCase {
         let store = Store(inMemory: true)
         XCTAssertNil(store.lastFinishedExercise(ExerciseID(folding: "Bench Press")))
         finishedBench(store)
-        XCTAssertEqual(store.lastFinishedExercise(ExerciseID(folding: "Bench Press"))?.sortedSets.filter(\.isDone).count, 2)
+        XCTAssertEqual(
+            store.lastFinishedExercise(ExerciseID(folding: "Bench Press"))?.sortedSets.filter(\.isDone).count, 2)
 
         try store.startMesocycle(twoDayDraft())
         let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
@@ -373,11 +402,14 @@ final class StoreTests: XCTestCase {
         let volumes = store.weeklyVolume(meso, week: 0)
         XCTAssertEqual(volumes.first { $0.muscle == .chest }?.done, 1)
         XCTAssertEqual(volumes.first { $0.muscle == .chest }?.planned, session.sortedExercises[0].sets.count)
-        XCTAssertGreaterThan(volumes.first { $0.muscle == .back }?.planned ?? 0, 0, "an unbuilt day counts what it would prescribe")
+        XCTAssertGreaterThan(
+            volumes.first { $0.muscle == .back }?.planned ?? 0, 0, "an unbuilt day counts what it would prescribe")
     }
 
     @discardableResult
-    func finished(_ store: Store, at start: Date, minutes: Double = 60, _ lifts: [(name: String, muscle: Muscle, weight: Double)]) -> Workout {
+    func finished(
+        _ store: Store, at start: Date, minutes: Double = 60, _ lifts: [(name: String, muscle: Muscle, weight: Double)]
+    ) -> Workout {
         let workout = Workout(name: "Logged", startDate: start)
         store.context.insert(workout)
         for (order, lift) in lifts.enumerated() {
@@ -394,19 +426,29 @@ final class StoreTests: XCTestCase {
 
     func testLibraryOrderIsStable() throws {
         let store = Store(inMemory: true)
-        finished(store, at: .now, [("zercher squat", .quads, 60), ("Bench Press", .chest, 100), ("Cafe Curl", .biceps, 20), ("Café Curl", .biceps, 20)])
+        finished(
+            store, at: .now,
+            [
+                ("zercher squat", .quads, 60), ("Bench Press", .chest, 100), ("Cafe Curl", .biceps, 20),
+                ("Café Curl", .biceps, 20),
+            ])
 
         let all = store.library(muscle: nil, search: "")
         XCTAssertEqual(all.count, ExerciseCatalog.all.count + 2, "custom lifts join the catalog once per folded name")
         XCTAssertTrue(all.contains { $0.name == "zercher squat" && $0.info == nil && $0.equipment == "Custom" })
-        XCTAssertEqual(all.map(\.name), all.map(\.name).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending },
-                       "names sort ignoring case, so a lowercase custom name sits among the rest")
+        XCTAssertEqual(
+            all.map(\.name), all.map(\.name).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending },
+            "names sort ignoring case, so a lowercase custom name sits among the rest")
         XCTAssertEqual(all, store.library(muscle: nil, search: ""), "the same store gives the same order every time")
 
         let quads = store.library(muscle: .quads, search: "")
         XCTAssertTrue(quads.allSatisfy { $0.muscle == .quads })
-        XCTAssertEqual(quads.map(\.id), all.filter { $0.muscle == .quads }.map(\.id), "a muscle filter keeps the full list's order")
-        XCTAssertEqual(store.library(muscle: nil, search: "  ZERCHER ").map(\.name), ["zercher squat"], "search trims and ignores case")
+        XCTAssertEqual(
+            quads.map(\.id), all.filter { $0.muscle == .quads }.map(\.id), "a muscle filter keeps the full list's order"
+        )
+        XCTAssertEqual(
+            store.library(muscle: nil, search: "  ZERCHER ").map(\.name), ["zercher squat"],
+            "search trims and ignores case")
     }
 
     func testWeekStatsMatchHistory() throws {
@@ -422,10 +464,12 @@ final class StoreTests: XCTestCase {
 
         let history = try store.context.fetch(Workout.history)
         let thisWeek = history.filter { $0.startDate >= weekStart }
-        XCTAssertEqual(store.weekStats(now: now),
-                       WeekStats(thisWeek: thisWeek.count, time: thisWeek.reduce(0) { $0 + $1.duration }, allTime: history.count))
-        XCTAssertEqual(store.weekStats(now: now), WeekStats(thisWeek: 2, time: 75 * 60, allTime: 3),
-                       "an open workout and last week's session stay out of this week")
+        XCTAssertEqual(
+            store.weekStats(now: now),
+            WeekStats(thisWeek: thisWeek.count, time: thisWeek.reduce(0) { $0 + $1.duration }, allTime: history.count))
+        XCTAssertEqual(
+            store.weekStats(now: now), WeekStats(thisWeek: 2, time: 75 * 60, allTime: 3),
+            "an open workout and last week's session stay out of this week")
     }
 
     func testStrengthSeriesPointsKeepTheirIdentity() throws {

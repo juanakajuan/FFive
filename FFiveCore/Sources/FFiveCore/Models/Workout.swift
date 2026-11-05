@@ -94,11 +94,13 @@ public final class Workout {
     }
 
     public func updateFeedback(for muscle: Muscle, _ change: (inout MuscleFeedback) -> Void) {
-        let record = feedbackRecord(for: muscle) ?? {
-            let record = MuscleFeedbackRecord(muscle: muscle)
-            feedback.append(record)
-            return record
-        }()
+        let record =
+            feedbackRecord(for: muscle)
+            ?? {
+                let record = MuscleFeedbackRecord(muscle: muscle)
+                feedback.append(record)
+                return record
+            }()
         change(&record.value)
     }
 
@@ -125,10 +127,12 @@ public final class Workout {
 
 extension Workout {
     public static var history: FetchDescriptor<Workout> {
-        FetchDescriptor(predicate: #Predicate { $0.endDate != nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
+        FetchDescriptor(
+            predicate: #Predicate { $0.endDate != nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
     }
 
     public static var open: FetchDescriptor<Workout> {
-        FetchDescriptor(predicate: #Predicate { $0.endDate == nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
+        FetchDescriptor(
+            predicate: #Predicate { $0.endDate == nil }, sortBy: [SortDescriptor(\.startDate, order: .reverse)])
     }
 }

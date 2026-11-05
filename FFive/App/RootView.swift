@@ -1,7 +1,7 @@
-import SwiftUI
-import SwiftData
-import Observation
 import FFiveCore
+import Observation
+import SwiftData
+import SwiftUI
 
 enum AppTab: CaseIterable, Hashable {
     case workout, mesos, templates, exercises, more
@@ -79,12 +79,18 @@ struct RootView: View {
             .frame(maxHeight: .infinity)
             if !keyboardShown { TabBar(selection: $router.tab) }
         }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in keyboardShown = true }
-        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in keyboardShown = false }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
+            keyboardShown = true
+        }
+        .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
+            keyboardShown = false
+        }
         .environment(router)
         .tint(Theme.text)
-        .alert("Your last change was not saved",
-               isPresented: Binding(get: { store.failure != nil }, set: { if !$0 { store.dismissFailure() } })) {
+        .alert(
+            "Your last change was not saved",
+            isPresented: Binding(get: { store.failure != nil }, set: { if !$0 { store.dismissFailure() } })
+        ) {
         } message: {
             Text(store.failure?.localizedDescription ?? "")
         }
@@ -98,7 +104,9 @@ private struct TabBar: View {
         HStack(spacing: 0) {
             ForEach(AppTab.allCases, id: \.self) { tab in
                 let selected = tab == selection
-                Button { selection = tab } label: {
+                Button {
+                    selection = tab
+                } label: {
                     VStack(spacing: 3) {
                         Image(systemName: tab.icon(selected: selected))
                             .font(.system(size: 22))
