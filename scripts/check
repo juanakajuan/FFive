@@ -1,0 +1,22 @@
+#!/bin/sh
+cd "$(dirname "$0")/.." || exit 1
+out="$(mktemp)"
+trap 'rm -f "$out"' EXIT
+
+run() {
+    started=$(date +%s)
+    if "$@" > "$out" 2>&1; then
+        echo "ok   $* ($(($(date +%s) - started))s) $(tail -n 1 "$out")"
+    else
+        cat "$out"
+        echo "CHECK FAIL $*"
+        exit 1
+    fi
+}
+
+run scripts/lint.sh --self-test
+run scripts/lint.sh
+run scripts/typecheck-app.sh
+run swift test --package-path FFiveCore --disable-swift-testing
+run scripts/perf-probe.sh
+echo "CHECK PASS"

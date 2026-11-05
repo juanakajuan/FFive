@@ -5,7 +5,7 @@ description: Drive the FFive iOS app (SwiftUI, SwiftData) on a throwaway iOS sim
 
 # Verify FFive
 
-FFive is an iPhone app (`com.juanix.FFive`, iOS 17+, one SwiftUI target in `FFive.xcodeproj`). The user touches only the app UI: five tabs (Workout, Mesos, Templates, Exercises, More, with Progress, Learn, and Settings pushed from More) plus sheets. There is no server, CLI, or URL scheme. `scripts/check-engine.sh` and `scripts/check-planner.sh` test the engine without UI. This skill covers the UI.
+FFive is an iPhone app (`com.juanix.FFive`, iOS 17+, one SwiftUI target in `FFive.xcodeproj`). The user touches only the app UI: five tabs (Workout, Mesos, Templates, Exercises, More, with Progress, Learn, and Settings pushed from More) plus sheets. There is no server, CLI, or URL scheme. `swift test --package-path FFiveCore` tests the engine and planner without UI. This skill covers the UI.
 
 The harness has two parts:
 
@@ -47,7 +47,7 @@ Teardown: see Cleanup. Simulators of removed worktrees are swept automatically.
 $V doctor
 ```
 
-This check is read-only. It confirms that the simulator recorded in `.verify/state.env` exists, carries our name, and is booted, that `com.juanix.FFive` is installed, that the driver is built, and that the installed build matches the source. The install is stamped with `HEAD` plus a hash of uncommitted `FFive/` changes. It ends with `HEALTHY` (exit 0) or `UNHEALTHY` (exit 1). It also warns when a drive holds the lock. Run it first whenever anything looks off. A stale-install failure means "run `launch`", not "the feature is broken".
+This check is read-only. It confirms that the simulator recorded in `.verify/state.env` exists, carries our name, and is booted, that `com.juanix.FFive` is installed, that the driver is built, and that the installed build matches the source. The install is stamped with `HEAD` plus a hash of uncommitted `FFive/` and `FFiveCore/` changes. It ends with `HEALTHY` (exit 0) or `UNHEALTHY` (exit 1). It also warns when a drive holds the lock. Run it first whenever anything looks off. A stale-install failure means "run `launch`", not "the feature is broken".
 
 ## Drive
 
