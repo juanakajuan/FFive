@@ -237,6 +237,9 @@ final class StoreTests: XCTestCase {
     }
 
     func testSnapshotRefreshesAfterAFailedSave() throws {
+        if #unavailable(macOS 27) {
+            throw XCTSkip("SwiftData before macOS 27 traps resolving a row whose save failed (ModelContext.swift:3256)")
+        }
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("nosave-\(UUID().uuidString).store")
         defer { try? FileManager.default.removeItem(at: url) }
         try Store(container: ModelContainer(for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url)),
