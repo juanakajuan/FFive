@@ -97,6 +97,11 @@ final class DriverTests: XCTestCase {
             try onScreen(args, timeout).tap()
         case "longpress":
             try onScreen(args, timeout).press(forDuration: 1.2)
+        case "drag":
+            guard let split = args.firstIndex(of: "to") else { throw StepError("expected `drag <target> to <target>`") }
+            let source = try onScreen(Array(args[..<split]), timeout)
+            let destination = try onScreen(Array(args[(split + 1)...]), timeout)
+            source.press(forDuration: 0.8, thenDragTo: destination)
         case "type":
             let text = try Self.pop(&args, "text")
             let field = try onScreen(args, timeout)

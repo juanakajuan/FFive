@@ -25,6 +25,10 @@ public final class Workout {
     }
 
     public var sortedExercises: [Exercise] { exercises.sorted { $0.order < $1.order } }
+    /// The order later weeks are planned in, which a session-only reorder keeps apart from `sortedExercises`.
+    var plannedExercises: [Exercise] {
+        exercises.sorted { ($0.plannedOrder ?? $0.order, $0.order) < ($1.plannedOrder ?? $1.order, $1.order) }
+    }
     public var duration: TimeInterval { (endDate ?? .now).timeIntervalSince(startDate) }
     public var completedSets: Int { exercises.reduce(0) { $0 + $1.sets.filter(\.isDone).count } }
     /// The share of planned sets logged, from 0 to 1.

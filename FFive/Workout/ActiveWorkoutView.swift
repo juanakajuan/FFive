@@ -15,6 +15,7 @@ struct ActiveWorkoutView: View {
 
     @State private var picker: PickerRequest?
     @State private var showingSchedule = false
+    @State private var showingReorder = false
     @State private var confirmDiscard = false
     @State private var confirmEnd = false
     @State private var renameDraft: String?
@@ -137,6 +138,7 @@ struct ActiveWorkoutView: View {
                 }
             }
         }
+        .sheet(isPresented: $showingReorder) { ReorderExercisesView(workout: workout) }
         .sheet(isPresented: $showingSchedule) {
             if let activeMeso {
                 ScheduleSheet(
@@ -225,6 +227,10 @@ struct ActiveWorkoutView: View {
     private var menuItems: some View {
         Button("Add Exercise", systemImage: "plus") { picker = .add }
             .a11y(.menuAddExercise)
+        if workout.exercises.count > 1 {
+            Button("Reorder Exercises", systemImage: "arrow.up.arrow.down") { showingReorder = true }
+                .a11y(.menuReorder)
+        }
         if let meso = workout.mesocycle, let key = workout.key, meso.canSkip(key) {
             Button("Skip Day", systemImage: "forward") { skip(key, of: meso) }
                 .a11y(.menuSkipDay)

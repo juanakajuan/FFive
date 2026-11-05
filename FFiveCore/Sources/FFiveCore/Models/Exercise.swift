@@ -6,6 +6,8 @@ public final class Exercise {
     public internal(set) var name: String
     public internal(set) var exerciseKey: String?
     public var order: Int
+    /// Where this exercise sits in the plan built from this session. Nil means the same as `order`.
+    var plannedOrder: Int?
     public internal(set) var workout: Workout?
     @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
     public internal(set) var sets: [SetEntry] = []

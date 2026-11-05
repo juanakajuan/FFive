@@ -97,6 +97,7 @@ Optional `timeout=<seconds>` changes the default 5 s wait for either target form
 | `launch [args...]` | Terminates and relaunches the app with those launch arguments (`-seedDemo`, `-demoRoute session`). `drive` adds `-disableAnimations`. |
 | `terminate` | Terminates the app. |
 | `tap <target>`, `longpress <target>` | Acts on the first on-screen match. Long press is 1.2 s, which opens context menus. |
+| `drag <target> to <target>` | Presses the first target for 0.8 s, then drags it onto the second. Use it on a list row's reorder handle in edit mode. |
 | `type <target> "<text>"` | Taps the field and types. |
 | `replace <target> "<text>"` | Focuses the field with a tap as near its trailing edge as takes focus, deletes its contents, and types. |
 | `wait <target>` / `assert <target>` | Fails unless the element exists and is hittable within the timeout. An element off screen or under a sheet fails with `not on screen within <t>s`. |
