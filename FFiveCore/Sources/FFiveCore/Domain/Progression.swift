@@ -93,6 +93,9 @@ public enum Progression {
     /// Holds load and adds the reps freed by the lower RIR; once reps pass the top of `repRange`,
     /// adds `increment` and re-derives reps from estimated 1RM. A set that fell 2+ reps short of its
     /// target repeats its target. Missing logs repeat the previous target.
+    /// Myo-rep and myo-rep match sets are excluded from load and rep targets: they are taken near failure after
+    /// short rest, so their reps say nothing about the straight-set target. Their slot repeats its previous target
+    /// (`SetEntry.logged` is nil for them), and they still count as sets toward weekly volume.
     static func nextTargets(
         previousTargets: [SetTarget],
         logged: [LoggedSet?],

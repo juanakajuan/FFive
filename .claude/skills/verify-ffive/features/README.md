@@ -8,7 +8,7 @@ This directory is the maintained source for verifying FFive's user-facing behavi
 - `ffive-verify launch` printed `READY`, and `ffive-verify doctor` prints `HEALTHY` with an install stamp that matches the source.
 - **Demo baseline** (read-only journeys): every drive starts with `launch -seedDemo`. The block "Full Body, 3 Days" is at Week 2 of 5. Week 1 is finished, Week 2 · Day 1 is in progress with Squat logged, and Week 2 · Day 3 is skipped. The Workout tab opens on `WEEK 2 DAY 1`. "Morning Workout" and "Evening Workout" are free-form history.
 - **On-disk baseline** (write journeys): `ffive-verify reset-data`, then a bare `launch`. The Workout tab shows `Plan a Mesocycle` and `Quick Workout`.
-- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes and end-mesocycle each start from their own `reset-data`.
+- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, and end-mesocycle each start from their own `reset-data`.
 - Never drive a simulator that `ffive-verify launch` did not create in this checkout.
 
 ## Driving conventions
@@ -45,6 +45,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Skip a day](./skip-day.md): skip from the workout menu or the schedule grid, then train it after all (on disk).
 - [End a mesocycle](./end-mesocycle.md): end the active block from the workout menu; the session reaches History, the block shows finished, and the store holds its finished date (on disk).
 - [Quick workout](./quick-workout.md): a free-form session with exercises from the picker (on disk).
+- [Set type](./set-type.md): mark a set Regular, Myorep, or Myorep match from its menu; the type shows on the row and in history (on disk).
 - [Notes](./notes.md): a per-workout exercise note, pinning it to carry forward, editing, unpinning, and deleting it, and a day note (on disk).
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
 - [Settings](./settings.md): weight unit and app version, pushed from More (demo plus UserDefaults).

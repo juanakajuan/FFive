@@ -449,17 +449,25 @@ struct SetRow: View {
         Binding(get: { set.reps == 0 ? nil : set.reps }, set: { set.reps = $0 ?? 0 })
     }
 
+    private var setType: Binding<SetType> {
+        Binding(get: { set.type }, set: { store.setType($0, of: set) })
+    }
+
     var body: some View {
         HStack(spacing: 0) {
             Menu {
                 Button("Add Set", systemImage: "plus", action: onAdd)
                     .a11y(.menuAddSet)
+                Picker("Set Type", selection: setType) {
+                    ForEach(SetType.allCases) { Text($0.title).tag($0) }
+                }
+                .a11y(.menuSetType)
                 Button("Delete Set", systemImage: "trash", role: .destructive, action: onDelete)
                     .a11y(.menuDeleteSet)
             } label: {
                 ActionIcon.verticalEllipsis.frame(width: SetColumns.menu, height: 44)
             }
-            .accessibilityLabel("Set \(number) menu")
+            .accessibilityLabel(set.type.tag == nil ? "Set \(number) menu" : "Set \(number) menu, \(set.type.title)")
             .a11y(.setMenu, number)
 
             TextField(
@@ -489,6 +497,16 @@ struct SetRow: View {
             .a11y(.setReps, number)
             .frame(width: SetColumns.field)
             .padding(.leading, 16)
+
+            if let tag = set.type.tag {
+                Text(tag)
+                    .font(Theme.caption.weight(.medium))
+                    .foregroundStyle(Theme.secondary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.7)
+                    .padding(.leading, 8)
+                    .accessibilityHidden(true)
+            }
 
             Spacer(minLength: 0)
 
@@ -534,6 +552,9 @@ struct ExerciseHistorySheet: View {
                             if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
                             HStack {
                                 Text("Set \(index + 1)").foregroundStyle(Theme.secondary)
+                                if let tag = set.type.tag {
+                                    Text(tag).font(Theme.caption.weight(.medium)).foregroundStyle(Theme.secondary)
+                                }
                                 Spacer()
                                 Text("\(formatWeight(set.weight)) \(unit.rawValue) × \(set.reps)")
                                     .monospacedDigit()
@@ -542,6 +563,10 @@ struct ExerciseHistorySheet: View {
                             .font(Theme.body)
                             .padding(.horizontal, Theme.gutter)
                             .frame(minHeight: 44)
+                            .accessibilityElement(children: .ignore)
+                            .accessibilityLabel(
+                                "Set \(index + 1)\(set.type.tag == nil ? "" : ", \(set.type.title)"), \(formatWeight(set.weight)) \(unit.rawValue) × \(set.reps)"
+                            )
                         }
                     } else {
                         Text("No finished session has this exercise yet.")

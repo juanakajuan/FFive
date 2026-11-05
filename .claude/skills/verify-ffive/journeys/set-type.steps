@@ -1,0 +1,43 @@
+# set-type: mark a set as Myorep match from its menu, log it, and see the type on the row and in history, on-disk.
+# Before: ffive-verify reset-data (no active mesocycle, so the Workout tab shows its empty state).
+launch
+wait #workout.quick timeout=20
+tap #workout.quick
+wait text "QUICK WORKOUT"
+tap #workout.menu
+tap #menu.add-exercise
+wait nav "Add Exercise"
+type #picker.search "Lateral"
+tap #picker.row.lateral-raise
+wait text "Lateral Raise"
+replace #set.weight.1 "25"
+replace #set.reps.1 "15"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+tap #set.menu.1
+tap #menu.add-set
+wait #set.weight.2
+exists any "Set 2 menu"
+tap #set.menu.2
+wait button "Myorep match"
+shot 01-set-menu-picker
+tap button "Myorep match"
+wait any "Set 2 menu, Myorep match"
+store-expect SetEntry typeRaw myorepMatch
+replace #set.reps.2 "5"
+tap #keyboard.done
+tap #set.log.2
+selected #set.log.2
+shot 02-row-tag
+tap #workout.finish
+wait #workout.quick timeout=10
+launch
+wait #workout.quick timeout=20
+tap #tab.more
+tap #more.progress
+tap #segment.history
+tap button "~Workout,"
+wait text "Lateral Raise"
+wait any "Set 2, Myorep match*25 lb*5"
+shot 03-history-detail
