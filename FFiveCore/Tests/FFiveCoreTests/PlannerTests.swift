@@ -347,6 +347,19 @@ final class PlannerTests: XCTestCase {
                Progression.estimatedOneRepMax(weight: 500, reps: 10, rir: 0))
         expect("but not the snapshot, which reads finished history only",
                snapshot(context).latestOneRepMax(of: benchID), before.latestOneRepMax(of: benchID))
+
+        let twice = Workout(name: "Bench twice", startDate: t0 + 6 * day)
+        context.insert(twice)
+        for (order, weight) in [(1, 200.0), (0, 60.0)] {
+            let exercise = Exercise(name: "Bench Press", order: order, muscle: .chest)
+            twice.exercises.append(exercise)
+            let set = SetEntry(reps: 8, weight: weight, order: 0)
+            set.isDone = true
+            exercise.sets.append(set)
+        }
+        twice.endDate = twice.startDate + 3600
+        expect("a lift done twice in one session reads its first row in session order, not the heavier",
+               snapshot(context).latestOneRepMax(of: benchID), Progression.estimatedOneRepMax(weight: 60, reps: 8, rir: 0))
     }
 
     func testNote() {
