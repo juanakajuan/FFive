@@ -1,7 +1,7 @@
 #!/bin/sh
-# --trunk compiles out the store.log side so these probe files also run in a checkout that predates Store.log.
+# --trunk prints the numbers without enforcing the budget, so the same probe reads a baseline in an older checkout.
 set -eu
 cd "$(dirname "$0")/.."
 flags=""
-[ "${1:-}" = "--trunk" ] && flags="-Xswiftc -DTRUNK_WRITE"
-swift run --quiet --package-path FFiveCore $flags PerfProbe
+[ "${1:-}" = "--trunk" ] && flags="--no-budget"
+swift run --quiet --package-path FFiveCore PerfProbe $flags

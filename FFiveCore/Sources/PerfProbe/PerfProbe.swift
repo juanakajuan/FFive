@@ -4,21 +4,65 @@ import SwiftData
 
 @main
 struct PerfProbe {
-    static let historyCount = 156
-    static let runs = 5
+    static let budgetSize = 156
+    static let scaleSize = 468
+    static let sizes = [0, budgetSize, scaleSize]
+    static let budgetMillis = 20.0
+    static let budgetScaleFactor = 3.0
+    static let runs = 7
     static let writes = 100
+    static let lifts: [(name: String, muscle: Muscle)] = [
+        ("Bench Press", .chest), ("Cable Fly", .chest), ("Lat Pulldown", .back),
+        ("Barbell Row", .back), ("Calf Raise", .calves), ("Incline Dumbbell Press", .chest),
+    ]
 
     @MainActor
     static func main() {
+        let enforceBudget = !CommandLine.arguments.contains("--no-budget")
+        let clock = ContinuousClock()
+        var medians: [Int: Double] = [:]
+        var stores: [Int: (Store, Mesocycle)] = [:]
+        for size in sizes {
+            let (store, meso) = seeded(finishedWorkouts: size)
+            stores[size] = (store, meso)
+            var millis: [Double] = []
+            for _ in 0..<runs {
+                millis.append(clock.measure { _ = store.weeklyVolume(meso, week: 0) }.milliseconds)
+            }
+            let median = millis.sorted()[runs / 2]
+            medians[size] = median
+            print("perf-probe: weeklyVolume median \(format(median)) ms at \(size) finished workouts (\(runs) runs)")
+        }
+
+        let (store, meso) = stores[budgetSize]!
+        let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
+        let set = session.sortedExercises[0].sortedSets[0]
+        var storeLog: [Double] = []
+        for index in 0..<writes {
+            storeLog.append(clock.measure { store.log(set, done: index.isMultiple(of: 2)) }.milliseconds)
+        }
+        print("perf-probe: set-done median \(format(storeLog.sorted()[writes / 2])) ms per write over \(writes) writes (store.log)")
+
+        guard enforceBudget else { return }
+        let at156 = medians[budgetSize]!
+        let atScale = medians[scaleSize]!
+        if at156 > budgetMillis {
+            print("perf-probe: FAIL weeklyVolume median \(format(at156)) ms at \(budgetSize) exceeds \(format(budgetMillis)) ms")
+            exit(1)
+        }
+        if atScale > budgetScaleFactor * at156 {
+            print("perf-probe: FAIL weeklyVolume median \(format(atScale)) ms at \(scaleSize) exceeds \(format(budgetScaleFactor)) x the \(format(at156)) ms at \(budgetSize)")
+            exit(1)
+        }
+    }
+
+    /// A fresh store with `finishedWorkouts` sessions of the six lifts behind a 4-day draft that has no session built.
+    @MainActor
+    private static func seeded(finishedWorkouts: Int) -> (Store, Mesocycle) {
         let store = Store(inMemory: true)
         let context = store.context
-        let lifts: [(name: String, muscle: Muscle)] = [
-            ("Bench Press", .chest), ("Cable Fly", .chest), ("Lat Pulldown", .back),
-            ("Barbell Row", .back), ("Calf Raise", .calves), ("Incline Dumbbell Press", .chest),
-        ]
-
         let start = Date(timeIntervalSince1970: 1_700_000_000)
-        for index in 0..<historyCount {
+        for index in 0..<finishedWorkouts {
             let date = start + Double(index) * 86_400
             let workout = Workout(name: "History \(index)", startDate: date)
             context.insert(workout)
@@ -33,42 +77,17 @@ struct PerfProbe {
             }
             workout.endDate = date + 3600
         }
-
         var draft = MesoDraft(template: nil)
         draft.days = (0..<4).map { day in
             .init(name: "Day \(day + 1)", slots: lifts.map { .init(exercise: $0.name, muscle: $0.muscle) })
         }
-        let meso = MesoPlanner.start(draft, in: context)
+        try! store.startMesocycle(draft)
+        let meso = try! context.fetch(Mesocycle.active).first!
+        return (store, meso)
+    }
 
-        let clock = ContinuousClock()
-        var millis: [Double] = []
-        for _ in 0..<runs {
-            let elapsed = clock.measure {
-                _ = MesoPlanner.weeklyVolume(meso, week: 0, unit: .lb, snapshot: PlanningSnapshot(context: context))
-            }
-            millis.append(elapsed.milliseconds)
-        }
-        print("perf-probe: weeklyVolume median \(Int(millis.sorted()[runs / 2].rounded())) ms over \(runs) runs, \(historyCount) finished workouts")
-
-        let session = MesoPlanner.workout(for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb,
-                                          snapshot: PlanningSnapshot(context: context), in: context)
-        try? context.save()
-        let set = session.sortedExercises[0].sortedSets[0]
-        var toggleSave: [Double] = []
-        for _ in 0..<writes {
-            toggleSave.append(clock.measure {
-                set.isDone.toggle()
-                try? context.save()
-            }.milliseconds)
-        }
-        print("perf-probe: set-done median \(toggleSave.sorted()[writes / 2].formatted(.number.precision(.fractionLength(2)))) ms per write over \(writes) writes (toggle+save, the trunk write)")
-        #if !TRUNK_WRITE
-        var storeLog: [Double] = []
-        for index in 0..<writes {
-            storeLog.append(clock.measure { store.log(set, done: index.isMultiple(of: 2)) }.milliseconds)
-        }
-        print("perf-probe: set-done median \(storeLog.sorted()[writes / 2].formatted(.number.precision(.fractionLength(2)))) ms per write over \(writes) writes (store.log)")
-        #endif
+    private static func format(_ millis: Double) -> String {
+        millis.formatted(.number.precision(.fractionLength(2)))
     }
 }
 
