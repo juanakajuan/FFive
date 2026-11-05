@@ -84,6 +84,7 @@ struct ActiveWorkoutView: View {
                         phase: workout.phase,
                         onSetCompleted: setCompleted,
                         onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
+                        jointPain: jointPain(for: muscle),
                         onShowHistory: { historyFor = exercise },
                         onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) }
                     ) {
@@ -97,7 +98,7 @@ struct ActiveWorkoutView: View {
                         FeedbackCard(
                             muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()
                         ) { change in
-                            workout.updateFeedback(for: muscle, change)
+                            store.updateFeedback(for: muscle, in: workout, change)
                         }
                     }
                 }
@@ -179,6 +180,15 @@ struct ActiveWorkoutView: View {
             }
         }
         .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
+    }
+
+    /// The muscle's joint pain for this session, shared by its exercise menus and its feedback card.
+    /// Only block sessions collect feedback, so quick workouts get none.
+    private func jointPain(for muscle: Muscle?) -> Binding<JointPain?>? {
+        guard let muscle, workout.mesocycle != nil else { return nil }
+        return Binding(
+            get: { workout.feedbackRecord(for: muscle)?.value.jointPain },
+            set: { value in store.updateFeedback(for: muscle, in: workout) { $0.jointPain = value } })
     }
 
     private func saveNote(_ text: String, to target: NoteEdit.Target) {
@@ -294,6 +304,7 @@ struct ExerciseCard: View {
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
     var onSwap: (() -> Void)?
+    var jointPain: Binding<JointPain?>?
     var onShowHistory: () -> Void
     var onEditNote: (String) -> Void
     var onRemove: () -> Void
@@ -389,6 +400,16 @@ struct ExerciseCard: View {
                         store.skipRemainingSets(of: exercise)
                     }
                     .a11y(.menuSkipRemaining)
+                }
+                if let jointPain {
+                    Picker(selection: jointPain) {
+                        ForEach(JointPain.allCases, id: \.self) { Text($0.label).tag(Optional($0)) }
+                    } label: {
+                        Label("Joint Pain", systemImage: "bandage")
+                        if let pain = jointPain.wrappedValue { Text(pain.label) }
+                    }
+                    .pickerStyle(.menu)
+                    .a11y(.menuJointPain)
                 }
                 Button(note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
                     onEditNote(note ?? "")

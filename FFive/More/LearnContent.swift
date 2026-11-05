@@ -515,7 +515,7 @@ extension Learn {
                     "**Soreness.** Did the muscle never get sore, heal a while ago, heal just in time, or is it still sore?",
                     "**Pump.** How full and tight the muscle felt during and right after its sets.",
                     "**Workload.** How hard that muscle's sets felt, from easy to too much.",
-                    "**Joint pain.** Any pain in the joints the exercises loaded.",
+                    "**Joint pain.** Any pain in the joints the exercises loaded. You can also report it mid-session from an exercise's menu.",
                 ]),
                 .paragraph(
                     "Soreness usually peaks a day or more after training, so the app cannot ask about it right away. It asks at the start of the next session that trains the muscle and writes the answer back to the session that caused it."

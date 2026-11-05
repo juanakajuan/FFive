@@ -371,6 +371,21 @@ final class StoreTests: XCTestCase {
         XCTAssertFalse(store.context.hasChanges)
     }
 
+    func testUpdateFeedbackSavesAndFeedsTheCap() throws {
+        let (store, meso) = try startedStore()
+        let session = store.buildSession(meso, at: day1)
+        store.updateFeedback(for: .chest, in: session) { $0.jointPain = .severe }
+        XCTAssertFalse(store.context.hasChanges, "a joint pain report is saved right away, not left to autosave")
+
+        store.updateFeedback(for: .chest, in: session) {
+            $0.soreness = .never
+            $0.workload = .easy
+        }
+        let feedback = try XCTUnwrap(session.feedbackRecord(for: .chest)).value
+        XCTAssertEqual(feedback.jointPain, .severe, "the end-of-muscle answers keep the earlier joint pain report")
+        XCTAssertEqual(Progression.setDelta(feedback), 0, "the reported pain caps next week's change at 0")
+    }
+
     func testRecordSorenessAnswersThePendingPrompt() throws {
         let (store, meso) = try startedStore()
         let first = store.buildSession(meso, at: day1)

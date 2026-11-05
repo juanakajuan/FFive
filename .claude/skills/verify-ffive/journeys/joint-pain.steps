@@ -1,0 +1,37 @@
+# joint-pain: report joint pain mid-session from an exercise's menu, then see the end-of-muscle card pre-filled.
+# Before: plan-mesocycle.steps ran on a fresh store (block "Verify Block", Week 1 Day 1 showing, Bench Press first).
+launch
+wait text "WEEK 1 DAY 1" timeout=20
+wait text "Bench Press"
+tap #exercise.menu.1
+tap #menu.joint-pain
+shot 01-joint-pain-menu
+tap button "A lot"
+store-expect MuscleFeedbackRecord jointPainRaw 3
+# The answer survives a relaunch, and the menu shows it.
+launch
+wait text "Bench Press" timeout=20
+tap #exercise.menu.1
+shot 02-menu-shows-answer
+tap #menu.joint-pain
+shot 03-picker-checked
+tap button "A lot"
+# Log Bench's first set and drop the rest, so the chest feedback card appears.
+replace #set.weight.1 "135"
+replace #set.reps.1 "9"
+tap #keyboard.done
+tap #set.log.1
+tap #set.menu.2
+tap #menu.delete-set
+tap #set.menu.2
+tap #menu.delete-set
+tap #set.menu.2
+tap #menu.delete-set
+tap #set.menu.2
+tap #menu.delete-set
+wait text "~How did chest feel today"
+shot 04-feedback-card
+scrollto #chip.a-lot
+selected #chip.a-lot
+unselected #chip.none
+shot 05-feedback-card-prefilled

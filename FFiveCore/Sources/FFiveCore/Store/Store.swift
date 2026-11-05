@@ -142,6 +142,11 @@ public final class Store {
         commit()
     }
 
+    public func updateFeedback(for muscle: Muscle, in workout: Workout, _ change: (inout MuscleFeedback) -> Void) {
+        workout.updateFeedback(for: muscle, change)
+        commit()
+    }
+
     public func lastFinishedExercise(_ key: ExerciseID) -> Exercise? {
         MesoPlanner.lastFinishedExercise(key, in: context)
     }
