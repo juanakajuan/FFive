@@ -112,6 +112,11 @@ public final class Store {
         commit()
     }
 
+    public func reorderExercises(of workout: Workout, to exercises: [Exercise], scope: ReorderScope) {
+        MesoPlanner.reorder(workout, to: exercises, scope: scope)
+        commit()
+    }
+
     public func removeExercise(_ exercise: Exercise, from workout: Workout) {
         workout.remove(exercise, in: context)
         commit()
