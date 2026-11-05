@@ -91,6 +91,13 @@ final class BodyweightTests: XCTestCase {
             strongest.oneRepMax, Progression.estimatedOneRepMax(weight: 180, reps: 8, rir: 0), accuracy: 0.001)
     }
 
+    func testVolumeCountsTheMovedLoadOfABodyweightLift() {
+        let store = Store(inMemory: true)
+
+        XCTAssertEqual(loggedPullUp(store, bodyweight: 180, weight: -40, reps: 10).totalVolume, 1400)
+        XCTAssertEqual(loggedPullUp(store, bodyweight: nil, weight: 25, reps: 8).totalVolume, 0)
+    }
+
     func testBodyweightCarriesIntoQuickWorkoutAndBlockSession() throws {
         let (store, meso) = try blockStore()
         let open = store.startQuickWorkout()

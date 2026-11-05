@@ -183,7 +183,6 @@ struct ActiveWorkoutView: View {
                 text: Binding(get: { bodyweightDraft ?? "" }, set: { bodyweightDraft = $0 })
             )
             .keyboardType(.decimalPad)
-            .a11y(.bodyweightField)
             Button("Save") {
                 let text = (bodyweightDraft ?? "").trimmingCharacters(in: .whitespaces)
                 store.setBodyweight(Double(text.replacing(",", with: ".")), of: workout)
