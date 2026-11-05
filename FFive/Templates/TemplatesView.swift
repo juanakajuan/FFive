@@ -21,15 +21,6 @@ struct TemplatesView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    SearchBox(text: $search)
-                        .padding(.horizontal, Theme.gutter)
-                        .padding(.bottom, 12)
-                    FilterBar(label: daysPerWeek.map { "\($0)/week" } ?? "Filters") {
-                        Picker("Days per week", selection: $daysPerWeek) {
-                            Text("All").tag(Int?.none)
-                            ForEach([3, 4, 5, 6], id: \.self) { Text("\($0)/week").tag(Int?.some($0)) }
-                        }
-                    }
                     SectionHeading(text: "FFive templates")
                         .padding(.horizontal, Theme.gutter)
                         .padding(.top, 16)
@@ -56,6 +47,20 @@ struct TemplatesView: View {
                     }
                 }
                 .padding(.bottom, Theme.gutter)
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 0) {
+                    SearchBox(text: $search)
+                        .padding(.horizontal, Theme.gutter)
+                        .padding(.bottom, 12)
+                    FilterBar(label: daysPerWeek.map { "\($0)/week" } ?? "Filters") {
+                        Picker("Days per week", selection: $daysPerWeek) {
+                            Text("All").tag(Int?.none)
+                            ForEach([3, 4, 5, 6], id: \.self) { Text("\($0)/week").tag(Int?.some($0)) }
+                        }
+                    }
+                }
+                .background(Theme.surface)
             }
             .background(Theme.surface)
             .screenHeader("Templates") {

@@ -12,16 +12,6 @@ struct ExercisesView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    SearchBox(text: $search)
-                        .a11y(.exercisesSearch)
-                        .padding(.horizontal, Theme.gutter)
-                        .padding(.bottom, 12)
-                    FilterBar(label: muscle?.displayName ?? "Filters") {
-                        Picker("Muscle", selection: $muscle) {
-                            Text("All").tag(Muscle?.none)
-                            ForEach(Muscle.allCases) { Text($0.displayName).tag(Muscle?.some($0)) }
-                        }
-                    }
                     if listings.isEmpty {
                         Text("No exercises match.")
                             .font(Theme.detail)
@@ -34,6 +24,21 @@ struct ExercisesView: View {
                             .a11y(.exercisesRow, key: listing.name)
                     }
                 }
+            }
+            .safeAreaInset(edge: .top, spacing: 0) {
+                VStack(spacing: 0) {
+                    SearchBox(text: $search)
+                        .a11y(.exercisesSearch)
+                        .padding(.horizontal, Theme.gutter)
+                        .padding(.bottom, 12)
+                    FilterBar(label: muscle?.displayName ?? "Filters") {
+                        Picker("Muscle", selection: $muscle) {
+                            Text("All").tag(Muscle?.none)
+                            ForEach(Muscle.allCases) { Text($0.displayName).tag(Muscle?.some($0)) }
+                        }
+                    }
+                }
+                .background(Theme.surface)
             }
             .background(Theme.surface)
             .screenHeader("Exercises")
