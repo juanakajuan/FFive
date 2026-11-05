@@ -129,7 +129,7 @@ private struct LoggedExerciseCard: View {
                         }
                     }
                     .frame(width: 32, alignment: .leading)
-                    Text("\(formatWeight(set.weight)) \(unit.rawValue)").frame(maxWidth: .infinity)
+                    Text(set.weightText(unit: unit)).frame(maxWidth: .infinity)
                     Text("\(set.reps)").frame(maxWidth: .infinity)
                 }
                 .font(Theme.body.monospacedDigit())
@@ -138,7 +138,7 @@ private struct LoggedExerciseCard: View {
                 .frame(minHeight: 44)
                 .accessibilityElement(children: .ignore)
                 .accessibilityLabel(
-                    "Set \(index + 1)\(set.type.tag == nil ? "" : ", \(set.type.title)"), \(formatWeight(set.weight)) \(unit.rawValue) × \(set.reps)"
+                    "Set \(index + 1)\(set.type.tag == nil ? "" : ", \(set.type.title)"), \(set.weightText(unit: unit)) × \(set.reps)"
                 )
             }
         }

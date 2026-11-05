@@ -1,0 +1,69 @@
+# bodyweight: set body weight from the workout menu, log a weighted and an assisted pull-up, see the e1RM and labels,
+# and see the body weight carry into the next workout, on-disk.
+# Before: ffive-verify reset-data (no active mesocycle, so the Workout tab shows its empty state).
+launch
+wait #workout.quick timeout=20
+tap #workout.quick
+wait text "QUICK WORKOUT"
+tap #workout.menu
+tap #menu.add-exercise
+wait nav "Add Exercise"
+type #picker.search "Pull"
+tap #picker.row.pull-up
+wait text "Pull-Up"
+wait text "~Set your bodyweight"
+wait field "BW"
+shot 01-no-bodyweight
+tap #workout.menu
+tap #menu.bodyweight
+wait field "Bodyweight (lb)"
+type field "Bodyweight (lb)" "180"
+shot 02-bodyweight-alert
+tap button "Save"
+absent text "~Set your bodyweight"
+wait text "Bodyweight*180 lb"
+store-expect Workout bodyweight 180
+replace #set.weight.1 "25"
+replace #set.reps.1 "8"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+tap #set.menu.1
+tap #menu.add-set
+wait #set.weight.2
+replace #set.weight.2 "-40"
+replace #set.reps.2 "10"
+tap #keyboard.done
+tap #set.log.2
+selected #set.log.2
+store-expect SetEntry weight -40
+shot 03-logged
+tap #workout.finish
+wait #workout.quick timeout=10
+launch
+wait #workout.quick timeout=20
+tap #tab.more
+tap #more.progress
+tap #segment.strength
+wait #strength.row.pull-up
+shot 04-progress
+tree 04-progress
+tap #segment.history
+tap button "~Workout,"
+wait text "Pull-Up"
+wait any "Set 1*BW+25*8"
+wait any "Set 2*BW−40*10"
+wait text "3,040"
+shot 05-history-detail
+tap #tab.workout
+wait #workout.quick timeout=10
+tap #workout.quick
+wait text "QUICK WORKOUT"
+tap #workout.menu
+tap #menu.add-exercise
+wait nav "Add Exercise"
+type #picker.search "Dip"
+tap #picker.row.dip
+wait text "Bodyweight*180 lb"
+absent text "~Set your bodyweight"
+shot 06-carried-forward

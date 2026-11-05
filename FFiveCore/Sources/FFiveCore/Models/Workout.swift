@@ -14,10 +14,16 @@ public final class Workout {
     @Relationship(deleteRule: .cascade, inverse: \MuscleFeedbackRecord.workout)
     public var feedback: [MuscleFeedbackRecord] = []
     public internal(set) var note: String?
+    /// The lifter's body weight for this session, in their weight unit. Bodyweight lifts log load added to it.
+    public internal(set) var bodyweight: Double?
 
     public init(name: String, startDate: Date = .now) {
         self.name = name
         self.startDate = startDate
+    }
+
+    func setBodyweight(_ weight: Double?) {
+        bodyweight = weight.flatMap { $0 > 0 ? $0 : nil }
     }
 
     func setNote(_ text: String) {
@@ -37,8 +43,14 @@ public final class Workout {
         return sets.isEmpty ? 0 : Double(sets.filter { $0.status != .pending }.count) / Double(sets.count)
     }
     public var isFullyLogged: Bool { !exercises.isEmpty && exercises.allSatisfy(\.isLogged) }
+    /// Reps times moved load. A bodyweight lift without a body weight adds nothing, because its load is unknown.
     public var totalVolume: Double {
-        exercises.flatMap(\.sets).filter(\.isDone).reduce(0) { $0 + Double($1.reps) * $1.weight }
+        exercises.reduce(0) { total, exercise in
+            let loading = exercise.loading
+            return exercise.sets.filter(\.isDone).reduce(total) {
+                $0 + Double($1.reps) * (loading.movedLoad(of: $1.weight) ?? 0)
+            }
+        }
     }
     public var isFinished: Bool { endDate != nil }
 

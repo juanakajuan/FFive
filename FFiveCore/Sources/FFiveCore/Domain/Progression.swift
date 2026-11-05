@@ -91,7 +91,8 @@ public enum Progression {
 
     /// Next week's targets for one exercise from what was logged last week.
     /// Holds load and adds the reps freed by the lower RIR; once reps pass the top of `repRange`,
-    /// adds `increment` and re-derives reps from estimated 1RM. A set that fell 2+ reps short of its
+    /// adds `increment` and re-derives reps from estimated 1RM. `offset` is what a logged weight is added to to get
+    /// the moved load, body weight for a bodyweight lift, and 1RM and reps are worked at the moved load. A set that fell 2+ reps short of its
     /// target repeats its target. Missing logs repeat the previous target.
     /// Myo-rep and myo-rep match sets are excluded from load and rep targets: they are taken near failure after
     /// short rest, so their reps say nothing about the straight-set target. Their slot repeats its previous target
@@ -103,6 +104,7 @@ public enum Progression {
         targetRIR: Int,
         repRange: ClosedRange<Int>,
         increment: Double,
+        offset: Double,
         setCount: Int
     ) -> [SetTarget] {
         let progressed = previousTargets.indices.map { index -> SetTarget in
@@ -111,13 +113,14 @@ public enum Progression {
             if let targetReps = target.reps, log.reps <= targetReps - 2 { return target }
 
             let reps = log.reps + (previousRIR - targetRIR)
-            guard increment > 0, reps > repRange.upperBound else {
+            let moved = log.weight + offset
+            guard increment > 0, reps > repRange.upperBound, moved > 0 else {
                 return SetTarget(weight: log.weight, reps: reps)
             }
-            let oneRepMax = estimatedOneRepMax(weight: log.weight, reps: log.reps, rir: previousRIR)
-            let load = roundDown(log.weight + increment, to: increment)
-            let solved = self.reps(atLoad: load, rir: targetRIR, oneRepMax: oneRepMax)
-            return SetTarget(weight: load, reps: min(repRange.upperBound, max(repRange.lowerBound, solved)))
+            let oneRepMax = estimatedOneRepMax(weight: moved, reps: log.reps, rir: previousRIR)
+            let weight = roundDown(log.weight + increment, to: increment)
+            let solved = self.reps(atLoad: weight + offset, rir: targetRIR, oneRepMax: oneRepMax)
+            return SetTarget(weight: weight, reps: min(repRange.upperBound, max(repRange.lowerBound, solved)))
         }
         return resized(progressed, to: setCount)
     }
@@ -138,9 +141,9 @@ public enum Progression {
         return (repRange.lowerBound + middle) / 2
     }
 
-    /// The load that leaves `rir` reps in reserve after `reps` reps, from an estimated 1RM.
-    static func load(forReps reps: Int, rir: Int, oneRepMax: Double, increment: Double) -> Double {
-        roundDown(oneRepMax / (1 + Double(reps + rir) / 30), to: increment)
+    /// The logged weight that leaves `rir` reps in reserve after `reps` reps, from an estimated 1RM of the moved load.
+    static func load(forReps reps: Int, rir: Int, oneRepMax: Double, increment: Double, offset: Double) -> Double {
+        roundDown(oneRepMax / (1 + Double(reps + rir) / 30) - offset, to: increment)
     }
 
     /// Reps that leave `rir` in reserve at `load`, from an estimated 1RM. Inverse of `estimatedOneRepMax`.
