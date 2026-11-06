@@ -628,6 +628,21 @@ final class StoreTests: XCTestCase {
             "search trims and ignores case")
     }
 
+    func testLibraryFitsTheLifterEquipment() throws {
+        let store = Store(inMemory: true)
+        finished(store, at: .now, [("zercher squat", .quads, 60)])
+        let all = store.library(muscle: nil, search: "")
+
+        let dumbbellOnly = all.filter { $0.fits([.dumbbell]) }
+        XCTAssertTrue(dumbbellOnly.contains { $0.name == "zercher squat" }, "a custom exercise always fits")
+        XCTAssertTrue(
+            dumbbellOnly.allSatisfy { $0.info == nil || $0.info?.equipment == .dumbbell },
+            "catalog exercises of other equipment are filtered out")
+        XCTAssertTrue(dumbbellOnly.contains { $0.info?.equipment == .dumbbell }, "dumbbell exercises stay")
+        XCTAssertLessThan(dumbbellOnly.count, all.count)
+        XCTAssertEqual(all.filter { $0.fits(Set(Equipment.allCases)) }, all, "owning everything hides nothing")
+    }
+
     func testWeekStatsMatchHistory() throws {
         let store = Store(inMemory: true)
         let now = try XCTUnwrap(Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 4, hour: 12)))
