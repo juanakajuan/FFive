@@ -7,12 +7,24 @@ struct TemplatesView: View {
 
     @State private var search = ""
     @State private var daysPerWeek: Int?
+    @State private var emphasis: TemplateEmphasis?
     @State private var builder: MesoBuilderView.Route?
+
+    private static let dayCounts = Set(ExerciseCatalog.templates.map(\.days.count)).sorted()
+    private static let emphases = TemplateEmphasis.allCases.filter { emphasis in
+        ExerciseCatalog.templates.contains { $0.emphasis == emphasis }
+    }
+
+    private var filterLabel: String {
+        let active = [daysPerWeek.map { "\($0)/week" }, emphasis?.displayName].compactMap { $0 }
+        return active.isEmpty ? "Filters" : active.joined(separator: " · ")
+    }
 
     private var templates: [ProgramTemplate] {
         let query = search.trimmingCharacters(in: .whitespaces)
         return ExerciseCatalog.templates
             .filter { daysPerWeek == nil || $0.days.count == daysPerWeek }
+            .filter { emphasis == nil || $0.emphasis == emphasis }
             .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
     }
 
@@ -53,10 +65,14 @@ struct TemplatesView: View {
                     SearchBox(text: $search)
                         .padding(.horizontal, Theme.gutter)
                         .padding(.bottom, 12)
-                    FilterBar(label: daysPerWeek.map { "\($0)/week" } ?? "Filters") {
+                    FilterBar(label: filterLabel) {
                         Picker("Days per week", selection: $daysPerWeek) {
                             Text("All").tag(Int?.none)
-                            ForEach([3, 4, 5, 6], id: \.self) { Text("\($0)/week").tag(Int?.some($0)) }
+                            ForEach(Self.dayCounts, id: \.self) { Text("\($0)/week").tag(Int?.some($0)) }
+                        }
+                        Picker("Emphasis", selection: $emphasis) {
+                            Text("All").tag(TemplateEmphasis?.none)
+                            ForEach(Self.emphases) { Text($0.displayName).tag(TemplateEmphasis?.some($0)) }
                         }
                     }
                 }
@@ -89,11 +105,6 @@ struct TemplateGroup<Content: View>: View {
 struct TemplateListRow: View {
     let template: ProgramTemplate
 
-    /// Template names read "Split, N Days", so the part before the comma names the split.
-    private var split: String {
-        String(template.name.split(separator: ",").first ?? Substring(template.name)).uppercased()
-    }
-
     var body: some View {
         HStack(alignment: .bottom, spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
@@ -101,7 +112,7 @@ struct TemplateListRow: View {
                     Image(systemName: "target")
                         .font(.system(size: 10))
                         .accessibilityHidden(true)
-                    Text(split)
+                    Text(template.emphasis.displayName.uppercased())
                         .font(.system(size: 11.5, design: .monospaced))
                         .lineLimit(1)
                 }
