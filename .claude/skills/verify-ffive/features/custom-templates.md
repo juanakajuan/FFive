@@ -23,6 +23,7 @@ Preconditions:
 
 - On disk: `ffive-verify reset-data`, then `launch`.
 - Journey: `journeys/custom-templates.steps`.
+- Journey: `journeys/template-during-block.steps` saves a template from Templates' "+" while a block is active (start from `ffive-verify reset-data`).
 
 - **Save a draft.** Steps: `tap #builder.template.upper-lower-4-days`, `tap #builder.save-template`, `replace field "Template name" "My Upper Lower"`, `sleep 1`, `tap button "Save"`, `store-expect CustomTemplate name "My Upper Lower"`.
 - **List and rename.** Steps: `tap #tab.templates`, `wait #templates.custom.my-upper-lower`, `tap #templates.menu.my-upper-lower`, `tap #menu.rename-template`, then replace the field and Save as above. `wait #templates.custom.<new slug>`.
