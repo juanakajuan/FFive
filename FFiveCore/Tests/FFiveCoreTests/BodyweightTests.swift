@@ -9,10 +9,10 @@ final class BodyweightTests: XCTestCase {
     let week1 = SessionKey(week: 1, dayIndex: 0)
     let pullUp = ExerciseID(folding: "Pull-Up")
 
-    func blockStore() throws -> (Store, Mesocycle) {
+    func blockStore(exercise: String = "Pull-Up", muscle: Muscle = .back) throws -> (Store, Mesocycle) {
         let store = Store(inMemory: true)
         var draft = MesoDraft(template: nil)
-        draft.days = [.init(name: "A", slots: [.init(exercise: "Pull-Up", muscle: .back)])]
+        draft.days = [.init(name: "A", slots: [.init(exercise: exercise, muscle: muscle)])]
         try store.startMesocycle(draft)
         return (store, try XCTUnwrap(store.context.fetch(Mesocycle.active).first))
     }
@@ -161,8 +161,42 @@ final class BodyweightTests: XCTestCase {
         XCTAssertEqual(bench.weightText(135, unit: .lb), "135 lb")
     }
 
-    func testBodyweightStepIsTheAddedLoadStep() {
-        XCTAssertEqual(Equipment.bodyweight.increment(.lb), 5)
-        XCTAssertEqual(Equipment.bodyweight.increment(.kg), 2.5)
+    func testBodyLiftsStepByTheirLoadStep() {
+        XCTAssertEqual(Equipment.bodyweightLoadable.increment(.lb), 5)
+        XCTAssertEqual(Equipment.assistedMachine.increment(.kg), 2.5)
+        XCTAssertEqual(Equipment.bodyweightOnly.increment(.lb), 0)
+        XCTAssertEqual(Equipment.bodyweightOnly.increment(.kg), 0)
+    }
+
+    func testBodyweightOnlyPastRangeHoldsLoadAndAddsReps() throws {
+        let (store, meso) = try blockStore(exercise: "Plank", muscle: .abs)
+        let first = store.buildSession(meso, at: week0)
+        store.setBodyweight(180, of: first)
+        for set in first.sortedExercises[0].sortedSets {
+            set.weight = 0
+            set.reps = 70
+            store.log(set, done: true)
+        }
+        store.finish(first)
+        let target = try XCTUnwrap(store.buildSession(meso, at: week1).sortedExercises[0].sortedSets.first).target
+
+        XCTAssertEqual(target.weight, 0, "no load to add")
+        XCTAssertGreaterThan(target.reps ?? 0, 70, "reps keep climbing past the range")
+        XCTAssertEqual(first.sortedExercises[0].loading.movedLoad(of: 0), 180, "body weight still counts")
+    }
+
+    func testAssistedMachinePastRangeShedsFivePoundsOfAssistance() throws {
+        let (store, meso) = try blockStore(exercise: "Assisted Pull-Up", muscle: .back)
+        let first = store.buildSession(meso, at: week0)
+        store.setBodyweight(180, of: first)
+        for set in first.sortedExercises[0].sortedSets {
+            set.weight = -40
+            set.reps = 16
+            store.log(set, done: true)
+        }
+        store.finish(first)
+        let target = try XCTUnwrap(store.buildSession(meso, at: week1).sortedExercises[0].sortedSets.first).target
+
+        XCTAssertEqual(target.weight, -35)
     }
 }

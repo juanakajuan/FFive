@@ -13,7 +13,7 @@ struct ExercisePickerView: View {
     private var query: String { search.trimmingCharacters(in: .whitespaces) }
 
     var body: some View {
-        let entries = store.library(muscle: muscle, search: search)
+        let entries = store.library(muscle: muscle, equipment: nil, search: search)
         NavigationStack {
             VStack(spacing: 0) {
                 SearchBox(prompt: "Search or create exercise", text: $search)

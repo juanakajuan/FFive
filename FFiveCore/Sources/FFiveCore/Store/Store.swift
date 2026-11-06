@@ -228,7 +228,7 @@ public final class Store {
         MesoPlanner.lastFinishedExercise(key, in: context)
     }
 
-    public func library(muscle: Muscle?, search: String) -> [ExerciseListing] {
+    public func library(muscle: Muscle?, equipment: Equipment?, search: String) -> [ExerciseListing] {
         observeCommits()
         var listings = ExerciseCatalog.all.map {
             ExerciseListing(id: $0.id, name: $0.name, muscle: $0.muscle, info: $0)
@@ -242,6 +242,7 @@ public final class Store {
         return
             listings
             .filter { muscle == nil || $0.muscle == muscle }
+            .filter { equipment == nil || $0.info?.equipment == equipment }
             .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
             .sorted {
                 switch $0.name.localizedCaseInsensitiveCompare($1.name) {

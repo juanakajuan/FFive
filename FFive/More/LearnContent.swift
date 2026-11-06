@@ -324,7 +324,7 @@ extension Learn {
                 ),
                 .loadSteps,
                 .paragraph(
-                    "Then it works out reps for the heavier weight. It estimates your one-rep max with the Epley formula, counting your reps in reserve as reps you could have done, and solves for the reps that leave the new RIR target. The result stays inside the exercise's range. If the estimate is off, the next week corrects it, because every week starts from what you logged. Once you set your bodyweight, bodyweight exercises add load or shed assistance in that step, counting your bodyweight in the estimate. Without it, they keep adding reps."
+                    "Then it works out reps for the heavier weight. It estimates your one-rep max with the Epley formula, counting your reps in reserve as reps you could have done, and solves for the reps that leave the new RIR target. The result stays inside the exercise's range. If the estimate is off, the next week corrects it, because every week starts from what you logged. Once you set your bodyweight, loadable and assisted exercises add load or shed assistance in that step, counting your bodyweight in the estimate. Bodyweight-only exercises and exercises without a bodyweight keep adding reps."
                 ),
                 .heading("When a set falls short"),
                 .paragraph(
