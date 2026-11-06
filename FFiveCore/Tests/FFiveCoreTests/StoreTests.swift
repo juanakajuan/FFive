@@ -26,7 +26,7 @@ final class StoreTests: XCTestCase {
     func testEndWithOpenLoggedSessionKeepsItInHistory() throws {
         let (store, meso) = try startedStore()
         let started = store.buildSession(meso, at: day1)
-        store.log(started.sortedExercises[0].sortedSets[0], done: true)
+        store.logEntered(started.sortedExercises[0].sortedSets[0])
         store.buildSession(meso, at: day2)
 
         store.endMesocycle(meso)
@@ -226,12 +226,66 @@ final class StoreTests: XCTestCase {
         let workout = store.startQuickWorkout()
         store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
         store.addSet(to: workout.exercises[0])
-        for set in workout.exercises[0].sets {
+        for set in workout.exercises[0].sortedSets {
             set.weight = 100
             set.reps = 8
             store.log(set, done: true)
         }
         store.finish(workout)
+    }
+
+    func testASetNeedsRepsAndWeightBeforeItLogs() throws {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
+        let set = workout.exercises[0].sortedSets[0]
+        set.weight = 0
+        set.reps = 0
+
+        store.log(set, done: true)
+        XCTAssertFalse(set.isDone, "an empty set does not log")
+        set.reps = 8
+        store.log(set, done: true)
+        XCTAssertFalse(set.isDone, "reps without a weight do not log")
+        set.weight = 100
+        store.log(set, done: true)
+        XCTAssertTrue(set.isDone)
+
+        store.addExercise(named: "Pull-Up", muscle: .back, to: workout)
+        let pullUp = try XCTUnwrap(workout.sortedExercises.last?.sortedSets.first)
+        pullUp.weight = 0
+        pullUp.reps = 8
+        store.log(pullUp, done: true)
+        XCTAssertTrue(pullUp.isDone, "a bodyweight set logs with no added weight")
+    }
+
+    func testSetsLogInOrder() throws {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
+        let exercise = workout.exercises[0]
+        while exercise.sets.count < 3 { store.addSet(to: exercise) }
+        let sets = exercise.sortedSets
+        for set in sets {
+            set.weight = 100
+            set.reps = 8
+        }
+
+        store.log(sets[1], done: true)
+        XCTAssertFalse(sets[1].isDone, "set 2 waits for set 1")
+        store.log(sets[0], done: true)
+        store.log(sets[1], done: true)
+        XCTAssertEqual(sets.map(\.status), [.done, .done, .pending])
+
+        store.log(sets[0], done: false)
+        XCTAssertTrue(sets[0].isDone, "set 1 stays logged while set 2 is")
+        store.log(sets[1], done: false)
+        store.log(sets[0], done: false)
+        XCTAssertEqual(sets.map(\.status), [.pending, .pending, .pending], "sets unlog from the last one back")
+
+        store.skip(sets[0], skipped: true)
+        store.log(sets[1], done: true)
+        XCTAssertTrue(sets[1].isDone, "a skipped set does not hold up the next one")
     }
 
     func testLogSetRestartsUntouchedClock() throws {
@@ -241,16 +295,16 @@ final class StoreTests: XCTestCase {
         let shown = Date.now - 600
         workout.startDate = shown
 
-        store.log(sets[0], done: true)
+        store.logEntered(sets[0])
         XCTAssertGreaterThan(workout.startDate, shown + 590, "the first logged set starts the session clock")
         XCTAssertTrue(sets[0].isDone)
         XCTAssertFalse(store.context.hasChanges, "the log is saved")
 
         let started = workout.startDate
-        store.log(sets[1], done: true)
+        store.logEntered(sets[1])
         XCTAssertEqual(workout.startDate, started, "later sets leave the clock alone")
-        store.log(sets[0], done: false)
-        XCTAssertFalse(sets[0].isDone, "a set can be unlogged")
+        store.log(sets[1], done: false)
+        XCTAssertFalse(sets[1].isDone, "a set can be unlogged")
         XCTAssertEqual(workout.startDate, started, "unlogging does not touch the clock")
 
         let quick = store.startQuickWorkout()
@@ -359,7 +413,7 @@ final class StoreTests: XCTestCase {
         while exercise.sets.count < 5 { store.addSet(to: exercise) }
         let sets = exercise.sortedSets
         for (set, weight) in zip(sets, [200, 200, 185, 200, 200]) { set.weight = Double(weight) }
-        store.log(sets[4], done: true)
+        sets[4].status = .done
         return (store, sets)
     }
 
@@ -428,7 +482,7 @@ final class StoreTests: XCTestCase {
         let sets = exercise.sortedSets
         XCTAssertGreaterThan(sets.count, 2)
 
-        store.log(sets[0], done: true)
+        store.logEntered(sets[0])
         store.skip(sets[1], skipped: true)
         XCTAssertEqual(sets[1].status, .skipped)
         XCTAssertFalse(workout.isFullyLogged, "a pending set still blocks finishing")
@@ -444,7 +498,7 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(chest?.done, 1)
         XCTAssertEqual(chest?.planned, 1, "skipped sets are not missed volume")
 
-        store.log(sets[1], done: true)
+        store.logEntered(sets[1])
         XCTAssertEqual(sets[1].status, .done, "logging a skipped set replaces the skip")
         store.skip(sets[2], skipped: false)
         XCTAssertEqual(sets[2].status, .pending, "a skip can be undone")
@@ -515,7 +569,7 @@ final class StoreTests: XCTestCase {
     func testRecordSorenessAnswersThePendingPrompt() throws {
         let (store, meso) = try startedStore()
         let first = store.buildSession(meso, at: day1)
-        store.log(first.sortedExercises[0].sortedSets[0], done: true)
+        store.logEntered(first.sortedExercises[0].sortedSets[0])
         first.updateFeedback(for: .chest) { $0.pump = .great }
         store.finish(first)
         let next = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0))
@@ -751,5 +805,14 @@ final class StoreTests: XCTestCase {
         store.setType(.myorepMatch, of: bench.sortedSets.last!)
         store.addSet(to: bench)
         XCTAssertEqual(bench.sortedSets.last?.type, .myorepMatch)
+    }
+}
+
+extension Store {
+    /// Fills an empty set with a lift, since a set without reps and weight cannot be logged.
+    func logEntered(_ set: SetEntry) {
+        if set.weight == 0 { set.weight = 100 }
+        if set.reps == 0 { set.reps = 8 }
+        log(set, done: true)
     }
 }

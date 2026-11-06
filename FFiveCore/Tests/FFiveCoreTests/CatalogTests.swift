@@ -13,7 +13,7 @@ final class CatalogTests: XCTestCase {
         workout.startDate = start
         store.addExercise(named: name, muscle: muscle, to: workout)
         let exercise = workout.exercises[0]
-        for set in exercise.sets {
+        for set in exercise.sortedSets {
             set.weight = weight
             set.reps = reps
             store.log(set, done: true)

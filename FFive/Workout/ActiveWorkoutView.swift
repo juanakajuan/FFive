@@ -627,6 +627,7 @@ struct SetRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .disabled(!set.canToggleLog)
             .padding(.leading, 16)
             .accessibilityLabel("Log set \(number)")
             .a11y(.setLog, number)

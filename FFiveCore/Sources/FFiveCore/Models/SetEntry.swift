@@ -38,6 +38,18 @@ public final class SetEntry {
         }
     }
 
+    /// A set is logged only once its reps are entered, and its weight too unless the lift is bodyweight, where 0 means
+    /// body weight alone.
+    public var hasEntry: Bool { reps > 0 && (weight != 0 || exercise?.isBodyweight == true) }
+
+    /// Sets log in order: a set waits until every earlier set is logged or skipped, and a logged set is unlogged only
+    /// while no later set is logged.
+    public var canToggleLog: Bool {
+        let sets = exercise?.sortedSets ?? []
+        if isDone { return !sets.contains { $0.order > order && $0.isDone } }
+        return hasEntry && !sets.contains { $0.order < order && $0.status == .pending }
+    }
+
     var target: SetTarget { SetTarget(weight: targetWeight, reps: targetReps) }
     var logged: LoggedSet? { isDone && type.countsTowardProgression ? LoggedSet(weight: weight, reps: reps) : nil }
 }
