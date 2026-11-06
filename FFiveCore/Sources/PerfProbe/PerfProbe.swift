@@ -59,6 +59,8 @@ struct PerfProbe {
 
         let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
         let set = session.sortedExercises[0].sortedSets[0]
+        set.weight = 100
+        set.reps = 8
         var storeLog: [Double] = []
         for index in 0..<writes {
             storeLog.append(time { store.log(set, done: index.isMultiple(of: 2)) })
