@@ -46,10 +46,18 @@ struct SessionFocus: Equatable {
 final class AppRouter {
     var tab: AppTab = [.progress, .strength].contains(DemoLaunch.route) ? .more : .workout
     var focus: SessionFocus?
+    /// The block that just ended, whose summary shows over every tab until it is dismissed.
+    var endedMeso: Mesocycle?
 
     func openSession(_ key: SessionKey, in meso: Mesocycle) {
         focus = SessionFocus(meso: meso.persistentModelID, key: key)
         tab = .workout
+    }
+
+    @MainActor
+    func end(_ meso: Mesocycle, store: Store) {
+        store.endMesocycle(meso)
+        endedMeso = meso
     }
 }
 
@@ -84,6 +92,7 @@ struct RootView: View {
         }
         .environment(router)
         .tint(Theme.text)
+        .sheet(item: $router.endedMeso) { MesoSummarySheet(meso: $0) }
         .alert(
             "Your last change was not saved",
             isPresented: Binding(get: { store.failure != nil }, set: { if !$0 { store.dismissFailure() } })

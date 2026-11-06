@@ -4,6 +4,7 @@ import SwiftUI
 
 struct MesosView: View {
     @Environment(Store.self) private var store
+    @Environment(AppRouter.self) private var router
     @Query(sort: \Mesocycle.startDate, order: .reverse) private var mesos: [Mesocycle]
 
     @State private var path = NavigationPath()
@@ -34,13 +35,14 @@ struct MesosView: View {
             }
             .navigationDestination(for: Mesocycle.self) { MesoDetailView(meso: $0) }
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
+            .navigationDestination(for: MesoSummaryRoute.self) { MesoSummaryView(meso: $0.meso) }
             .sheet(isPresented: $showingBuilder) { MesoBuilderView() }
             .confirmationDialog(
                 "End this mesocycle?",
                 isPresented: Binding(get: { ending != nil }, set: { if !$0 { ending = nil } }),
                 titleVisibility: .visible, presenting: ending
             ) { meso in
-                Button("End Mesocycle", role: .destructive) { store.endMesocycle(meso) }
+                Button("End Mesocycle", role: .destructive) { router.end(meso, store: store) }
                     .a11y(.dialogEndMesocycle)
             } message: { _ in
                 Text("Logged sessions stay in Progress. You can plan a new block right after.")
@@ -89,6 +91,8 @@ struct MesosView: View {
                 } else {
                     Button("View", systemImage: "eye") { path.append(meso) }
                         .a11y(.menuView)
+                    Button("Summary", systemImage: "chart.bar") { path.append(MesoSummaryRoute(meso: meso)) }
+                        .a11y(.menuSummary)
                 }
             } label: {
                 Image(systemName: "ellipsis")

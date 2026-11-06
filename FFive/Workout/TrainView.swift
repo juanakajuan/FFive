@@ -163,7 +163,7 @@ enum WorkoutTabActions {
     }
 
     static func end(_ meso: Mesocycle, router: AppRouter, store: Store) {
-        store.endMesocycle(meso)
+        router.end(meso, store: store)
         router.focus = nil
     }
 }

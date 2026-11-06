@@ -6,8 +6,9 @@ A lifter ends the active block early or once it is complete. Ending finishes the
 
 - `end-menu` ends the block from the Workout tab: `Workout menu`, `End Mesocycle`, then `End Mesocycle` again in the "End this mesocycle?" dialog.
 - `end-history` keeps the in-progress session's logged sets as a finished workout in Progress, History.
+- `end-summary` opens the block's summary as a sheet over every end entry point. `Done` (`#sheet.done`) closes it.
 - `end-mesos` marks the Mesos row `Finished` and re-enables the `New Mesocycle` "+".
-- `end-other-entries` ends the block from the Mesos row's `<name> menu`, the block's detail page (its `End Mesocycle` button has no id, so tap it by label and the dialog by `#dialog.end-mesocycle`), or the "Block complete" screen. Not yet driven.
+- `end-other-entries` ends the block from the Mesos row's `<name> menu`, the block's detail page (its `End Mesocycle` button has no id, so tap it by label and the dialog by `#dialog.end-mesocycle`), or the "Block complete" screen. `meso-summary.steps` and `rename-mesocycle.steps` drive the Mesos row and the detail page. The "Block complete" screen is not yet driven.
 
 ## How to get to it (user POV)
 
@@ -22,7 +23,7 @@ Preconditions:
 - On-disk baseline: `ffive-verify reset-data`, so the Workout tab shows `Plan a Mesocycle`.
 - Journey: `ffive-verify drive .claude/skills/verify-ffive/journeys/end-mesocycle.steps --name end-mesocycle`. It plans "Ending Block" from the Full Body, 3 Days template, logs one Bench Press set, ends the block, and relaunches.
 
-- **End.** Steps: `tap #workout.menu`, `tap #menu.end-mesocycle`, `tap #dialog.end-mesocycle`, `wait #workout.plan timeout=10`.
+- **End.** Steps: `tap #workout.menu`, `tap #menu.end-mesocycle`, `tap #dialog.end-mesocycle`, `wait nav "Ending Block Summary" timeout=10`, `tap #sheet.done`, `wait #workout.plan timeout=10`.
 - **Store.** Steps: `store-expect Mesocycle finishedDate null` before the end and `store-expect Mesocycle finishedDate not-null` after it, then `store-expect Workout endDate not-null` for the session the end finished. For the row, run `ffive-verify store "select ZNAME, ZFINISHEDDATE from ZMESOCYCLE"`.
 - **History.** Steps: `tap #tab.more`, `tap #more.progress`, `tap #segment.history`, `count #history.row.full-body-a "1"`. Before ending, History is empty.
 - **Mesos.** Steps: `tap #tab.mesos`, `wait any "Finished"`.

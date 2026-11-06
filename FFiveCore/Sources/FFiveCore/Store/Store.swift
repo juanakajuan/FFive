@@ -72,6 +72,13 @@ public final class Store {
         commit()
     }
 
+    public func rename(_ meso: Mesocycle, to name: String) {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        meso.name = name
+        commit()
+    }
+
     public func setPriority(_ priority: MusclePriority, of muscle: Muscle, in meso: Mesocycle) {
         meso.setPriority(priority, of: muscle)
         commit()

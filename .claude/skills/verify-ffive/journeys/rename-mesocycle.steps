@@ -1,0 +1,40 @@
+# rename-mesocycle: rename a block, prove it persists, end it from the Mesos row, open its summary.
+# Before: ffive-verify reset-data.
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+replace #builder.name "Verify Block"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+tap #tab.mesos
+tap #mesos.row.verify-block
+wait nav "Verify Block"
+tap #meso.menu
+tap #menu.rename
+wait alert "Rename Mesocycle"
+replace field "Mesocycle name" "  Spring Block  "
+sleep 1
+tap button "Save"
+absent alert "Rename Mesocycle"
+wait nav "Spring Block"
+store-expect Mesocycle name "Spring Block"
+launch
+tap #tab.mesos timeout=20
+wait #mesos.row.spring-block
+shot 01-renamed-after-relaunch
+tap #mesos.menu.spring-block
+tap #menu.end-mesocycle
+tap #dialog.end-mesocycle
+wait nav "Spring Block Summary" timeout=10
+wait text "No finished sessions in this block yet."
+shot 02-summary-from-list-end
+store-expect Mesocycle finishedDate not-null
+tap #sheet.done
+absent nav "Spring Block Summary"
+tap #mesos.menu.spring-block
+tap #menu.summary
+wait nav "Spring Block Summary"
+shot 03-summary-from-list-menu
