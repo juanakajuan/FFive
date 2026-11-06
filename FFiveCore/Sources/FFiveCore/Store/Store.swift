@@ -145,6 +145,11 @@ public final class Store {
         commit()
     }
 
+    public func setReps(_ reps: Int, of set: SetEntry) {
+        set.reps = reps
+        commit()
+    }
+
     public func addSet(to exercise: Exercise) {
         exercise.addSet()
         commit()

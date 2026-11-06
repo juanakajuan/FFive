@@ -386,6 +386,21 @@ final class StoreTests: XCTestCase {
         XCTAssertTrue(store.weightFollowers(of: sets[0]).isEmpty)
     }
 
+    func testTypedWeightAndRepsAreSavedBeforeTheSetIsLogged() throws {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Squat", muscle: .quads, to: workout)
+        let set = workout.exercises[0].sortedSets[0]
+        store.setWeight(123, of: set, carryingTo: [])
+        XCTAssertFalse(store.context.hasChanges, "the weight is saved")
+        store.setReps(8, of: set)
+        XCTAssertFalse(store.context.hasChanges, "the reps are saved")
+        let saved = try ModelContext(store.container).fetch(FetchDescriptor<SetEntry>())
+        XCTAssertEqual(saved.map(\.weight), [123])
+        XCTAssertEqual(saved.map(\.reps), [8])
+        XCTAssertFalse(set.isDone)
+    }
+
     func testAddAndDeleteSet() {
         let store = Store(inMemory: true)
         let workout = store.startQuickWorkout()
