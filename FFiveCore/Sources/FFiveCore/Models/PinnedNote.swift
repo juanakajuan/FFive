@@ -23,6 +23,11 @@ public final class PinnedNote {
         all(named: name, in: context).forEach(context.delete)
     }
 
+    static func rename(from old: String, to name: String, in context: ModelContext) {
+        guard let moved = find(named: old, in: context) else { return }
+        if find(named: name, in: context) == nil { moved.name = name } else { context.delete(moved) }
+    }
+
     static func set(_ text: String, for name: String, in context: ModelContext) {
         guard let text = text.noteText else { return delete(for: name, in: context) }
         let existing = all(named: name, in: context)

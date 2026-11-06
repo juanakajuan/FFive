@@ -4,9 +4,11 @@ public struct ExerciseListing: Hashable, Identifiable {
     public let id: ExerciseID
     public let name: String
     public let muscle: Muscle
-    public let info: ExerciseInfo?
+    public let info: ExerciseInfo
+    public let isCustom: Bool
+    public let isHidden: Bool
 
-    public var equipment: String { info?.equipment.displayName ?? "Custom" }
+    public var equipment: String { info.equipment.displayName }
 
     public static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
     public func hash(into hasher: inout Hasher) { hasher.combine(id) }

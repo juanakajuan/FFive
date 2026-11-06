@@ -625,9 +625,11 @@ final class StoreTests: XCTestCase {
                 ("Café Curl", .biceps, 20),
             ])
 
+        store.backfillCustomExercises()
+
         let all = store.library(muscle: nil, equipment: nil, search: "")
         XCTAssertEqual(all.count, ExerciseCatalog.all.count + 2, "custom lifts join the catalog once per folded name")
-        XCTAssertTrue(all.contains { $0.name == "zercher squat" && $0.info == nil && $0.equipment == "Custom" })
+        XCTAssertTrue(all.contains { $0.name == "zercher squat" && $0.isCustom && $0.equipment == "Machine" })
         XCTAssertEqual(
             all.map(\.name), all.map(\.name).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending },
             "names sort ignoring case, so a lowercase custom name sits among the rest")

@@ -4,6 +4,8 @@ import SwiftData
 
 public enum StoreError: Error, Equatable {
     case anotherMesocycleIsActive
+    case nameEmpty
+    case nameTaken
 }
 
 @MainActor
@@ -25,6 +27,7 @@ public final class Store {
         context = container.mainContext
         self.settings = settings
         backfillExerciseKeys()
+        backfillCustomExercises()
     }
 
     public convenience init(inMemory: Bool) {
@@ -228,30 +231,6 @@ public final class Store {
         MesoPlanner.lastFinishedExercise(key, in: context)
     }
 
-    public func library(muscle: Muscle?, equipment: Equipment?, search: String) -> [ExerciseListing] {
-        observeCommits()
-        var listings = ExerciseCatalog.all.map {
-            ExerciseListing(id: $0.id, name: $0.name, muscle: $0.muscle, info: $0)
-        }
-        var seen = Set(listings.map(\.id))
-        for exercise in (try? context.fetch(FetchDescriptor<Exercise>())) ?? [] {
-            guard let muscle = exercise.muscle, seen.insert(exercise.key).inserted else { continue }
-            listings.append(ExerciseListing(id: exercise.key, name: exercise.name, muscle: muscle, info: nil))
-        }
-        let query = search.trimmingCharacters(in: .whitespaces)
-        return
-            listings
-            .filter { muscle == nil || $0.muscle == muscle }
-            .filter { equipment == nil || $0.info?.equipment == equipment }
-            .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
-            .sorted {
-                switch $0.name.localizedCaseInsensitiveCompare($1.name) {
-                case .orderedSame: $0.id.rawValue < $1.id.rawValue
-                case let order: order == .orderedAscending
-                }
-            }
-    }
-
     public func weekStats(now: Date = .now) -> WeekStats {
         observeCommits()
         let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: now)?.start ?? now
@@ -377,7 +356,7 @@ public final class Store {
         return written
     }
 
-    private func observeCommits() {
+    func observeCommits() {
         _ = revision
     }
 
