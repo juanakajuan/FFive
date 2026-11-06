@@ -117,12 +117,49 @@ struct ChipPicker<Option: Hashable>: View {
     let options: [Option]
     var columns: Int
     let label: (Option) -> String
+    var meaning: ((Option) -> String)? = nil
     let selection: Option?
     let onSelect: (Option?) -> Void
 
+    @State private var showsHelp = false
+
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
-            Text(title).font(Theme.detail).foregroundStyle(Theme.secondary)
+            HStack(spacing: 4) {
+                Text(title).font(Theme.detail).foregroundStyle(Theme.secondary)
+                if meaning != nil {
+                    Button {
+                        withAnimation(.easeInOut(duration: 0.2)) { showsHelp.toggle() }
+                    } label: {
+                        Image(systemName: showsHelp ? "questionmark.circle.fill" : "questionmark.circle")
+                            .font(Theme.detail)
+                            .foregroundStyle(Theme.infoText)
+                            .frame(minWidth: 28, minHeight: 28)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.borderless)
+                    .accessibilityLabel(
+                        showsHelp
+                            ? "Hide what \(title.lowercased()) answers mean" : "What \(title.lowercased()) answers mean"
+                    )
+                    .a11y(.chipHelp, key: title)
+                }
+            }
+            if showsHelp, let meaning {
+                VStack(alignment: .leading, spacing: 4) {
+                    ForEach(options, id: \.self) { option in
+                        let name = Text(label(option)).fontWeight(.semibold).foregroundStyle(Theme.text)
+                        Text("\(name)  \(meaning(option))")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondary)
+                            .fixedSize(horizontal: false, vertical: true)
+                    }
+                }
+                .padding(10)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                .transition(.opacity)
+            }
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: columns), spacing: 8) {
                 ForEach(options, id: \.self) { option in
                     let selected = option == selection

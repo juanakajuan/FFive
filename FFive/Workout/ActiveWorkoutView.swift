@@ -827,7 +827,7 @@ struct SorenessSheet: View {
                     }
                     ChipPicker(
                         title: "Soreness after that session", options: Soreness.allCases, columns: 2,
-                        label: \.label, selection: draft
+                        label: \.label, meaning: \.meaning, selection: draft
                     ) { draft = $0 }
                     Text("Today's sets for \(muscle.displayName.lowercased()) are planned from this answer.")
                         .font(Theme.caption)
@@ -942,16 +942,17 @@ struct FeedbackSheet: View {
                     Text("How did \(muscle.displayName.lowercased()) feel today?")
                         .font(Theme.cardTitle)
                         .foregroundStyle(Theme.text)
-                    ChipPicker(title: "Pump", options: Pump.allCases, columns: 3, label: \.label, selection: draft.pump)
-                    {
-                        draft.pump = $0
-                    }
                     ChipPicker(
-                        title: "Workload", options: Workload.allCases, columns: 2, label: \.label,
+                        title: "Pump", options: Pump.allCases, columns: 3, label: \.label, meaning: \.meaning,
+                        selection: draft.pump
+                    ) { draft.pump = $0 }
+                    ChipPicker(
+                        title: "Workload", options: Workload.allCases, columns: 2, label: \.label, meaning: \.meaning,
                         selection: draft.workload
                     ) { draft.workload = $0 }
                     ChipPicker(
                         title: "Joint pain", options: JointPain.allCases, columns: 4, label: \.label,
+                        meaning: \.meaning,
                         selection: draft.jointPain
                     ) { draft.jointPain = $0 }
                     Text(
