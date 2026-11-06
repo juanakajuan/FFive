@@ -3,12 +3,12 @@ launch -seedDemo
 wait text "WEEK 2 DAY 1" timeout=20
 wait text "Target 185 * 7"
 wait text "How did quads feel today?"
-# scrollto swipes a long way and can leave its target under the tab bar, so each row is brought on screen
-# by scrolling to the element just below it.
-scrollto #chip.pretty-good
+# A tap on a chip under the pinned header lands on the header, so scrollto centers each chip row first.
+scrollto #chip.great
 tap #chip.great
+scrollto #chip.pretty-good
 tap #chip.pretty-good
-scrollto text "~Next week's sets for quads"
+scrollto #chip.none
 tap #chip.none
 selected #chip.none
 exists image "checkmark.circle.fill"

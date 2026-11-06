@@ -131,9 +131,7 @@ final class DriverTests: XCTestCase {
             let actual = try resolveAll(args).count
             guard String(actual) == expected else { throw StepError("count is \(actual), expected \(expected)") }
         case "scrollto":
-            let query = try resolve(args)
-            for _ in 0..<12 where !(query.exists && query.isHittable) { app.swipeUp() }
-            guard query.exists && query.isHittable else { throw StepError("never scrolled into view: \(args)") }
+            try scrollToMiddle(try resolve(args), args)
         case "swipe":
             switch args.first {
             case "up": app.swipeUp()
@@ -178,6 +176,25 @@ final class DriverTests: XCTestCase {
             dx = max(dx - 0.1, 0.5)
             return "no keyboard focus after taps along the trailing edge"
         }
+    }
+
+    /// Drags the list a third of the screen at a time, with no fling, until the target sits in the middle half.
+    /// XCUITest calls an element under the Workout tab's pinned header or above the tab bar hittable, but a
+    /// tap there lands on the header or bar, so on-screen is not enough.
+    private func scrollToMiddle(_ target: XCUIElement, _ args: [String]) throws {
+        let height = app.windows.firstMatch.frame.height
+        let band = (height * 0.25)...(height * 0.75)
+        func centered() -> Bool { target.exists && target.isHittable && band.contains(target.frame.midY) }
+        for _ in 0..<36 where !centered() {
+            let before = target.exists ? target.frame : .null
+            let up = !(target.exists && target.frame.midY < band.lowerBound)
+            let (from, to) = up ? (0.7, 0.37) : (0.37, 0.7)
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: from)).press(
+                forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: to)),
+                withVelocity: .slow, thenHoldForDuration: 0.2)
+            if target.exists, target.frame == before { break }
+        }
+        guard target.exists && target.isHittable else { throw StepError("never scrolled into view: \(args)") }
     }
 
     private func resolveAll(_ args: [String]) throws -> XCUIElementQuery {
