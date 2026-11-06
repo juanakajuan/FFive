@@ -18,11 +18,15 @@ public enum ExerciseCatalog {
             "Machine Chest Press", .chest, .machine, 8...15,
             "The fixed path lets you push close to failure with little fatigue from balancing."),
         x(
-            "Push-Up", .chest, .bodyweight, 10...20,
+            "Push-Up", .chest, .bodyweightLoadable, 10...20,
             "Keep a rigid plank and lower until the chest nearly touches the floor."),
         x(
-            "Dip", .chest, .bodyweight, 8...15,
+            "Dip", .chest, .bodyweightLoadable, 8...15,
             "Lean the torso forward and sink until the chest stretches, without forcing the shoulders."),
+        x(
+            "Assisted Dip", .chest, .assistedMachine, 8...15,
+            "Set the assistance so you reach full depth with a stretch in the chest, then lower it as you get stronger."
+        ),
         x(
             "Cable Fly", .chest, .cable, 10...20,
             "Keep a soft bend in the elbows and reach wide at the start for a strong stretch."),
@@ -36,10 +40,33 @@ public enum ExerciseCatalog {
             "Low-to-High Cable Fly", .chest, .cable, 12...20,
             "Sweep up toward chin height to bias the upper chest with almost no joint stress."),
 
-        x("Pull-Up", .back, .bodyweight, 6...12, "Start from a dead hang and pull the elbows down toward the hips."),
         x(
-            "Chin-Up", .back, .bodyweight, 6...12,
+            "Pull-Up", .back, .bodyweightLoadable, 6...12,
+            "Start from a dead hang and pull the elbows down toward the hips."),
+        x(
+            "Chin-Up", .back, .bodyweightLoadable, 6...12,
             "An underhand grip lets the lats move more weight through a long range."),
+        x(
+            "Assisted Pull-Up", .back, .assistedMachine, 8...15,
+            "Kneel on the pad, start from a dead hang, and pull the elbows down toward the hips."),
+        x(
+            "Assisted Wide-Grip Pull-Up", .back, .assistedMachine, 8...15,
+            "A wide overhand grip stresses the upper lats; pull the elbows down and out."),
+        x(
+            "Assisted Neutral-Grip Pull-Up", .back, .assistedMachine, 8...15,
+            "Palms facing each other is easy on the shoulders; pull until the chin clears the handles."),
+        x(
+            "Assisted Chin-Up", .back, .assistedMachine, 8...15,
+            "An underhand grip brings in the biceps; hang fully before each rep."),
+        x(
+            "Wide-Grip Pull-Up", .back, .bodyweightLoadable, 6...12,
+            "Take a grip wider than the shoulders and pull the chest toward the bar."),
+        x(
+            "Neutral-Grip Pull-Up", .back, .bodyweightLoadable, 6...12,
+            "Palms facing each other lets the elbows stay close; add a belt and weight once 12 reps is easy."),
+        x(
+            "Inverted Row", .back, .bodyweightOnly, 10...20,
+            "Keep the body in a straight line and pull the chest to the bar; bend the knees to make it easier."),
         x(
             "Lat Pulldown", .back, .cable, 8...15,
             "Lock the thighs under the pad and let the arms rise fully before each rep."),
@@ -100,7 +127,7 @@ public enum ExerciseCatalog {
             "Leg Extension", .quads, .machine, 10...20,
             "Lean back slightly to lengthen the quads and pause briefly at the top."),
         x(
-            "Sissy Squat", .quads, .bodyweight, 10...20,
+            "Sissy Squat", .quads, .bodyweightLoadable, 10...20,
             "Hold a support, let the knees travel far forward, and lean back to stretch the quads."),
 
         x(
@@ -125,11 +152,15 @@ public enum ExerciseCatalog {
             "Lying Leg Curl", .hamstrings, .machine, 10...15,
             "Keep the hips pressed into the pad so the hamstrings, not the lower back, finish the rep."),
         x(
-            "Nordic Curl", .hamstrings, .bodyweight, 5...10,
+            "Nordic Curl", .hamstrings, .bodyweightOnly, 5...10,
             "Lower yourself as slowly as you can; the eccentric is where this one works."),
         x(
-            "Glute-Ham Raise", .hamstrings, .bodyweight, 6...12,
+            "Glute-Ham Raise", .hamstrings, .bodyweightLoadable, 6...12,
             "Bend at the knees to pull the torso up, keeping a straight line from knee to shoulder."),
+        x(
+            "45-Degree Back Raise", .hamstrings, .bodyweightLoadable, 10...20,
+            "Keep the back flat and hinge at the hips to bias the hamstrings; hold a plate to your chest once it gets easy."
+        ),
 
         x(
             "Hip Thrust", .glutes, .barbell, 8...12,
@@ -144,7 +175,7 @@ public enum ExerciseCatalog {
             "Cable Pull-Through", .glutes, .cable, 10...15,
             "Hinge back against the cable's pull, then squeeze the hips forward to stand tall."),
         x(
-            "Back Extension", .glutes, .bodyweight, 10...20,
+            "Back Extension", .glutes, .bodyweightLoadable, 10...20,
             "Round slightly at the top and drive with the hips to bias the glutes over the lower back."),
         x(
             "Hip Abduction Machine", .glutes, .machine, 12...20,
@@ -270,7 +301,7 @@ public enum ExerciseCatalog {
             "Machine Dip", .triceps, .machine, 8...12,
             "Stay upright and press down to lockout; the machine removes the shoulder strain of dips."),
         x(
-            "Close-Grip Push-Up", .triceps, .bodyweight, 10...20,
+            "Close-Grip Push-Up", .triceps, .bodyweightLoadable, 10...20,
             "Hands under the shoulders and elbows tight to load the triceps with no equipment."),
 
         x(
@@ -320,19 +351,22 @@ public enum ExerciseCatalog {
             "Machine Crunch", .abs, .machine, 10...20,
             "Curl the torso down by flexing the spine, not by pulling with the arms."),
         x(
-            "Hanging Leg Raise", .abs, .bodyweight, 10...20,
+            "Hanging Leg Raise", .abs, .bodyweightOnly, 10...20,
             "Curl the pelvis up at the top so the abs, not the hip flexors, finish the rep."),
         x(
-            "Reverse Crunch", .abs, .bodyweight, 10...20,
+            "Hanging Knee Raise", .abs, .bodyweightOnly, 10...20,
+            "Curl the knees up by tilting the pelvis back instead of swinging, and lower with control."),
+        x(
+            "Reverse Crunch", .abs, .bodyweightOnly, 10...20,
             "Roll the hips off the floor slowly and lower them with control."),
         x(
-            "Decline Sit-Up", .abs, .bodyweight, 10...20,
+            "Decline Sit-Up", .abs, .bodyweightLoadable, 10...20,
             "Curl up one vertebra at a time and hold a weight once bodyweight gets easy."),
         x(
-            "Ab Wheel", .abs, .bodyweight, 8...15,
+            "Ab Wheel", .abs, .bodyweightOnly, 8...15,
             "Keep the hips tucked and roll only as far as you can without the lower back sagging."),
         x(
-            "Plank", .abs, .bodyweight, 20...60,
+            "Plank", .abs, .bodyweightOnly, 20...60,
             "Log seconds held as reps; squeeze the glutes and brace as if bracing for a punch."),
     ]
 

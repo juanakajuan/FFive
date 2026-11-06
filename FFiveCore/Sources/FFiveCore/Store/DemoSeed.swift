@@ -130,7 +130,8 @@ public enum DemoSeed {
         case .dumbbell: 30
         case .cable: 50
         case .smith: 115
-        case .bodyweight: 0
+        case .assistedMachine: -50
+        case .bodyweightLoadable, .bodyweightOnly: 0
         case .machine, nil: 100
         }
     }

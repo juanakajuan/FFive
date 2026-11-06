@@ -520,15 +520,18 @@ extension Learn {
                 ForEach(Equipment.allCases, id: \.self) { equipment in
                     GridRow {
                         Text(equipment.displayName)
-                        Text(verbatim: "+\(equipment.increment(.lb).formatted())")
-                            .monospacedDigit()
-                        Text(verbatim: "+\(equipment.increment(.kg).formatted())")
-                            .monospacedDigit()
+                        step(equipment.increment(.lb))
+                        step(equipment.increment(.kg))
                     }
                 }
             }
             .font(Theme.detail)
             .learnPanel()
+        }
+
+        private func step(_ increment: Double) -> some View {
+            Text(verbatim: increment == 0 ? "Reps" : "+\(increment.formatted())")
+                .monospacedDigit()
         }
     }
 }

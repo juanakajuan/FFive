@@ -15,7 +15,7 @@ struct ExercisePickerView: View {
 
     var body: some View {
         let settings = store.settings
-        let all = store.library(muscle: muscle, search: search)
+        let all = store.library(muscle: muscle, equipment: nil, search: search)
         let entries = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
         NavigationStack {
             VStack(spacing: 0) {

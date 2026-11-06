@@ -13,7 +13,7 @@ struct Loading: Equatable {
         self.bodyweight = bodyweight
     }
 
-    var addsToBodyweight: Bool { equipment == .bodyweight }
+    var addsToBodyweight: Bool { equipment.addsToBodyweight }
 
     /// What a logged weight is added to, nil when body weight is needed and missing.
     var offset: Double? { addsToBodyweight ? bodyweight : 0 }

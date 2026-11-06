@@ -2,7 +2,7 @@
 # Before: ffive-verify reset-data (all equipment selected by default).
 launch
 tap #tab.exercises timeout=20
-wait #exercises.row.bench-press
+exists #exercises.row.bench-press
 absent #equipment-filter
 tap #tab.more
 tap #more.settings

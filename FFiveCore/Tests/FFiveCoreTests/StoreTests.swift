@@ -386,6 +386,21 @@ final class StoreTests: XCTestCase {
         XCTAssertTrue(store.weightFollowers(of: sets[0]).isEmpty)
     }
 
+    func testTypedWeightAndRepsAreSavedBeforeTheSetIsLogged() throws {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Squat", muscle: .quads, to: workout)
+        let set = workout.exercises[0].sortedSets[0]
+        store.setWeight(123, of: set, carryingTo: [])
+        XCTAssertFalse(store.context.hasChanges, "the weight is saved")
+        store.setReps(8, of: set)
+        XCTAssertFalse(store.context.hasChanges, "the reps are saved")
+        let saved = try ModelContext(store.container).fetch(FetchDescriptor<SetEntry>())
+        XCTAssertEqual(saved.map(\.weight), [123])
+        XCTAssertEqual(saved.map(\.reps), [8])
+        XCTAssertFalse(set.isDone)
+    }
+
     func testAddAndDeleteSet() {
         let store = Store(inMemory: true)
         let workout = store.startQuickWorkout()
@@ -610,28 +625,41 @@ final class StoreTests: XCTestCase {
                 ("Café Curl", .biceps, 20),
             ])
 
-        let all = store.library(muscle: nil, search: "")
+        let all = store.library(muscle: nil, equipment: nil, search: "")
         XCTAssertEqual(all.count, ExerciseCatalog.all.count + 2, "custom lifts join the catalog once per folded name")
         XCTAssertTrue(all.contains { $0.name == "zercher squat" && $0.info == nil && $0.equipment == "Custom" })
         XCTAssertEqual(
             all.map(\.name), all.map(\.name).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending },
             "names sort ignoring case, so a lowercase custom name sits among the rest")
-        XCTAssertEqual(all, store.library(muscle: nil, search: ""), "the same store gives the same order every time")
+        XCTAssertEqual(
+            all, store.library(muscle: nil, equipment: nil, search: ""),
+            "the same store gives the same order every time")
 
-        let quads = store.library(muscle: .quads, search: "")
+        let quads = store.library(muscle: .quads, equipment: nil, search: "")
         XCTAssertTrue(quads.allSatisfy { $0.muscle == .quads })
         XCTAssertEqual(
             quads.map(\.id), all.filter { $0.muscle == .quads }.map(\.id), "a muscle filter keeps the full list's order"
         )
         XCTAssertEqual(
-            store.library(muscle: nil, search: "  ZERCHER ").map(\.name), ["zercher squat"],
+            store.library(muscle: nil, equipment: nil, search: "  ZERCHER ").map(\.name), ["zercher squat"],
             "search trims and ignores case")
+
+        let assisted = store.library(muscle: nil, equipment: .assistedMachine, search: "")
+        XCTAssertEqual(
+            Set(assisted.map(\.name)),
+            [
+                "Assisted Pull-Up", "Assisted Wide-Grip Pull-Up", "Assisted Neutral-Grip Pull-Up", "Assisted Chin-Up",
+                "Assisted Dip",
+            ],
+            "an equipment filter drops custom lifts, which have none")
+        XCTAssertEqual(
+            store.library(muscle: .back, equipment: .assistedMachine, search: "").count, 4, "the filters combine")
     }
 
     func testLibraryFitsTheLifterEquipment() throws {
         let store = Store(inMemory: true)
         finished(store, at: .now, [("zercher squat", .quads, 60)])
-        let all = store.library(muscle: nil, search: "")
+        let all = store.library(muscle: nil, equipment: nil, search: "")
 
         let dumbbellOnly = all.filter { $0.fits([.dumbbell]) }
         XCTAssertTrue(dumbbellOnly.contains { $0.name == "zercher squat" }, "a custom exercise always fits")

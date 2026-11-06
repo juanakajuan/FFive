@@ -9,6 +9,8 @@ tap #workout.menu
 tap #menu.add-exercise
 wait nav "Add Exercise"
 type #picker.search "Pull"
+swipe up
+scrollto #picker.row.pull-up
 tap #picker.row.pull-up
 wait text "Pull-Up"
 wait text "~Set your bodyweight"
