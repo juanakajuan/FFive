@@ -338,7 +338,33 @@ public enum ExerciseCatalog {
 
     public static let templates: [ProgramTemplate] = [
         ProgramTemplate(
+            name: "Full Body, 2 Days",
+            emphasis: .balanced,
+            summary: "Suits anyone with only two training days who wants the whole body hit twice a week.",
+            days: [
+                day(
+                    "Full Body A",
+                    ["Squat", "Bench Press", "Pull-Up", "Seated Leg Curl", "Lateral Raise", "Cable Curl"]),
+                day(
+                    "Full Body B",
+                    [
+                        "Romanian Deadlift", "Incline Dumbbell Press", "Seated Cable Row", "Leg Extension",
+                        "Overhead Cable Extension", "Calf Raise",
+                    ]),
+            ]
+        ),
+        ProgramTemplate(
+            name: "Time-Saver Full Body, 2 Days",
+            emphasis: .timeSaver,
+            summary: "Suits busy lifters with two short days who can spare about 25 minutes a session.",
+            days: [
+                day("Full Body A", ["Squat", "Bench Press", "Pull-Up", "Lateral Raise"]),
+                day("Full Body B", ["Romanian Deadlift", "Overhead Press", "Seated Cable Row", "Tricep Pushdown"]),
+            ]
+        ),
+        ProgramTemplate(
             name: "Full Body, 3 Days",
+            emphasis: .balanced,
             summary: "Suits beginners or anyone with three training days who wants each muscle hit twice a week.",
             days: [
                 day(
@@ -359,7 +385,40 @@ public enum ExerciseCatalog {
             ]
         ),
         ProgramTemplate(
+            name: "Time-Saver Full Body, 3 Days",
+            emphasis: .timeSaver,
+            summary: "Suits busy lifters with three short days who can spare about 25 minutes a session.",
+            days: [
+                day("Full Body A", ["Squat", "Dumbbell Press", "Chest-Supported Dumbbell Row", "Rope Pushdown"]),
+                day("Full Body B", ["Romanian Deadlift", "Machine Shoulder Press", "Lat Pulldown", "EZ-Bar Curl"]),
+                day("Full Body C", ["Leg Press", "Incline Dumbbell Press", "Seated Cable Row", "Cable Lateral Raise"]),
+            ]
+        ),
+        ProgramTemplate(
+            name: "Glute Focus Full Body, 3 Days",
+            emphasis: .glutes,
+            summary: "Suits lifters with three days who want glute growth first while still training the whole body.",
+            days: [
+                day(
+                    "Full Body A",
+                    ["Hip Thrust", "Squat", "Seated Leg Curl", "Bench Press", "Pull-Up", "Cable Kickback"]),
+                day(
+                    "Full Body B",
+                    [
+                        "Romanian Deadlift", "Bulgarian Split Squat", "Hip Abduction Machine", "Incline Dumbbell Press",
+                        "Seated Cable Row", "Hammer Curl",
+                    ]),
+                day(
+                    "Full Body C",
+                    [
+                        "Smith Hip Thrust", "Hack Squat", "Cable Pull-Through", "Machine Shoulder Press",
+                        "Lat Pulldown", "Rope Pushdown",
+                    ]),
+            ]
+        ),
+        ProgramTemplate(
             name: "Upper/Lower, 4 Days",
+            emphasis: .balanced,
             summary:
                 "Suits intermediates with four days who want every muscle trained twice a week with room to add sets.",
             days: [
@@ -387,7 +446,75 @@ public enum ExerciseCatalog {
             ]
         ),
         ProgramTemplate(
+            name: "Upper Body Focus, 4 Days",
+            emphasis: .upperBody,
+            summary: "Suits lifters with four days who want a bigger chest, back and shoulders with one solid leg day.",
+            days: [
+                day(
+                    "Upper A",
+                    [
+                        "Bench Press", "Pull-Up", "Incline Dumbbell Press", "Seated Cable Row", "Lateral Raise",
+                        "Skull Crusher",
+                    ]),
+                day(
+                    "Lower",
+                    ["Squat", "Romanian Deadlift", "Leg Extension", "Lying Leg Curl", "Calf Raise", "Cable Crunch"]),
+                day(
+                    "Upper B",
+                    [
+                        "Overhead Press", "Lat Pulldown", "Dip", "Chest-Supported Dumbbell Row", "Cable Lateral Raise",
+                        "EZ-Bar Curl",
+                    ]),
+                day(
+                    "Upper C",
+                    [
+                        "Incline Bench Press", "Barbell Row", "Pec Deck", "Reverse Pec Deck", "Hammer Curl",
+                        "Overhead Cable Extension",
+                    ]),
+            ]
+        ),
+        ProgramTemplate(
+            name: "Lower Body Focus, 4 Days",
+            emphasis: .lowerBody,
+            summary: "Suits lifters with four days who want bigger legs with three lower days and one upper day.",
+            days: [
+                day(
+                    "Lower A",
+                    [
+                        "Squat", "Romanian Deadlift", "Leg Extension", "Lying Leg Curl", "Calf Raise",
+                        "Hanging Leg Raise",
+                    ]),
+                day(
+                    "Upper",
+                    ["Bench Press", "Pull-Up", "Overhead Press", "Seated Cable Row", "EZ-Bar Curl", "Rope Pushdown"]),
+                day(
+                    "Lower B",
+                    [
+                        "Hack Squat", "Hip Thrust", "Seated Leg Curl", "Bulgarian Split Squat", "Seated Calf Raise",
+                        "Cable Crunch",
+                    ]),
+                day(
+                    "Lower C",
+                    [
+                        "Leg Press", "Stiff-Legged Deadlift", "Leg Extension", "Cable Pull-Through",
+                        "Leg Press Calf Raise", "Back Extension",
+                    ]),
+            ]
+        ),
+        ProgramTemplate(
+            name: "Time-Saver Upper/Lower, 4 Days",
+            emphasis: .timeSaver,
+            summary: "Suits busy lifters with four short days who can spare about 25 minutes a session.",
+            days: [
+                day("Upper A", ["Bench Press", "Pull-Up", "Lateral Raise", "Tricep Pushdown"]),
+                day("Lower A", ["Squat", "Lying Leg Curl", "Calf Raise"]),
+                day("Upper B", ["Incline Dumbbell Press", "Seated Cable Row", "Face Pull", "Hammer Curl"]),
+                day("Lower B", ["Romanian Deadlift", "Leg Press", "Hip Thrust", "Seated Calf Raise"]),
+            ]
+        ),
+        ProgramTemplate(
             name: "Upper/Lower + Arms & Delts, 5 Days",
+            emphasis: .armsAndShoulders,
             summary:
                 "Suits lifters with five days who want extra arm and side delt volume on top of an upper/lower base.",
             days: [
@@ -424,7 +551,98 @@ public enum ExerciseCatalog {
             ]
         ),
         ProgramTemplate(
+            name: "Glute Focus, 5 Days",
+            emphasis: .glutes,
+            summary:
+                "Suits lifters with five days who want glutes trained three times a week alongside two upper days.",
+            days: [
+                day(
+                    "Glutes A",
+                    [
+                        "Hip Thrust", "Romanian Deadlift", "Bulgarian Split Squat", "Hip Abduction Machine",
+                        "Seated Leg Curl", "Calf Raise",
+                    ]),
+                day(
+                    "Upper A",
+                    ["Bench Press", "Pull-Up", "Seated Cable Row", "Lateral Raise", "Cable Curl", "Rope Pushdown"]),
+                day(
+                    "Glutes B",
+                    ["Squat", "Smith Hip Thrust", "Lunge", "Cable Kickback", "Lying Leg Curl", "Hanging Leg Raise"]),
+                day(
+                    "Upper B",
+                    [
+                        "Incline Dumbbell Press", "Lat Pulldown", "Machine Shoulder Press",
+                        "Chest-Supported Dumbbell Row", "Hammer Curl", "Overhead Cable Extension",
+                    ]),
+                day(
+                    "Glutes C",
+                    [
+                        "Deadlift", "Hack Squat", "Back Extension", "Hip Abduction Machine", "Seated Calf Raise",
+                        "Cable Crunch",
+                    ]),
+            ]
+        ),
+        ProgramTemplate(
+            name: "Chest & Triceps Focus, 5 Days",
+            emphasis: .chestAndTriceps,
+            summary:
+                "Suits lifters with five days who want a bigger chest and triceps with the rest of the body kept on track.",
+            days: [
+                day(
+                    "Chest & Triceps A",
+                    [
+                        "Bench Press", "Incline Dumbbell Press", "Cable Fly", "Skull Crusher", "Rope Pushdown",
+                        "Lateral Raise",
+                    ]),
+                day("Legs A", ["Squat", "Romanian Deadlift", "Leg Extension", "Lying Leg Curl", "Calf Raise"]),
+                day(
+                    "Back & Biceps",
+                    ["Pull-Up", "Chest-Supported Dumbbell Row", "Face Pull", "Barbell Curl", "Hammer Curl"]),
+                day(
+                    "Chest & Triceps B",
+                    [
+                        "Incline Bench Press", "Dumbbell Press", "Pec Deck", "Dip", "Overhead Cable Extension",
+                        "Tricep Pushdown",
+                    ]),
+                day(
+                    "Legs B",
+                    [
+                        "Hack Squat", "Hip Thrust", "Seated Leg Curl", "Bulgarian Split Squat", "Seated Calf Raise",
+                        "Cable Crunch",
+                    ]),
+            ]
+        ),
+        ProgramTemplate(
+            name: "Back & Biceps Focus, 5 Days",
+            emphasis: .backAndBiceps,
+            summary:
+                "Suits lifters with five days who want a wider back and bigger biceps with the rest of the body kept on track.",
+            days: [
+                day(
+                    "Back & Biceps A",
+                    [
+                        "Pull-Up", "Barbell Row", "Close-Grip Lat Pulldown", "Straight-Arm Pulldown", "Barbell Curl",
+                        "Incline Dumbbell Curl",
+                    ]),
+                day("Legs A", ["Squat", "Romanian Deadlift", "Leg Extension", "Lying Leg Curl", "Calf Raise"]),
+                day("Push", ["Bench Press", "Pec Deck", "Lateral Raise", "Overhead Cable Extension", "Rope Pushdown"]),
+                day(
+                    "Back & Biceps B",
+                    [
+                        "Lat Pulldown", "Chest-Supported Dumbbell Row", "T-Bar Row", "Face Pull", "Hammer Curl",
+                        "Cable Curl",
+                    ]),
+                day(
+                    "Legs B",
+                    [
+                        "Hack Squat", "Hip Thrust", "Seated Leg Curl", "Bulgarian Split Squat", "Seated Calf Raise",
+                        "Cable Crunch",
+                    ]),
+            ]
+        ),
+        ProgramTemplate(
             name: "Push/Pull/Legs, 6 Days",
+            emphasis: .balanced,
             summary:
                 "Suits experienced lifters who recover well and can train six days with shorter, focused sessions.",
             days: [
@@ -454,7 +672,80 @@ public enum ExerciseCatalog {
                     ]),
             ]
         ),
+        ProgramTemplate(
+            name: "Upper Body Focus, 6 Days",
+            emphasis: .upperBody,
+            summary:
+                "Suits experienced lifters with six days who want upper body growth with a single dedicated leg day.",
+            days: [
+                day(
+                    "Push A",
+                    ["Bench Press", "Incline Dumbbell Press", "Overhead Press", "Lateral Raise", "Rope Pushdown"]),
+                day("Pull A", ["Pull-Up", "Barbell Row", "Seated Cable Row", "Face Pull", "Barbell Curl"]),
+                day(
+                    "Legs",
+                    ["Squat", "Romanian Deadlift", "Leg Extension", "Lying Leg Curl", "Calf Raise", "Cable Crunch"]),
+                day(
+                    "Push B",
+                    [
+                        "Dip", "Incline Bench Press", "Machine Shoulder Press", "Cable Fly", "Cable Lateral Raise",
+                        "Overhead Cable Extension",
+                    ]),
+                day(
+                    "Pull B",
+                    [
+                        "Lat Pulldown", "Chest-Supported Dumbbell Row", "Reverse Pec Deck", "Barbell Shrug",
+                        "Incline Dumbbell Curl", "Hammer Curl",
+                    ]),
+                day(
+                    "Shoulders & Arms",
+                    [
+                        "Seated Dumbbell Lateral Raise", "Skull Crusher", "EZ-Bar Curl", "Dumbbell Overhead Extension",
+                        "Cable Curl", "Rear Delt Fly",
+                    ]),
+            ]
+        ),
+        ProgramTemplate(
+            name: "Lower Body Focus, 6 Days",
+            emphasis: .lowerBody,
+            summary:
+                "Suits experienced lifters with six days who want bigger legs and glutes with a light upper body schedule.",
+            days: [
+                day(
+                    "Quads",
+                    [
+                        "Squat", "Hack Squat", "Leg Extension", "Bulgarian Split Squat", "Calf Raise",
+                        "Hanging Leg Raise",
+                    ]),
+                day(
+                    "Push",
+                    ["Bench Press", "Overhead Press", "Incline Dumbbell Press", "Lateral Raise", "Rope Pushdown"]),
+                day(
+                    "Hamstrings & Glutes",
+                    [
+                        "Romanian Deadlift", "Hip Thrust", "Lying Leg Curl", "Cable Pull-Through", "Seated Leg Curl",
+                        "Seated Calf Raise",
+                    ]),
+                day(
+                    "Pull",
+                    ["Pull-Up", "Seated Cable Row", "Chest-Supported Dumbbell Row", "Face Pull", "Barbell Curl"]),
+                day(
+                    "Legs",
+                    [
+                        "Leg Press", "Stiff-Legged Deadlift", "Lunge", "Hip Abduction Machine", "Leg Extension",
+                        "Leg Press Calf Raise",
+                    ]),
+                day(
+                    "Arms & Delts",
+                    [
+                        "Cable Lateral Raise", "Skull Crusher", "EZ-Bar Curl", "Overhead Cable Extension",
+                        "Hammer Curl", "Reverse Pec Deck",
+                    ]),
+            ]
+        ),
     ]
+
+    public static let defaultTemplate = templates.first { $0.name == "Full Body, 3 Days" }
 
     static let byID: [ExerciseID: ExerciseInfo] = Dictionary(uniqueKeysWithValues: all.map { ($0.id, $0) })
 

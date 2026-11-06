@@ -31,7 +31,7 @@ struct MesoBuilderView: View {
             .navigationDestination(for: Route.self, destination: editor)
             .onAppear {
                 if startAt == nil, DemoLaunch.route == .builder, path.isEmpty,
-                    let first = ExerciseCatalog.templates.first
+                    let first = ExerciseCatalog.defaultTemplate
                 {
                     path = [.template(first.name)]
                 }
