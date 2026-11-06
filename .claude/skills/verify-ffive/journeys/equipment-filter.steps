@@ -1,0 +1,43 @@
+# equipment-filter: Settings picks the lifter's equipment, and the Exercises tab and picker show only it until Show All. On-disk.
+# Before: ffive-verify reset-data (all equipment selected by default).
+launch
+tap #tab.exercises timeout=20
+wait #exercises.row.bench-press
+absent #equipment-filter
+tap #tab.more
+tap #more.settings
+wait nav "Settings"
+tap #settings.equipment.barbell
+unselected #settings.equipment.barbell
+selected #settings.equipment.dumbbell
+shot 01-settings-no-barbell
+sleep 5
+terminate
+launch
+tap #tab.more timeout=20
+tap #more.settings
+unselected #settings.equipment.barbell
+tap #tab.workout
+tap #workout.quick timeout=10
+tap #workout.menu
+tap #menu.add-exercise
+wait button "Show All"
+type #picker.search "bench press"
+absent #picker.row.bench-press
+absent button "~Create"
+wait text "~equipment you"
+shot 02-picker-filtered
+tap #equipment-filter
+wait #picker.row.bench-press
+shot 03-picker-all
+tap #picker.cancel
+tap #tab.exercises
+wait button "Show All"
+type #exercises.search "press"
+absent #exercises.row.bench-press
+wait #exercises.row.incline-dumbbell-press
+shot 04-exercises-filtered
+tap #equipment-filter
+wait #exercises.row.bench-press
+wait button "My Equipment"
+shot 05-exercises-all

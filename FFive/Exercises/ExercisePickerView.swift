@@ -9,14 +9,14 @@ struct ExercisePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
     @State private var search = ""
-    @State private var showAll = false
+    @State private var equipmentOnly = true
 
     private var query: String { search.trimmingCharacters(in: .whitespaces) }
 
     var body: some View {
         let settings = store.settings
         let all = store.library(muscle: muscle, search: search)
-        let entries = all.filter { showAll || !settings.filtersEquipment || $0.fits(settings.equipment) }
+        let entries = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
         NavigationStack {
             VStack(spacing: 0) {
                 SearchBox(prompt: "Search or create exercise", text: $search)
@@ -25,10 +25,17 @@ struct ExercisePickerView: View {
                     .padding(.horizontal, Theme.gutter)
                     .padding(.bottom, settings.filtersEquipment ? 0 : 12)
                 if settings.filtersEquipment {
-                    EquipmentScopeToggle(showAll: $showAll)
+                    EquipmentScopeToggle(isOn: $equipmentOnly)
                         .padding(.bottom, 4)
                 }
                 List {
+                    if entries.isEmpty && !all.isEmpty {
+                        Text("Only exercises for equipment you don\u{2019}t have match.")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondary)
+                            .themedRow(vertical: 8)
+                            .listRowSeparator(.hidden)
+                    }
                     if !query.isEmpty && !all.contains(where: { $0.id == ExerciseID(folding: query) }) {
                         createRow
                             .themedRow()

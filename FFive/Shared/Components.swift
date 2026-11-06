@@ -242,15 +242,20 @@ extension View {
 }
 
 struct EquipmentScopeToggle: View {
-    @Binding var showAll: Bool
+    @Binding var isOn: Bool
 
     var body: some View {
-        Toggle("My Equipment Only", isOn: Binding(get: { !showAll }, set: { showAll = !$0 }))
-            .tint(Theme.success)
-            .font(Theme.body)
-            .foregroundStyle(Theme.text)
-            .padding(.horizontal, Theme.gutter)
-            .frame(minHeight: 44)
-            .a11y(.equipmentFilter)
+        HStack {
+            Text(isOn ? "Showing your equipment" : "Showing all equipment")
+                .font(Theme.detail)
+                .foregroundStyle(Theme.secondary)
+            Spacer()
+            Button(isOn ? "Show All" : "My Equipment") { isOn.toggle() }
+                .font(Theme.body)
+                .foregroundStyle(Theme.infoText)
+                .a11y(.equipmentFilter)
+        }
+        .padding(.horizontal, Theme.gutter)
+        .frame(minHeight: 44)
     }
 }
