@@ -100,6 +100,7 @@ public enum A11y: String, CaseIterable {
     case settingsEquipment = "settings.equipment"
     case settingsExport = "settings.export"
     case settingsAppearance = "settings.appearance"
+    case settingsSync = "settings.sync"
     case equipmentFilter = "equipment-filter"
 
     static let indexed: Set<A11y> = [

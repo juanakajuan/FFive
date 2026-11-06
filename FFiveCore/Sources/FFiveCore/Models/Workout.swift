@@ -3,19 +3,29 @@ import SwiftData
 
 @Model
 public final class Workout {
-    public var name: String
-    public internal(set) var startDate: Date
+    public var name: String = ""
+    public internal(set) var startDate: Date = Date.now
     public internal(set) var endDate: Date?
-    @Relationship(deleteRule: .cascade, inverse: \Exercise.workout)
-    public internal(set) var exercises: [Exercise] = []
+    @Relationship(deleteRule: .cascade, originalName: "exercises", inverse: \Exercise.workout)
+    var storedExercises: [Exercise]?
     public internal(set) var mesocycle: Mesocycle?
     public internal(set) var week: Int?
     public internal(set) var dayIndex: Int?
-    @Relationship(deleteRule: .cascade, inverse: \MuscleFeedbackRecord.workout)
-    public var feedback: [MuscleFeedbackRecord] = []
+    @Relationship(deleteRule: .cascade, originalName: "feedback", inverse: \MuscleFeedbackRecord.workout)
+    var storedFeedback: [MuscleFeedbackRecord]?
     public internal(set) var note: String?
     /// The lifter's body weight for this session, in their weight unit. Bodyweight lifts log load added to it.
     public internal(set) var bodyweight: Double?
+
+    public internal(set) var exercises: [Exercise] {
+        get { storedExercises ?? [] }
+        set { storedExercises = newValue }
+    }
+
+    public var feedback: [MuscleFeedbackRecord] {
+        get { storedFeedback ?? [] }
+        set { storedFeedback = newValue }
+    }
 
     public init(name: String, startDate: Date = .now) {
         self.name = name

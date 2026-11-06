@@ -7,13 +7,23 @@ public final class Mesocycle {
     public internal(set) var startDate: Date = Date.now
     public var accumulationWeeks: Int = 4
     public internal(set) var finishedDate: Date?
-    @Relationship(deleteRule: .cascade, inverse: \MesoDay.mesocycle)
-    public internal(set) var days: [MesoDay] = []
-    @Relationship(deleteRule: .nullify, inverse: \Workout.mesocycle)
-    public internal(set) var workouts: [Workout] = []
+    @Relationship(deleteRule: .cascade, originalName: "days", inverse: \MesoDay.mesocycle)
+    var storedDays: [MesoDay]?
+    @Relationship(deleteRule: .nullify, originalName: "workouts", inverse: \Workout.mesocycle)
+    var storedWorkouts: [Workout]?
     var skippedSessions: [SessionKey] = []
     /// Muscle raw value to priority raw value. A muscle missing here is trained at normal priority.
     var musclePriorityRaw: [String: String] = [:]
+
+    public internal(set) var days: [MesoDay] {
+        get { storedDays ?? [] }
+        set { storedDays = newValue }
+    }
+
+    public internal(set) var workouts: [Workout] {
+        get { storedWorkouts ?? [] }
+        set { storedWorkouts = newValue }
+    }
 
     init(name: String, accumulationWeeks: Int, startDate: Date = .now) {
         self.name = name
