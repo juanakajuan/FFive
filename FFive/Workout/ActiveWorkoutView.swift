@@ -338,6 +338,7 @@ struct ActiveWorkoutView: View {
 private enum SetColumns {
     static let menu: CGFloat = 32
     static let field: CGFloat = 93
+    static let log: CGFloat = 44
 }
 
 struct ExerciseCard: View {
@@ -486,10 +487,10 @@ struct ExerciseCard: View {
     private var columnHeaders: some View {
         HStack(spacing: 0) {
             Color.clear.frame(width: SetColumns.menu, height: 1)
-            Text(exercise.isBodyweight ? "BW +/−" : "Weight").frame(width: SetColumns.field).padding(.leading, 12)
-            Text("Reps").frame(width: SetColumns.field).padding(.leading, 16)
-            Spacer(minLength: 0)
-            Text("Log")
+            Text(exercise.isBodyweight ? "BW +/−" : "Weight").frame(minWidth: SetColumns.field, maxWidth: .infinity)
+                .padding(.leading, 12)
+            Text("Reps").frame(minWidth: SetColumns.field, maxWidth: .infinity).padding(.leading, 16)
+            Text("Log").frame(width: SetColumns.log, alignment: .trailing).padding(.leading, 16)
         }
         .font(Theme.columnHeader)
         .textCase(.uppercase)
@@ -585,7 +586,7 @@ struct SetRow: View {
             .onTapGesture { focus = .weight }
             .accessibilityLabel("Set \(number) weight")
             .a11y(.setWeight, number)
-            .frame(width: SetColumns.field)
+            .frame(minWidth: SetColumns.field, maxWidth: .infinity)
             .padding(.leading, 12)
             .opacity(set.status == .skipped ? 0.4 : 1)
 
@@ -600,31 +601,32 @@ struct SetRow: View {
             .onTapGesture { focus = .reps }
             .accessibilityLabel("Set \(number) reps")
             .a11y(.setReps, number)
-            .frame(width: SetColumns.field)
+            .overlay(alignment: .trailing) {
+                if let tag = set.type.tag {
+                    Text(tag)
+                        .font(Theme.caption.weight(.medium))
+                        .foregroundStyle(Theme.secondary)
+                        .lineLimit(1)
+                        .minimumScaleFactor(0.7)
+                        .padding(.trailing, 6)
+                        .allowsHitTesting(false)
+                        .accessibilityHidden(true)
+                }
+            }
+            .frame(minWidth: SetColumns.field, maxWidth: .infinity)
             .padding(.leading, 16)
             .opacity(set.status == .skipped ? 0.4 : 1)
-
-            if let tag = set.type.tag {
-                Text(tag)
-                    .font(Theme.caption.weight(.medium))
-                    .foregroundStyle(Theme.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .padding(.leading, 8)
-                    .accessibilityHidden(true)
-            }
-
-            Spacer(minLength: 0)
 
             Button {
                 store.log(set, done: !set.isDone)
                 if set.isDone { onCompleted() }
             } label: {
                 LogCheckbox(status: set.status)
-                    .frame(width: 44, height: 44, alignment: .trailing)
+                    .frame(width: SetColumns.log, height: 44, alignment: .trailing)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .padding(.leading, 16)
             .accessibilityLabel("Log set \(number)")
             .a11y(.setLog, number)
             .accessibilityValue(set.status == .skipped ? "Skipped" : "")
