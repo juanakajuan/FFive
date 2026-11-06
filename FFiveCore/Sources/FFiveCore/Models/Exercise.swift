@@ -41,7 +41,6 @@ public final class Exercise {
 
     public var repRange: ClosedRange<Int> { ExerciseCatalog.repRange(for: key) }
 
-    /// Appends a set shaped like the last one, so the lifter edits instead of retyping.
     func addSet() {
         let last = sortedSets.last
         let set = SetEntry(reps: last?.reps ?? 10, weight: last?.weight ?? 0, order: (last?.order ?? -1) + 1)

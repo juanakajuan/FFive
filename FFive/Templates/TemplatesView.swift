@@ -74,7 +74,6 @@ struct TemplatesView: View {
     }
 }
 
-/// A raised, rounded card of rows, inset from the screen edges.
 struct TemplateGroup<Content: View>: View {
     let content: Content
 
@@ -88,7 +87,6 @@ struct TemplateGroup<Content: View>: View {
     }
 }
 
-/// A template row: the split as a caption, the name, and how many days a week it trains.
 struct TemplateListRow: View {
     let template: ProgramTemplate
 

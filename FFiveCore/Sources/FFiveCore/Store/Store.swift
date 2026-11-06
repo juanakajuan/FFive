@@ -33,7 +33,6 @@ public final class Store {
 
     private var unit: WeightUnit { settings.weightUnit }
 
-    /// Dropped by every commit, saved or not, because the context holds the change either way.
     @ObservationIgnored private var cachedSnapshot: PlanningSnapshot?
     private var snapshot: PlanningSnapshot {
         if let cachedSnapshot { return cachedSnapshot }
@@ -166,7 +165,6 @@ public final class Store {
         MesoPlanner.lastFinishedExercise(key, in: context)
     }
 
-    /// Catalog exercises plus custom ones the lifter has logged with a muscle, by name.
     public func library(muscle: Muscle?, search: String) -> [ExerciseListing] {
         observeCommits()
         var listings = ExerciseCatalog.all.map {
@@ -315,7 +313,6 @@ public final class Store {
         return written
     }
 
-    /// Makes the view running this read re-render after the next saved commit.
     private func observeCommits() {
         _ = revision
     }

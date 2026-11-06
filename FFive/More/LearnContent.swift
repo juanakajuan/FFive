@@ -1,8 +1,6 @@
 import FFiveCore
 import Foundation
 
-/// The Learn tab's articles as data. Foundation only, so a script can compile it with Domain.swift
-/// to check word counts and the feedback rule without SwiftUI.
 enum Learn {
     enum Category: String, CaseIterable, Identifiable {
         case system = "The system"
@@ -21,7 +19,6 @@ enum Learn {
         var url: URL? { doi.flatMap { URL(string: "https://doi.org/\($0)") } }
     }
 
-    /// Text blocks hold inline Markdown. The cases without text are visual aids drawn from Domain.swift.
     enum Block {
         case heading(String)
         case paragraph(String)
@@ -55,8 +52,6 @@ enum Learn {
         }
     }
 
-    // MARK: - Rules shown in the visual aids
-
     static let accumulationWeekOptions = 3...6
 
     static func rir(week: Int, accumulationWeeks: Int) -> Int {
@@ -75,8 +70,6 @@ enum Learn {
         }
     }
 }
-
-// MARK: - Evidence
 
 extension Learn.Citation {
     static let israetel2021 = Self(
@@ -215,8 +208,6 @@ extension Learn.Citation {
             "How many times per week should a muscle be trained to maximize muscle hypertrophy? A systematic review and meta-analysis of studies examining the effects of resistance training frequency",
         source: "Journal of Sports Sciences, 37(11), 1286-1295", doi: "10.1080/02640414.2018.1555906")
 }
-
-// MARK: - Articles
 
 extension Learn {
     static let articles: [Article] = [

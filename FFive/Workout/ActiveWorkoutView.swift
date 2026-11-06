@@ -2,11 +2,8 @@ import FFiveCore
 import SwiftData
 import SwiftUI
 
-/// The open workout on the Workout tab: a pinned header over a stream of exercise cards with their feedback,
-/// and a pinned Finish button once every set is logged.
 struct ActiveWorkoutView: View {
     @Bindable var workout: Workout
-    /// The block in progress, also when the session shown is a quick workout.
     let activeMeso: Mesocycle?
     let openQuickWorkout: Workout?
 
@@ -632,7 +629,6 @@ struct SetRow: View {
     }
 }
 
-/// The sets logged for an exercise the last time it was trained.
 struct ExerciseHistorySheet: View {
     let name: String
 

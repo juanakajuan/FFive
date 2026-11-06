@@ -185,8 +185,6 @@ final class PlannerTests: XCTestCase {
         expect("next up is nil once the deload is done", meso.nextUp, nil)
     }
 
-    // MARK: - Reorder
-
     @MainActor private final class Block {
         let context = ModelContext(AppStore.makeContainer(inMemory: true))
         let meso: Mesocycle

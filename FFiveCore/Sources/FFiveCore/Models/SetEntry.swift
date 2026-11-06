@@ -24,7 +24,6 @@ public final class SetEntry {
         self.order = order
     }
 
-    /// A prescribed set, prefilled with its target so checking it off logs the target.
     public convenience init(target: SetTarget, order: Int) {
         self.init(reps: target.reps ?? 0, weight: target.weight ?? 0, order: order)
         targetWeight = target.weight

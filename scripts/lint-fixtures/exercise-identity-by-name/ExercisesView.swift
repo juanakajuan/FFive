@@ -2,7 +2,6 @@ import SwiftUI
 import SwiftData
 import FFiveCore
 
-/// One exercise in the library: a catalog entry, or a custom one the lifter has logged.
 struct ExerciseListing: Hashable, Identifiable {
     let name: String
     let muscle: Muscle
@@ -21,7 +20,6 @@ struct ExercisesView: View {
     @State private var search = ""
     @State private var muscle: Muscle?
 
-    /// Catalog exercises plus custom ones the lifter has logged with a muscle, as in the exercise picker.
     private var listings: [ExerciseListing] {
         var result = ExerciseCatalog.all.map { ExerciseListing(name: $0.name, muscle: $0.muscle, info: $0) }
         var seen = Set(result.map(\.id))

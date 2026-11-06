@@ -1,11 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// The open workout on the Workout tab: a pinned header over a stream of exercise cards with their feedback,
-/// and a pinned Finish button once every set is logged.
 struct ActiveWorkoutView: View {
     @Bindable var workout: Workout
-    /// The block in progress, also when the session shown is a quick workout.
     let activeMeso: Mesocycle?
     let openQuickWorkout: Workout?
 
@@ -220,7 +217,6 @@ struct ActiveWorkoutView: View {
         let exercise = Exercise(name: name, order: (workout.exercises.map(\.order).max() ?? -1) + 1, muscle: muscle)
         workout.exercises.append(exercise)
 
-        // Pre-fill with what you did last time for this exercise, or a single empty set.
         let previous = lastFinishedExercise(named: name, in: context)?.sortedSets.filter(\.isDone) ?? []
         if previous.isEmpty {
             exercise.sets.append(SetEntry(reps: 10, weight: 0, order: 0))
@@ -232,7 +228,6 @@ struct ActiveWorkoutView: View {
     }
 }
 
-/// The most recent finished session's entry for an exercise.
 @MainActor
 func lastFinishedExercise(named name: String, in context: ModelContext) -> Exercise? {
     let descriptor = FetchDescriptor<Exercise>(predicate: #Predicate { $0.name == name })
@@ -417,7 +412,6 @@ struct SetRow: View {
     private enum Field { case weight, reps }
     @FocusState private var focus: Field?
 
-    /// Zero reads as "not entered yet", so the field shows its placeholder instead of a 0.
     private var weight: Binding<Double?> {
         Binding(get: { set.weight == 0 ? nil : set.weight }, set: { set.weight = $0 ?? 0 })
     }
@@ -477,7 +471,6 @@ struct SetRow: View {
     }
 }
 
-/// The sets logged for an exercise the last time it was trained.
 struct ExerciseHistorySheet: View {
     let name: String
     let unit: WeightUnit

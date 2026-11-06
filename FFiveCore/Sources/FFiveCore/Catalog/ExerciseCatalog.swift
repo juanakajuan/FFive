@@ -2,7 +2,6 @@ import Foundation
 
 public enum ExerciseCatalog {
     public static let all: [ExerciseInfo] = [
-        // Chest
         x(
             "Bench Press", .chest, .barbell, 5...10,
             "Shoulder blades pinned, touch low on the chest, and press without bouncing."),
@@ -37,7 +36,6 @@ public enum ExerciseCatalog {
             "Low-to-High Cable Fly", .chest, .cable, 12...20,
             "Sweep up toward chin height to bias the upper chest with almost no joint stress."),
 
-        // Back
         x("Pull-Up", .back, .bodyweight, 6...12, "Start from a dead hang and pull the elbows down toward the hips."),
         x(
             "Chin-Up", .back, .bodyweight, 6...12,
@@ -71,7 +69,6 @@ public enum ExerciseCatalog {
             "A stable machine lets you take sets close to failure with little setup cost."),
         x("T-Bar Row", .back, .machine, 8...12, "Keep the chest on the pad and pull the elbows back past the torso."),
 
-        // Quads
         x(
             "Squat", .quads, .barbell, 5...10,
             "Sit straight down between the heels and hit full depth at a steady speed."),
@@ -106,7 +103,6 @@ public enum ExerciseCatalog {
             "Sissy Squat", .quads, .bodyweight, 10...20,
             "Hold a support, let the knees travel far forward, and lean back to stretch the quads."),
 
-        // Hamstrings
         x(
             "Romanian Deadlift", .hamstrings, .barbell, 6...10,
             "Push the hips back with soft knees and stop once the hamstrings are fully stretched."),
@@ -135,7 +131,6 @@ public enum ExerciseCatalog {
             "Glute-Ham Raise", .hamstrings, .bodyweight, 6...12,
             "Bend at the knees to pull the torso up, keeping a straight line from knee to shoulder."),
 
-        // Glutes
         x(
             "Hip Thrust", .glutes, .barbell, 8...12,
             "Tuck the chin, drive through the heels, and pause with the hips fully extended."),
@@ -158,7 +153,6 @@ public enum ExerciseCatalog {
             "Cable Kickback", .glutes, .cable, 12...20,
             "Brace on the frame and kick back and slightly out without arching the lower back."),
 
-        // Side delts
         x(
             "Lateral Raise", .sideDelts, .dumbbell, 12...20,
             "Lead with the elbows and raise out to the sides, stopping near shoulder height."),
@@ -187,7 +181,6 @@ public enum ExerciseCatalog {
             "Cable Upright Row", .sideDelts, .cable, 10...15,
             "Use a wide grip and pull the elbows out to shoulder height, no higher."),
 
-        // Rear delts
         x(
             "Face Pull", .rearDelts, .cable, 12...20,
             "Pull the rope toward the eyes with elbows high and spread the hands apart at the end."),
@@ -204,7 +197,6 @@ public enum ExerciseCatalog {
             "Wide-Grip Rear Delt Row", .rearDelts, .cable, 10...15,
             "Row with the elbows flared wide so the rear delts lead instead of the lats."),
 
-        // Front delts
         x(
             "Overhead Press", .frontDelts, .barbell, 5...10,
             "Squeeze the glutes, press the bar straight up, and move the head through at the top."),
@@ -224,7 +216,6 @@ public enum ExerciseCatalog {
             "Front Raise", .frontDelts, .dumbbell, 10...15,
             "Raise to eye level without swinging; pressing often covers this muscle already."),
 
-        // Biceps
         x(
             "Barbell Curl", .biceps, .barbell, 8...12,
             "Pin the elbows at your sides and lower the bar all the way down each rep."),
@@ -256,7 +247,6 @@ public enum ExerciseCatalog {
             "Behind-the-Body Cable Curl", .biceps, .cable, 10...15,
             "Face away from the cable so the arm starts behind you in a long, stretched position."),
 
-        // Triceps
         x(
             "Close-Grip Bench Press", .triceps, .barbell, 6...10,
             "Grip about shoulder width and keep the elbows tucked to shift work to the triceps."),
@@ -283,7 +273,6 @@ public enum ExerciseCatalog {
             "Close-Grip Push-Up", .triceps, .bodyweight, 10...20,
             "Hands under the shoulders and elbows tight to load the triceps with no equipment."),
 
-        // Calves
         x(
             "Calf Raise", .calves, .machine, 10...20,
             "Pause at the bottom in a full stretch before rising; the stretch drives growth here."),
@@ -300,7 +289,6 @@ public enum ExerciseCatalog {
             "Single-Leg Calf Raise", .calves, .dumbbell, 10...20,
             "One leg at a time on a step gives a big range with only a light dumbbell."),
 
-        // Traps
         x(
             "Barbell Shrug", .traps, .barbell, 10...15,
             "Lift the shoulders straight up toward the ears and hold the top for a second."),
@@ -312,7 +300,6 @@ public enum ExerciseCatalog {
             "The cable keeps tension at the bottom, so let the shoulders drop fully each rep."),
         x("Smith Shrug", .traps, .smith, 10...15, "The fixed bar lets you load heavy and focus only on the shrug."),
 
-        // Forearms
         x(
             "Wrist Curl", .forearms, .barbell, 12...20,
             "Rest the forearms on the thighs and let the bar roll to the fingertips before curling."),
@@ -326,7 +313,6 @@ public enum ExerciseCatalog {
             "Reverse Curl", .forearms, .barbell, 10...15,
             "An overhand grip makes the forearm muscles do most of the curling."),
 
-        // Abs
         x(
             "Cable Crunch", .abs, .cable, 10...20,
             "Round the spine to bring the ribs toward the hips, keeping the hips still."),

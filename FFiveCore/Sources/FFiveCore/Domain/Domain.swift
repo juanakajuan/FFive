@@ -90,7 +90,6 @@ public struct ExerciseInfo: Identifiable, Hashable {
     public let muscle: Muscle
     public let equipment: Equipment
     public let repRange: ClosedRange<Int>
-    /// One-line technique or stimulus-to-fatigue cue shown in the session.
     public let cue: String
 
     init(name: String, muscle: Muscle, equipment: Equipment, repRange: ClosedRange<Int>, cue: String) {
@@ -102,8 +101,6 @@ public struct ExerciseInfo: Identifiable, Hashable {
         self.cue = cue
     }
 }
-
-// MARK: - Session feedback
 
 public enum Soreness: Int, CaseIterable, Codable {
     case never, healedEarly, healedOnTime, stillSore
@@ -132,7 +129,6 @@ public enum JointPain: Int, CaseIterable, Codable {
     public var label: String { ["None", "Low", "Moderate", "A lot"][rawValue] }
 }
 
-/// What the lifter reported for one muscle in one session.
 /// Soreness is reported at the start of the next session that trains the muscle, then written back here.
 public struct MuscleFeedback: Equatable, Codable {
     public var soreness: Soreness?
@@ -147,8 +143,6 @@ public struct MuscleFeedback: Equatable, Codable {
         self.jointPain = jointPain
     }
 }
-
-// MARK: - Program templates
 
 public struct TemplateSlot: Hashable {
     public let muscle: Muscle

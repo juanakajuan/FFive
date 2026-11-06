@@ -65,7 +65,6 @@ struct ProgressScreen: View {
             .listRowSeparator(.hidden)
     }
 
-    // MARK: Volume
 
     @ViewBuilder
     private var volume: some View {
@@ -100,7 +99,6 @@ struct ProgressScreen: View {
         }
     }
 
-    // MARK: Strength
 
     @ViewBuilder
     private var strength: some View {
@@ -146,7 +144,6 @@ struct ProgressScreen: View {
         }
     }
 
-    // MARK: History
 
     @ViewBuilder
     private var historyList: some View {
@@ -201,7 +198,6 @@ struct StrengthSeries: Identifiable, Hashable {
     var latest: Double { points.last?.value ?? 0 }
     var change: Double { latest - (points.first?.value ?? 0) }
 
-    /// One point per finished session per exercise, most recently trained exercise first.
     static func all(from workouts: [Workout]) -> [StrengthSeries] {
         var byName: [String: (muscle: Muscle?, points: [Point])] = [:]
         for workout in workouts.sorted(by: { $0.startDate < $1.startDate }) {

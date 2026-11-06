@@ -1,7 +1,5 @@
 import XCTest
 
-/// Runs a step file against the installed FFive app (`com.juanix.FFive`).
-/// The step language is documented in the skill's SKILL.md.
 final class DriverTests: XCTestCase {
     private let app = XCUIApplication(bundleIdentifier: "com.juanix.FFive")
     private let environment = ProcessInfo.processInfo.environment
@@ -74,8 +72,6 @@ final class DriverTests: XCTestCase {
             captureFailure()
         }
     }
-
-    // MARK: Steps
 
     private func run(_ words: [String]) throws {
         guard let verb = words.first else { return }
@@ -184,8 +180,6 @@ final class DriverTests: XCTestCase {
         }
     }
 
-    // MARK: Queries
-
     private func resolveAll(_ args: [String]) throws -> XCUIElementQuery {
         if let id = args.first, id.hasPrefix("#") {
             return app.descendants(matching: .any).matching(identifier: String(id.dropFirst()))
@@ -267,8 +261,6 @@ final class DriverTests: XCTestCase {
         return "\(actual)" == expected ? nil : "\(key) is \"\(actual)\", expected \"\(expected)\""
     }
 
-    // MARK: Plumbing
-
     private func append(_ entry: String) {
         lock.withLock {
             log.append(entry)
@@ -282,7 +274,6 @@ final class DriverTests: XCTestCase {
         try? data.write(to: out.appendingPathComponent(name))
     }
 
-    /// Splits on spaces, keeping "double quoted" runs together.
     static func tokenize(_ line: String) -> [String] {
         var words: [String] = []
         var current = ""

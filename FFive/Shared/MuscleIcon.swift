@@ -1,8 +1,6 @@
 import FFiveCore
 import SwiftUI
 
-/// A body figure with one muscle group lit in its tint, seen from the front or the back.
-/// Upper-body muscles show the figure from the head to the hips, leg muscles from the hips down.
 struct MuscleIcon: View {
     let muscle: Muscle
 
@@ -27,13 +25,11 @@ struct MuscleIcon: View {
 
 enum Facing { case front, back }
 
-/// Regions of the figure, drawn in a 24 × 32 box. Each covers both sides of the body.
 enum BodyPart: CaseIterable {
     case head, traps, delts, chest, abs, upperBack, lowerBack, upperArms, forearms, hips, thighs, lowerLegs
 
     static let box = CGSize(width: 24, height: 32)
 
-    /// The window of the figure an icon lighting this part shows.
     var crop: CGRect {
         switch self {
         case .hips, .thighs, .lowerLegs: CGRect(x: 5, y: 18.4, width: 14, height: 13.6)
@@ -79,7 +75,6 @@ enum BodyPart: CaseIterable {
         }
     }
 
-    /// A left shape and its mirror image across the figure's center line, or at `mirroredAt` if given.
     private static func pair(
         x: CGFloat, y: CGFloat, width: CGFloat, height: CGFloat, radius: CGFloat,
         mirroredAt rightX: CGFloat? = nil
@@ -95,7 +90,6 @@ enum BodyPart: CaseIterable {
 }
 
 extension Muscle {
-    /// The part of the figure this muscle lights, and which side of the body shows it.
     var figurePart: (BodyPart, Facing) {
         switch self {
         case .chest: (.chest, .front)

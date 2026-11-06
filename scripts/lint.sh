@@ -73,7 +73,7 @@ ratchet() {
     awk -F'\t' -v base="$baseline" -v never="$never_baselined" '
     BEGIN { n = split(never, list, " "); for (i = 1; i <= n; i++) neverBaselined[list[i]] = 1 }
     FILENAME == base {
-        if ($0 ~ /^#/ || $0 == "") next
+        if ($0 == "") next
         split($0, w, " ")
         if (neverBaselined[w[1]]) { print "rule " w[1] " is never baselined. Fix the hit and delete this line from " base ":\n  " $0; stale++; next }
         left[$0]++

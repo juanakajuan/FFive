@@ -1,15 +1,10 @@
 import SwiftUI
 import UIKit
 
-/// The app's palette and type scale. Every screen draws from these tokens instead of system grouped colors.
 enum Theme {
-    /// Behind cards on the workout screen.
     static let page = Color(rgb: 0x131416)
-    /// Cards, list screens, navigation bar, and tab bar.
     static let surface = Color(rgb: 0x252627)
-    /// Filter bars, pills, and grouped cards that sit on `surface`.
     static let raised = Color(rgb: 0x2F2F32)
-    /// Text fields and search fields.
     static let field = Color(rgb: 0x131416)
     static let text = Color(rgb: 0xF3F5F7)
     static let secondary = Color(rgb: 0xF3F5F7).opacity(0.55)
@@ -31,7 +26,6 @@ enum Theme {
     static let tag = Font.system(size: 12, weight: .semibold)
     static let caption = Font.system(size: 12)
 
-    /// The navigation bar appearance is UIKit-wide, so it is set once at launch.
     static func applyNavigationBarAppearance() {
         let text = UIColor(Theme.text)
 
@@ -42,8 +36,6 @@ enum Theme {
         nav.titleTextAttributes = [.foregroundColor: text, .font: UIFont.systemFont(ofSize: 17, weight: .semibold)]
         nav.largeTitleTextAttributes = [.foregroundColor: text, .font: UIFont.systemFont(ofSize: 26, weight: .bold)]
         UINavigationBar.appearance().standardAppearance = nav
-        // An opaque scroll-edge appearance hides large titles over scrolling content, so the edge state is
-        // transparent over the same color.
         let edge = UINavigationBarAppearance()
         edge.configureWithTransparentBackground()
         edge.backgroundColor = UIColor(Theme.surface)
@@ -61,7 +53,6 @@ extension Color {
 }
 
 extension Muscle {
-    /// Muscles share a color by region: pushing muscles, pulling muscles, legs, and calves with abs.
     var tint: Color {
         switch self {
         case .chest, .frontDelts, .sideDelts, .rearDelts, .triceps: Color(rgb: 0xE03EC3)
@@ -72,7 +63,6 @@ extension Muscle {
     }
 }
 
-/// The colored label above each exercise card.
 struct MuscleTag: View {
     let muscle: Muscle
 
@@ -95,7 +85,6 @@ struct MuscleTag: View {
     }
 }
 
-/// A dot and colored muscle name, as in exercise list rows.
 struct MuscleDotLabel: View {
     let muscle: Muscle
 
@@ -108,7 +97,6 @@ struct MuscleDotLabel: View {
     }
 }
 
-/// A full-width card on the `page` background.
 struct SurfaceCard: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -119,7 +107,6 @@ struct SurfaceCard: ViewModifier {
     }
 }
 
-/// A dark input box, used for set weight and reps.
 struct ThemedField: ViewModifier {
     var height: CGFloat = 32
 
@@ -141,7 +128,6 @@ extension View {
     func themedField(height: CGFloat = 32) -> some View { modifier(ThemedField(height: height)) }
 }
 
-/// The square log toggle at the end of each set row.
 struct LogCheckbox: View {
     let isOn: Bool
 
@@ -158,7 +144,6 @@ struct LogCheckbox: View {
     }
 }
 
-/// A tinted strip inside a card: blue for guidance, gold for a note the lifter saved.
 struct Callout: View {
     enum Style { case info, note }
 
@@ -180,7 +165,6 @@ struct Callout: View {
     }
 }
 
-/// A small uppercase label such as CURRENT.
 struct StatusBadge: View {
     let text: String
 
@@ -197,7 +181,6 @@ struct StatusBadge: View {
     }
 }
 
-/// A compact count such as "4/week".
 struct CountPill: View {
     let text: String
 
@@ -212,7 +195,6 @@ struct CountPill: View {
     }
 }
 
-/// The dark search box at the top of list screens.
 struct SearchBox: View {
     var prompt = "Search"
     @Binding var text: String
@@ -230,7 +212,6 @@ struct SearchBox: View {
     }
 }
 
-/// The full-width band under the search box that opens filter choices.
 struct FilterBar<MenuContent: View>: View {
     var label = "Filters"
     @ViewBuilder var menu: () -> MenuContent
@@ -252,7 +233,6 @@ struct FilterBar<MenuContent: View>: View {
     }
 }
 
-/// A bordered group of rows, as on the More screen.
 struct OutlinedGroup<Content: View>: View {
     @ViewBuilder var content: () -> Content
 
@@ -262,7 +242,6 @@ struct OutlinedGroup<Content: View>: View {
     }
 }
 
-/// A screen section heading such as "Account".
 struct SectionHeading: View {
     let text: String
 
@@ -274,7 +253,6 @@ struct SectionHeading: View {
     }
 }
 
-/// A tab root's title row, drawn in the page like the design instead of as a navigation bar large title.
 struct ScreenHeader<Trailing: View>: ViewModifier {
     let title: String
     @ViewBuilder var trailing: () -> Trailing
@@ -300,7 +278,6 @@ struct ScreenHeader<Trailing: View>: ViewModifier {
     }
 }
 
-/// The plain "+" in a screen header.
 struct HeaderAddButton: View {
     let label: String
     let action: () -> Void

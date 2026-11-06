@@ -1,7 +1,6 @@
 import FFiveCore
 import SwiftUI
 
-/// Drag handles over the session's exercises. A block session also asks whether later weeks follow the new order.
 struct ReorderExercisesView: View {
     let workout: Workout
 

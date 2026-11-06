@@ -1,9 +1,6 @@
 import Foundation
 import SwiftData
 
-/// Seeds two free-form sessions, then a 4-week block on the first template with week 1 fully logged,
-/// week 2 day 1 under way, and week 2's last day skipped. Everything runs through the planner so the demo
-/// shows real prescriptions.
 @MainActor
 public enum DemoSeed {
     private static let day: TimeInterval = 86_400
@@ -95,7 +92,6 @@ public enum DemoSeed {
         workout.endDate = start + 50 * 60
     }
 
-    /// Logs every set at its target, or at a plausible first-week load when the target says calibrate.
     private static func logAllSets(of exercise: Exercise, beatTargetBy extra: Int, unit: WeightUnit) {
         for set in exercise.sets {
             if let weight = set.targetWeight, let reps = set.targetReps {

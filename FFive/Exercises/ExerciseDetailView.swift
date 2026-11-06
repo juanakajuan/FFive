@@ -2,7 +2,6 @@ import FFiveCore
 import SwiftData
 import SwiftUI
 
-/// An exercise's catalog facts and every finished session that logged it.
 struct ExerciseDetailView: View {
     let listing: ExerciseListing
 
@@ -24,7 +23,6 @@ struct ExerciseDetailView: View {
         var id: PersistentIdentifier { workout.persistentModelID }
     }
 
-    /// Finished sessions newest first, each with its heaviest done set (more reps breaks a tie).
     private var history: [Session] {
         logged.compactMap { exercise in
             guard let workout = exercise.workout, workout.isFinished,

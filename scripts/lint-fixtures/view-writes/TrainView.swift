@@ -1,11 +1,8 @@
 import SwiftUI
 import SwiftData
 
-/// What the Workout tab shows. Resolving it only reads stored state; building a block day happens in `.task(id:)`.
 enum WorkoutTabContent: Equatable {
-    /// An open workout: the focused block day, the open quick workout, or the block's next session.
     case session(Workout)
-    /// A block day with no workout row yet.
     case unbuilt(Mesocycle, SessionKey)
     case blockComplete(Mesocycle)
     case empty
@@ -58,7 +55,6 @@ struct TrainView: View {
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
-            // With the navigation bar hidden, cards would otherwise scroll visibly under the status bar.
             .clipped()
             .background(Theme.page)
             .toolbar(.hidden, for: .navigationBar)
@@ -137,10 +133,8 @@ struct TrainView: View {
     }
 }
 
-/// Actions that change which content the Workout tab shows, shared by the session menu and the empty states.
 @MainActor
 enum WorkoutTabActions {
-    /// Shows the open quick workout, starting one first when none is open.
     static func showQuickWorkout(_ open: Workout?, router: AppRouter, in context: ModelContext) {
         if open == nil {
             context.insert(Workout(name: defaultWorkoutName()))
@@ -164,7 +158,6 @@ enum WorkoutTabActions {
     }
 }
 
-/// The block's week grid and this week's volume. Opening a day shows it on the Workout tab.
 struct ScheduleSheet: View {
     let meso: Mesocycle
     let week: Int

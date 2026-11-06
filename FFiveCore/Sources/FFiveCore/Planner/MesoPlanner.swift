@@ -1,7 +1,6 @@
 import Foundation
 import SwiftData
 
-/// What the lifter edits in the builder before a mesocycle exists.
 public struct MesoDraft {
     public struct Slot: Identifiable, Hashable {
         public let id = UUID()
@@ -40,7 +39,6 @@ public struct MesoDraft {
     public var isStartable: Bool { days.contains { !$0.slots.isEmpty } }
 }
 
-/// Which sessions a reorder applies to.
 public enum ReorderScope {
     case thisSession
     case laterWeeks
@@ -65,7 +63,6 @@ extension ExerciseCatalog {
 
 }
 
-/// Owns every decision about what a mesocycle session prescribes.
 @MainActor
 enum MesoPlanner {
     /// Deload sessions and exercises added during one load at the easiest accumulation effort.
@@ -140,8 +137,6 @@ enum MesoPlanner {
                 from: base, baseRIR: baseRIR, meso: meso, key: key, rir: rir, unit: unit, snapshot: snapshot)
         }
     }
-
-    // MARK: - Plans
 
     private static func templatePlan(
         _ meso: Mesocycle, dayIndex: Int, rir: Int, unit: WeightUnit, snapshot: PlanningSnapshot
@@ -220,8 +215,6 @@ enum MesoPlanner {
             muscle: muscle, sessionsPerWeek: sessions, exercisesInSession: inSession)
     }
 
-    /// Targets for an exercise with no history in this block: solved from the lifter's latest logged sets
-    /// anywhere, or calibrate when there are none.
     private static func freshTargets(
         for key: ExerciseID, count: Int, rir: Int, unit: WeightUnit, snapshot: PlanningSnapshot,
         bodyweight: Double?
@@ -236,7 +229,6 @@ enum MesoPlanner {
         return Array(repeating: load + offset > 0 ? SetTarget(weight: load, reps: reps) : .calibrate, count: count)
     }
 
-    /// The loads and reps this exercise was first done at in the block, preferring the same day.
     private static func firstWeekTargets(of key: ExerciseID, dayIndex: Int, in meso: Mesocycle) -> [SetTarget] {
         let candidates = meso.workouts.filter { $0.phase?.rir != nil && $0.exercises.contains { $0.key == key } }
         let earliest: (Workout, Workout) -> Bool = { ($0.week ?? .max) < ($1.week ?? .max) }
@@ -251,8 +243,6 @@ enum MesoPlanner {
                 reps: set.targetReps ?? (set.isDone ? set.reps : nil))
         }
     }
-
-    // MARK: - Session edits
 
     static func addExercise(
         named name: String, muscle: Muscle, to workout: Workout, unit: WeightUnit,
@@ -347,8 +337,6 @@ enum MesoPlanner {
         }
     }
 
-    // MARK: - Feedback
-
     /// Writes soreness back to the session it describes. When that session is the one this session was planned
     /// from and the muscle is still untouched, its set count is re-planned with the now-complete feedback.
     static func recordSoreness(
@@ -367,10 +355,6 @@ enum MesoPlanner {
         }
     }
 
-    // MARK: - Volume
-
-    /// Done and planned sets per muscle for one week. Days not built yet count at what they would prescribe,
-    /// skipped days and skipped sets count nothing.
     static func weeklyVolume(_ meso: Mesocycle, week: Int, unit: WeightUnit, snapshot: PlanningSnapshot)
         -> [MuscleVolume]
     {

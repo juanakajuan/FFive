@@ -1,11 +1,8 @@
 import SwiftUI
 
-/// The flat bar pinned to the top of the Workout tab, standing in for a navigation bar. Its fill runs up under
-/// the status bar, and its bottom edge doubles as the session's progress line.
 struct WorkoutHeader<Trailing: View>: View {
     let title: Text
     let subtitle: Text
-    /// The share of the session's sets logged, from 0 to 1; nil draws only the hairline.
     var progress: Double?
     let trailing: Trailing
 
@@ -61,14 +58,12 @@ private struct ProgressLine: View {
     }
 }
 
-/// An outline glyph sized for header and card actions.
 struct ActionIcon: View {
     let systemName: String
     var rotated = false
 
     static let verticalEllipsis = ActionIcon(systemName: "ellipsis", rotated: true)
 
-    /// A calendar showing today's day of the month, where the system has those glyphs.
     static var calendar: ActionIcon {
         if #available(iOS 26, *) {
             return ActionIcon(systemName: "\(Calendar.current.component(.day, from: .now)).calendar")
@@ -86,7 +81,6 @@ struct ActionIcon: View {
     }
 }
 
-/// Full-width buttons for the Workout tab's empty states.
 struct WideButtonStyle: ButtonStyle {
     enum Kind { case filled, outlined }
 
@@ -132,7 +126,6 @@ extension ButtonStyle where Self == WideButtonStyle {
     static var wideOutlined: WideButtonStyle { WideButtonStyle(kind: .outlined) }
 }
 
-/// A blue capsule that floats over the content beneath it: the workout's Finish button.
 struct FloatingButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label

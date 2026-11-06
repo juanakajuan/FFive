@@ -1,7 +1,6 @@
 import Foundation
 import SwiftData
 
-/// What the lifter edits in the builder before a mesocycle exists.
 public struct MesoDraft {
     public struct Slot: Identifiable, Hashable {
         public let id = UUID()
@@ -60,10 +59,8 @@ extension ExerciseCatalog {
     }
 }
 
-/// Owns every decision about what a mesocycle session prescribes.
 @MainActor
 enum MesoPlanner {
-    /// Deload sessions and exercises added during one load at the easiest accumulation effort.
     private static let deloadRIR = 3
 
     @discardableResult
@@ -81,7 +78,6 @@ enum MesoPlanner {
         return meso
     }
 
-    /// The session for `key`, built from the plan the first time it is asked for.
     static func workout(for meso: Mesocycle, at key: SessionKey, unit: WeightUnit, in context: ModelContext) -> Workout {
         if let existing = meso.workout(at: key) { return existing }
         let planned = plan(meso, at: key, unit: unit, context: context)
@@ -99,7 +95,6 @@ enum MesoPlanner {
         return workout
     }
 
-    /// What the session at `key` would prescribe if it were built now. Reads only; never inserts.
     static func plan(_ meso: Mesocycle, at key: SessionKey, unit: WeightUnit, context: ModelContext) -> [PlannedExercise] {
         let base = meso.latestWorkout(dayIndex: key.dayIndex, before: key.week)
         switch meso.phase(week: key.week) {
@@ -123,7 +118,6 @@ enum MesoPlanner {
         }
     }
 
-    // MARK: - Plans
 
     private static func templatePlan(_ meso: Mesocycle, dayIndex: Int, rir: Int, unit: WeightUnit, context: ModelContext) -> [PlannedExercise] {
         let days = meso.sortedDays
@@ -162,8 +156,6 @@ enum MesoPlanner {
         }
     }
 
-    /// Sets of `muscle` in `week` across the other days, counting a day not yet built at its latest session's size.
-    /// Using this week's built days, not only last week's total, keeps two days from both spending the same room.
     private static func projectedSets(of muscle: Muscle, in meso: Mesocycle, week: Int, excludingDay: Int) -> Int {
         meso.days.indices.filter { $0 != excludingDay }.reduce(0) { total, day in
             if meso.status(at: SessionKey(week: week, dayIndex: day)) == .skipped { return total }
@@ -182,8 +174,6 @@ enum MesoPlanner {
         return Progression.initialSetsPerExercise(muscle: muscle, sessionsPerWeek: sessions, exercisesInSession: inSession)
     }
 
-    /// Targets for an exercise with no history in this block: solved from the lifter's latest logged sets
-    /// anywhere, or calibrate when there are none.
     private static func freshTargets(for name: String, count: Int, rir: Int, unit: WeightUnit, context: ModelContext) -> [SetTarget] {
         guard let oneRepMax = latestOneRepMax(of: name, context: context) else {
             return Array(repeating: .calibrate, count: count)
@@ -203,7 +193,6 @@ enum MesoPlanner {
             .value
     }
 
-    /// The loads and reps this exercise was first done at in the block, preferring the same day.
     private static func firstWeekTargets(of name: String, dayIndex: Int, in meso: Mesocycle) -> [SetTarget] {
         let candidates = meso.workouts.filter { $0.phase?.rir != nil && $0.exercises.contains { $0.name == name } }
         let earliest: (Workout, Workout) -> Bool = { ($0.week ?? .max) < ($1.week ?? .max) }
@@ -215,7 +204,6 @@ enum MesoPlanner {
         }
     }
 
-    // MARK: - Session edits
 
     static func addExercise(named name: String, muscle: Muscle, to workout: Workout, unit: WeightUnit, in context: ModelContext) {
         let exercise = Exercise(name: name, order: (workout.exercises.map(\.order).max() ?? -1) + 1, muscle: muscle)
@@ -245,7 +233,6 @@ enum MesoPlanner {
             .max { ($0.workout?.startDate ?? .distantPast) < ($1.workout?.startDate ?? .distantPast) }
     }
 
-    /// Swaps an untouched exercise for another, keeping its set count and re-deriving targets.
     static func swap(_ exercise: Exercise, to name: String, muscle: Muscle, unit: WeightUnit, in context: ModelContext) {
         exercise.name = name
         exercise.muscle = muscle
@@ -264,10 +251,7 @@ enum MesoPlanner {
         }
     }
 
-    // MARK: - Feedback
 
-    /// Writes soreness back to the session it describes. When that session is the one this session was planned
-    /// from and the muscle is still untouched, its set count is re-planned with the now-complete feedback.
     static func recordSoreness(_ soreness: Soreness, on record: MuscleFeedbackRecord, during workout: Workout,
                                unit: WeightUnit, in context: ModelContext) {
         record.value.soreness = soreness
@@ -281,10 +265,7 @@ enum MesoPlanner {
         }
     }
 
-    // MARK: - Volume
 
-    /// Done and planned sets per muscle for one week. Days not built yet count at what they would prescribe,
-    /// skipped days count nothing.
     static func weeklyVolume(_ meso: Mesocycle, week: Int, unit: WeightUnit, context: ModelContext) -> [MuscleVolume] {
         var done: [Muscle: Int] = [:]
         var planned: [Muscle: Int] = [:]
