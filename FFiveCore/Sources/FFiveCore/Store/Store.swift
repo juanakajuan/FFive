@@ -79,6 +79,11 @@ public final class Store {
         commit()
     }
 
+    public func setPriority(_ priority: MusclePriority, of muscle: Muscle, in meso: Mesocycle) {
+        meso.setPriority(priority, of: muscle)
+        commit()
+    }
+
     public func unskip(_ key: SessionKey, of meso: Mesocycle) {
         meso.unskip(key)
         commit()
@@ -124,6 +129,19 @@ public final class Store {
 
     public func setType(_ type: SetType, of set: SetEntry) {
         set.type = type
+        commit()
+    }
+
+    /// The later unlogged sets that share `set`'s weight right now. Capture this once when editing starts: clearing
+    /// the field writes 0 on the way to the new number, and a recount then would sweep in unrelated empty sets.
+    public func weightFollowers(of set: SetEntry) -> [SetEntry] {
+        guard settings.autoMatchWeights, let exercise = set.exercise else { return [] }
+        return exercise.laterSets(matchingWeightOf: set)
+    }
+
+    public func setWeight(_ weight: Double, of set: SetEntry, carryingTo followers: [SetEntry]) {
+        set.weight = weight
+        for follower in followers where follower.status != .done { follower.weight = weight }
         commit()
     }
 

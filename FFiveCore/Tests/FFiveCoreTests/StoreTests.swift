@@ -350,6 +350,42 @@ final class StoreTests: XCTestCase {
             "a workout the context holds feeds the next build even when its save failed")
     }
 
+    func autoMatchSetup() throws -> (Store, [SetEntry]) {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: "auto-\(UUID().uuidString)"))
+        let store = Store(inMemory: true, settings: Settings(defaults: defaults))
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Squat", muscle: .quads, to: workout)
+        let exercise = workout.exercises[0]
+        while exercise.sets.count < 5 { store.addSet(to: exercise) }
+        let sets = exercise.sortedSets
+        for (set, weight) in zip(sets, [200, 200, 185, 200, 200]) { set.weight = Double(weight) }
+        store.log(sets[4], done: true)
+        return (store, sets)
+    }
+
+    func testWeightEditCarriesToLaterUnloggedSetsOfTheSameWeight() throws {
+        let (store, sets) = try autoMatchSetup()
+        let followers = store.weightFollowers(of: sets[1])
+        store.setWeight(225, of: sets[1], carryingTo: followers)
+        XCTAssertEqual(sets.map(\.weight), [200, 225, 185, 225, 200], "only the later pending 200 follows")
+        XCTAssertFalse(store.context.hasChanges)
+    }
+
+    func testFollowersCapturedUpFrontIgnoreATransientZero() throws {
+        let (store, sets) = try autoMatchSetup()
+        sets[2].weight = 0
+        let followers = store.weightFollowers(of: sets[1])
+        store.setWeight(0, of: sets[1], carryingTo: followers)
+        store.setWeight(225, of: sets[1], carryingTo: followers)
+        XCTAssertEqual(sets.map(\.weight), [200, 225, 0, 225, 200], "an empty later set is not swept in")
+    }
+
+    func testToggleOffLeavesNoFollowers() throws {
+        let (store, sets) = try autoMatchSetup()
+        store.settings.autoMatchWeights = false
+        XCTAssertTrue(store.weightFollowers(of: sets[0]).isEmpty)
+    }
+
     func testAddAndDeleteSet() {
         let store = Store(inMemory: true)
         let workout = store.startQuickWorkout()

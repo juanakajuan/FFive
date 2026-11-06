@@ -1,6 +1,6 @@
 # Set type
 
-A lifter marks any set as Regular, Myorep, or Myorep match from the set's menu. A non-regular set shows a `MYO` or `MATCH` tag between its reps field and its log checkbox, and the same tag under the set number in the finished workout's detail page and in the exercise history sheet. A set added with `Add Set` copies the type of the set before it. Progression ignores myo-rep sets for load and rep targets and for 1RM estimates.
+A lifter marks any set as Regular, Myorep, or Myorep match from the set's menu. A non-regular set shows a `MYO` or `MATCH` tag between its reps field and its log checkbox, and the same tag under the set number in the finished workout's detail page and beside it in the exercise history sheet. Both history views list logged sets only. The menu's picker is `#menu.set-type`. A set added with `Add Set` copies the type of the set before it. Progression ignores myo-rep sets for load and rep targets and for 1RM estimates.
 
 ## Sub-features
 

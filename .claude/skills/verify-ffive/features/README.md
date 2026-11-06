@@ -8,7 +8,7 @@ This directory is the maintained source for verifying FFive's user-facing behavi
 - `ffive-verify launch` printed `READY`, and `ffive-verify doctor` prints `HEALTHY` with an install stamp that matches the source.
 - **Demo baseline** (read-only journeys): every drive starts with `launch -seedDemo`. The block "Full Body, 3 Days" is at Week 2 of 5. Week 1 is finished, Week 2 · Day 1 is in progress with Squat logged, and Week 2 · Day 3 is skipped. The Workout tab opens on `WEEK 2 DAY 1`. "Morning Workout" and "Evening Workout" are free-form history.
 - **On-disk baseline** (write journeys): `ffive-verify reset-data`, then a bare `launch`. The Workout tab shows `Plan a Mesocycle` and `Quick Workout`.
-- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, reorder-exercises, reset-and-rename-day, end-mesocycle, and rename-mesocycle each start from their own `reset-data`.
+- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, reorder-exercises, reset-and-rename-day, muscle-priorities, end-mesocycle, and rename-mesocycle each start from their own `reset-data`.
 - Never drive a simulator that `ffive-verify launch` did not create in this checkout.
 
 ## Driving conventions
@@ -41,6 +41,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 ## Features
 
 - [Plan a mesocycle](./plan-mesocycle.md): pick a template, customize name and length, start the block, and see it on the Mesos tab (on disk).
+- [Muscle priorities](./muscle-priorities.md): mark muscles Emphasize, Normal, or Maintain in the builder or on the block's detail page; maintained muscles start at MV (on disk).
 - [Train a planned session](./train-session.md): the block's session shows on the Workout tab; log or skip sets against targets, give feedback and soreness, and finish (on disk and demo).
 - [Skip a day](./skip-day.md): skip from the workout menu or the schedule grid, then train it after all (on disk).
 - [End a mesocycle](./end-mesocycle.md): end the active block from the workout menu; the session reaches History, the block shows finished, and the store holds its finished date (on disk).
@@ -52,6 +53,6 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Bodyweight](./bodyweight.md): set body weight from the workout menu, log added load or assistance on bodyweight lifts, and see e1RM, volume, and labels count body weight (on disk).
 - [Notes](./notes.md): a per-workout exercise note, pinning it to carry forward, editing, unpinning, and deleting it, and a day note (on disk).
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
-- [Settings](./settings.md): weight unit and app version, pushed from More (demo plus UserDefaults).
+- [Settings](./settings.md): weight unit, auto-match weights, and app version, pushed from More (demo plus UserDefaults).
 
-Not mapped yet: the Templates and Exercises tabs, a block's detail page on the Mesos tab (beyond its schedule grid), Learn, swapping or removing exercises, renaming a quick workout, and discarding a workout.
+Not mapped yet: the Templates and Exercises tabs, a block's detail page on the Mesos tab (beyond its schedule grid and priorities), Learn, swapping or removing exercises, renaming a quick workout, and discarding a workout.

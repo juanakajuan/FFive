@@ -68,6 +68,22 @@ public enum Muscle: String, CaseIterable, Identifiable, Codable {
     }
 }
 
+/// How a block trains one muscle. Emphasized muscles add sets faster, maintained ones start at maintenance volume
+/// and never add sets, so recovery goes to the muscles being grown.
+public enum MusclePriority: String, CaseIterable, Codable, Identifiable {
+    case emphasize, normal, maintain
+
+    public var id: String { rawValue }
+
+    public var label: String {
+        switch self {
+        case .emphasize: "Emphasize"
+        case .normal: "Normal"
+        case .maintain: "Maintain"
+        }
+    }
+}
+
 public enum Equipment: String, CaseIterable, Codable {
     case barbell, dumbbell, cable, machine, smith, bodyweight
 

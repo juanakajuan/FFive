@@ -71,17 +71,20 @@ public enum A11y: String, CaseIterable {
     case mesosRow = "mesos.row"
     case mesosMenu = "mesos.menu"
     case mesoMenu = "meso.menu"
+    case musclePriority = "muscle-priority"
     case segment = "segment"
     case chip = "chip"
     case strengthRow = "strength.row"
     case historyRow = "history.row"
     case settingsUnit = "settings.unit"
+    case settingsAutoMatch = "settings.auto-match"
 
     static let indexed: Set<A11y> = [
         .setWeight, .setReps, .setMenu, .setLog, .exerciseMenu, .exerciseCue, .exerciseHistory, .exercisePin,
     ]
     static let keyed: Set<A11y> = [
-        .pickerRow, .exercisesRow, .builderTemplate, .mesosRow, .mesosMenu, .segment, .chip, .strengthRow, .historyRow,
+        .pickerRow, .exercisesRow, .builderTemplate, .mesosRow, .mesosMenu, .musclePriority, .segment, .chip,
+        .strengthRow, .historyRow,
         .settingsUnit,
     ]
 

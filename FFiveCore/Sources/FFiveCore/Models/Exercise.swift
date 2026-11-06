@@ -41,6 +41,10 @@ public final class Exercise {
 
     public var repRange: ClosedRange<Int> { ExerciseCatalog.repRange(for: key) }
 
+    func laterSets(matchingWeightOf set: SetEntry) -> [SetEntry] {
+        sortedSets.filter { $0.order > set.order && $0.status != .done && $0.weight == set.weight }
+    }
+
     func addSet() {
         let last = sortedSets.last
         let set = SetEntry(reps: last?.reps ?? 10, weight: last?.weight ?? 0, order: (last?.order ?? -1) + 1)

@@ -20,7 +20,7 @@
 
 Preconditions: `ffive-verify reset-data`. Journey: `journeys/reset-and-rename-day.steps`.
 
-- **Reset.** Steps: log a set, `tap #workout.menu`, `tap #menu.reset`, `tap #dialog.reset`, `unselected #set.log.1`. Result: `ffive-verify store "select ZWEIGHT, ZREPS, ZISDONE from ZSETENTRY where ZISDONE = 1 or ZWEIGHT > 0"` is empty on week 1.
+- **Reset.** Steps: log a set, `tap #workout.menu`, `tap #menu.reset`, `tap #dialog.reset`, `unselected #set.log.1`. Result: `ffive-verify store "select ZWEIGHT, ZREPS, ZISDONE, ZISSKIPPED from ZSETENTRY where ZISDONE = 1 or ZISSKIPPED = 1 or ZWEIGHT > 0"` is empty on a store holding only this block. `store-expect` passes on any matching row, so it cannot prove the reset.
 - **Rename.** Steps: `tap #menu.rename`, `wait alert "Rename Day"`, `replace field "Day name" "Push Day"`, `sleep 1`, `tap button "Save"`, `absent alert "Rename Day"`. Result: `store-expect MesoDay name "Push Day"` and `wait any "Day 1, Push Day"` in the schedule sheet.
 
 ## Gotchas

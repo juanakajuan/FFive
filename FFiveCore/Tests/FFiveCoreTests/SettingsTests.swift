@@ -26,6 +26,14 @@ final class SettingsTests: XCTestCase {
         XCTAssertEqual(Settings(defaults: defaults).weightUnit, .lb, "and read back on the next launch")
     }
 
+    func testAutoMatchWeightsDefaultsOnAndPersistsOff() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        XCTAssertTrue(Settings(defaults: defaults).autoMatchWeights)
+
+        Settings(defaults: defaults).autoMatchWeights = false
+        XCTAssertFalse(Settings(defaults: defaults).autoMatchWeights)
+    }
+
     func testStorePlansInTheSettingsUnit() throws {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defaults.set("kg", forKey: "weightUnit")
