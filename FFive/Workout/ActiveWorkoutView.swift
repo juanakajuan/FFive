@@ -616,7 +616,7 @@ struct SetRow: View {
     let number: Int
     let unit: WeightUnit
     let rir: Int?
-    /// How this logged set did against its target, or last session's set without one, marked beside its log box.
+    /// Whether this logged set improved on, maintained or regressed from the same set last session.
     let comparison: SetComparison?
     var onCompleted: () -> Void
     var onLogBlocked: ((SetEntry) -> Void)?
@@ -766,7 +766,7 @@ struct SetRow: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.leading, 16)
-                    .accessibilityLabel("Set \(number) \(outcome.verb)")
+                    .accessibilityLabel("Set \(number) \(outcome.verb) last session")
                     .accessibilityHint("Shows what changed")
                     .a11y(.setVsLast, number)
                 }
@@ -779,16 +779,23 @@ struct SetRow: View {
     private func comparisonText(_ comparison: SetComparison) -> String {
         let unit = store.settings.weightUnit
         func load(_ weight: Double) -> String { set.exercise?.weightText(weight, unit: unit) ?? formatWeight(weight) }
-        let expected = comparison.expected
-        let basis = comparison.basis == .target ? "Target" : "Last time"
-        let reference = "\(basis) \(load(expected.weight)) × \(expected.reps)."
+        let previous = comparison.previous
+        let lastTime = "Last time \(load(previous.weight)) × \(previous.reps)."
         let gap = abs(set.reps - comparison.expectedReps)
         let reps = "\(gap) \(gap == 1 ? "rep" : "reps")"
-        let atLoad = set.weight == expected.weight ? "" : " at \(load(set.weight))"
+        guard set.weight != previous.weight else {
+            switch comparison.outcome {
+            case .improved: return "Improved by \(reps). \(lastTime)"
+            case .maintained: return "Maintained. \(lastTime)"
+            case .regressed: return "Regressed by \(reps). \(lastTime)"
+            }
+        }
+        let expected = "\(comparison.expectedReps) \(comparison.expectedReps == 1 ? "rep" : "reps")"
+        let atLoad = "Last time's strength gives \(expected) at \(load(set.weight))."
         switch comparison.outcome {
-        case .above: return "\(reps) more than expected\(atLoad). \(reference)"
-        case .met: return "Right on what was expected\(atLoad). \(reference)"
-        case .below: return "\(reps) fewer than expected\(atLoad). \(reference)"
+        case .improved: return "Improved by \(reps). \(atLoad) \(lastTime)"
+        case .maintained: return "Maintained. \(atLoad) \(lastTime)"
+        case .regressed: return "Regressed by \(reps). \(atLoad) \(lastTime)"
         }
     }
 }
@@ -796,25 +803,25 @@ struct SetRow: View {
 extension SetComparison.Outcome {
     fileprivate var symbol: String {
         switch self {
-        case .above: "arrow.up"
-        case .met: "equal"
-        case .below: "arrow.down"
+        case .improved: "arrow.up"
+        case .maintained: "equal"
+        case .regressed: "arrow.down"
         }
     }
 
     fileprivate var color: Color {
         switch self {
-        case .above: Theme.success
-        case .met: Theme.secondary
-        case .below: Theme.danger
+        case .improved: Theme.success
+        case .maintained: Theme.secondary
+        case .regressed: Theme.danger
         }
     }
 
     fileprivate var verb: String {
         switch self {
-        case .above: "beat what was expected"
-        case .met: "met what was expected"
-        case .below: "fell short of what was expected"
+        case .improved: "improved on"
+        case .maintained: "maintained"
+        case .regressed: "regressed from"
         }
     }
 }
