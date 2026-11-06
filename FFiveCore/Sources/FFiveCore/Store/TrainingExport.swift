@@ -96,18 +96,24 @@ struct TrainingExport: Codable, Equatable {
 }
 
 extension TrainingExport {
-    init(context: ModelContext, weightUnit: WeightUnit, customExercises: [ExerciseListing], now: Date) throws {
+    init(context: ModelContext, weightUnit: WeightUnit, now: Date) throws {
         let mesos = try context.fetch(FetchDescriptor<Mesocycle>(sortBy: [SortDescriptor(\.startDate)]))
-        let freeForm = try context.fetch(FetchDescriptor<Workout>(sortBy: [SortDescriptor(\.startDate)]))
-            .filter { $0.mesocycle == nil }
+        let workouts = try context.fetch(FetchDescriptor<Workout>(sortBy: [SortDescriptor(\.startDate)]))
         let templates = try context.fetch(FetchDescriptor<CustomTemplate>(sortBy: [SortDescriptor(\.createdDate)]))
         let notes = try context.fetch(FetchDescriptor<PinnedNote>(sortBy: [SortDescriptor(\.name)]))
+        var seen = Set<ExerciseID>()
+        let custom = workouts.flatMap(\.sortedExercises).compactMap { exercise -> CustomExercise? in
+            guard exercise.info == nil, let muscle = exercise.muscle, seen.insert(exercise.key).inserted else {
+                return nil
+            }
+            return CustomExercise(name: exercise.name, muscle: muscle.rawValue)
+        }
         self.init(
             exportedAt: now,
             weightUnit: weightUnit.rawValue,
             mesocycles: mesos.map(Meso.init),
-            workouts: freeForm.map(Session.init),
-            customExercises: customExercises.map { CustomExercise(name: $0.name, muscle: $0.muscle.rawValue) },
+            workouts: workouts.filter { $0.mesocycle == nil }.map(Session.init),
+            customExercises: custom,
             templates: templates.map {
                 Template(name: $0.name, createdDate: $0.createdDate, days: $0.days.map(Day.init))
             },
@@ -181,9 +187,7 @@ extension TrainingExport.SetValue {
 extension Store {
     /// Every mesocycle, workout, set, feedback entry, custom exercise, saved template and pinned note, as JSON.
     public func exportJSON(now: Date = .now) throws -> Data {
-        let custom = library(muscle: nil, equipment: nil, search: "").filter { $0.info == nil }
-        let export = try TrainingExport(
-            context: context, weightUnit: settings.weightUnit, customExercises: custom, now: now)
+        let export = try TrainingExport(context: context, weightUnit: settings.weightUnit, now: now)
         return try TrainingExport.encoder.encode(export)
     }
 }

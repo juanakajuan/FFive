@@ -33,6 +33,8 @@ final class TrainingExportTests: XCTestCase {
         store.finish(quick)
         store.saveTemplate(from: meso, named: "Mine")
 
+        XCTAssertNil(store.failure)
+
         let export = try decode(store.exportJSON())
 
         XCTAssertEqual(export.version, 1)
