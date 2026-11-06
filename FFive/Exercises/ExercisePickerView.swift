@@ -9,6 +9,7 @@ struct ExercisePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
     @State private var search = ""
+    @State private var creating = false
 
     private var query: String { search.trimmingCharacters(in: .whitespaces) }
 
@@ -25,11 +26,13 @@ struct ExercisePickerView: View {
                     if !query.isEmpty && !entries.contains(where: { $0.id == ExerciseID(folding: query) }) {
                         createRow
                             .themedRow()
-                        Text("Custom exercises need the muscle they train so volume and progression can count them.")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondary)
-                            .themedRow(vertical: 8)
-                            .listRowSeparator(.hidden)
+                        Text(
+                            "Custom exercises need a muscle, equipment and a rep range so volume and progression can count them."
+                        )
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondary)
+                        .themedRow(vertical: 8)
+                        .listRowSeparator(.hidden)
                     }
                     ForEach(muscle.map { [$0] } ?? Muscle.allCases) { group in
                         let rows = entries.filter { $0.muscle == group }
@@ -61,7 +64,7 @@ struct ExercisePickerView: View {
                     ContentUnavailableView(
                         "Search to add an exercise",
                         systemImage: "magnifyingglass",
-                        description: Text("Type a name to create your own, then choose the muscle it trains."))
+                        description: Text("Type a name to create your own exercise."))
                 }
             }
             .navigationTitle(title)
@@ -70,6 +73,11 @@ struct ExercisePickerView: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
                         .a11y(.pickerCancel)
+                }
+            }
+            .sheet(isPresented: $creating) {
+                CustomExerciseEditor(draft: CustomExerciseDraft(name: query, muscle: muscle ?? .chest)) { saved in
+                    pick(saved.name, saved.muscle)
                 }
             }
         }
@@ -104,36 +112,22 @@ struct ExercisePickerView: View {
         .a11y(.pickerRow, key: entry.name)
     }
 
-    @ViewBuilder
     private var createRow: some View {
-        let label = HStack(spacing: 10) {
-            Image(systemName: "plus.circle.fill")
-                .font(.system(size: 20))
-                .foregroundStyle(Theme.infoText)
-            Text("Create \u{201C}\(query)\u{201D}")
-                .font(Theme.body)
-                .foregroundStyle(Theme.text)
-            Spacer(minLength: 0)
-        }
-        .contentShape(Rectangle())
-        if let muscle {
-            Button {
-                pick(query, muscle)
-            } label: {
-                label
+        Button {
+            creating = true
+        } label: {
+            HStack(spacing: 10) {
+                Image(systemName: "plus.circle.fill")
+                    .font(.system(size: 20))
+                    .foregroundStyle(Theme.infoText)
+                Text("Create \u{201C}\(query)\u{201D}")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.text)
+                Spacer(minLength: 0)
             }
-            .buttonStyle(.plain)
-        } else {
-            Menu {
-                Section("Which muscle does it train?") {
-                    ForEach(Muscle.allCases) { muscle in
-                        Button(muscle.displayName) { pick(query, muscle) }
-                    }
-                }
-            } label: {
-                label
-            }
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
     }
 
     private func pick(_ name: String, _ muscle: Muscle) {
