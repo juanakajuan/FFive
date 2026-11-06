@@ -85,13 +85,34 @@ public enum MusclePriority: String, CaseIterable, Codable, Identifiable {
 }
 
 public enum Equipment: String, CaseIterable, Codable {
-    case barbell, dumbbell, cable, machine, smith, bodyweight
+    case barbell, dumbbell, cable, machine, smith, assistedMachine, bodyweightLoadable, bodyweightOnly
 
-    public var displayName: String { rawValue == "smith" ? "Smith Machine" : rawValue.capitalized }
+    public var displayName: String {
+        switch self {
+        case .barbell: "Barbell"
+        case .dumbbell: "Dumbbell"
+        case .cable: "Cable"
+        case .machine: "Machine"
+        case .smith: "Smith Machine"
+        case .assistedMachine: "Assisted Machine"
+        case .bodyweightLoadable: "Bodyweight Loadable"
+        case .bodyweightOnly: "Bodyweight Only"
+        }
+    }
 
-    /// Smallest sensible jump in load for this implement. For bodyweight it is the step of added load.
+    /// Whether a logged weight is added to body weight, negative for assistance.
+    var addsToBodyweight: Bool {
+        switch self {
+        case .assistedMachine, .bodyweightLoadable, .bodyweightOnly: true
+        case .barbell, .dumbbell, .cable, .machine, .smith: false
+        }
+    }
+
+    /// Smallest sensible jump in load for this implement. For a body lift it is the step of added load or shed
+    /// assistance, and 0 when there is nothing to add, so progression adds reps.
     public func increment(_ unit: WeightUnit) -> Double {
         switch (self, unit) {
+        case (.bodyweightOnly, _): 0
         case (.dumbbell, .lb): 5
         case (.dumbbell, .kg): 2
         case (_, .lb): 5
