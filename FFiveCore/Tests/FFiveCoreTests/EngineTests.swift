@@ -81,6 +81,38 @@ final class EngineTests: XCTestCase {
         expect("missing workload returns 0", Progression.setDelta(feedback(.never, nil)), 0)
     }
 
+    func testSetDeltaPriority() {
+        func delta(_ soreness: Soreness, _ workload: Workload, _ priority: MusclePriority, pain: JointPain = .none)
+            -> Int
+        {
+            Progression.setDelta(feedback(soreness, workload, pain: pain), priority: priority)
+        }
+        expect("emphasize adds 1 to a positive delta", delta(.healedEarly, .good, .emphasize), 2)
+        expect("emphasize leaves a zero delta alone", delta(.healedOnTime, .good, .emphasize), 0)
+        expect("emphasize leaves a removal alone", delta(.stillSore, .tooMuch, .emphasize), -1)
+        expect("emphasize clamps at 3", delta(.never, .easy, .emphasize), 3)
+        expect("emphasize keeps the joint pain cap", delta(.never, .easy, .emphasize, pain: .moderate), 0)
+        expect("maintain never adds a set", delta(.never, .easy, .maintain), 0)
+        expect("maintain keeps a removal", delta(.stillSore, .tooMuch, .maintain), -1)
+        expect("normal matches the table", delta(.healedEarly, .good, .normal), 1)
+    }
+
+    func testInitialSetsPriority() {
+        func sets(_ muscle: Muscle, _ priority: MusclePriority, sessions: Int, exercises: Int) -> Int {
+            Progression.initialSetsPerExercise(
+                muscle: muscle, priority: priority, sessionsPerWeek: sessions, exercisesInSession: exercises)
+        }
+        expect("normal chest splits MEV 10 over 2 slots", sets(.chest, .normal, sessions: 2, exercises: 1), 5)
+        expect("emphasized chest also starts at MEV", sets(.chest, .emphasize, sessions: 2, exercises: 1), 5)
+        expect("maintained chest splits MV 8 over 2 slots", sets(.chest, .maintain, sessions: 2, exercises: 1), 4)
+        expect(
+            "maintained hamstrings split MV 3 over 4 slots", sets(.hamstrings, .maintain, sessions: 2, exercises: 2), 1)
+        expect(
+            "maintained side delts with MV 0 still get 1 set", sets(.sideDelts, .maintain, sessions: 1, exercises: 1), 1
+        )
+        expect("normal keeps the 2-set floor", sets(.glutes, .normal, sessions: 1, exercises: 1), 2)
+    }
+
     func testDistribute() {
         expect(
             "distribute adds to the smallest", Progression.distribute(delta: 1, across: [3, 2], weeklyRoom: 10), [3, 3])

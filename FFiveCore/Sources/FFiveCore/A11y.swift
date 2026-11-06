@@ -69,6 +69,7 @@ public enum A11y: String, CaseIterable {
     case mesosPlan = "mesos.plan"
     case mesosRow = "mesos.row"
     case mesosMenu = "mesos.menu"
+    case musclePriority = "muscle-priority"
     case segment = "segment"
     case chip = "chip"
     case strengthRow = "strength.row"
@@ -79,7 +80,8 @@ public enum A11y: String, CaseIterable {
         .setWeight, .setReps, .setMenu, .setLog, .exerciseMenu, .exerciseCue, .exerciseHistory, .exercisePin,
     ]
     static let keyed: Set<A11y> = [
-        .pickerRow, .exercisesRow, .builderTemplate, .mesosRow, .mesosMenu, .segment, .chip, .strengthRow, .historyRow,
+        .pickerRow, .exercisesRow, .builderTemplate, .mesosRow, .mesosMenu, .musclePriority, .segment, .chip,
+        .strengthRow, .historyRow,
         .settingsUnit,
     ]
 

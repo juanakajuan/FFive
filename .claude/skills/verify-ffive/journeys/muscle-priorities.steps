@@ -1,0 +1,41 @@
+# muscle-priorities: set priorities in the builder, see them shape week 1, change one on the detail screen.
+# Before: ffive-verify reset-data.
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+scrollto #muscle-priority.chest
+scrollto #muscle-priority.back
+shot 01-builder-defaults
+tap #muscle-priority.chest
+tap button "Maintain"
+value #muscle-priority.chest "Maintain"
+tap #muscle-priority.back
+tap button "Emphasize"
+value #muscle-priority.back "Emphasize"
+shot 02-builder-set
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+store-expect Mesocycle name "Upper/Lower, 4 Days"
+shot 03-week1-session
+tree 03-week1-session
+tap #tab.mesos
+tap #mesos.row.upper-lower-4-days
+scrollto #muscle-priority.chest
+scrollto #muscle-priority.back
+value #muscle-priority.chest "Maintain"
+value #muscle-priority.back "Emphasize"
+shot 04-detail
+tap #muscle-priority.back
+tap button "Normal"
+value #muscle-priority.back "Normal"
+launch
+tap #tab.mesos timeout=20
+tap #mesos.row.upper-lower-4-days
+scrollto #muscle-priority.chest
+scrollto #muscle-priority.back
+value #muscle-priority.chest "Maintain"
+value #muscle-priority.back "Normal"
+shot 05-detail-after-relaunch

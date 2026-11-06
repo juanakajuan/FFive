@@ -27,6 +27,8 @@ public struct MesoDraft {
     public var name: String
     public var accumulationWeeks = 4
     public var days: [Day]
+    /// A muscle missing here is trained at normal priority.
+    public var priorities: [Muscle: MusclePriority] = [:]
 
     public init(template: ProgramTemplate?) {
         name = template?.name ?? "My Mesocycle"
@@ -37,6 +39,12 @@ public struct MesoDraft {
     }
 
     public var isStartable: Bool { days.contains { !$0.slots.isEmpty } }
+
+    /// Every muscle a day of the draft trains, in catalog order.
+    public var muscles: [Muscle] {
+        let trained = Set(days.flatMap(\.slots).map(\.muscle))
+        return Muscle.allCases.filter(trained.contains)
+    }
 }
 
 public enum ReorderScope {
@@ -74,6 +82,7 @@ enum MesoPlanner {
             name: draft.name.trimmingCharacters(in: .whitespaces).isEmpty ? "My Mesocycle" : draft.name,
             accumulationWeeks: draft.accumulationWeeks)
         context.insert(meso)
+        for muscle in draft.muscles { meso.setPriority(draft.priorities[muscle] ?? .normal, of: muscle) }
         for (order, draftDay) in draft.days.filter({ !$0.slots.isEmpty }).enumerated() {
             let day = MesoDay(name: draftDay.name, order: order)
             meso.days.append(day)
@@ -162,7 +171,8 @@ enum MesoPlanner {
         var counts = exercises.map { max(1, $0.sets.count) }
         for muscle in base.trainedMuscles {
             let indices = exercises.indices.filter { exercises[$0].muscle == muscle }
-            let delta = Progression.setDelta(base.feedbackRecord(for: muscle)?.value ?? MuscleFeedback())
+            let delta = Progression.setDelta(
+                base.feedbackRecord(for: muscle)?.value ?? MuscleFeedback(), priority: meso.priority(of: muscle))
             let projected =
                 projectedSets(of: muscle, in: meso, week: key.week, excludingDay: key.dayIndex)
                 + base.setCount(for: muscle)
@@ -212,7 +222,8 @@ enum MesoPlanner {
         let sessions = meso.days.filter { $0.slots.contains { $0.muscleRaw == slot.muscleRaw } }.count
         let inSession = meso.sortedDays[dayIndex].slots.filter { $0.muscleRaw == slot.muscleRaw }.count
         return Progression.initialSetsPerExercise(
-            muscle: muscle, sessionsPerWeek: sessions, exercisesInSession: inSession)
+            muscle: muscle, priority: meso.priority(of: muscle), sessionsPerWeek: sessions,
+            exercisesInSession: inSession)
     }
 
     private static func freshTargets(
@@ -265,7 +276,7 @@ enum MesoPlanner {
         }
         let sessions = meso.days.filter { $0.slots.contains { $0.muscleRaw == muscle.rawValue } }.count
         let count = Progression.initialSetsPerExercise(
-            muscle: muscle, sessionsPerWeek: sessions,
+            muscle: muscle, priority: meso.priority(of: muscle), sessionsPerWeek: sessions,
             exercisesInSession: workout.exercises(for: muscle).count)
         replaceSets(
             of: exercise,

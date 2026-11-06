@@ -72,6 +72,11 @@ public final class Store {
         commit()
     }
 
+    public func setPriority(_ priority: MusclePriority, of muscle: Muscle, in meso: Mesocycle) {
+        meso.setPriority(priority, of: muscle)
+        commit()
+    }
+
     public func unskip(_ key: SessionKey, of meso: Mesocycle) {
         meso.unskip(key)
         commit()
