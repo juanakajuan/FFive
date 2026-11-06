@@ -207,6 +207,21 @@ extension Learn.Citation {
         title:
             "How many times per week should a muscle be trained to maximize muscle hypertrophy? A systematic review and meta-analysis of studies examining the effects of resistance training frequency",
         source: "Journal of Sports Sciences, 37(11), 1286-1295", doi: "10.1080/02640414.2018.1555906")
+
+    static let schoenfeld2016Rest = Self(
+        authors:
+            "Schoenfeld BJ, Pope ZK, Benik FM, Hester GM, Sellers J, Nooner JL, Schnaiter JA, Bond-Williams KE, Carter AS, Ross CL, Just BL, Henselmans M, Krieger JW",
+        year: 2016,
+        title: "Longer Interset Rest Periods Enhance Muscle Strength and Hypertrophy in Resistance-Trained Men",
+        source: "Journal of Strength and Conditioning Research, 30(7), 1805-1812", doi: "10.1519/JSC.0000000000001272")
+
+    static let singer2024 = Self(
+        authors:
+            "Singer A, Wolf M, Generoso L, Arias E, Delcastillo K, Echevarria E, Martinez A, Androulakis Korakakis P, Refalo MC, Swinton PA, Schoenfeld BJ",
+        year: 2024,
+        title:
+            "Give it a rest: a systematic review with Bayesian meta-analysis on the effect of inter-set rest interval duration on muscle hypertrophy",
+        source: "Frontiers in Sports and Active Living, 6, 1429789", doi: "10.3389/fspor.2024.1429789")
 }
 
 extension Learn {
@@ -374,6 +389,10 @@ extension Learn {
                     "Count only reps with the same form as the first rep. A rep that needs a bounce or a body swing does not count.",
                     "Reps slow down as you near failure. A clear slowdown means you are close.",
                 ]),
+                .heading("Your first week"),
+                .paragraph(
+                    "In the first week of a block the app has no history for an exercise, so it shows **Calibrate** instead of a weight. Pick a load you expect to lift for the bottom of the rep range at the target RIR. Do the set, stop when you reach that RIR, and log the reps you got. If you guessed wrong, the next set or next week corrects it, because targets start from what you log."
+                ),
             ],
             evidence: [.zourdos2016, .helms2016, .refalo2023, .robinson2024, .halperin2022]
         ),
@@ -489,6 +508,31 @@ extension Learn {
                 ),
             ],
             evidence: [.wolf2023, .schoenfeldGrgic2020, .maeo2021, .maeo2023, .pedrosa2022, .schoenfeld2015]
+        ),
+
+        Article(
+            id: "rest", category: .gym,
+            title: "Rest between sets", symbol: "timer",
+            summary: "How long to rest so the next set can still reach its target.",
+            takeaways: [
+                "Rest until you could repeat the last set at its target, usually 2 to 3 minutes, longer for big lifts.",
+                "Rests of a minute or less cost some growth. Past about 90 seconds the difference gets small.",
+                "If short rest makes a set fall well short of its target, rest longer next time.",
+            ],
+            blocks: [
+                .heading("What the research shows"),
+                .paragraph(
+                    "Schoenfeld and colleagues (2016) had trained men rest either 1 or 3 minutes between sets for 8 weeks. The 3-minute group gained more muscle and more strength. A 2024 meta-analysis by Singer and colleagues found a small advantage for rests longer than 60 seconds, and little difference between rests past 90 seconds."
+                ),
+                .heading("In practice"),
+                .bullets([
+                    "Rest until your breathing settles and you feel ready to match the last set. For most lifts that is 2 to 3 minutes.",
+                    "Squats, deadlifts, and other big lifts that tax your whole body may need 3 to 5 minutes.",
+                    "Curls, raises, and other small lifts often need less.",
+                    "If you are short on time, cut an exercise rather than every rest. Rushed sets fall short of their targets, and the app reads that as lost strength.",
+                ]),
+            ],
+            evidence: [.schoenfeld2016Rest, .singer2024]
         ),
 
         Article(

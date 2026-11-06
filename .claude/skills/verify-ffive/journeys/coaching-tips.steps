@@ -1,0 +1,43 @@
+# coaching-tips: the starting-load tip on a calibration set, the rest tip after a log, each Learn link, and dismissal surviving a relaunch.
+# Before: ffive-verify reset-data. After: ffive-verify defaults | grep -A3 dismissedTips
+
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+wait text "~Pick a weight you expect"
+wait #tip.learn-more.1
+shot 01-starting-load-tip
+tap #tip.learn-more.1
+wait nav "Reps in reserve"
+scrollto text "Your first week"
+shot 02-learn-first-week
+tap #sheet.done
+absent nav "Reps in reserve"
+tap #tip.dismiss.1
+absent text "~Pick a weight you expect"
+shot 03-starting-load-dismissed
+type #set.weight.1 "100"
+type #set.reps.1 "8"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+wait text "~Rest until you could match"
+shot 04-rest-tip
+tap #tip.learn-more.1
+wait nav "Rest between sets"
+shot 05-learn-rest
+tap #sheet.done
+tap #tip.dismiss.1
+absent text "~Rest until you could match"
+shot 06-rest-dismissed
+launch
+wait text "WEEK 1 DAY 1" timeout=20
+selected #set.log.1
+absent text "~Rest until you could match"
+absent text "~Pick a weight you expect"
+shot 07-after-relaunch
