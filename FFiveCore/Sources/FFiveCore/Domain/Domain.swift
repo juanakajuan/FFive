@@ -127,9 +127,9 @@ public struct ExerciseInfo: Identifiable, Hashable {
     public let muscle: Muscle
     public let equipment: Equipment
     public let repRange: ClosedRange<Int>
-    public let cue: String
+    public let cue: String?
 
-    init(name: String, muscle: Muscle, equipment: Equipment, repRange: ClosedRange<Int>, cue: String) {
+    init(name: String, muscle: Muscle, equipment: Equipment, repRange: ClosedRange<Int>, cue: String?) {
         id = ExerciseID(folding: name)
         self.name = name
         self.muscle = muscle

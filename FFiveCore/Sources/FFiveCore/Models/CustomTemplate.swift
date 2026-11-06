@@ -46,6 +46,12 @@ extension CustomTemplate {
         FetchDescriptor(sortBy: [SortDescriptor(\.name)])
     }
 
+    static func referencing(_ key: ExerciseID, in context: ModelContext) -> [CustomTemplate] {
+        ((try? context.fetch(all)) ?? []).filter { template in
+            template.days.contains { $0.slots.contains { ExerciseID(folding: $0.exercise) == key } }
+        }
+    }
+
     static func layout(of draft: MesoDraft) -> [Layout.Day] {
         draft.days.filter { !$0.slots.isEmpty }.map { day in
             Layout.Day(name: day.name, slots: day.slots.map { Layout.Slot(exercise: $0.exercise, muscle: $0.muscle) })

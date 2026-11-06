@@ -6,6 +6,9 @@ struct ExerciseDetailView: View {
     let listing: ExerciseListing
 
     @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    @State private var editing: CustomExercise?
+    @State private var confirmingDelete = false
     @Query private var logged: [Exercise]
     @Query private var notes: [PinnedNote]
 
@@ -35,24 +38,28 @@ struct ExerciseDetailView: View {
 
     var body: some View {
         let history = history
-        let reps = ExerciseCatalog.repRange(for: listing.id)
+        let current = store.listing(listing.id) ?? listing
+        let reps = current.info.repRange
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 10) {
-                    MuscleTag(muscle: listing.muscle)
-                    Text(listing.name)
+                    MuscleTag(muscle: current.muscle)
+                    Text(current.name)
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(Theme.text)
                     HStack(spacing: 6) {
-                        Text(listing.equipment)
+                        Text(current.equipment)
                         Text("•")
                         Text("\(reps.lowerBound)–\(reps.upperBound) reps")
                     }
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
-                    if let cue = listing.info?.cue {
+                    if let cue = current.info.cue {
                         Callout(text: cue, systemImage: "lightbulb")
                             .padding(.top, 4)
+                    }
+                    if current.isHidden {
+                        Callout(text: "Hidden from pickers. Your history is kept.", systemImage: "eye.slash")
                     }
                     if let note = notes.first?.text {
                         Callout(text: note, systemImage: "note.text", style: .pinned)
@@ -79,8 +86,50 @@ struct ExerciseDetailView: View {
             }
         }
         .background(Theme.surface)
-        .navigationTitle(listing.name)
+        .navigationTitle(current.name)
         .navigationBarTitleDisplayMode(.inline)
+        .toolbar {
+            ToolbarItem(placement: .primaryAction) { actions(current) }
+        }
+        .sheet(item: $editing) { custom in
+            CustomExerciseEditor(draft: CustomExerciseDraft(custom), editing: custom) { saved in
+                if saved.name != current.name { dismiss() }
+            }
+        }
+        .confirmationDialog("Delete this exercise?", isPresented: $confirmingDelete, titleVisibility: .visible) {
+            Button("Delete Exercise", role: .destructive) {
+                if let custom = store.customExercise(listing.id) {
+                    store.deleteCustomExercise(custom)
+                    dismiss()
+                }
+            }
+            .a11y(.dialogDeleteExercise)
+        } message: {
+            Text(
+                "Your history is kept. If you have logged it or planned it, it is archived and hidden from pickers instead of removed."
+            )
+        }
+    }
+
+    private func actions(_ current: ExerciseListing) -> some View {
+        Menu {
+            if current.isCustom {
+                Button("Edit", systemImage: "pencil") { editing = store.customExercise(current.id) }
+                    .a11y(.detailEdit)
+            }
+            Button(
+                current.isHidden ? "Show in pickers" : "Hide from pickers",
+                systemImage: current.isHidden ? "eye" : "eye.slash"
+            ) { store.setHidden(current.id, !current.isHidden) }
+            .a11y(.detailHide)
+            if current.isCustom {
+                Button("Delete", systemImage: "trash", role: .destructive) { confirmingDelete = true }
+                    .a11y(.detailDelete)
+            }
+        } label: {
+            Image(systemName: "ellipsis.circle")
+        }
+        .accessibilityLabel("Exercise actions")
     }
 
     private func historyRow(_ session: Session) -> some View {

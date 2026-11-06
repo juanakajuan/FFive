@@ -6,6 +6,7 @@ import Observation
 public final class Settings {
     private static let weightUnitKey = "weightUnit"
     private static let autoMatchWeightsKey = "autoMatchWeights"
+    private static let hiddenExercisesKey = "hiddenExercises"
     private static let equipmentKey = "equipment"
 
     /// The unit new prescriptions use. Loads already logged keep their numbers.
@@ -16,6 +17,11 @@ public final class Settings {
     /// An edited weight also changes later unlogged sets of that exercise that had the same weight.
     public var autoMatchWeights: Bool {
         didSet { defaults.set(autoMatchWeights, forKey: Self.autoMatchWeightsKey) }
+    }
+
+    /// Catalog exercises the lifter hid from pickers. A custom exercise keeps its own `isHidden`.
+    public var hiddenExercises: Set<ExerciseID> {
+        didSet { defaults.set(hiddenExercises.map(\.rawValue).sorted(), forKey: Self.hiddenExercisesKey) }
     }
 
     /// The equipment the lifter has. Never empty.
@@ -39,6 +45,8 @@ public final class Settings {
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         weightUnit = defaults.string(forKey: Self.weightUnitKey).flatMap(WeightUnit.init(rawValue:)) ?? .lb
+        hiddenExercises = Set(
+            (defaults.stringArray(forKey: Self.hiddenExercisesKey) ?? []).map(ExerciseID.init(rawValue:)))
         autoMatchWeights = defaults.object(forKey: Self.autoMatchWeightsKey) as? Bool ?? true
         let stored = Set((defaults.stringArray(forKey: Self.equipmentKey) ?? []).compactMap(Equipment.init(rawValue:)))
         equipment = stored.isEmpty ? Set(Equipment.allCases) : stored

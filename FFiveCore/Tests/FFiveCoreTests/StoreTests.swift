@@ -625,9 +625,11 @@ final class StoreTests: XCTestCase {
                 ("Café Curl", .biceps, 20),
             ])
 
+        store.backfillCustomExercises()
+
         let all = store.library(muscle: nil, equipment: nil, search: "")
         XCTAssertEqual(all.count, ExerciseCatalog.all.count + 2, "custom lifts join the catalog once per folded name")
-        XCTAssertTrue(all.contains { $0.name == "zercher squat" && $0.info == nil && $0.equipment == "Custom" })
+        XCTAssertTrue(all.contains { $0.name == "zercher squat" && $0.isCustom && $0.equipment == "Machine" })
         XCTAssertEqual(
             all.map(\.name), all.map(\.name).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending },
             "names sort ignoring case, so a lowercase custom name sits among the rest")
@@ -659,14 +661,16 @@ final class StoreTests: XCTestCase {
     func testLibraryFitsTheLifterEquipment() throws {
         let store = Store(inMemory: true)
         finished(store, at: .now, [("zercher squat", .quads, 60)])
+        store.backfillCustomExercises()
         let all = store.library(muscle: nil, equipment: nil, search: "")
 
         let dumbbellOnly = all.filter { $0.fits([.dumbbell]) }
         XCTAssertTrue(dumbbellOnly.contains { $0.name == "zercher squat" }, "a custom exercise always fits")
         XCTAssertTrue(
-            dumbbellOnly.allSatisfy { $0.info == nil || $0.info?.equipment == .dumbbell },
+            dumbbellOnly.allSatisfy { $0.isCustom || $0.info.equipment == .dumbbell },
             "catalog exercises of other equipment are filtered out")
-        XCTAssertTrue(dumbbellOnly.contains { $0.info?.equipment == .dumbbell }, "dumbbell exercises stay")
+        XCTAssertTrue(
+            dumbbellOnly.contains { !$0.isCustom && $0.info.equipment == .dumbbell }, "dumbbell exercises stay")
         XCTAssertLessThan(dumbbellOnly.count, all.count)
         XCTAssertEqual(all.filter { $0.fits(Set(Equipment.allCases)) }, all, "owning everything hides nothing")
     }
