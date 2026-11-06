@@ -9,6 +9,7 @@ struct MesoDetailView: View {
     @Environment(AppRouter.self) private var router
     @State private var confirmEnd = false
     @State private var trainAfterAll: SessionKey?
+    @State private var templateName: String?
     @State private var renameDraft: String?
 
     var body: some View {
@@ -19,6 +20,12 @@ struct MesoDetailView: View {
                 MesoScheduleGrid(meso: meso, onOpen: open, onSkipped: { trainAfterAll = $0 })
                 WeekVolumeCard(meso: meso, week: week)
                 MusclePrioritiesCard(meso: meso)
+                Button("Save as Template") { templateName = meso.name }
+                    .font(.system(size: 16, weight: .semibold))
+                    .foregroundStyle(Theme.text)
+                    .frame(maxWidth: .infinity, minHeight: 48)
+                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                    .a11y(.mesoSaveTemplate)
                 if meso.isActive {
                     Button("End Mesocycle", role: .destructive) { confirmEnd = true }
                         .font(.system(size: 16, weight: .semibold))
@@ -64,6 +71,18 @@ struct MesoDetailView: View {
                 .a11y(.dialogEndMesocycle)
         } message: {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
+        }
+        .alert(
+            "Save as Template",
+            isPresented: Binding(get: { templateName != nil }, set: { if !$0 { templateName = nil } })
+        ) {
+            TextField("Template name", text: Binding(get: { templateName ?? "" }, set: { templateName = $0 }))
+            Button("Save") {
+                if let templateName { store.saveTemplate(from: meso, named: templateName) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Saves this block's days and exercises so you can start a new one from them.")
         }
     }
 

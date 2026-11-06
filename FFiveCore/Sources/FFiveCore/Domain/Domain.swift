@@ -191,7 +191,8 @@ public enum TemplateEmphasis: String, CaseIterable, Identifiable {
 
 public struct ProgramTemplate: Identifiable, Hashable {
     public let name: String
-    public let emphasis: TemplateEmphasis
+    /// Nil for a custom template.
+    public let emphasis: TemplateEmphasis?
     public let summary: String
     public let days: [TemplateDay]
     public var id: String { name }

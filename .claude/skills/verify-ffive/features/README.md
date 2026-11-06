@@ -41,6 +41,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 ## Features
 
 - [Plan a mesocycle](./plan-mesocycle.md): pick a template, customize name and length, start the block, and see it on the Mesos tab (on disk).
+- [Custom templates](./custom-templates.md): save a builder draft or a block as a template, find it on the Templates tab and in the builder, rename and delete it (on disk).
 - [Muscle priorities](./muscle-priorities.md): mark muscles Emphasize, Normal, or Maintain in the builder or on the block's detail page; maintained muscles start at MV (on disk).
 - [Train a planned session](./train-session.md): the block's session shows on the Workout tab; log or skip sets against targets, give feedback and soreness, and finish (on disk and demo).
 - [Skip a day](./skip-day.md): skip from the workout menu or the schedule grid, then train it after all (on disk).
@@ -55,4 +56,4 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
 - [Settings](./settings.md): weight unit, auto-match weights, and app version, pushed from More (demo plus UserDefaults).
 
-Not mapped yet: the Templates and Exercises tabs, a block's detail page on the Mesos tab (beyond its schedule grid and priorities), Learn, swapping or removing exercises, renaming a quick workout, and discarding a workout.
+Not mapped yet: the Templates tab's search and filter, the Exercises tab, a block's detail page on the Mesos tab (beyond its schedule grid and priorities), Learn, swapping or removing exercises, renaming a quick workout, and discarding a workout.

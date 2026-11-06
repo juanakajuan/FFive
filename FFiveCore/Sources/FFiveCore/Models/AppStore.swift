@@ -7,7 +7,7 @@ public enum AppStore {
     static let schema = Schema([
         Workout.self, Exercise.self, SetEntry.self,
         Mesocycle.self, MesoDay.self, DaySlot.self, MuscleFeedbackRecord.self,
-        PinnedNote.self,
+        PinnedNote.self, CustomTemplate.self,
     ])
 
     public static func makeContainer(inMemory: Bool) -> ModelContainer {
