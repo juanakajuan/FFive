@@ -610,22 +610,35 @@ final class StoreTests: XCTestCase {
                 ("Café Curl", .biceps, 20),
             ])
 
-        let all = store.library(muscle: nil, search: "")
+        let all = store.library(muscle: nil, equipment: nil, search: "")
         XCTAssertEqual(all.count, ExerciseCatalog.all.count + 2, "custom lifts join the catalog once per folded name")
         XCTAssertTrue(all.contains { $0.name == "zercher squat" && $0.info == nil && $0.equipment == "Custom" })
         XCTAssertEqual(
             all.map(\.name), all.map(\.name).sorted { $0.localizedCaseInsensitiveCompare($1) == .orderedAscending },
             "names sort ignoring case, so a lowercase custom name sits among the rest")
-        XCTAssertEqual(all, store.library(muscle: nil, search: ""), "the same store gives the same order every time")
+        XCTAssertEqual(
+            all, store.library(muscle: nil, equipment: nil, search: ""),
+            "the same store gives the same order every time")
 
-        let quads = store.library(muscle: .quads, search: "")
+        let quads = store.library(muscle: .quads, equipment: nil, search: "")
         XCTAssertTrue(quads.allSatisfy { $0.muscle == .quads })
         XCTAssertEqual(
             quads.map(\.id), all.filter { $0.muscle == .quads }.map(\.id), "a muscle filter keeps the full list's order"
         )
         XCTAssertEqual(
-            store.library(muscle: nil, search: "  ZERCHER ").map(\.name), ["zercher squat"],
+            store.library(muscle: nil, equipment: nil, search: "  ZERCHER ").map(\.name), ["zercher squat"],
             "search trims and ignores case")
+
+        let assisted = store.library(muscle: nil, equipment: .assistedMachine, search: "")
+        XCTAssertEqual(
+            Set(assisted.map(\.name)),
+            [
+                "Assisted Pull-Up", "Assisted Wide-Grip Pull-Up", "Assisted Neutral-Grip Pull-Up", "Assisted Chin-Up",
+                "Assisted Dip",
+            ],
+            "an equipment filter drops custom lifts, which have none")
+        XCTAssertEqual(
+            store.library(muscle: .back, equipment: .assistedMachine, search: "").count, 4, "the filters combine")
     }
 
     func testWeekStatsMatchHistory() throws {
