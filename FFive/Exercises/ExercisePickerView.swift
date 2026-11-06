@@ -10,6 +10,7 @@ struct ExercisePickerView: View {
     @Environment(Store.self) private var store
     @State private var search = ""
     @State private var creating = false
+    @FocusState private var searchFocused: Bool
 
     private var query: String { search.trimmingCharacters(in: .whitespaces) }
 
@@ -18,6 +19,7 @@ struct ExercisePickerView: View {
         NavigationStack {
             VStack(spacing: 0) {
                 SearchBox(prompt: "Search or create exercise", text: $search)
+                    .focused($searchFocused)
                     .accessibilityAddTraits(.isSearchField)
                     .a11y(.pickerSearch)
                     .padding(.horizontal, Theme.gutter)
@@ -114,6 +116,7 @@ struct ExercisePickerView: View {
 
     private var createRow: some View {
         Button {
+            searchFocused = false
             creating = true
         } label: {
             HStack(spacing: 10) {
