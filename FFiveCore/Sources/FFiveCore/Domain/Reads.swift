@@ -4,13 +4,15 @@ public struct ExerciseListing: Hashable, Identifiable {
     public let id: ExerciseID
     public let name: String
     public let muscle: Muscle
-    public let info: ExerciseInfo?
+    public let info: ExerciseInfo
+    public let isCustom: Bool
+    public let isHidden: Bool
 
-    public var equipment: String { info?.equipment.displayName ?? "Custom" }
+    public var equipment: String { info.equipment.displayName }
 
     /// Custom exercises always fit, since the lifter made them.
     public func fits(_ equipment: Set<Equipment>) -> Bool {
-        info.map { equipment.contains($0.equipment) } ?? true
+        isCustom || equipment.contains(info.equipment)
     }
 
     public static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }

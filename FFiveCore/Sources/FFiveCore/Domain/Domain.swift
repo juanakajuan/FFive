@@ -11,6 +11,18 @@ public enum WeightUnit: String, CaseIterable, Identifiable {
     }
 }
 
+public enum Appearance: String, CaseIterable, Identifiable {
+    case system, dark, light
+    public var id: String { rawValue }
+    public var label: String {
+        switch self {
+        case .system: "System"
+        case .dark: "Dark"
+        case .light: "Light"
+        }
+    }
+}
+
 /// Weekly working-set landmarks for one muscle.
 /// mv = maintenance, mev = minimum effective, mav = most productive range, mrv = maximum recoverable.
 public struct VolumeLandmarks: Equatable {
@@ -127,9 +139,9 @@ public struct ExerciseInfo: Identifiable, Hashable {
     public let muscle: Muscle
     public let equipment: Equipment
     public let repRange: ClosedRange<Int>
-    public let cue: String
+    public let cue: String?
 
-    init(name: String, muscle: Muscle, equipment: Equipment, repRange: ClosedRange<Int>, cue: String) {
+    init(name: String, muscle: Muscle, equipment: Equipment, repRange: ClosedRange<Int>, cue: String?) {
         id = ExerciseID(folding: name)
         self.name = name
         self.muscle = muscle

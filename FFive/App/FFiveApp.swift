@@ -20,7 +20,6 @@ struct FFiveApp: App {
     var body: some Scene {
         WindowGroup {
             RootView()
-                .preferredColorScheme(.dark)
                 .transaction {
                     if animationsDisabled {
                         $0.disablesAnimations = true

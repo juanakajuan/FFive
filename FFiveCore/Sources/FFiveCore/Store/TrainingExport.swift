@@ -10,7 +10,9 @@ struct TrainingExport: Codable, Equatable {
     var mesocycles: [Meso]
     /// Sessions started outside any mesocycle.
     var workouts: [Session]
-    var customExercises: [CustomExercise]
+    var customExercises: [CustomExerciseValue]
+    /// Catalog exercises the lifter hid from pickers, by folded name.
+    var hiddenExercises: [String]
     var templates: [Template]
     var pinnedNotes: [PinnedNoteValue]
 
@@ -71,9 +73,14 @@ struct TrainingExport: Codable, Equatable {
         var jointPain: String?
     }
 
-    struct CustomExercise: Codable, Equatable {
+    struct CustomExerciseValue: Codable, Equatable {
         var name: String
         var muscle: String
+        var equipment: String
+        var minReps: Int
+        var maxReps: Int
+        var cue: String?
+        var isHidden: Bool
     }
 
     struct Template: Codable, Equatable {
@@ -96,24 +103,24 @@ struct TrainingExport: Codable, Equatable {
 }
 
 extension TrainingExport {
-    init(context: ModelContext, weightUnit: WeightUnit, now: Date) throws {
+    @MainActor init(context: ModelContext, settings: Settings, now: Date) throws {
         let mesos = try context.fetch(FetchDescriptor<Mesocycle>(sortBy: [SortDescriptor(\.startDate)]))
         let workouts = try context.fetch(FetchDescriptor<Workout>(sortBy: [SortDescriptor(\.startDate)]))
         let templates = try context.fetch(FetchDescriptor<CustomTemplate>(sortBy: [SortDescriptor(\.createdDate)]))
         let notes = try context.fetch(FetchDescriptor<PinnedNote>(sortBy: [SortDescriptor(\.name)]))
-        var seen = Set<ExerciseID>()
-        let custom = workouts.flatMap(\.sortedExercises).compactMap { exercise -> CustomExercise? in
-            guard exercise.info == nil, let muscle = exercise.muscle, seen.insert(exercise.key).inserted else {
-                return nil
-            }
-            return CustomExercise(name: exercise.name, muscle: muscle.rawValue)
-        }
+        let custom = try context.fetch(FetchDescriptor<CustomExercise>(sortBy: [SortDescriptor(\.name)]))
         self.init(
             exportedAt: now,
-            weightUnit: weightUnit.rawValue,
+            weightUnit: settings.weightUnit.rawValue,
             mesocycles: mesos.map(Meso.init),
             workouts: workouts.filter { $0.mesocycle == nil }.map(Session.init),
-            customExercises: custom,
+            customExercises: custom.map {
+                CustomExerciseValue(
+                    name: $0.name, muscle: $0.muscle.rawValue, equipment: $0.equipment.rawValue,
+                    minReps: $0.repRange.lowerBound, maxReps: $0.repRange.upperBound, cue: $0.cue,
+                    isHidden: $0.isHidden)
+            },
+            hiddenExercises: settings.hiddenExercises.map(\.rawValue).sorted(),
             templates: templates.map {
                 Template(name: $0.name, createdDate: $0.createdDate, days: $0.days.map(Day.init))
             },
@@ -187,7 +194,7 @@ extension TrainingExport.SetValue {
 extension Store {
     /// Every mesocycle, workout, set, feedback entry, custom exercise, saved template and pinned note, as JSON.
     public func exportJSON(now: Date = .now) throws -> Data {
-        let export = try TrainingExport(context: context, weightUnit: settings.weightUnit, now: now)
+        let export = try TrainingExport(context: context, settings: settings, now: now)
         return try TrainingExport.encoder.encode(export)
     }
 }

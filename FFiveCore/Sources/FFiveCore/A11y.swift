@@ -61,6 +61,17 @@ public enum A11y: String, CaseIterable {
     case pickerCancel = "picker.cancel"
     case exercisesSearch = "exercises.search"
     case exercisesRow = "exercises.row"
+    case exercisesShowHidden = "exercises.show-hidden"
+    case editorName = "editor.name"
+    case editorMuscle = "editor.muscle"
+    case editorEquipment = "editor.equipment"
+    case editorCue = "editor.cue"
+    case editorSave = "editor.save"
+    case editorCancel = "editor.cancel"
+    case detailEdit = "detail.edit"
+    case detailDelete = "detail.delete"
+    case detailHide = "detail.hide"
+    case dialogDeleteExercise = "dialog.delete-exercise"
     case builderTemplate = "builder.template"
     case builderBlank = "builder.blank"
     case builderName = "builder.name"
@@ -88,6 +99,7 @@ public enum A11y: String, CaseIterable {
     case settingsAutoMatch = "settings.auto-match"
     case settingsEquipment = "settings.equipment"
     case settingsExport = "settings.export"
+    case settingsAppearance = "settings.appearance"
     case equipmentFilter = "equipment-filter"
 
     static let indexed: Set<A11y> = [
@@ -97,7 +109,7 @@ public enum A11y: String, CaseIterable {
         .pickerRow, .exercisesRow, .builderTemplate, .builderCustomTemplate, .templatesCustom, .templatesMenu,
         .mesosRow, .mesosMenu, .musclePriority, .segment, .chip,
         .strengthRow, .historyRow,
-        .settingsUnit, .settingsEquipment,
+        .settingsUnit, .settingsEquipment, .settingsAppearance,
     ]
 
     func indexed(_ index: Int) -> String { "\(rawValue).\(index)" }

@@ -7,11 +7,12 @@ struct ExercisesView: View {
     @State private var search = ""
     @State private var muscle: Muscle?
     @State private var equipment: Equipment?
+    @State private var showHidden = false
     @State private var equipmentOnly = true
 
     var body: some View {
         let settings = store.settings
-        let all = store.library(muscle: muscle, equipment: equipment, search: search)
+        let all = store.library(muscle: muscle, equipment: equipment, search: search, includeHidden: showHidden)
         let listings = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
         NavigationStack {
             ScrollView {
@@ -52,6 +53,8 @@ struct ExercisesView: View {
                             ForEach(Equipment.allCases, id: \.self) { Text($0.displayName).tag(Equipment?.some($0)) }
                         }
                         .pickerStyle(.menu)
+                        Toggle("Show hidden", isOn: $showHidden)
+                            .a11y(.exercisesShowHidden)
                     }
                 }
                 .background(Theme.surface)
@@ -64,7 +67,7 @@ struct ExercisesView: View {
     }
 
     private var filterLabel: String {
-        let names = [muscle?.displayName, equipment?.displayName].compactMap { $0 }
+        let names = [muscle?.displayName, equipment?.displayName, showHidden ? "Hidden" : nil].compactMap { $0 }
         return names.isEmpty ? "Filters" : names.joined(separator: " \u{00B7} ")
     }
 
@@ -78,6 +81,10 @@ struct ExercisesView: View {
                     MuscleDotLabel(muscle: listing.muscle)
                     Text("•")
                     Text(listing.equipment)
+                    if listing.isHidden {
+                        Text("•")
+                        Text("Hidden")
+                    }
                 }
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondary)

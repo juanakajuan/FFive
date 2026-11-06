@@ -28,7 +28,9 @@ final class TrainingExportTests: XCTestCase {
         store.finish(session)
 
         let quick = store.startQuickWorkout()
-        store.addExercise(named: "Landmine Press", muscle: .frontDelts, to: quick)
+        try store.saveCustomExercise(
+            CustomExerciseDraft(name: "Garage Sled Push", muscle: .quads, equipment: .bodyweightOnly, cue: "Low hips"))
+        store.addExercise(named: "Garage Sled Push", muscle: .quads, to: quick)
         store.log(quick.sortedExercises[0].sortedSets[0], done: true)
         store.finish(quick)
         store.saveTemplate(from: meso, named: "Mine")
@@ -50,11 +52,14 @@ final class TrainingExportTests: XCTestCase {
         XCTAssertEqual(firstSet.weight, 185)
         XCTAssertEqual(firstSet.reps, 8)
         XCTAssertEqual(exportedSession.feedback, [.init(muscle: "chest", pump: "great")])
-        XCTAssertEqual(export.workouts.map { $0.exercises.map(\.name) }, [["Landmine Press"]], "free-form sessions")
+        XCTAssertEqual(export.workouts.map { $0.exercises.map(\.name) }, [["Garage Sled Push"]], "free-form sessions")
         XCTAssertEqual(
-            export.customExercises, [.init(name: "Landmine Press", muscle: "frontDelts")],
-            "\(quick.exercises.map { ($0.key.rawValue, $0.info?.name ?? "nil", $0.muscleRaw ?? "nil", $0.workout === quick) })"
-        )
+            export.customExercises,
+            [
+                .init(
+                    name: "Garage Sled Push", muscle: "quads", equipment: "bodyweightOnly", minReps: 8, maxReps: 12,
+                    cue: "Low hips", isHidden: false)
+            ])
         XCTAssertEqual(export.templates.map(\.name), ["Mine"])
         XCTAssertEqual(export.pinnedNotes, [.init(exercise: "Bench Press", text: "Shoulder felt fine")])
     }
