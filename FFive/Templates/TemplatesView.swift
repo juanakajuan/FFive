@@ -190,6 +190,13 @@ struct TemplateListRow: View {
         HStack(alignment: .bottom, spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 4) {
+                    if template.emphasis != nil {
+                        Image("Logo")
+                            .resizable()
+                            .frame(width: 14, height: 14)
+                            .clipShape(RoundedRectangle(cornerRadius: 3))
+                            .accessibilityHidden(true)
+                    }
                     Image(systemName: template.emphasis == nil ? "person" : "target")
                         .font(.system(size: 10))
                         .accessibilityHidden(true)
