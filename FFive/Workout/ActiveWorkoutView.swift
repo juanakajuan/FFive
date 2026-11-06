@@ -58,9 +58,128 @@ struct ActiveWorkoutView: View {
     }
 
     var body: some View {
-        let exercises = workout.sortedExercises
+        sessionList(workout.sortedExercises)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                    .a11y(.keyboardDone)
+                }
+            }
+            .sensoryFeedback(.success, trigger: setsCompleted)
+            .sheet(item: $picker) { request in
+                switch request {
+                case .add:
+                    ExercisePickerView { name, muscle in addExercise(name, muscle: muscle) }
+                case .swap(let exercise):
+                    ExercisePickerView(title: "Swap \(exercise.name)", muscle: exercise.muscle) { name, muscle in
+                        store.swapExercise(exercise, to: name, muscle: muscle)
+                    }
+                }
+            }
+            .sheet(isPresented: $showingReorder) { ReorderExercisesView(workout: workout) }
+            .sheet(isPresented: $showingSchedule) {
+                if let activeMeso {
+                    ScheduleSheet(
+                        meso: activeMeso, week: workout.week ?? activeMeso.nextUp?.week ?? activeMeso.accumulationWeeks)
+                }
+            }
+            .confirmationDialog("Discard this workout?", isPresented: $confirmDiscard, titleVisibility: .visible) {
+                Button("Discard Workout", role: .destructive, action: discard)
+                    .a11y(.dialogDiscard)
+            } message: {
+                Text(
+                    workout.mesocycle == nil
+                        ? "Its exercises and sets are deleted."
+                        : "This day is rebuilt from the plan. Logged sets, swaps and added exercises are dropped.")
+            }
+            .confirmationDialog("Reset this workout?", isPresented: $confirmReset, titleVisibility: .visible) {
+                Button("Reset Workout", role: .destructive) { store.reset(workout) }
+                    .a11y(.dialogReset)
+            } message: {
+                Text("Logged sets are cleared. Exercises and targets stay.")
+            }
+            .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
+                if let activeMeso {
+                    Button("End Mesocycle", role: .destructive) {
+                        WorkoutTabActions.end(activeMeso, router: router, store: store)
+                    }
+                    .a11y(.dialogEndMesocycle)
+                }
+            } message: {
+                Text("Logged sessions stay in Progress. You can plan a new block right after.")
+            }
+            .alert(
+                workout.mesocycle == nil ? "Rename Workout" : "Rename Day",
+                isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
+            ) {
+                TextField(
+                    workout.mesocycle == nil ? "Workout name" : "Day name",
+                    text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
+                Button("Save") {
+                    if let name = renameDraft { store.rename(workout, to: name) }
+                }
+                Button("Cancel", role: .cancel) {}
+            }
+            .alert(
+                "Bodyweight",
+                isPresented: Binding(get: { bodyweightDraft != nil }, set: { if !$0 { bodyweightDraft = nil } })
+            ) {
+                TextField(
+                    "Bodyweight (\(store.settings.weightUnit.rawValue))",
+                    text: Binding(get: { bodyweightDraft ?? "" }, set: { bodyweightDraft = $0 })
+                )
+                .keyboardType(.decimalPad)
+                Button("Save") {
+                    let text = (bodyweightDraft ?? "").trimmingCharacters(in: .whitespaces)
+                    store.setBodyweight(Double(text.replacing(",", with: ".")), of: workout)
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Bodyweight lifts log the load you add to it. Leave it empty to clear.")
+            }
+            .sheet(item: $noteEdit) { edit in
+                NoteEditor(title: edit.target.title, draft: edit.draft) {
+                    saveNote($0, to: edit.target)
+                }
+            }
+            .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
+            .sheet(item: $feedbackFor) { muscle in
+                FeedbackSheet(muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback())
+                {
+                    answers in
+                    store.updateFeedback(for: muscle, in: workout) {
+                        $0.pump = answers.pump
+                        $0.workload = answers.workload
+                        $0.jointPain = answers.jointPain
+                    }
+                }
+            }
+    }
+
+    /// A muscle that finished before this exercise's muscle and still has no feedback. Its sets wait for that answer.
+    private func unratedMuscle(before exercise: Exercise, in exercises: [Exercise]) -> Muscle? {
+        feedbackMuscles(in: exercises).first {
+            $0 != exercise.muscle && workout.feedbackRecord(for: $0)?.value.isRated != true
+        }
+    }
+
+    /// Muscles whose last exercise has no pending set, so their feedback is due. Only block sessions collect it.
+    private func feedbackMuscles(in exercises: [Exercise]) -> [Muscle] {
+        guard workout.mesocycle != nil else { return [] }
+        var seen = Set<Muscle>()
+        return exercises.compactMap(\.muscle).filter { seen.insert($0).inserted }.filter { muscle in
+            exercises.last { $0.muscle == muscle }?.isLogged == true
+        }
+    }
+
+    /// The session's cards, with the feedback toast and the sheet that opens when a muscle finishes.
+    private func sessionList(_ exercises: [Exercise]) -> some View {
         let pendingSoreness = store.pendingSoreness(in: workout)
-        ScrollView {
+        return ScrollView {
             LazyVStack(spacing: 16) {
                 if let note = workout.note {
                     Callout(text: note, systemImage: "note.text", style: .note)
@@ -101,120 +220,6 @@ struct ActiveWorkoutView: View {
         }
         .onChange(of: feedbackMuscles(in: exercises)) { old, new in
             feedbackFor = new.first { !old.contains($0) && workout.feedbackRecord(for: $0)?.value.isRated != true }
-        }
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    UIApplication.shared.sendAction(
-                        #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                }
-                .a11y(.keyboardDone)
-            }
-        }
-        .sensoryFeedback(.success, trigger: setsCompleted)
-        .sheet(item: $picker) { request in
-            switch request {
-            case .add:
-                ExercisePickerView { name, muscle in addExercise(name, muscle: muscle) }
-            case .swap(let exercise):
-                ExercisePickerView(title: "Swap \(exercise.name)", muscle: exercise.muscle) { name, muscle in
-                    store.swapExercise(exercise, to: name, muscle: muscle)
-                }
-            }
-        }
-        .sheet(isPresented: $showingReorder) { ReorderExercisesView(workout: workout) }
-        .sheet(isPresented: $showingSchedule) {
-            if let activeMeso {
-                ScheduleSheet(
-                    meso: activeMeso, week: workout.week ?? activeMeso.nextUp?.week ?? activeMeso.accumulationWeeks)
-            }
-        }
-        .confirmationDialog("Discard this workout?", isPresented: $confirmDiscard, titleVisibility: .visible) {
-            Button("Discard Workout", role: .destructive, action: discard)
-                .a11y(.dialogDiscard)
-        } message: {
-            Text(
-                workout.mesocycle == nil
-                    ? "Its exercises and sets are deleted."
-                    : "This day is rebuilt from the plan. Logged sets, swaps and added exercises are dropped.")
-        }
-        .confirmationDialog("Reset this workout?", isPresented: $confirmReset, titleVisibility: .visible) {
-            Button("Reset Workout", role: .destructive) { store.reset(workout) }
-                .a11y(.dialogReset)
-        } message: {
-            Text("Logged sets are cleared. Exercises and targets stay.")
-        }
-        .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            if let activeMeso {
-                Button("End Mesocycle", role: .destructive) {
-                    WorkoutTabActions.end(activeMeso, router: router, store: store)
-                }
-                .a11y(.dialogEndMesocycle)
-            }
-        } message: {
-            Text("Logged sessions stay in Progress. You can plan a new block right after.")
-        }
-        .alert(
-            workout.mesocycle == nil ? "Rename Workout" : "Rename Day",
-            isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
-        ) {
-            TextField(
-                workout.mesocycle == nil ? "Workout name" : "Day name",
-                text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
-            Button("Save") {
-                if let name = renameDraft { store.rename(workout, to: name) }
-            }
-            Button("Cancel", role: .cancel) {}
-        }
-        .alert(
-            "Bodyweight",
-            isPresented: Binding(get: { bodyweightDraft != nil }, set: { if !$0 { bodyweightDraft = nil } })
-        ) {
-            TextField(
-                "Bodyweight (\(store.settings.weightUnit.rawValue))",
-                text: Binding(get: { bodyweightDraft ?? "" }, set: { bodyweightDraft = $0 })
-            )
-            .keyboardType(.decimalPad)
-            Button("Save") {
-                let text = (bodyweightDraft ?? "").trimmingCharacters(in: .whitespaces)
-                store.setBodyweight(Double(text.replacing(",", with: ".")), of: workout)
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Bodyweight lifts log the load you add to it. Leave it empty to clear.")
-        }
-        .sheet(item: $noteEdit) { edit in
-            NoteEditor(title: edit.target.title, draft: edit.draft) {
-                saveNote($0, to: edit.target)
-            }
-        }
-        .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
-        .sheet(item: $feedbackFor) { muscle in
-            FeedbackSheet(muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()) {
-                answers in
-                store.updateFeedback(for: muscle, in: workout) {
-                    $0.pump = answers.pump
-                    $0.workload = answers.workload
-                    $0.jointPain = answers.jointPain
-                }
-            }
-        }
-    }
-
-    /// A muscle that finished before this exercise's muscle and still has no feedback. Its sets wait for that answer.
-    private func unratedMuscle(before exercise: Exercise, in exercises: [Exercise]) -> Muscle? {
-        feedbackMuscles(in: exercises).first {
-            $0 != exercise.muscle && workout.feedbackRecord(for: $0)?.value.isRated != true
-        }
-    }
-
-    /// Muscles whose last exercise has no pending set, so their feedback is due. Only block sessions collect it.
-    private func feedbackMuscles(in exercises: [Exercise]) -> [Muscle] {
-        guard workout.mesocycle != nil else { return [] }
-        var seen = Set<Muscle>()
-        return exercises.compactMap(\.muscle).filter { seen.insert($0).inserted }.filter { muscle in
-            exercises.last { $0.muscle == muscle }?.isLogged == true
         }
     }
 
