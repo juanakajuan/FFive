@@ -4,7 +4,6 @@ import SwiftUI
 
 struct TemplatesView: View {
     @Environment(Store.self) private var store
-    @Query(Mesocycle.active) private var activeMesos: [Mesocycle]
     @Query(CustomTemplate.all) private var customTemplates: [CustomTemplate]
 
     @State private var search = ""
@@ -96,7 +95,6 @@ struct TemplatesView: View {
             .background(Theme.surface)
             .screenHeader("Templates") {
                 HeaderAddButton(label: "New Mesocycle") { builder = .blank }
-                    .disabled(!activeMesos.isEmpty)
                     .a11y(.mesosNew)
             }
             .sheet(item: $builder) { MesoBuilderView(startAt: $0) }

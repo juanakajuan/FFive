@@ -18,7 +18,7 @@ A lifter with no active block plans one from a program template. They rename it,
 - Mesos tab: `Plan a Mesocycle` in the empty state (only when no block has ever existed), or the `New Mesocycle` "+" in the header.
 - Templates tab: tap a template row to open the builder straight on Customize, or the `New Mesocycle` "+" for a blank one.
 - The builder sheet: choose a template row, or `Build from scratch`.
-- While a block is active, both "+" buttons are disabled, and a builder opened from a Templates row shows "End <name> before starting a new mesocycle." with `Start Mesocycle` disabled. The lifter must end the block first (`End Mesocycle` in the `Workout menu`, the Mesos row's `<name> menu`, or the block's detail page).
+- While a block is active, the Mesos tab's "+" is disabled. The Templates tab's "+" still opens a blank builder, and that builder, like one opened from a Templates row, shows "End <name> before starting a new mesocycle." with `Start Mesocycle` disabled. The lifter must end the block first (`End Mesocycle` in the `Workout menu`, the Mesos row's `<name> menu`, or the block's detail page).
 
 ## Driving it with ffive-verify
 

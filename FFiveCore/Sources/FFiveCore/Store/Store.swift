@@ -145,7 +145,9 @@ public final class Store {
     }
 
     /// Logging the first set of a block day restarts its clock one last time, so duration counts from the first lift.
+    /// A call that breaks the order or logs an empty set changes nothing.
     public func log(_ set: SetEntry, done: Bool) {
+        guard done != set.isDone, set.canToggleLog else { return }
         if done, let workout = set.exercise?.workout, workout.mesocycle != nil, workout.completedSets == 0 {
             workout.startDate = .now
         }

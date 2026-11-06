@@ -1,0 +1,37 @@
+# template-during-block: with a block active, Templates' "+" still opens the builder and saves a template.
+# Before: ffive-verify reset-data.
+launch
+tap #workout.plan timeout=20
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+replace #builder.name "Active Block"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+store-expect Mesocycle name "Active Block"
+tap #tab.templates
+wait text "Templates"
+shot 01-templates-with-active-block
+tap #mesos.new
+wait nav "Customize"
+value #builder.name "My Mesocycle"
+wait text "End Active Block before starting a new mesocycle."
+shot 02-blank-builder-start-blocked
+tap button "Add Exercise"
+tap #picker.row.bench-press
+wait nav "Customize"
+replace #builder.name "Made Mid Block"
+shot 03-draft-with-exercise
+tap #builder.save-template
+wait alert "Save as Template"
+replace field "Template name" "Made Mid Block"
+sleep 1
+tap button "Save"
+absent alert "Save as Template"
+store-expect CustomTemplate name "Made Mid Block"
+tap #builder.cancel
+wait #templates.custom.made-mid-block
+shot 04-template-listed
+launch
+tap #tab.templates timeout=20
+wait #templates.custom.made-mid-block
+shot 05-after-relaunch

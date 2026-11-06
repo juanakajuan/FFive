@@ -4,8 +4,9 @@ wait text "WEEK 2 DAY 1" timeout=20
 wait text "Target 185 * 7"
 wait text "How did quads feel today?"
 # Quads finished without feedback, so logging a set on Bench (chest) is refused and opens the quads sheet.
+# set.log.N repeats per card; with Bench centered, Squat's set 1 is off screen, so the tap lands on Bench's first set.
 scrollto #set.log.5
-tap #set.log.5
+tap #set.log.1
 wait #feedback.required
 shot 01-feedback-required
 wait #feedback.save

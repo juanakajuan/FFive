@@ -11,6 +11,18 @@ public enum WeightUnit: String, CaseIterable, Identifiable {
     }
 }
 
+public enum Appearance: String, CaseIterable, Identifiable {
+    case system, dark, light
+    public var id: String { rawValue }
+    public var label: String {
+        switch self {
+        case .system: "System"
+        case .dark: "Dark"
+        case .light: "Light"
+        }
+    }
+}
+
 /// Weekly working-set landmarks for one muscle.
 /// mv = maintenance, mev = minimum effective, mav = most productive range, mrv = maximum recoverable.
 public struct VolumeLandmarks: Equatable {
