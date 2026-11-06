@@ -567,7 +567,19 @@ struct SetRow: View {
                 Button("Delete Set", systemImage: "trash", role: .destructive, action: onDelete)
                     .a11y(.menuDeleteSet)
             } label: {
-                ActionIcon.verticalEllipsis.frame(width: SetColumns.menu, height: 44)
+                VStack(spacing: 2) {
+                    if let tag = set.type.tag {
+                        ActionIcon.verticalEllipsis.scaleEffect(0.75).frame(height: 22)
+                        Text(tag)
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(Theme.infoText)
+                            .lineLimit(1)
+                            .fixedSize()
+                    } else {
+                        ActionIcon.verticalEllipsis
+                    }
+                }
+                .frame(width: SetColumns.menu, height: 44)
             }
             .accessibilityLabel(set.type.tag == nil ? "Set \(number) menu" : "Set \(number) menu, \(set.type.title)")
             .a11y(.setMenu, number)
@@ -601,18 +613,6 @@ struct SetRow: View {
             .onTapGesture { focus = .reps }
             .accessibilityLabel("Set \(number) reps")
             .a11y(.setReps, number)
-            .overlay(alignment: .trailing) {
-                if let tag = set.type.tag {
-                    Text(tag)
-                        .font(Theme.caption.weight(.medium))
-                        .foregroundStyle(Theme.secondary)
-                        .lineLimit(1)
-                        .minimumScaleFactor(0.7)
-                        .padding(.trailing, 6)
-                        .allowsHitTesting(false)
-                        .accessibilityHidden(true)
-                }
-            }
             .frame(minWidth: SetColumns.field, maxWidth: .infinity)
             .padding(.leading, 16)
             .opacity(set.status == .skipped ? 0.4 : 1)
