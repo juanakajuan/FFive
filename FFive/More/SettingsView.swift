@@ -62,6 +62,34 @@ struct SettingsView: View {
                 .foregroundStyle(Theme.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+                SectionHeading(text: "Data")
+                    .padding(.top, 20)
+                OutlinedGroup {
+                    ShareLink(
+                        item: TrainingExportFile(store: store),
+                        preview: SharePreview(TrainingExportFile.fileName(on: .now))
+                    ) {
+                        HStack {
+                            Text("Export Training Data").font(Theme.body).foregroundStyle(Theme.text)
+                            Spacer()
+                            Image(systemName: "square.and.arrow.up")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(Theme.infoText)
+                        }
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .a11y(.settingsExport)
+                }
+                Text(
+                    "Saves every mesocycle, workout, set, feedback entry, custom exercise, template and pinned note to a JSON file."
+                )
+                .font(Theme.detail)
+                .foregroundStyle(Theme.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
                 SectionHeading(text: "About")
                     .padding(.top, 20)
                 OutlinedGroup {
@@ -130,6 +158,24 @@ struct SettingsView: View {
         .accessibilityLabel(option.displayName)
         .accessibilityAddTraits(selected ? .isSelected : [])
         .a11y(.settingsEquipment, key: option.rawValue)
+    }
+}
+
+/// Builds the JSON only when the share sheet asks for it, so opening Settings costs nothing.
+private struct TrainingExportFile: Transferable {
+    let store: Store
+
+    static func fileName(on date: Date) -> String {
+        "FFive Export \(date.formatted(.iso8601.year().month().day())).json"
+    }
+
+    static var transferRepresentation: some TransferRepresentation {
+        FileRepresentation(exportedContentType: .json) { file in
+            let data = try await file.store.exportJSON()
+            let url = URL.temporaryDirectory.appending(path: fileName(on: .now))
+            try data.write(to: url, options: .atomic)
+            return SentTransferredFile(url)
+        }
     }
 }
 
