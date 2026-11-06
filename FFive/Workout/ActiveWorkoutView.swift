@@ -21,7 +21,8 @@ struct ActiveWorkoutView: View {
     @State private var noteEdit: NoteEdit?
     @State private var historyFor: Exercise?
     @State private var feedbackFor: Muscle?
-    @State private var feedbackRequired: Muscle?
+    @State private var feedbackRequired: FeedbackBlock?
+    @State private var sorenessAsk: SorenessAsk?
     @State private var setsCompleted = 0
 
     private struct NoteEdit: Identifiable {
@@ -43,6 +44,21 @@ struct ActiveWorkoutView: View {
             case .exercise(let exercise): "exercise:\(exercise.persistentModelID.hashValue)"
             }
         }
+    }
+
+    /// A refused set log: the exercise tapped, and the muscle whose feedback it waits for.
+    private struct FeedbackBlock: Equatable {
+        let muscle: Muscle
+        let exercise: PersistentIdentifier
+    }
+
+    /// The muscle's first log tap, held until soreness since its last session is answered.
+    private struct SorenessAsk: Identifiable {
+        let muscle: Muscle
+        let record: MuscleFeedbackRecord
+        let set: SetEntry
+
+        var id: Muscle { muscle }
     }
 
     private enum PickerRequest: Identifiable {
@@ -147,6 +163,12 @@ struct ActiveWorkoutView: View {
                 }
             }
             .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
+            .sheet(item: $sorenessAsk) { ask in
+                SorenessSheet(muscle: ask.muscle, record: ask.record) { soreness in
+                    store.recordSoreness(soreness, on: ask.record, during: workout, logging: ask.set)
+                    setCompleted()
+                }
+            }
             .sheet(item: $feedbackFor) { muscle in
                 FeedbackSheet(muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback())
                 {
@@ -158,6 +180,18 @@ struct ActiveWorkoutView: View {
                     }
                 }
             }
+    }
+
+    /// What a log tap on this exercise does instead of logging: point at the feedback it waits for, or ask the
+    /// muscle's soreness first. Nil logs the set.
+    private func logGate(for exercise: Exercise, unrated: Muscle?, soreness: MuscleFeedbackRecord?)
+        -> ((SetEntry) -> Void)?
+    {
+        if let unrated {
+            return { _ in feedbackRequired = FeedbackBlock(muscle: unrated, exercise: exercise.persistentModelID) }
+        }
+        guard let muscle = exercise.muscle, let soreness else { return nil }
+        return { set in sorenessAsk = SorenessAsk(muscle: muscle, record: soreness, set: set) }
     }
 
     /// A muscle that finished before this exercise's muscle and still has no feedback. Its sets wait for that answer.
@@ -205,18 +239,13 @@ struct ActiveWorkoutView: View {
             }
         }
         .animation(.snappy, value: exercises.map(\.isLogged))
-        .overlay {
-            if feedbackRequired != nil {
-                FeedbackRequiredToast().transition(.scale(scale: 0.9).combined(with: .opacity))
-            }
-        }
         .animation(.snappy, value: feedbackRequired)
         .task(id: feedbackRequired) {
-            guard let muscle = feedbackRequired else { return }
-            try? await Task.sleep(for: .seconds(0.9))
+            guard let block = feedbackRequired else { return }
+            try? await Task.sleep(for: .seconds(1.2))
             guard !Task.isCancelled else { return }
             feedbackRequired = nil
-            feedbackFor = muscle
+            feedbackFor = block.muscle
         }
         .onChange(of: feedbackMuscles(in: exercises)) { old, new in
             feedbackFor = new.first { !old.contains($0) && workout.feedbackRecord(for: $0)?.value.isRated != true }
@@ -238,24 +267,15 @@ struct ActiveWorkoutView: View {
         pendingSoreness: [Muscle: MuscleFeedbackRecord]
     ) -> some View {
         let muscle = exercise.muscle
-        if let muscle, let record = pendingSoreness[muscle],
-            exercises.firstIndex(where: { $0.muscle == muscle }) == index
-        {
-            SorenessCard(muscle: muscle, record: record) { soreness in
-                withAnimation {
-                    store.recordSoreness(soreness, on: record, during: workout)
-                }
-            }
-        }
-
+        let unrated = unratedMuscle(before: exercise, in: exercises)
         ExerciseCard(
             exercise: exercise,
             position: index + 1,
             phase: workout.phase,
             onSetCompleted: setCompleted,
-            onLogBlocked: unratedMuscle(before: exercise, in: exercises).map { muscle in
-                { feedbackRequired = muscle }
-            },
+            isLocked: unrated != nil,
+            onLogBlocked: logGate(for: exercise, unrated: unrated, soreness: muscle.flatMap { pendingSoreness[$0] }),
+            showsFeedbackRequired: feedbackRequired?.exercise == exercise.persistentModelID,
             onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
             jointPain: jointPain(for: muscle),
             onShowHistory: { historyFor = exercise },
@@ -396,8 +416,11 @@ struct ExerciseCard: View {
     let position: Int
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
-    /// Set when logging a set here must wait for another muscle's feedback; called instead of logging.
-    var onLogBlocked: (() -> Void)?
+    /// Greyed out while another muscle's feedback is owed.
+    var isLocked = false
+    /// Called instead of logging an unlogged set, with that set.
+    var onLogBlocked: ((SetEntry) -> Void)?
+    var showsFeedbackRequired = false
     var onSwap: (() -> Void)?
     var jointPain: Binding<JointPain?>?
     var onShowHistory: () -> Void
@@ -472,6 +495,12 @@ struct ExerciseCard: View {
             }
         }
         .surfaceCard(tag: exercise.muscle)
+        .opacity(isLocked ? 0.4 : 1)
+        .overlay {
+            if showsFeedbackRequired {
+                FeedbackRequiredToast().transition(.scale(scale: 0.9).combined(with: .opacity))
+            }
+        }
     }
 
     private func actions(note: String?) -> some View {
@@ -572,7 +601,7 @@ struct SetRow: View {
     let unit: WeightUnit
     let rir: Int?
     var onCompleted: () -> Void
-    var onLogBlocked: (() -> Void)?
+    var onLogBlocked: ((SetEntry) -> Void)?
     var onAdd: () -> Void
     var onDelete: () -> Void
 
@@ -673,7 +702,7 @@ struct SetRow: View {
 
             Button {
                 if !set.isDone, let onLogBlocked {
-                    onLogBlocked()
+                    onLogBlocked(set)
                     return
                 }
                 store.log(set, done: !set.isDone)
@@ -759,31 +788,59 @@ struct ExerciseHistorySheet: View {
     }
 }
 
-struct SorenessCard: View {
+/// Asks how a muscle recovered since its last session, before its first set today is logged.
+struct SorenessSheet: View {
     let muscle: Muscle
     let record: MuscleFeedbackRecord
-    var onAnswer: (Soreness) -> Void
+    let onSave: (Soreness) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: Soreness?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("How did your \(muscle.displayName.lowercased()) recover?")
-                    .font(Theme.cardTitle)
-                    .foregroundStyle(Theme.text)
-                if let previous = record.workout {
-                    Text("Since \(previous.name), \(previous.startDate.formatted(.dateTime.weekday(.wide)))")
-                        .font(Theme.detail)
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("How did your \(muscle.displayName.lowercased()) recover?")
+                            .font(Theme.cardTitle)
+                            .foregroundStyle(Theme.text)
+                        if let previous = record.workout {
+                            Text("Since \(previous.name), \(previous.startDate.formatted(.dateTime.weekday(.wide)))")
+                                .font(Theme.detail)
+                                .foregroundStyle(Theme.secondary)
+                        }
+                    }
+                    ChipPicker(
+                        title: "Soreness after that session", options: Soreness.allCases, columns: 2,
+                        label: \.label, selection: draft
+                    ) { draft = $0 }
+                    Text("Today's sets for \(muscle.displayName.lowercased()) are planned from this answer.")
+                        .font(Theme.caption)
                         .foregroundStyle(Theme.secondary)
                 }
+                .padding(Theme.gutter)
             }
-            ChipPicker(
-                title: "Soreness after that session", options: Soreness.allCases, columns: 2,
-                label: \.label, selection: nil
-            ) { if let soreness = $0 { onAnswer(soreness) } }
+            .background(Theme.page)
+            .navigationTitle("\(muscle.displayName) Recovery")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .a11y(.sorenessCancel)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        if let draft { onSave(draft) }
+                        dismiss()
+                    }
+                    .disabled(draft == nil)
+                    .a11y(.sorenessSave)
+                }
+            }
         }
-        .padding(.horizontal, Theme.gutter)
-        .padding(.bottom, 8)
-        .surfaceCard(tag: muscle)
+        .presentationDetents([.medium])
+        .interactiveDismissDisabled(draft != nil)
     }
 }
 

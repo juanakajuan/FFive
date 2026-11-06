@@ -60,6 +60,8 @@ public enum A11y: String, CaseIterable {
     case feedbackSave = "feedback.save"
     case feedbackCancel = "feedback.cancel"
     case feedbackRequired = "feedback.required"
+    case sorenessSave = "soreness.save"
+    case sorenessCancel = "soreness.cancel"
     case pickerSearch = "picker.search"
     case pickerRow = "picker.row"
     case pickerCancel = "picker.cancel"

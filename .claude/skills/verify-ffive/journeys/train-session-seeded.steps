@@ -19,10 +19,17 @@ tap #feedback.save
 absent #feedback.save
 exists image "checkmark.circle.fill"
 shot 03-quads-feedback-saved
-scrollto text "How did your chest recover?"
-wait text "Target 150 * 8"
+# Bench's first log tap now asks chest soreness first; Save re-plans chest, then logs that set.
+scrollto #set.log.5
+tap #set.log.1
+wait #soreness.save
+wait text "How did your chest recover?"
 shot 04-soreness-asked
+tap #soreness.save
+wait #soreness.save
 tap #chip.healed-just-in-time
-absent text "How did your chest recover?"
+tap #soreness.save
+absent #soreness.save
+selected #set.log.1
 tree 05-soreness-answered
 shot 05-soreness-answered
