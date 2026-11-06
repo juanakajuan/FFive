@@ -37,10 +37,12 @@ struct ExercisesView: View {
                             Text("All").tag(Muscle?.none)
                             ForEach(Muscle.allCases) { Text($0.displayName).tag(Muscle?.some($0)) }
                         }
+                        .pickerStyle(.menu)
                         Picker("Equipment", selection: $equipment) {
                             Text("All").tag(Equipment?.none)
                             ForEach(Equipment.allCases, id: \.self) { Text($0.displayName).tag(Equipment?.some($0)) }
                         }
+                        .pickerStyle(.menu)
                     }
                 }
                 .background(Theme.surface)
