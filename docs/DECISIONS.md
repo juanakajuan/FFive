@@ -1,6 +1,6 @@
 # Decision trail: science-based hypertrophy app
 
-Goal: turn a plain set logger into a training app that plans mesocycles and progresses volume and load from feedback, following the approach Renaissance Periodization teaches.
+Goal: turn a plain set logger into a training app that plans mesocycles and progresses volume and load from feedback.
 
 ## Done predicate
 
