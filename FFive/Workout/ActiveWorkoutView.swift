@@ -391,7 +391,8 @@ struct ExerciseCard: View {
                 }
                 if showingCue, let info = exercise.info {
                     Callout(
-                        text: "\(info.cue) \(info.repRange.lowerBound)–\(info.repRange.upperBound) reps.",
+                        text: [info.cue, "\(info.repRange.lowerBound)–\(info.repRange.upperBound) reps."]
+                            .compactMap { $0 }.joined(separator: " "),
                         systemImage: "lightbulb.fill")
                 }
                 if exercise.isBodyweight, exercise.workout?.bodyweight == nil {

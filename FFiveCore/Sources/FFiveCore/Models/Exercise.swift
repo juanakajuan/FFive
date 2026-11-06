@@ -31,7 +31,10 @@ public final class Exercise {
     public var sortedSets: [SetEntry] { sets.sorted { $0.order < $1.order } }
     /// Every set is logged or skipped.
     public var isLogged: Bool { !sets.isEmpty && !sets.contains { $0.status == .pending } }
-    public var info: ExerciseInfo? { ExerciseCatalog.info(key) }
+    /// The catalog entry, else the lifter's own definition. Catalog hits never fetch.
+    public var info: ExerciseInfo? {
+        ExerciseCatalog.info(key) ?? modelContext.flatMap { CustomExercise.find(key, in: $0) }?.info
+    }
 
     /// Rows logged before muscles were stored resolve through the catalog.
     public internal(set) var muscle: Muscle? {
@@ -39,7 +42,7 @@ public final class Exercise {
         set { muscleRaw = newValue?.rawValue }
     }
 
-    public var repRange: ClosedRange<Int> { ExerciseCatalog.repRange(for: key) }
+    public var repRange: ClosedRange<Int> { info?.repRange ?? 8...12 }
 
     func laterSets(matchingWeightOf set: SetEntry) -> [SetEntry] {
         sortedSets.filter { $0.order > set.order && $0.status != .done && $0.weight == set.weight }

@@ -87,6 +87,7 @@ enum MesoPlanner {
             let day = MesoDay(name: draftDay.name, order: order)
             meso.days.append(day)
             for (slotOrder, slot) in draftDay.slots.enumerated() {
+                CustomExercise.ensure(named: slot.exercise, muscle: slot.muscle, in: context)
                 day.slots.append(DaySlot(exerciseName: slot.exercise, muscle: slot.muscle, order: slotOrder))
             }
         }
@@ -184,7 +185,7 @@ enum MesoPlanner {
         return exercises.indices.map { index in
             let exercise = exercises[index]
             let sets = exercise.sortedSets
-            let loading = ExerciseCatalog.loading(for: exercise.key, bodyweight: bodyweight)
+            let loading = snapshot.loading(for: exercise.key, bodyweight: bodyweight)
             return PlannedExercise(
                 name: exercise.name, key: exercise.key, muscle: exercise.muscle,
                 targets: Progression.nextTargets(
@@ -192,7 +193,7 @@ enum MesoPlanner {
                     logged: sets.map(\.logged),
                     previousRIR: baseRIR,
                     targetRIR: rir,
-                    repRange: exercise.repRange,
+                    repRange: snapshot.repRange(for: exercise.key),
                     increment: loading.increment(unit),
                     offset: loading.offset ?? 0,
                     setCount: counts[index]))
@@ -230,11 +231,11 @@ enum MesoPlanner {
         for key: ExerciseID, count: Int, rir: Int, unit: WeightUnit, snapshot: PlanningSnapshot,
         bodyweight: Double?
     ) -> [SetTarget] {
-        let loading = ExerciseCatalog.loading(for: key, bodyweight: bodyweight)
+        let loading = snapshot.loading(for: key, bodyweight: bodyweight)
         guard let offset = loading.offset, let oneRepMax = snapshot.latestOneRepMax(of: key) else {
             return Array(repeating: .calibrate, count: count)
         }
-        let reps = Progression.startingReps(in: ExerciseCatalog.repRange(for: key))
+        let reps = Progression.startingReps(in: snapshot.repRange(for: key))
         let load = Progression.load(
             forReps: reps, rir: rir, oneRepMax: oneRepMax, increment: loading.increment(unit), offset: offset)
         return Array(repeating: load + offset > 0 ? SetTarget(weight: load, reps: reps) : .calibrate, count: count)
@@ -261,6 +262,7 @@ enum MesoPlanner {
     ) {
         let exercise = Exercise(name: name, order: (workout.exercises.map(\.order).max() ?? -1) + 1, muscle: muscle)
         workout.exercises.append(exercise)
+        CustomExercise.ensure(named: name, muscle: muscle, in: context)
         guard let meso = workout.mesocycle else {
             let previous = lastFinishedExercise(exercise.key, in: context)?.sortedSets.filter(\.isDone) ?? []
             if previous.isEmpty {
@@ -301,6 +303,7 @@ enum MesoPlanner {
     ) {
         exercise.rename(name)
         exercise.muscle = muscle
+        CustomExercise.ensure(named: name, muscle: muscle, in: context)
         guard let workout = exercise.workout, workout.mesocycle != nil else { return }
         replaceSets(
             of: exercise,
