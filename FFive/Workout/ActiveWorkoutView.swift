@@ -483,8 +483,10 @@ struct ExerciseCard: View {
                         text: "Set your bodyweight in the workout menu to track strength on this lift.",
                         systemImage: "figure.stand")
                 }
-                if let phase, let set = sets.first(where: { $0.status == .pending }) ?? sets.first {
-                    Callout(text: targetText(set, phase))
+                if let phase, let set = sets.first(where: { $0.status == .pending }) ?? sets.first,
+                    set.targetWeight == nil
+                {
+                    Callout(text: calibrateText(phase))
                 }
                 if let tip = CoachingTip.applicable(to: exercise, dismissed: store.settings.dismissedTips) {
                     CoachingTipCallout(tip: tip, position: position, onLearnMore: onOpenArticle) {
@@ -595,23 +597,10 @@ struct ExerciseCard: View {
         .padding(.bottom, 4)
     }
 
-    private func targetText(_ set: SetEntry, _ phase: WeekPhase) -> String {
-        guard let weight = set.targetWeight else {
-            let range = exercise.repRange
-            let effort = phase.rir.map { "at \($0) RIR" } ?? "kept light"
-            return "Calibrate · \(range.lowerBound)–\(range.upperBound) reps \(effort)"
-        }
-        guard let reps = set.targetReps else {
-            return "Target \(exercise.weightText(weight, unit: store.settings.weightUnit))"
-        }
-        if weight == 0 && !exercise.isBodyweight { return "Target \(reps) reps" }
-        guard let rir = phase.rir else { return "Target \(exercise.weightText(weight)) × \(reps)" }
-        let unit = store.settings.weightUnit
-        if let loads = exercise.targetLoads(for: set, rir: rir, unit: unit), loads.lowerBound < loads.upperBound {
-            let lower = exercise.weightText(loads.lowerBound)
-            return "Target \(lower)–\(exercise.weightText(loads.upperBound, unit: unit)) · \(reps) reps or \(rir) RIR"
-        }
-        return "Target \(exercise.weightText(weight, unit: unit)) · \(reps) reps or \(rir) RIR"
+    private func calibrateText(_ phase: WeekPhase) -> String {
+        let range = exercise.repRange
+        let effort = phase.rir.map { "at \($0) RIR" } ?? "kept light"
+        return "Calibrate · \(range.lowerBound)–\(range.upperBound) reps \(effort)"
     }
 }
 
@@ -649,6 +638,38 @@ struct SetRow: View {
     }
 
     var body: some View {
+        VStack(spacing: 0) {
+            fields
+            if let recommendation = focus.flatMap(recommendation(for:)) {
+                Text(recommendation)
+                    .font(Theme.detail)
+                    .foregroundStyle(Theme.secondary)
+                    .padding(.horizontal, Theme.gutter)
+                    .padding(.bottom, 10)
+                    .a11y(.setRecommendation, number)
+            }
+        }
+    }
+
+    private func recommendation(for field: Field) -> String? {
+        guard let exercise = set.exercise else { return nil }
+        switch field {
+        case .weight:
+            guard let weight = set.targetWeight, weight != 0 || isBodyweight else { return nil }
+            if let rir, let loads = exercise.targetLoads(for: set, rir: rir, unit: unit),
+                loads.lowerBound < loads.upperBound
+            {
+                let upper = exercise.weightText(loads.upperBound, unit: unit)
+                return "We recommend \(exercise.weightText(loads.lowerBound))–\(upper)"
+            }
+            return "We recommend \(exercise.weightText(weight, unit: unit))"
+        case .reps:
+            guard let reps = set.targetReps else { return nil }
+            return "We recommend \(reps) reps" + (rir.map { " or \($0) RIR" } ?? "")
+        }
+    }
+
+    private var fields: some View {
         HStack(spacing: 0) {
             Menu {
                 Button("Add Set", systemImage: "plus", action: onAdd)

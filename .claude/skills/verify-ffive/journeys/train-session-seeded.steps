@@ -1,7 +1,12 @@
 # train-session (seeded): the demo block's in-progress session shows on the Workout tab; give feedback, answer soreness.
 launch -seedDemo
 wait text "WEEK 2 DAY 1" timeout=20
-wait text "Target 185 * 7"
+tap #set.reps.1
+wait text "We recommend 7 reps or 2 RIR"
+tap #set.weight.1
+wait text "We recommend 175*195 lb"
+tap #keyboard.done
+absent #set.recommendation.1
 wait text "How did quads feel today?"
 # Quads finished without feedback, so logging a set on Bench (chest) is refused and opens the quads sheet.
 # set.log.N repeats per card; with Bench centered, Squat's set 1 is off screen, so the tap lands on Bench's first set.
