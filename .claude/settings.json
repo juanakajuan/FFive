@@ -22,6 +22,17 @@
           }
         ]
       }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "f=\"$CLAUDE_PROJECT_DIR/.claude/skills/verify-ffive/scripts/ffive-verify\"; grep -q cmd_park \"$f\" 2>/dev/null || exit 0; nohup sh -c 'sleep 660; \"$0\" park --idle; \"$0\" sweep' \"$f\" >/dev/null 2>&1 &",
+            "timeout": 10
+          }
+        ]
+      }
     ]
   }
 }
