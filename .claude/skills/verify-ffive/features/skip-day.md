@@ -1,6 +1,6 @@
 # Skip a day
 
-A lifter can skip a session of the current week, either from the `Workout menu` or by long-pressing its cell in the schedule grid. A skipped day shows a fast-forward icon, the Workout tab moves on to the next day, and the skip persists. Tapping a skipped day of the current week offers to train it after all, which shows that session on the Workout tab.
+A lifter can skip a session of the current week, either from the `Workout menu` or by long-pressing its cell in the schedule grid. A skipped day shows a fast-forward icon, the Workout tab shows the block's first open day, and the skip persists. Tapping a skipped day of the current week offers to train it after all, which shows that session on the Workout tab.
 
 ## Sub-features
 

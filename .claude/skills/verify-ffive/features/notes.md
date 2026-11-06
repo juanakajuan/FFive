@@ -5,7 +5,7 @@ A lifter attaches a note to an exercise in a workout. By default it stays with t
 ## Sub-features
 
 - `note-exercise-add` adds an exercise note with `Exercise menu`, then `Add Note`. An `Exercise Note` sheet takes the text in `#note.text` and saves with `#note.save`. The card shows it as a callout labeled `Note: <text>`, with the pin button `#exercise.pin.<n>` beside it.
-- `note-exercise-local` keeps an unpinned note off later workouts, and shows it in the finished workout's detail page.
+- `note-exercise-local` keeps an unpinned note off later workouts, and shows it in the finished workout's detail page. Pinning moves the text out of the workout, so a note that is pinned when the workout finishes does not show in its detail page.
 - `note-exercise-pin` pins it with `Pin note`. The button becomes `Unpin note`, and the note shows on the exercise's card in later workouts, including after a relaunch.
 - `note-exercise-edit` edits it with `Exercise menu`, then `Edit Note`. Editing a pinned note edits the pin.
 - `note-exercise-unpin` unpins with `Unpin note`. The note stays on the current workout and stops carrying forward.
