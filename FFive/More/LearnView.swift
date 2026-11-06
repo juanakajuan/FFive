@@ -26,13 +26,6 @@ struct LearnView: View {
                     .themedRow()
                 }
             }
-            Text(
-                "Volume landmarks, the stimulus-to-fatigue ratio, and adjusting sets from session feedback come from Renaissance Periodization (Mike Israetel and colleagues). This app is not affiliated with RP."
-            )
-            .font(Theme.caption)
-            .foregroundStyle(Theme.secondary)
-            .themedRow(vertical: 20)
-            .listRowSeparator(.hidden)
         }
         .themedList()
         .navigationTitle("Learn")

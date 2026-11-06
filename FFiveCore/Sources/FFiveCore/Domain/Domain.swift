@@ -161,21 +161,53 @@ public enum Soreness: Int, CaseIterable, Codable {
         case .stillSore: "Still sore"
         }
     }
+
+    public var meaning: String {
+        switch self {
+        case .never: "No soreness at all after that session."
+        case .healedEarly: "Sore, but it was gone well before today."
+        case .healedOnTime: "Sore until about today. Recovered just enough."
+        case .stillSore: "Still sore now. You haven't recovered yet."
+        }
+    }
 }
 
 public enum Pump: Int, CaseIterable, Codable {
     case low, moderate, great
     public var label: String { ["Low", "Moderate", "Great"][rawValue] }
+    public var meaning: String {
+        [
+            "The muscle barely felt full or tight.",
+            "Some fullness, but it faded quickly.",
+            "Very full and tight, hard to miss.",
+        ][rawValue]
+    }
 }
 
 public enum Workload: Int, CaseIterable, Codable {
     case easy, good, hard, tooMuch
     public var label: String { ["Easy", "Pretty good", "Pushed my limits", "Too much"][rawValue] }
+    public var meaning: String {
+        [
+            "You could have done a lot more sets.",
+            "Challenging, with a few sets left in the tank.",
+            "About all you could do. Another set would be a struggle.",
+            "More than you could recover from. Form or reps fell apart.",
+        ][rawValue]
+    }
 }
 
 public enum JointPain: Int, CaseIterable, Codable {
     case none, low, moderate, severe
     public var label: String { ["None", "Low", "Moderate", "A lot"][rawValue] }
+    public var meaning: String {
+        [
+            "Joints felt fine.",
+            "Some awareness in a joint, but nothing that hurt.",
+            "The joints are taking a beating from this exercise.",
+            "Sharp or lasting pain. Stop or swap the exercise.",
+        ][rawValue]
+    }
 }
 
 /// Soreness is reported at the start of the next session that trains the muscle, then written back here.
