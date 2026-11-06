@@ -3,20 +3,25 @@ launch -seedDemo
 wait text "WEEK 2 DAY 1" timeout=20
 wait text "Target 185 * 7"
 wait text "How did quads feel today?"
-# A tap on a chip under the pinned header lands on the header, so scrollto centers each chip row first.
-scrollto #chip.great
+# Quads finished without feedback, so logging a set on Bench (chest) is refused and opens the quads sheet.
+scrollto #set.log.5
+tap #set.log.5
+wait #feedback.required
+shot 01-feedback-required
+wait #feedback.save
 tap #chip.great
-scrollto #chip.pretty-good
 tap #chip.pretty-good
-scrollto #chip.none
 tap #chip.none
 selected #chip.none
+shot 02-quads-feedback-sheet
+tap #feedback.save
+absent #feedback.save
 exists image "checkmark.circle.fill"
-shot 01-quads-feedback
+shot 03-quads-feedback-saved
 scrollto text "How did your chest recover?"
 wait text "Target 150 * 8"
-shot 02-soreness-asked
+shot 04-soreness-asked
 tap #chip.healed-just-in-time
 absent text "How did your chest recover?"
-tree 03-soreness-answered
-shot 03-soreness-answered
+tree 05-soreness-answered
+shot 05-soreness-answered

@@ -43,6 +43,9 @@ absent #workout.finish
 tap #set.menu.2
 tap #menu.delete-set
 absent #set.weight.2
+# The fully logged Bench opens the chest feedback sheet; Cancel leaves it unanswered.
+wait #feedback.save
+tap #feedback.cancel
 wait #workout.finish
 shot 03-finish-shown
 tap #workout.finish

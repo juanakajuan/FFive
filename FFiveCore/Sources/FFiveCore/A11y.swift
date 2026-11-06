@@ -56,6 +56,10 @@ public enum A11y: String, CaseIterable {
     case noteText = "note.text"
     case noteSave = "note.save"
     case noteCancel = "note.cancel"
+    case feedbackOpen = "feedback.open"
+    case feedbackSave = "feedback.save"
+    case feedbackCancel = "feedback.cancel"
+    case feedbackRequired = "feedback.required"
     case pickerSearch = "picker.search"
     case pickerRow = "picker.row"
     case pickerCancel = "picker.cancel"
@@ -106,7 +110,7 @@ public enum A11y: String, CaseIterable {
     static let keyed: Set<A11y> = [
         .pickerRow, .exercisesRow, .builderTemplate, .builderCustomTemplate, .templatesCustom, .templatesMenu,
         .mesosRow, .mesosMenu, .musclePriority, .segment, .chip,
-        .strengthRow, .historyRow,
+        .strengthRow, .historyRow, .feedbackOpen,
         .settingsUnit, .settingsEquipment,
     ]
 

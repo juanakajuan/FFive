@@ -20,6 +20,8 @@ struct ActiveWorkoutView: View {
     @State private var bodyweightDraft: String?
     @State private var noteEdit: NoteEdit?
     @State private var historyFor: Exercise?
+    @State private var feedbackFor: Muscle?
+    @State private var feedbackRequired: Muscle?
     @State private var setsCompleted = 0
 
     private struct NoteEdit: Identifiable {
@@ -84,6 +86,22 @@ struct ActiveWorkoutView: View {
             }
         }
         .animation(.snappy, value: exercises.map(\.isLogged))
+        .overlay {
+            if feedbackRequired != nil {
+                FeedbackRequiredToast().transition(.scale(scale: 0.9).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy, value: feedbackRequired)
+        .task(id: feedbackRequired) {
+            guard let muscle = feedbackRequired else { return }
+            try? await Task.sleep(for: .seconds(0.9))
+            guard !Task.isCancelled else { return }
+            feedbackRequired = nil
+            feedbackFor = muscle
+        }
+        .onChange(of: feedbackMuscles(in: exercises)) { old, new in
+            feedbackFor = new.first { !old.contains($0) && workout.feedbackRecord(for: $0)?.value.isRated != true }
+        }
         .toolbar {
             ToolbarItemGroup(placement: .keyboard) {
                 Spacer()
@@ -172,6 +190,32 @@ struct ActiveWorkoutView: View {
             }
         }
         .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
+        .sheet(item: $feedbackFor) { muscle in
+            FeedbackSheet(muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()) {
+                answers in
+                store.updateFeedback(for: muscle, in: workout) {
+                    $0.pump = answers.pump
+                    $0.workload = answers.workload
+                    $0.jointPain = answers.jointPain
+                }
+            }
+        }
+    }
+
+    /// A muscle that finished before this exercise's muscle and still has no feedback. Its sets wait for that answer.
+    private func unratedMuscle(before exercise: Exercise, in exercises: [Exercise]) -> Muscle? {
+        feedbackMuscles(in: exercises).first {
+            $0 != exercise.muscle && workout.feedbackRecord(for: $0)?.value.isRated != true
+        }
+    }
+
+    /// Muscles whose last exercise has no pending set, so their feedback is due. Only block sessions collect it.
+    private func feedbackMuscles(in exercises: [Exercise]) -> [Muscle] {
+        guard workout.mesocycle != nil else { return [] }
+        var seen = Set<Muscle>()
+        return exercises.compactMap(\.muscle).filter { seen.insert($0).inserted }.filter { muscle in
+            exercises.last { $0.muscle == muscle }?.isLogged == true
+        }
     }
 
     /// The muscle's joint pain for this session, shared by its exercise menus and its feedback card.
@@ -204,6 +248,9 @@ struct ActiveWorkoutView: View {
             position: index + 1,
             phase: workout.phase,
             onSetCompleted: setCompleted,
+            onLogBlocked: unratedMuscle(before: exercise, in: exercises).map { muscle in
+                { feedbackRequired = muscle }
+            },
             onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
             jointPain: jointPain(for: muscle),
             onShowHistory: { historyFor = exercise },
@@ -217,9 +264,7 @@ struct ActiveWorkoutView: View {
         {
             FeedbackCard(
                 muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()
-            ) { change in
-                store.updateFeedback(for: muscle, in: workout, change)
-            }
+            ) { feedbackFor = muscle }
         }
     }
 
@@ -346,6 +391,8 @@ struct ExerciseCard: View {
     let position: Int
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
+    /// Set when logging a set here must wait for another muscle's feedback; called instead of logging.
+    var onLogBlocked: (() -> Void)?
     var onSwap: (() -> Void)?
     var jointPain: Binding<JointPain?>?
     var onShowHistory: () -> Void
@@ -414,7 +461,7 @@ struct ExerciseCard: View {
                     if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
                     SetRow(
                         set: set, number: index + 1, unit: unit, rir: phase?.rir,
-                        onCompleted: onSetCompleted, onAdd: { store.addSet(to: exercise) }
+                        onCompleted: onSetCompleted, onLogBlocked: onLogBlocked, onAdd: { store.addSet(to: exercise) }
                     ) { store.deleteSet(set, from: exercise) }
                 }
             }
@@ -520,6 +567,7 @@ struct SetRow: View {
     let unit: WeightUnit
     let rir: Int?
     var onCompleted: () -> Void
+    var onLogBlocked: (() -> Void)?
     var onAdd: () -> Void
     var onDelete: () -> Void
 
@@ -619,6 +667,10 @@ struct SetRow: View {
             .opacity(set.status == .skipped ? 0.4 : 1)
 
             Button {
+                if !set.isDone, let onLogBlocked {
+                    onLogBlocked()
+                    return
+                }
                 store.log(set, done: !set.isDone)
                 if set.isDone { onCompleted() }
             } label: {
@@ -729,50 +781,128 @@ struct SorenessCard: View {
     }
 }
 
+extension MuscleFeedback {
+    fileprivate var isRated: Bool { pump != nil && workload != nil && jointPain != nil }
+}
+
+/// The muscle's end-of-session feedback in the list: a summary that opens `FeedbackSheet`.
 struct FeedbackCard: View {
     let muscle: Muscle
     let feedback: MuscleFeedback
-    var onChange: ((inout MuscleFeedback) -> Void) -> Void
-
-    private var isComplete: Bool { feedback.pump != nil && feedback.workload != nil && feedback.jointPain != nil }
+    var onOpen: () -> Void
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top) {
-                Text("How did \(muscle.displayName.lowercased()) feel today?")
-                    .font(Theme.cardTitle)
-                    .foregroundStyle(Theme.text)
-                Spacer()
-                if isComplete {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundStyle(Theme.success)
+        Button(action: onOpen) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("How did \(muscle.displayName.lowercased()) feel today?")
+                        .font(Theme.cardTitle)
+                        .foregroundStyle(Theme.text)
+                        .multilineTextAlignment(.leading)
+                    Text(summary)
+                        .font(Theme.detail)
+                        .foregroundStyle(Theme.secondary)
+                        .multilineTextAlignment(.leading)
                 }
+                Spacer()
+                Image(systemName: feedback.isRated ? "checkmark.circle.fill" : "chevron.right")
+                    .font(.system(size: feedback.isRated ? 22 : 15, weight: .semibold))
+                    .foregroundStyle(feedback.isRated ? Theme.success : Theme.secondary)
             }
-            ChipPicker(title: "Pump", options: Pump.allCases, columns: 3, label: \.label, selection: feedback.pump) {
-                value in
-                onChange { $0.pump = value }
-            }
-            ChipPicker(
-                title: "Workload", options: Workload.allCases, columns: 2, label: \.label, selection: feedback.workload
-            ) { value in
-                onChange { $0.workload = value }
-            }
-            ChipPicker(
-                title: "Joint pain", options: JointPain.allCases, columns: 4, label: \.label,
-                selection: feedback.jointPain
-            ) { value in
-                onChange { $0.jointPain = value }
-            }
-            Text(
-                "Next week's sets for \(muscle.displayName.lowercased()) come from these answers and how sore you get."
-            )
-            .font(Theme.caption)
-            .foregroundStyle(Theme.secondary)
+            .contentShape(Rectangle())
         }
+        .buttonStyle(.plain)
+        .a11y(.feedbackOpen, key: muscle.rawValue)
         .padding(.horizontal, Theme.gutter)
         .padding(.bottom, 8)
         .surfaceCard(tag: muscle)
+    }
+
+    private var summary: String {
+        guard feedback.isRated, let pump = feedback.pump, let workload = feedback.workload,
+            let jointPain = feedback.jointPain
+        else { return "Rate pump, workload and joint pain" }
+        return "Pump \(pump.label.lowercased()) · \(workload.label) · Joint pain \(jointPain.label.lowercased())"
+    }
+}
+
+private struct FeedbackRequiredToast: View {
+    var body: some View {
+        Label("Your feedback is required", systemImage: "info.circle")
+            .font(Theme.body.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .background(Theme.danger, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            .shadow(radius: 8)
+            .accessibilityAddTraits(.isStaticText)
+            .a11y(.feedbackRequired)
+    }
+}
+
+/// Asks pump, workload and joint pain on a draft; Save writes all three, Cancel drops them.
+struct FeedbackSheet: View {
+    let muscle: Muscle
+    let original: MuscleFeedback
+    let onSave: (MuscleFeedback) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: MuscleFeedback
+
+    init(muscle: Muscle, feedback: MuscleFeedback, onSave: @escaping (MuscleFeedback) -> Void) {
+        self.muscle = muscle
+        self.original = feedback
+        self.onSave = onSave
+        _draft = State(initialValue: feedback)
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("How did \(muscle.displayName.lowercased()) feel today?")
+                        .font(Theme.cardTitle)
+                        .foregroundStyle(Theme.text)
+                    ChipPicker(title: "Pump", options: Pump.allCases, columns: 3, label: \.label, selection: draft.pump)
+                    {
+                        draft.pump = $0
+                    }
+                    ChipPicker(
+                        title: "Workload", options: Workload.allCases, columns: 2, label: \.label,
+                        selection: draft.workload
+                    ) { draft.workload = $0 }
+                    ChipPicker(
+                        title: "Joint pain", options: JointPain.allCases, columns: 4, label: \.label,
+                        selection: draft.jointPain
+                    ) { draft.jointPain = $0 }
+                    Text(
+                        "Next week's sets for \(muscle.displayName.lowercased()) come from these answers and how sore you get."
+                    )
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondary)
+                }
+                .padding(Theme.gutter)
+            }
+            .background(Theme.page)
+            .navigationTitle("\(muscle.displayName) Feedback")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .a11y(.feedbackCancel)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(draft)
+                        dismiss()
+                    }
+                    .disabled(!draft.isRated)
+                    .a11y(.feedbackSave)
+                }
+            }
+        }
+        .presentationDetents([.medium, .large])
+        .interactiveDismissDisabled(draft != original)
     }
 }
 
