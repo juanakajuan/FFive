@@ -338,6 +338,7 @@ struct ActiveWorkoutView: View {
 private enum SetColumns {
     static let menu: CGFloat = 32
     static let field: CGFloat = 93
+    static let log: CGFloat = 44
 }
 
 struct ExerciseCard: View {
@@ -487,10 +488,10 @@ struct ExerciseCard: View {
     private var columnHeaders: some View {
         HStack(spacing: 0) {
             Color.clear.frame(width: SetColumns.menu, height: 1)
-            Text(exercise.isBodyweight ? "BW +/−" : "Weight").frame(width: SetColumns.field).padding(.leading, 12)
-            Text("Reps").frame(width: SetColumns.field).padding(.leading, 16)
-            Spacer(minLength: 0)
-            Text("Log")
+            Text(exercise.isBodyweight ? "BW +/−" : "Weight").frame(minWidth: SetColumns.field, maxWidth: .infinity)
+                .padding(.leading, 12)
+            Text("Reps").frame(minWidth: SetColumns.field, maxWidth: .infinity).padding(.leading, 16)
+            Text("Log").frame(width: SetColumns.log, alignment: .trailing).padding(.leading, 16)
         }
         .font(Theme.columnHeader)
         .textCase(.uppercase)
@@ -567,7 +568,19 @@ struct SetRow: View {
                 Button("Delete Set", systemImage: "trash", role: .destructive, action: onDelete)
                     .a11y(.menuDeleteSet)
             } label: {
-                ActionIcon.verticalEllipsis.frame(width: SetColumns.menu, height: 44)
+                VStack(spacing: 2) {
+                    if let tag = set.type.tag {
+                        ActionIcon.verticalEllipsis.scaleEffect(0.75).frame(height: 22)
+                        Text(tag)
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundStyle(Theme.infoText)
+                            .lineLimit(1)
+                            .fixedSize()
+                    } else {
+                        ActionIcon.verticalEllipsis
+                    }
+                }
+                .frame(width: SetColumns.menu, height: 44)
             }
             .accessibilityLabel(set.type.tag == nil ? "Set \(number) menu" : "Set \(number) menu, \(set.type.title)")
             .a11y(.setMenu, number)
@@ -586,7 +599,7 @@ struct SetRow: View {
             .onTapGesture { focus = .weight }
             .accessibilityLabel("Set \(number) weight")
             .a11y(.setWeight, number)
-            .frame(width: SetColumns.field)
+            .frame(minWidth: SetColumns.field, maxWidth: .infinity)
             .padding(.leading, 12)
             .opacity(set.status == .skipped ? 0.4 : 1)
 
@@ -601,31 +614,20 @@ struct SetRow: View {
             .onTapGesture { focus = .reps }
             .accessibilityLabel("Set \(number) reps")
             .a11y(.setReps, number)
-            .frame(width: SetColumns.field)
+            .frame(minWidth: SetColumns.field, maxWidth: .infinity)
             .padding(.leading, 16)
             .opacity(set.status == .skipped ? 0.4 : 1)
-
-            if let tag = set.type.tag {
-                Text(tag)
-                    .font(Theme.caption.weight(.medium))
-                    .foregroundStyle(Theme.secondary)
-                    .lineLimit(1)
-                    .minimumScaleFactor(0.7)
-                    .padding(.leading, 8)
-                    .accessibilityHidden(true)
-            }
-
-            Spacer(minLength: 0)
 
             Button {
                 store.log(set, done: !set.isDone)
                 if set.isDone { onCompleted() }
             } label: {
                 LogCheckbox(status: set.status)
-                    .frame(width: 44, height: 44, alignment: .trailing)
+                    .frame(width: SetColumns.log, height: 44, alignment: .trailing)
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
+            .padding(.leading, 16)
             .accessibilityLabel("Log set \(number)")
             .a11y(.setLog, number)
             .accessibilityValue(set.status == .skipped ? "Skipped" : "")
