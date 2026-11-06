@@ -38,6 +38,13 @@ load_state() {
     [[ -f "$state" ]] || die "no instance; run: $0 launch"
     # shellcheck disable=SC1090
     source "$state"
+    # park shuts the simulator down between turns; boot it again on first use.
+    local dev; dev="$(device_state "$UDID")"
+    [[ -n "$dev" ]] || die "simulator $UDID is gone; run: $0 launch"
+    if [[ "$(cut -f1 <<<"$dev")" != "Booted" ]]; then
+        log "booting parked simulator $UDID"
+        xcrun simctl bootstatus "$UDID" -b >/dev/null
+    fi
 }
 
 device_state() {
@@ -82,6 +89,8 @@ build_and_install() {
 
 cmd_launch() {
     mkdir -p "$work" "$artifacts"
+    # Tells park the simulator is in use while launch builds and installs.
+    echo $$ >"$work/launch.pid"
     local udid=""
     if [[ -f "$state" ]]; then
         source "$state"
@@ -103,7 +112,7 @@ cmd_launch() {
     smoke="$(mktemp "$work/smoke.XXXXXX")"
     printf '%s\n' 'launch -seedDemo' 'wait button "Workout" timeout=20' 'wait button "Workout menu"' 'shot ready' >"$smoke"
     cmd_drive "$smoke" --name launch-smoke
-    rm -f "$smoke"
+    rm -f "$smoke" "$work/launch.pid"
     echo "READY udid=$udid stamp=$(source_stamp)"
 }
 
@@ -115,8 +124,9 @@ cmd_doctor() {
     local dev; dev="$(device_state "$UDID")"
     check "simulator $UDID exists" '[[ -n "$dev" ]]'
     check "simulator is ours (\"$DEVICE_NAME\")" '[[ "$(cut -f2 <<<"$dev")" == "$DEVICE_NAME" ]]'
-    check "simulator booted" '[[ "$(cut -f1 <<<"$dev")" == "Booted" ]]'
-    check "$bundle_id installed" 'xcrun simctl get_app_container "$UDID" "$bundle_id" app >/dev/null 2>&1'
+    check "simulator booted, or parked until the next command ($(cut -f1 <<<"$dev"))" '[[ "$(cut -f1 <<<"$dev")" =~ ^(Booted|Shutdown)$ ]]'
+    # Read the bundle off disk: get_app_container fails on a parked (shut down) simulator.
+    check "$bundle_id installed" 'ls -d ~/Library/Developer/CoreSimulator/Devices/"$UDID"/data/Containers/Bundle/Application/*/FFive.app >/dev/null 2>&1'
     check "driver built" '[[ -n "$(ls "$driver_build"/Build/Products/*.xctestrun 2>/dev/null)" ]]'
     check "install matches source (installed $STAMP, source $(source_stamp))" '[[ "$STAMP" == "$(source_stamp)" ]]'
     if [[ -d "$work/drive.lock" ]]; then echo "WARN  a drive holds $work/drive.lock (pid $(cat "$work/drive.lock/pid" 2>/dev/null))"; fi
@@ -252,14 +262,54 @@ cmd_cleanup() {
         fi
         rm -f "$state"
     fi
-    rm -rf "$work/drive.lock" "$work"/smoke.* "$work"/stdin.*
+    rm -rf "$work/drive.lock" "$work/launch.pid" "$work"/smoke.* "$work"/stdin.*
     [[ $purge == 1 ]] && rm -rf "$app_build" "$driver_build" "$work"/build-*.log
     echo "cleaned; evidence kept in $artifacts"
 }
 
+idle_min="${FFIVE_PARK_IDLE_MIN:-10}"
+
+# True when a checkout's .verify/ shows a launch, drive or shot in the last $2 minutes.
+recently_used() {
+    [[ -n "$(find "$1/state.env" "$1/artifacts" "$1"/build-*.log -maxdepth 1 -mmin "-$2" 2>/dev/null | head -1)" ]]
+}
+
+pid_alive() { [[ -f "$1" ]] && kill -0 "$(cat "$1" 2>/dev/null)" 2>/dev/null; }
+
+# Prints why a checkout's simulator is in use, or nothing when it is idle.
+busy_reason() {
+    local udid="$1" dir="$2"
+    if [[ -d "$dir/drive.lock" ]] && { [[ ! -f "$dir/drive.lock/pid" ]] || pid_alive "$dir/drive.lock/pid"; }; then
+        echo "a drive is running"
+    elif pid_alive "$dir/launch.pid"; then
+        echo "a launch is running"
+    elif pgrep -qf "id=$udid"; then
+        echo "an xcodebuild targets it"
+    fi
+}
+
+# Shuts down a booted simulator of ours that nothing is using. Its app, data and builds stay.
+park_simulator() {
+    local udid="$1" name="$2" dir="$3" dry="${4:-0}" dev why
+    dev="$(device_state "$udid")"
+    [[ "$(cut -f1 <<<"$dev")" == "Booted" && "$(cut -f2 <<<"$dev")" == "$name" && "$name" == "FFive Verify "* ]] || return 0
+    why="$(busy_reason "$udid" "$dir")"
+    if [[ -n "$why" ]]; then log "not parking $name ($udid): $why"
+    elif [[ $dry == 1 ]]; then log "would park $name ($udid)"
+    else xcrun simctl shutdown "$udid" && log "parked $name ($udid)"; fi
+}
+
+cmd_park() {
+    [[ -f "$state" ]] || return 0
+    if [[ "${1:-}" == "--idle" ]]; then recently_used "$work" "$idle_min" && return 0; fi
+    # shellcheck disable=SC1090
+    source "$state"
+    park_simulator "$UDID" "$DEVICE_NAME" "$work"
+}
+
 cmd_sweep() {
-    # Deletes simulators whose owning checkout no longer exists. Never touches a simulator whose
-    # worktree is still on disk, nor one this repo did not create.
+    # Deletes simulators whose owning checkout no longer exists, and parks booted ones whose checkout
+    # has not used them for $idle_min minutes. Never touches a simulator this repo did not create.
     local dry=0; [[ "${1:-}" == "--dry-run" ]] && dry=1
     local live=() path
     while IFS= read -r path; do
@@ -283,7 +333,10 @@ cmd_sweep() {
         fi
         # shellcheck disable=SC1090
         ROOT=""; NAME=""; source "$registry/$udid"
-        is_live "$ROOT" && continue
+        if is_live "$ROOT"; then
+            recently_used "$ROOT/.verify" "$idle_min" || park_simulator "$udid" "$name" "$ROOT/.verify" "$dry"
+            continue
+        fi
         if [[ "$NAME" != "$name" ]]; then
             log "skipping $udid: registered as \"$NAME\" but now named \"$name\""
             continue
@@ -317,6 +370,7 @@ case "${1:-}" in
     shot) shift; cmd_shot "$@" ;;
     reset-data) shift; cmd_reset_data "$@" ;;
     cleanup) shift; cmd_cleanup "$@" ;;
+    park) shift; cmd_park "$@" ;;
     sweep) shift; cmd_sweep "$@" ;;
-    *) echo "usage: $0 {launch|doctor|drive <steps|-> [--name n] [--timeout s]|store [sql]|defaults|shot [name]|reset-data|cleanup [--purge]|sweep [--dry-run]}" >&2; exit 2 ;;
+    *) echo "usage: $0 {launch|doctor|drive <steps|-> [--name n] [--timeout s]|store [sql]|defaults|shot [name]|reset-data|cleanup [--purge]|park [--idle]|sweep [--dry-run]}" >&2; exit 2 ;;
 esac

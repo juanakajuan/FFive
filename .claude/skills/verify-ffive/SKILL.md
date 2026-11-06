@@ -39,7 +39,7 @@ Two data modes, picked per `launch` step inside a drive:
 - **Demo, in memory:** `launch -seedDemo`. The `DemoSeed` data loads into an in-memory store: two free-form workouts and the "Full Body, 3 Days" block with week 1 logged, week 2 day 1 in progress, and week 2's last day skipped. Nothing persists between launches. `-demoRoute <train|builder|session|progress|strength>` opens straight into a screen. Use it for read-only journeys.
 - **On disk, the real user path:** a bare `launch`. This is the SwiftData store at `<app data container>/Library/Application Support/default.store`. It persists across launches and is what `store` reads. Start it empty with `$V reset-data`, which uninstalls and reinstalls the app and wipes the store and UserDefaults. Use it for any proof of a write.
 
-Teardown: see Cleanup. Simulators of removed worktrees are swept automatically.
+Teardown: see Cleanup. Ten minutes after its last launch, drive, or shot, a hook parks (shuts down) the simulator. `drive`, `store`, `defaults`, `shot`, and `reset-data` boot it again on first use. The boot takes about 6 seconds, but the first drive after it took 84 seconds where a warm one took 21. Simulators of removed worktrees are swept automatically.
 
 ## Doctor
 
@@ -190,11 +190,15 @@ $V cleanup --purge    # also delete .verify/build and .verify/build-driver
 Cleanup deletes only the simulator whose UDID is recorded in `state.env`, and only if its name is still our `FFive Verify …` name. It never kills processes by name. Evidence in `.verify/artifacts/` always survives. Delete old run dirs by hand when you no longer need them. After cleanup, the next `launch` creates a fresh simulator.
 
 ```bash
-$V sweep              # delete simulators whose worktree no longer exists
-$V sweep --dry-run    # print what sweep would delete or adopt
+$V park               # shut down this checkout's simulator unless a launch or drive is using it
+$V park --idle        # the same, but only if this checkout has not used it for 10 minutes
+$V sweep              # delete simulators whose worktree is gone, park ones idle for 10 minutes
+$V sweep --dry-run    # print what sweep would delete, park, or adopt
 ```
 
-`launch` records which checkout owns each simulator in `.git/ffive-verify/<udid>`, the git directory every worktree shares. `sweep` deletes a simulator only when its recorded checkout is no longer on disk and its name still matches the record. A simulator whose worktree still exists is never touched, even if its branch is merged. A simulator that predates the registry is adopted when a live checkout hashes to its name, and skipped otherwise. The project's `SessionStart` and `SessionEnd` hooks in `.claude/settings.json` run `sweep` automatically, so a removed worktree's simulator goes away at the next session start. Run `cleanup` yourself when you finish with a simulator in a worktree you are keeping.
+`park` keeps the simulator, the installed app, its data, and the builds. It skips a simulator while `.verify/drive.lock` or `.verify/launch.pid` names a live process, or while an `xcodebuild` targets its UDID.
+
+`launch` records which checkout owns each simulator in `.git/ffive-verify/<udid>`, the git directory every worktree shares. `sweep` deletes a simulator only when its recorded checkout is no longer on disk and its name still matches the record. A simulator whose worktree still exists is never touched, even if its branch is merged. A simulator that predates the registry is adopted when a live checkout hashes to its name, and skipped otherwise. `sweep` also parks a booted simulator whose worktree still exists when nothing in that worktree's `.verify/` (`state.env`, `artifacts/`, build logs) changed in the last `FFIVE_PARK_IDLE_MIN` minutes, 10 by default. The project's hooks in `.claude/settings.json` run these automatically: at the end of every turn, `Stop` starts a detached job that waits 11 minutes, then runs `park --idle` and `sweep`. `SessionStart` and `SessionEnd` run `sweep`. Run `cleanup` yourself when you finish with a simulator in a worktree you are keeping.
 
 ## Feature map
 
