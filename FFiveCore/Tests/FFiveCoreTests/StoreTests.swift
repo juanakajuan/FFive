@@ -586,6 +586,31 @@ final class StoreTests: XCTestCase {
         XCTAssertFalse(store.context.hasChanges)
     }
 
+    func testRecordSorenessFromTheFirstLogTapReplansThenLogsTheTappedSet() throws {
+        let (store, meso) = try startedStore()
+        let first = store.buildSession(meso, at: day1)
+        store.logEntered(first.sortedExercises[0].sortedSets[0])
+        first.updateFeedback(for: .chest) { $0.pump = .great }
+        store.finish(first)
+        let next = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0))
+        next.startDate = first.startDate + 86_400
+        let record = try XCTUnwrap(store.pendingSoreness(in: next)[.chest])
+        let exercise = try XCTUnwrap(next.sortedExercises.first { $0.muscle == .chest })
+        let tapped = exercise.sortedSets[0]
+        tapped.weight = 140
+        tapped.reps = 9
+
+        store.recordSoreness(.stillSore, on: record, during: next, logging: tapped)
+
+        XCTAssertEqual(first.feedbackRecord(for: .chest)?.value.soreness, .stillSore)
+        let logged = try XCTUnwrap(exercise.sortedSets.first, "the re-planned exercise keeps a first set")
+        XCTAssertTrue(logged.isDone, "the tapped set is logged once soreness is saved")
+        XCTAssertEqual(logged.weight, 140, "the entered weight survives the re-plan")
+        XCTAssertEqual(logged.reps, 9, "the entered reps survive the re-plan")
+        XCTAssertEqual(exercise.sortedSets.filter(\.isDone).count, 1, "only the tapped set is logged")
+        XCTAssertFalse(store.context.hasChanges)
+    }
+
     func testDeleteUnfinishedSessionDetachesItFromItsBlock() throws {
         let (store, meso) = try startedStore()
         let workout = store.buildSession(meso, at: day1)

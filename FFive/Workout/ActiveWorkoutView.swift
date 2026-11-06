@@ -20,6 +20,9 @@ struct ActiveWorkoutView: View {
     @State private var bodyweightDraft: String?
     @State private var noteEdit: NoteEdit?
     @State private var historyFor: Exercise?
+    @State private var feedbackFor: Muscle?
+    @State private var feedbackRequired: FeedbackBlock?
+    @State private var sorenessAsk: SorenessAsk?
     @State private var setsCompleted = 0
 
     private struct NoteEdit: Identifiable {
@@ -43,6 +46,21 @@ struct ActiveWorkoutView: View {
         }
     }
 
+    /// A refused set log: the exercise tapped, and the muscle whose feedback it waits for.
+    private struct FeedbackBlock: Equatable {
+        let muscle: Muscle
+        let exercise: PersistentIdentifier
+    }
+
+    /// The muscle's first log tap, held until soreness since its last session is answered.
+    private struct SorenessAsk: Identifiable {
+        let muscle: Muscle
+        let record: MuscleFeedbackRecord
+        let set: SetEntry
+
+        var id: Muscle { muscle }
+    }
+
     private enum PickerRequest: Identifiable {
         case add
         case swap(Exercise)
@@ -56,9 +74,146 @@ struct ActiveWorkoutView: View {
     }
 
     var body: some View {
-        let exercises = workout.sortedExercises
+        sessionList(workout.sortedExercises)
+            .toolbar {
+                ToolbarItemGroup(placement: .keyboard) {
+                    Spacer()
+                    Button("Done") {
+                        UIApplication.shared.sendAction(
+                            #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+                    }
+                    .a11y(.keyboardDone)
+                }
+            }
+            .sensoryFeedback(.success, trigger: setsCompleted)
+            .sheet(item: $picker) { request in
+                switch request {
+                case .add:
+                    ExercisePickerView { name, muscle in addExercise(name, muscle: muscle) }
+                case .swap(let exercise):
+                    ExercisePickerView(title: "Swap \(exercise.name)", muscle: exercise.muscle) { name, muscle in
+                        store.swapExercise(exercise, to: name, muscle: muscle)
+                    }
+                }
+            }
+            .sheet(isPresented: $showingReorder) { ReorderExercisesView(workout: workout) }
+            .sheet(isPresented: $showingSchedule) {
+                if let activeMeso {
+                    ScheduleSheet(
+                        meso: activeMeso, week: workout.week ?? activeMeso.nextUp?.week ?? activeMeso.accumulationWeeks)
+                }
+            }
+            .confirmationDialog("Discard this workout?", isPresented: $confirmDiscard, titleVisibility: .visible) {
+                Button("Discard Workout", role: .destructive, action: discard)
+                    .a11y(.dialogDiscard)
+            } message: {
+                Text(
+                    workout.mesocycle == nil
+                        ? "Its exercises and sets are deleted."
+                        : "This day is rebuilt from the plan. Logged sets, swaps and added exercises are dropped.")
+            }
+            .confirmationDialog("Reset this workout?", isPresented: $confirmReset, titleVisibility: .visible) {
+                Button("Reset Workout", role: .destructive) { store.reset(workout) }
+                    .a11y(.dialogReset)
+            } message: {
+                Text("Logged sets are cleared. Exercises and targets stay.")
+            }
+            .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
+                if let activeMeso {
+                    Button("End Mesocycle", role: .destructive) {
+                        WorkoutTabActions.end(activeMeso, router: router, store: store)
+                    }
+                    .a11y(.dialogEndMesocycle)
+                }
+            } message: {
+                Text("Logged sessions stay in Progress. You can plan a new block right after.")
+            }
+            .alert(
+                workout.mesocycle == nil ? "Rename Workout" : "Rename Day",
+                isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
+            ) {
+                TextField(
+                    workout.mesocycle == nil ? "Workout name" : "Day name",
+                    text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
+                Button("Save") {
+                    if let name = renameDraft { store.rename(workout, to: name) }
+                }
+                Button("Cancel", role: .cancel) {}
+            }
+            .alert(
+                "Bodyweight",
+                isPresented: Binding(get: { bodyweightDraft != nil }, set: { if !$0 { bodyweightDraft = nil } })
+            ) {
+                TextField(
+                    "Bodyweight (\(store.settings.weightUnit.rawValue))",
+                    text: Binding(get: { bodyweightDraft ?? "" }, set: { bodyweightDraft = $0 })
+                )
+                .keyboardType(.decimalPad)
+                Button("Save") {
+                    let text = (bodyweightDraft ?? "").trimmingCharacters(in: .whitespaces)
+                    store.setBodyweight(Double(text.replacing(",", with: ".")), of: workout)
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Bodyweight lifts log the load you add to it. Leave it empty to clear.")
+            }
+            .sheet(item: $noteEdit) { edit in
+                NoteEditor(title: edit.target.title, draft: edit.draft) {
+                    saveNote($0, to: edit.target)
+                }
+            }
+            .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
+            .sheet(item: $sorenessAsk) { ask in
+                SorenessSheet(muscle: ask.muscle, record: ask.record) { soreness in
+                    store.recordSoreness(soreness, on: ask.record, during: workout, logging: ask.set)
+                    setCompleted()
+                }
+            }
+            .sheet(item: $feedbackFor) { muscle in
+                FeedbackSheet(muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback())
+                {
+                    answers in
+                    store.updateFeedback(for: muscle, in: workout) {
+                        $0.pump = answers.pump
+                        $0.workload = answers.workload
+                        $0.jointPain = answers.jointPain
+                    }
+                }
+            }
+    }
+
+    /// What a log tap on this exercise does instead of logging: point at the feedback it waits for, or ask the
+    /// muscle's soreness first. Nil logs the set.
+    private func logGate(for exercise: Exercise, unrated: Muscle?, soreness: MuscleFeedbackRecord?)
+        -> ((SetEntry) -> Void)?
+    {
+        if let unrated {
+            return { _ in feedbackRequired = FeedbackBlock(muscle: unrated, exercise: exercise.persistentModelID) }
+        }
+        guard let muscle = exercise.muscle, let soreness else { return nil }
+        return { set in sorenessAsk = SorenessAsk(muscle: muscle, record: soreness, set: set) }
+    }
+
+    /// A muscle that finished before this exercise's muscle and still has no feedback. Its sets wait for that answer.
+    private func unratedMuscle(before exercise: Exercise, in exercises: [Exercise]) -> Muscle? {
+        feedbackMuscles(in: exercises).first {
+            $0 != exercise.muscle && workout.feedbackRecord(for: $0)?.value.isRated != true
+        }
+    }
+
+    /// Muscles whose last exercise has no pending set, so their feedback is due. Only block sessions collect it.
+    private func feedbackMuscles(in exercises: [Exercise]) -> [Muscle] {
+        guard workout.mesocycle != nil else { return [] }
+        var seen = Set<Muscle>()
+        return exercises.compactMap(\.muscle).filter { seen.insert($0).inserted }.filter { muscle in
+            exercises.last { $0.muscle == muscle }?.isLogged == true
+        }
+    }
+
+    /// The session's cards, with the feedback toast and the sheet that opens when a muscle finishes.
+    private func sessionList(_ exercises: [Exercise]) -> some View {
         let pendingSoreness = store.pendingSoreness(in: workout)
-        ScrollView {
+        return ScrollView {
             LazyVStack(spacing: 16) {
                 if let note = workout.note {
                     Callout(text: note, systemImage: "note.text", style: .note)
@@ -84,94 +239,17 @@ struct ActiveWorkoutView: View {
             }
         }
         .animation(.snappy, value: exercises.map(\.isLogged))
-        .toolbar {
-            ToolbarItemGroup(placement: .keyboard) {
-                Spacer()
-                Button("Done") {
-                    UIApplication.shared.sendAction(
-                        #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                }
-                .a11y(.keyboardDone)
-            }
+        .animation(.snappy, value: feedbackRequired)
+        .task(id: feedbackRequired) {
+            guard let block = feedbackRequired else { return }
+            try? await Task.sleep(for: .seconds(1.2))
+            guard !Task.isCancelled else { return }
+            feedbackRequired = nil
+            feedbackFor = block.muscle
         }
-        .sensoryFeedback(.success, trigger: setsCompleted)
-        .sheet(item: $picker) { request in
-            switch request {
-            case .add:
-                ExercisePickerView { name, muscle in addExercise(name, muscle: muscle) }
-            case .swap(let exercise):
-                ExercisePickerView(title: "Swap \(exercise.name)", muscle: exercise.muscle) { name, muscle in
-                    store.swapExercise(exercise, to: name, muscle: muscle)
-                }
-            }
+        .onChange(of: feedbackMuscles(in: exercises)) { old, new in
+            feedbackFor = new.first { !old.contains($0) && workout.feedbackRecord(for: $0)?.value.isRated != true }
         }
-        .sheet(isPresented: $showingReorder) { ReorderExercisesView(workout: workout) }
-        .sheet(isPresented: $showingSchedule) {
-            if let activeMeso {
-                ScheduleSheet(
-                    meso: activeMeso, week: workout.week ?? activeMeso.nextUp?.week ?? activeMeso.accumulationWeeks)
-            }
-        }
-        .confirmationDialog("Discard this workout?", isPresented: $confirmDiscard, titleVisibility: .visible) {
-            Button("Discard Workout", role: .destructive, action: discard)
-                .a11y(.dialogDiscard)
-        } message: {
-            Text(
-                workout.mesocycle == nil
-                    ? "Its exercises and sets are deleted."
-                    : "This day is rebuilt from the plan. Logged sets, swaps and added exercises are dropped.")
-        }
-        .confirmationDialog("Reset this workout?", isPresented: $confirmReset, titleVisibility: .visible) {
-            Button("Reset Workout", role: .destructive) { store.reset(workout) }
-                .a11y(.dialogReset)
-        } message: {
-            Text("Logged sets are cleared. Exercises and targets stay.")
-        }
-        .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            if let activeMeso {
-                Button("End Mesocycle", role: .destructive) {
-                    WorkoutTabActions.end(activeMeso, router: router, store: store)
-                }
-                .a11y(.dialogEndMesocycle)
-            }
-        } message: {
-            Text("Logged sessions stay in Progress. You can plan a new block right after.")
-        }
-        .alert(
-            workout.mesocycle == nil ? "Rename Workout" : "Rename Day",
-            isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
-        ) {
-            TextField(
-                workout.mesocycle == nil ? "Workout name" : "Day name",
-                text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
-            Button("Save") {
-                if let name = renameDraft { store.rename(workout, to: name) }
-            }
-            Button("Cancel", role: .cancel) {}
-        }
-        .alert(
-            "Bodyweight",
-            isPresented: Binding(get: { bodyweightDraft != nil }, set: { if !$0 { bodyweightDraft = nil } })
-        ) {
-            TextField(
-                "Bodyweight (\(store.settings.weightUnit.rawValue))",
-                text: Binding(get: { bodyweightDraft ?? "" }, set: { bodyweightDraft = $0 })
-            )
-            .keyboardType(.decimalPad)
-            Button("Save") {
-                let text = (bodyweightDraft ?? "").trimmingCharacters(in: .whitespaces)
-                store.setBodyweight(Double(text.replacing(",", with: ".")), of: workout)
-            }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Bodyweight lifts log the load you add to it. Leave it empty to clear.")
-        }
-        .sheet(item: $noteEdit) { edit in
-            NoteEditor(title: edit.target.title, draft: edit.draft) {
-                saveNote($0, to: edit.target)
-            }
-        }
-        .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
     }
 
     /// The muscle's joint pain for this session, shared by its exercise menus and its feedback card.
@@ -189,21 +267,17 @@ struct ActiveWorkoutView: View {
         pendingSoreness: [Muscle: MuscleFeedbackRecord]
     ) -> some View {
         let muscle = exercise.muscle
-        if let muscle, let record = pendingSoreness[muscle],
-            exercises.firstIndex(where: { $0.muscle == muscle }) == index
-        {
-            SorenessCard(muscle: muscle, record: record) { soreness in
-                withAnimation {
-                    store.recordSoreness(soreness, on: record, during: workout)
-                }
-            }
-        }
-
+        let unrated = unratedMuscle(before: exercise, in: exercises)
         ExerciseCard(
             exercise: exercise,
             position: index + 1,
             phase: workout.phase,
             onSetCompleted: setCompleted,
+            isLocked: unrated != nil,
+            onLogBlocked: logGate(for: exercise, unrated: unrated, soreness: muscle.flatMap { pendingSoreness[$0] }),
+            feedbackRequiredFor: feedbackRequired.flatMap {
+                $0.exercise == exercise.persistentModelID ? $0.muscle : nil
+            },
             onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
             jointPain: jointPain(for: muscle),
             onShowHistory: { historyFor = exercise },
@@ -217,9 +291,7 @@ struct ActiveWorkoutView: View {
         {
             FeedbackCard(
                 muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()
-            ) { change in
-                store.updateFeedback(for: muscle, in: workout, change)
-            }
+            ) { feedbackFor = muscle }
         }
     }
 
@@ -346,6 +418,12 @@ struct ExerciseCard: View {
     let position: Int
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
+    /// Greyed out while another muscle's feedback is owed.
+    var isLocked = false
+    /// Called instead of logging an unlogged set, with that set.
+    var onLogBlocked: ((SetEntry) -> Void)?
+    /// The muscle whose feedback a refused log tap here waits for, shown over the card.
+    var feedbackRequiredFor: Muscle?
     var onSwap: (() -> Void)?
     var jointPain: Binding<JointPain?>?
     var onShowHistory: () -> Void
@@ -414,12 +492,19 @@ struct ExerciseCard: View {
                     if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
                     SetRow(
                         set: set, number: index + 1, unit: unit, rir: phase?.rir,
-                        onCompleted: onSetCompleted, onAdd: { store.addSet(to: exercise) }
+                        onCompleted: onSetCompleted, onLogBlocked: onLogBlocked, onAdd: { store.addSet(to: exercise) }
                     ) { store.deleteSet(set, from: exercise) }
                 }
             }
         }
         .surfaceCard(tag: exercise.muscle)
+        .opacity(isLocked ? 0.4 : 1)
+        .overlay {
+            if let feedbackRequiredFor {
+                FeedbackRequiredToast(muscle: feedbackRequiredFor).transition(
+                    .scale(scale: 0.9).combined(with: .opacity))
+            }
+        }
     }
 
     private func actions(note: String?) -> some View {
@@ -520,6 +605,7 @@ struct SetRow: View {
     let unit: WeightUnit
     let rir: Int?
     var onCompleted: () -> Void
+    var onLogBlocked: ((SetEntry) -> Void)?
     var onAdd: () -> Void
     var onDelete: () -> Void
 
@@ -619,6 +705,10 @@ struct SetRow: View {
             .opacity(set.status == .skipped ? 0.4 : 1)
 
             Button {
+                if !set.isDone, let onLogBlocked {
+                    onLogBlocked(set)
+                    return
+                }
                 store.log(set, done: !set.isDone)
                 if set.isDone { onCompleted() }
             } label: {
@@ -702,78 +792,186 @@ struct ExerciseHistorySheet: View {
     }
 }
 
-struct SorenessCard: View {
+/// Asks how a muscle recovered since its last session, before its first set today is logged.
+struct SorenessSheet: View {
     let muscle: Muscle
     let record: MuscleFeedbackRecord
-    var onAnswer: (Soreness) -> Void
+    let onSave: (Soreness) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: Soreness?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            VStack(alignment: .leading, spacing: 2) {
-                Text("How did your \(muscle.displayName.lowercased()) recover?")
-                    .font(Theme.cardTitle)
-                    .foregroundStyle(Theme.text)
-                if let previous = record.workout {
-                    Text("Since \(previous.name), \(previous.startDate.formatted(.dateTime.weekday(.wide)))")
-                        .font(Theme.detail)
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("How did your \(muscle.displayName.lowercased()) recover?")
+                            .font(Theme.cardTitle)
+                            .foregroundStyle(Theme.text)
+                        if let previous = record.workout {
+                            Text("Since \(previous.name), \(previous.startDate.formatted(.dateTime.weekday(.wide)))")
+                                .font(Theme.detail)
+                                .foregroundStyle(Theme.secondary)
+                        }
+                    }
+                    ChipPicker(
+                        title: "Soreness after that session", options: Soreness.allCases, columns: 2,
+                        label: \.label, selection: draft
+                    ) { draft = $0 }
+                    Text("Today's sets for \(muscle.displayName.lowercased()) are planned from this answer.")
+                        .font(Theme.caption)
                         .foregroundStyle(Theme.secondary)
                 }
+                .padding(Theme.gutter)
             }
-            ChipPicker(
-                title: "Soreness after that session", options: Soreness.allCases, columns: 2,
-                label: \.label, selection: nil
-            ) { if let soreness = $0 { onAnswer(soreness) } }
+            .background(Theme.page)
+            .navigationTitle("\(muscle.displayName) Recovery")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .a11y(.sorenessCancel)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        if let draft { onSave(draft) }
+                        dismiss()
+                    }
+                    .disabled(draft == nil)
+                    .a11y(.sorenessSave)
+                }
+            }
         }
+        .presentationDetents([.medium])
+        .interactiveDismissDisabled(draft != nil)
+    }
+}
+
+extension MuscleFeedback {
+    fileprivate var isRated: Bool { pump != nil && workload != nil && jointPain != nil }
+}
+
+/// The muscle's end-of-session feedback in the list: a summary that opens `FeedbackSheet`.
+struct FeedbackCard: View {
+    let muscle: Muscle
+    let feedback: MuscleFeedback
+    var onOpen: () -> Void
+
+    var body: some View {
+        Button(action: onOpen) {
+            HStack(spacing: 12) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("How did \(muscle.displayName.lowercased()) feel today?")
+                        .font(Theme.cardTitle)
+                        .foregroundStyle(Theme.text)
+                        .multilineTextAlignment(.leading)
+                    Text(summary)
+                        .font(Theme.detail)
+                        .foregroundStyle(Theme.secondary)
+                        .multilineTextAlignment(.leading)
+                }
+                Spacer()
+                Image(systemName: feedback.isRated ? "checkmark.circle.fill" : "chevron.right")
+                    .font(.system(size: feedback.isRated ? 22 : 15, weight: .semibold))
+                    .foregroundStyle(feedback.isRated ? Theme.success : Theme.secondary)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .a11y(.feedbackOpen, key: muscle.rawValue)
         .padding(.horizontal, Theme.gutter)
         .padding(.bottom, 8)
         .surfaceCard(tag: muscle)
     }
+
+    private var summary: String {
+        guard feedback.isRated, let pump = feedback.pump, let workload = feedback.workload,
+            let jointPain = feedback.jointPain
+        else { return "Rate pump, workload and joint pain" }
+        return "Pump \(pump.label.lowercased()) · \(workload.label) · Joint pain \(jointPain.label.lowercased())"
+    }
 }
 
-struct FeedbackCard: View {
+private struct FeedbackRequiredToast: View {
     let muscle: Muscle
-    let feedback: MuscleFeedback
-    var onChange: ((inout MuscleFeedback) -> Void) -> Void
-
-    private var isComplete: Bool { feedback.pump != nil && feedback.workload != nil && feedback.jointPain != nil }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .top) {
-                Text("How did \(muscle.displayName.lowercased()) feel today?")
-                    .font(Theme.cardTitle)
-                    .foregroundStyle(Theme.text)
-                Spacer()
-                if isComplete {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.system(size: 22))
-                        .foregroundStyle(Theme.success)
+        Label("Rate \(muscle.displayName.lowercased()) first", systemImage: "info.circle")
+            .font(Theme.body.weight(.semibold))
+            .foregroundStyle(.white)
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .background(Theme.danger, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            .shadow(radius: 8)
+            .accessibilityAddTraits(.isStaticText)
+            .a11y(.feedbackRequired)
+    }
+}
+
+/// Asks pump, workload and joint pain on a draft; Save writes all three, Cancel drops them.
+struct FeedbackSheet: View {
+    let muscle: Muscle
+    let original: MuscleFeedback
+    let onSave: (MuscleFeedback) -> Void
+
+    @Environment(\.dismiss) private var dismiss
+    @State private var draft: MuscleFeedback
+
+    init(muscle: Muscle, feedback: MuscleFeedback, onSave: @escaping (MuscleFeedback) -> Void) {
+        self.muscle = muscle
+        self.original = feedback
+        self.onSave = onSave
+        _draft = State(initialValue: feedback)
+    }
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 14) {
+                    Text("How did \(muscle.displayName.lowercased()) feel today?")
+                        .font(Theme.cardTitle)
+                        .foregroundStyle(Theme.text)
+                    ChipPicker(title: "Pump", options: Pump.allCases, columns: 3, label: \.label, selection: draft.pump)
+                    {
+                        draft.pump = $0
+                    }
+                    ChipPicker(
+                        title: "Workload", options: Workload.allCases, columns: 2, label: \.label,
+                        selection: draft.workload
+                    ) { draft.workload = $0 }
+                    ChipPicker(
+                        title: "Joint pain", options: JointPain.allCases, columns: 4, label: \.label,
+                        selection: draft.jointPain
+                    ) { draft.jointPain = $0 }
+                    Text(
+                        "Next week's sets for \(muscle.displayName.lowercased()) come from these answers and how sore you get."
+                    )
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondary)
+                }
+                .padding(Theme.gutter)
+            }
+            .background(Theme.page)
+            .navigationTitle("\(muscle.displayName) Feedback")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .a11y(.feedbackCancel)
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        onSave(draft)
+                        dismiss()
+                    }
+                    .disabled(!draft.isRated)
+                    .a11y(.feedbackSave)
                 }
             }
-            ChipPicker(title: "Pump", options: Pump.allCases, columns: 3, label: \.label, selection: feedback.pump) {
-                value in
-                onChange { $0.pump = value }
-            }
-            ChipPicker(
-                title: "Workload", options: Workload.allCases, columns: 2, label: \.label, selection: feedback.workload
-            ) { value in
-                onChange { $0.workload = value }
-            }
-            ChipPicker(
-                title: "Joint pain", options: JointPain.allCases, columns: 4, label: \.label,
-                selection: feedback.jointPain
-            ) { value in
-                onChange { $0.jointPain = value }
-            }
-            Text(
-                "Next week's sets for \(muscle.displayName.lowercased()) come from these answers and how sore you get."
-            )
-            .font(Theme.caption)
-            .foregroundStyle(Theme.secondary)
         }
-        .padding(.horizontal, Theme.gutter)
-        .padding(.bottom, 8)
-        .surfaceCard(tag: muscle)
+        .presentationDetents([.medium, .large])
+        .interactiveDismissDisabled(draft != original)
     }
 }
 

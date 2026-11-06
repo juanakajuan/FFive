@@ -29,9 +29,9 @@ tap #set.menu.2
 tap #menu.delete-set
 tap #set.menu.2
 tap #menu.delete-set
-wait text "~How did chest feel today"
-shot 04-feedback-card
-scrollto #chip.a-lot
+# The fully logged Bench opens the chest feedback sheet, pre-filled from the menu answer.
+wait #feedback.save
+shot 04-feedback-sheet
 selected #chip.a-lot
 unselected #chip.none
-shot 05-feedback-card-prefilled
+shot 05-feedback-sheet-prefilled
