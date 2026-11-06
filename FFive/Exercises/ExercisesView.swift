@@ -6,9 +6,12 @@ struct ExercisesView: View {
 
     @State private var search = ""
     @State private var muscle: Muscle?
+    @State private var showAll = false
 
     var body: some View {
+        let settings = store.settings
         let listings = store.library(muscle: muscle, search: search)
+            .filter { showAll || !settings.filtersEquipment || $0.fits(settings.equipment) }
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -31,6 +34,9 @@ struct ExercisesView: View {
                         .a11y(.exercisesSearch)
                         .padding(.horizontal, Theme.gutter)
                         .padding(.bottom, 12)
+                    if settings.filtersEquipment {
+                        EquipmentScopeToggle(showAll: $showAll)
+                    }
                     FilterBar(label: muscle?.displayName ?? "Filters") {
                         Picker("Muscle", selection: $muscle) {
                             Text("All").tag(Muscle?.none)

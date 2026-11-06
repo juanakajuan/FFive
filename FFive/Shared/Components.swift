@@ -240,3 +240,17 @@ extension View {
             .listRowInsets(EdgeInsets(top: vertical, leading: Theme.gutter, bottom: vertical, trailing: Theme.gutter))
     }
 }
+
+struct EquipmentScopeToggle: View {
+    @Binding var showAll: Bool
+
+    var body: some View {
+        Toggle("My Equipment Only", isOn: Binding(get: { !showAll }, set: { showAll = !$0 }))
+            .tint(Theme.success)
+            .font(Theme.body)
+            .foregroundStyle(Theme.text)
+            .padding(.horizontal, Theme.gutter)
+            .frame(minHeight: 44)
+            .a11y(.equipmentFilter)
+    }
+}
