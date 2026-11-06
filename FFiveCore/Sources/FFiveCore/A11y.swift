@@ -98,6 +98,7 @@ public enum A11y: String, CaseIterable {
     case settingsUnit = "settings.unit"
     case settingsAutoMatch = "settings.auto-match"
     case settingsEquipment = "settings.equipment"
+    case settingsExport = "settings.export"
     case settingsAppearance = "settings.appearance"
     case equipmentFilter = "equipment-filter"
 
