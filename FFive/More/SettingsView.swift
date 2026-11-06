@@ -29,6 +29,21 @@ struct SettingsView: View {
                 .foregroundStyle(Theme.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+                SectionHeading(text: "Equipment")
+                    .padding(.top, 20)
+                OutlinedGroup {
+                    ForEach(Array(Equipment.allCases.enumerated()), id: \.element) { index, option in
+                        if index > 0 { divider }
+                        equipmentRow(option)
+                    }
+                }
+                Text(
+                    "The Exercises tab and the exercise picker show only exercises for the equipment you have. Custom exercises always show."
+                )
+                .font(Theme.detail)
+                .foregroundStyle(Theme.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
                 SectionHeading(text: "Workout")
                     .padding(.top, 20)
                 OutlinedGroup {
@@ -91,6 +106,30 @@ struct SettingsView: View {
         .accessibilityLabel(title)
         .accessibilityAddTraits(selected ? .isSelected : [])
         .a11y(.settingsUnit, key: option.rawValue)
+    }
+
+    private func equipmentRow(_ option: Equipment) -> some View {
+        let selected = store.settings.equipment.contains(option)
+        return Button {
+            store.settings.toggle(option)
+        } label: {
+            HStack {
+                Text(option.displayName).font(Theme.body).foregroundStyle(Theme.text)
+                Spacer()
+                if selected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Theme.infoText)
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(option.displayName)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .a11y(.settingsEquipment, key: option.rawValue)
     }
 }
 

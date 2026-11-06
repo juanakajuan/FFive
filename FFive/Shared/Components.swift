@@ -240,3 +240,22 @@ extension View {
             .listRowInsets(EdgeInsets(top: vertical, leading: Theme.gutter, bottom: vertical, trailing: Theme.gutter))
     }
 }
+
+struct EquipmentScopeToggle: View {
+    @Binding var isOn: Bool
+
+    var body: some View {
+        HStack {
+            Text(isOn ? "Showing your equipment" : "Showing all equipment")
+                .font(Theme.detail)
+                .foregroundStyle(Theme.secondary)
+            Spacer()
+            Button(isOn ? "Show All" : "My Equipment") { isOn.toggle() }
+                .font(Theme.body)
+                .foregroundStyle(Theme.infoText)
+                .a11y(.equipmentFilter)
+        }
+        .padding(.horizontal, Theme.gutter)
+        .frame(minHeight: 44)
+    }
+}

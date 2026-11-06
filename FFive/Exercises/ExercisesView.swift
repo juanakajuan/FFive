@@ -8,17 +8,23 @@ struct ExercisesView: View {
     @State private var muscle: Muscle?
     @State private var equipment: Equipment?
     @State private var showHidden = false
+    @State private var equipmentOnly = true
 
     var body: some View {
-        let listings = store.library(muscle: muscle, equipment: equipment, search: search, includeHidden: showHidden)
+        let settings = store.settings
+        let all = store.library(muscle: muscle, equipment: equipment, search: search, includeHidden: showHidden)
+        let listings = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     if listings.isEmpty {
-                        Text("No exercises match.")
-                            .font(Theme.detail)
-                            .foregroundStyle(Theme.secondary)
-                            .padding(Theme.gutter * 2)
+                        Text(
+                            all.isEmpty
+                                ? "No exercises match." : "Only exercises for equipment you don\u{2019}t have match."
+                        )
+                        .font(Theme.detail)
+                        .foregroundStyle(Theme.secondary)
+                        .padding(Theme.gutter * 2)
                     }
                     ForEach(listings) { listing in
                         NavigationLink(value: listing) { row(listing) }
@@ -33,6 +39,9 @@ struct ExercisesView: View {
                         .a11y(.exercisesSearch)
                         .padding(.horizontal, Theme.gutter)
                         .padding(.bottom, 12)
+                    if settings.filtersEquipment {
+                        EquipmentScopeToggle(isOn: $equipmentOnly)
+                    }
                     FilterBar(label: filterLabel) {
                         Picker("Muscle", selection: $muscle) {
                             Text("All").tag(Muscle?.none)
