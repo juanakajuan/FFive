@@ -34,6 +34,17 @@ final class SettingsTests: XCTestCase {
         XCTAssertFalse(Settings(defaults: defaults).autoMatchWeights)
     }
 
+    func testAppearanceDefaultsDarkAndPersists() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        XCTAssertEqual(Settings(defaults: defaults).appearance, .dark, "an upgrade keeps the dark look it had")
+
+        Settings(defaults: defaults).appearance = .light
+        XCTAssertEqual(Settings(defaults: defaults).appearance, .light, "a choice is read back on the next launch")
+
+        defaults.set("sepia", forKey: "appearance")
+        XCTAssertEqual(Settings(defaults: defaults).appearance, .dark, "an unknown value falls back to dark")
+    }
+
     func testEquipmentDefaultsToAllAndDoesNotFilter() throws {
         let settings = Settings(defaults: try XCTUnwrap(UserDefaults(suiteName: suite)))
         XCTAssertEqual(settings.equipment, Set(Equipment.allCases), "a fresh install has every kind of equipment")

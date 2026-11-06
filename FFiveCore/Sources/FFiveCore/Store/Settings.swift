@@ -7,6 +7,12 @@ public final class Settings {
     private static let weightUnitKey = "weightUnit"
     private static let autoMatchWeightsKey = "autoMatchWeights"
     private static let equipmentKey = "equipment"
+    private static let appearanceKey = "appearance"
+
+    /// Dark until the lifter picks otherwise, since every earlier build was dark only.
+    public var appearance: Appearance {
+        didSet { defaults.set(appearance.rawValue, forKey: Self.appearanceKey) }
+    }
 
     /// The unit new prescriptions use. Loads already logged keep their numbers.
     public var weightUnit: WeightUnit {
@@ -40,6 +46,7 @@ public final class Settings {
         self.defaults = defaults
         weightUnit = defaults.string(forKey: Self.weightUnitKey).flatMap(WeightUnit.init(rawValue:)) ?? .lb
         autoMatchWeights = defaults.object(forKey: Self.autoMatchWeightsKey) as? Bool ?? true
+        appearance = defaults.string(forKey: Self.appearanceKey).flatMap(Appearance.init(rawValue:)) ?? .dark
         let stored = Set((defaults.stringArray(forKey: Self.equipmentKey) ?? []).compactMap(Equipment.init(rawValue:)))
         equipment = stored.isEmpty ? Set(Equipment.allCases) : stored
     }

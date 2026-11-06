@@ -92,6 +92,7 @@ struct RootView: View {
         }
         .environment(router)
         .tint(Theme.text)
+        .preferredColorScheme(store.settings.appearance.colorScheme)
         .sheet(item: $router.endedMeso) { MesoSummarySheet(meso: $0) }
         .alert(
             "Your last change was not saved",

@@ -29,6 +29,19 @@ struct SettingsView: View {
                 .foregroundStyle(Theme.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+                SectionHeading(text: "Appearance")
+                    .padding(.top, 20)
+                OutlinedGroup {
+                    ForEach(Array(Appearance.allCases.enumerated()), id: \.element) { index, option in
+                        if index > 0 { divider }
+                        appearanceRow(option)
+                    }
+                }
+                Text("System follows the iPhone's Light or Dark setting.")
+                    .font(Theme.detail)
+                    .foregroundStyle(Theme.secondary)
+                    .fixedSize(horizontal: false, vertical: true)
+
                 SectionHeading(text: "Equipment")
                     .padding(.top, 20)
                 OutlinedGroup {
@@ -77,6 +90,7 @@ struct SettingsView: View {
         .background(Theme.surface)
         .navigationTitle("Settings")
         .sensoryFeedback(.selection, trigger: store.settings.weightUnit)
+        .sensoryFeedback(.selection, trigger: store.settings.appearance)
     }
 
     private var divider: some View {
@@ -106,6 +120,30 @@ struct SettingsView: View {
         .accessibilityLabel(title)
         .accessibilityAddTraits(selected ? .isSelected : [])
         .a11y(.settingsUnit, key: option.rawValue)
+    }
+
+    private func appearanceRow(_ option: Appearance) -> some View {
+        let selected = option == store.settings.appearance
+        return Button {
+            store.settings.appearance = option
+        } label: {
+            HStack {
+                Text(option.label).font(Theme.body).foregroundStyle(Theme.text)
+                Spacer()
+                if selected {
+                    Image(systemName: "checkmark")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(Theme.infoText)
+                }
+            }
+            .padding(.horizontal, 12)
+            .frame(minHeight: 44)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityLabel(option.label)
+        .accessibilityAddTraits(selected ? .isSelected : [])
+        .a11y(.settingsAppearance, key: option.rawValue)
     }
 
     private func equipmentRow(_ option: Equipment) -> some View {
