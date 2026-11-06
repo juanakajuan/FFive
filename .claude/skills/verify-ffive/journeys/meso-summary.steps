@@ -14,6 +14,7 @@ shot 03-summary-feedback
 tap button "Full Body, 3 Days"
 wait nav "Full Body, 3 Days"
 tap #meso.menu
+sleep 1
 tap #menu.rename
 wait alert "Rename Mesocycle"
 replace field "Mesocycle name" "Spring Block"
