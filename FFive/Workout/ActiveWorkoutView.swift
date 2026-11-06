@@ -18,6 +18,7 @@ struct ActiveWorkoutView: View {
     @State private var confirmEnd = false
     @State private var renameDraft: String?
     @State private var bodyweightDraft: String?
+    @State private var article: Learn.Article?
     @State private var noteEdit: NoteEdit?
     @State private var historyFor: Exercise?
     @State private var feedbackFor: Muscle?
@@ -163,6 +164,7 @@ struct ActiveWorkoutView: View {
                 }
             }
             .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
+            .sheet(item: $article) { Learn.ArticleSheet(article: $0) }
             .sheet(item: $sorenessAsk) { ask in
                 SorenessSheet(muscle: ask.muscle, record: ask.record) { soreness in
                     store.recordSoreness(soreness, on: ask.record, during: workout, logging: ask.set)
@@ -282,7 +284,8 @@ struct ActiveWorkoutView: View {
             jointPain: jointPain(for: muscle),
             onShowHistory: { historyFor = exercise },
             onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) },
-            onRemove: { store.removeExercise(exercise, from: workout) }
+            onRemove: { store.removeExercise(exercise, from: workout) },
+            onOpenArticle: { article = $0 }
         )
 
         if let muscle, workout.mesocycle != nil,
@@ -429,6 +432,7 @@ struct ExerciseCard: View {
     var onShowHistory: () -> Void
     var onEditNote: (String) -> Void
     var onRemove: () -> Void
+    var onOpenArticle: (Learn.Article) -> Void
 
     @Environment(Store.self) private var store
     @State private var showingCue = false
@@ -481,6 +485,12 @@ struct ExerciseCard: View {
                 }
                 if let phase, let set = sets.first(where: { $0.status == .pending }) ?? sets.first {
                     Callout(text: targetText(set, phase))
+                }
+                if let tip = CoachingTip.applicable(to: exercise, dismissed: store.settings.dismissedTips) {
+                    CoachingTipCallout(tip: tip, position: position, onLearnMore: onOpenArticle) {
+                        withAnimation(.snappy) { store.settings.dismiss(tip) }
+                    }
+                    .transition(.opacity)
                 }
             }
             .padding(.horizontal, Theme.gutter)
