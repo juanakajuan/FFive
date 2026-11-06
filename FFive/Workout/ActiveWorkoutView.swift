@@ -499,12 +499,14 @@ struct ExerciseCard: View {
             .padding(.top, 10)
 
             if !sets.isEmpty {
+                let comparisons = exercise.comparisons(with: store.lastFinishedExercise(exercise.key))
                 columnHeaders.padding(.top, 14)
                 ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
                     if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
                     SetRow(
                         set: set, number: index + 1, unit: unit, rir: phase?.rir,
-                        onCompleted: onSetCompleted, onLogBlocked: onLogBlocked, onAdd: { store.addSet(to: exercise) }
+                        comparison: comparisons[ObjectIdentifier(set)], onCompleted: onSetCompleted,
+                        onLogBlocked: onLogBlocked, onAdd: { store.addSet(to: exercise) }
                     ) { store.deleteSet(set, from: exercise) }
                 }
             }
@@ -609,6 +611,8 @@ struct SetRow: View {
     let number: Int
     let unit: WeightUnit
     let rir: Int?
+    /// Whether this logged set improved on, maintained or regressed from the same set last session.
+    let comparison: SetComparison?
     var onCompleted: () -> Void
     var onLogBlocked: ((SetEntry) -> Void)?
     var onAdd: () -> Void
@@ -619,6 +623,7 @@ struct SetRow: View {
     private enum Field { case weight, reps }
     @FocusState private var focus: Field?
     @State private var followers: [SetEntry] = []
+    @State private var showingComparison = false
 
     /// Zero reads as "not entered yet", so the field shows its placeholder instead of a 0.
     private var weight: Binding<Double?> {
@@ -638,16 +643,26 @@ struct SetRow: View {
     }
 
     var body: some View {
-        VStack(spacing: 0) {
+        VStack(alignment: .leading, spacing: 0) {
             fields
             if let recommendation = focus.flatMap(recommendation(for:)) {
                 Text(recommendation)
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
+                    .frame(maxWidth: .infinity)
                     .padding(.horizontal, Theme.gutter)
                     .padding(.bottom, 10)
                     .a11y(.setRecommendation, number)
             }
+            if showingComparison, let comparison {
+                Callout(text: comparisonText(comparison), systemImage: "\(comparison.outcome.symbol).circle.fill")
+                    .padding(.horizontal, Theme.gutter)
+                    .padding(.bottom, 8)
+                    .transition(.opacity)
+            }
+        }
+        .onChange(of: comparison == nil) { _, gone in
+            if gone { showingComparison = false }
         }
     }
 
@@ -760,9 +775,76 @@ struct SetRow: View {
             .a11y(.setLog, number)
             .accessibilityValue(set.status == .skipped ? "Skipped" : "")
             .accessibilityAddTraits(set.isDone ? .isSelected : [])
+            .overlay(alignment: .leading) {
+                if let outcome = comparison?.outcome {
+                    Button {
+                        withAnimation(.snappy) { showingComparison.toggle() }
+                    } label: {
+                        Image(systemName: outcome.symbol)
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(outcome.color)
+                            .frame(width: 20, height: 44)
+                            .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.leading, 16)
+                    .accessibilityLabel("Set \(number) \(outcome.verb) last session")
+                    .accessibilityHint("Shows what changed")
+                    .a11y(.setVsLast, number)
+                }
+            }
         }
         .padding(.horizontal, Theme.gutter)
         .frame(minHeight: 52)
+    }
+
+    private func comparisonText(_ comparison: SetComparison) -> String {
+        let unit = store.settings.weightUnit
+        func load(_ weight: Double) -> String { set.exercise?.weightText(weight, unit: unit) ?? formatWeight(weight) }
+        let previous = comparison.previous
+        let lastTime = "Last time \(load(previous.weight)) × \(previous.reps)."
+        let gap = abs(set.reps - comparison.expectedReps)
+        let reps = "\(gap) \(gap == 1 ? "rep" : "reps")"
+        guard set.weight != previous.weight else {
+            switch comparison.outcome {
+            case .improved: return "Improved by \(reps). \(lastTime)"
+            case .maintained: return "Maintained. \(lastTime)"
+            case .regressed: return "Regressed by \(reps). \(lastTime)"
+            }
+        }
+        let expected = "\(comparison.expectedReps) \(comparison.expectedReps == 1 ? "rep" : "reps")"
+        let atLoad = "Last time's strength gives \(expected) at \(load(set.weight))."
+        switch comparison.outcome {
+        case .improved: return "Improved by \(reps). \(atLoad) \(lastTime)"
+        case .maintained: return "Maintained. \(atLoad) \(lastTime)"
+        case .regressed: return "Regressed by \(reps). \(atLoad) \(lastTime)"
+        }
+    }
+}
+
+extension SetComparison.Outcome {
+    fileprivate var symbol: String {
+        switch self {
+        case .improved: "arrow.up"
+        case .maintained: "equal"
+        case .regressed: "arrow.down"
+        }
+    }
+
+    fileprivate var color: Color {
+        switch self {
+        case .improved: Theme.success
+        case .maintained: Theme.secondary
+        case .regressed: Theme.danger
+        }
+    }
+
+    fileprivate var verb: String {
+        switch self {
+        case .improved: "improved on"
+        case .maintained: "maintained"
+        case .regressed: "regressed from"
+        }
     }
 }
 
@@ -854,7 +936,7 @@ struct SorenessSheet: View {
                     }
                     ChipPicker(
                         title: "Soreness after that session", options: Soreness.allCases, columns: 2,
-                        label: \.label, selection: draft
+                        label: \.label, meaning: \.meaning, selection: draft
                     ) { draft = $0 }
                     Text("Today's sets for \(muscle.displayName.lowercased()) are planned from this answer.")
                         .font(Theme.caption)
@@ -969,16 +1051,17 @@ struct FeedbackSheet: View {
                     Text("How did \(muscle.displayName.lowercased()) feel today?")
                         .font(Theme.cardTitle)
                         .foregroundStyle(Theme.text)
-                    ChipPicker(title: "Pump", options: Pump.allCases, columns: 3, label: \.label, selection: draft.pump)
-                    {
-                        draft.pump = $0
-                    }
                     ChipPicker(
-                        title: "Workload", options: Workload.allCases, columns: 2, label: \.label,
+                        title: "Pump", options: Pump.allCases, columns: 3, label: \.label, meaning: \.meaning,
+                        selection: draft.pump
+                    ) { draft.pump = $0 }
+                    ChipPicker(
+                        title: "Workload", options: Workload.allCases, columns: 2, label: \.label, meaning: \.meaning,
                         selection: draft.workload
                     ) { draft.workload = $0 }
                     ChipPicker(
                         title: "Joint pain", options: JointPain.allCases, columns: 4, label: \.label,
+                        meaning: \.meaning,
                         selection: draft.jointPain
                     ) { draft.jointPain = $0 }
                     Text(

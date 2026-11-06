@@ -56,6 +56,7 @@ public enum A11y: String, CaseIterable {
     case setReps = "set.reps"
     case setLog = "set.log"
     case setRecommendation = "set.recommendation"
+    case setVsLast = "set.vs-last"
     case noteText = "note.text"
     case noteSave = "note.save"
     case noteCancel = "note.cancel"
@@ -102,6 +103,7 @@ public enum A11y: String, CaseIterable {
     case musclePriority = "muscle-priority"
     case segment = "segment"
     case chip = "chip"
+    case chipHelp = "chip.help"
     case strengthRow = "strength.row"
     case historyRow = "history.row"
     case settingsUnit = "settings.unit"
@@ -113,13 +115,14 @@ public enum A11y: String, CaseIterable {
     case equipmentFilter = "equipment-filter"
 
     static let indexed: Set<A11y> = [
-        .setWeight, .setReps, .setMenu, .setLog, .setRecommendation, .exerciseMenu, .exerciseCue, .exerciseHistory,
+        .setWeight, .setReps, .setMenu, .setLog, .setRecommendation, .setVsLast, .exerciseMenu, .exerciseCue,
+        .exerciseHistory,
         .exercisePin,
         .tipLearnMore, .tipDismiss,
     ]
     static let keyed: Set<A11y> = [
         .pickerRow, .exercisesRow, .builderTemplate, .builderCustomTemplate, .templatesCustom, .templatesMenu,
-        .mesosRow, .mesosMenu, .musclePriority, .segment, .chip,
+        .mesosRow, .mesosMenu, .musclePriority, .segment, .chip, .chipHelp,
         .strengthRow, .historyRow, .feedbackOpen,
         .settingsUnit, .settingsEquipment, .settingsAppearance,
     ]
