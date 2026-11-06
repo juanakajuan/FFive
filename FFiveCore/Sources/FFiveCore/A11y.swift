@@ -53,6 +53,7 @@ public enum A11y: String, CaseIterable {
     case setWeight = "set.weight"
     case setReps = "set.reps"
     case setLog = "set.log"
+    case setBeat = "set.beat"
     case noteText = "note.text"
     case noteSave = "note.save"
     case noteCancel = "note.cancel"
@@ -110,7 +111,7 @@ public enum A11y: String, CaseIterable {
     case equipmentFilter = "equipment-filter"
 
     static let indexed: Set<A11y> = [
-        .setWeight, .setReps, .setMenu, .setLog, .exerciseMenu, .exerciseCue, .exerciseHistory, .exercisePin,
+        .setWeight, .setReps, .setMenu, .setLog, .setBeat, .exerciseMenu, .exerciseCue, .exerciseHistory, .exercisePin,
     ]
     static let keyed: Set<A11y> = [
         .pickerRow, .exercisesRow, .builderTemplate, .builderCustomTemplate, .templatesCustom, .templatesMenu,
