@@ -141,7 +141,7 @@ Find ids in `A11y.swift`, and dump a tree (`tree x`) to see what is on screen. I
 - Schedule grid cells have no ids. Their identifiers are SF Symbol names: `checkmark.circle.fill` (finished), `circle.lefthalf.filled` (built, open), `play.circle.fill` (next, not built yet, rare because the tab builds the day it shows), `forward.circle` (skipped), `circle` (upcoming). Finished cells are always buttons that open the read-only workout. Skipped, open, and upcoming cells are buttons only in the current week of an unfinished block. A cell's long-press `Skip Day` is `#menu.skip-day`.
 - Segmented controls: `#segment.<slug>`, as in `#segment.volume`, `#segment.history`, `#segment.w1`, `#segment.dl`. Feedback and soreness chips: `#chip.<slug>`, as in `#chip.pretty-good` and `#chip.healed-just-in-time`. Chips carry Selected when chosen.
 - Progress rows: `#strength.row.<slug>` and `#history.row.<slug>`. A quick workout's name depends on the clock, so its history row is tapped by label, `button "~Workout,"`.
-- Settings: `#settings.unit.lb` and `#settings.unit.kg`.
+- Settings: `#settings.unit.lb`, `#settings.unit.kg`, and the Auto-Match Weights switch `#settings.auto-match`.
 
 Gotchas:
 

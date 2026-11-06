@@ -1,0 +1,68 @@
+# auto-match-weights: a weight edit carries to later unlogged sets with the same weight, and the Settings toggle turns it off. On-disk.
+# Before: ffive-verify reset-data (no active mesocycle, auto-match on by default).
+# After: ffive-verify store "select ZORDER, ZWEIGHT, ZISDONE from ZSETENTRY order by ZORDER"
+launch
+wait #workout.quick timeout=20
+tap #workout.quick
+wait text "QUICK WORKOUT"
+tap #workout.menu
+tap #menu.add-exercise
+wait nav "Add Exercise"
+type #picker.search "Lateral"
+tap #picker.row.lateral-raise
+wait text "Lateral Raise"
+replace #set.weight.1 "20"
+replace #set.reps.1 "12"
+tap #keyboard.done
+tap #set.menu.1
+tap #menu.add-set
+wait #set.weight.2
+tap #set.menu.2
+tap #menu.add-set
+wait #set.weight.3
+tap #set.menu.3
+tap #menu.add-set
+wait #set.weight.4
+value #set.weight.4 "20"
+tap #set.log.2
+selected #set.log.2
+shot 01-before-edit
+replace #set.weight.1 "25"
+tap #keyboard.done
+value #set.weight.1 "25"
+value #set.weight.2 "20"
+value #set.weight.3 "25"
+value #set.weight.4 "25"
+shot 02-after-edit-carried
+replace #set.weight.3 "30"
+tap #keyboard.done
+value #set.weight.1 "25"
+value #set.weight.3 "30"
+value #set.weight.4 "30"
+shot 03-middle-edit-carries-down-only
+store-expect SetEntry weight 30
+tap #tab.more
+tap #more.settings
+wait nav "Settings"
+wait #settings.auto-match
+shot 04-settings-toggle-on
+tap #settings.auto-match
+defaults-expect autoMatchWeights 0
+shot 05-settings-toggle-off
+tap #tab.workout
+wait text "QUICK WORKOUT" timeout=10
+replace #set.weight.3 "35"
+tap #keyboard.done
+value #set.weight.3 "35"
+value #set.weight.4 "30"
+shot 06-toggle-off-no-carry
+launch
+wait text "QUICK WORKOUT" timeout=20
+value #set.weight.1 "25"
+value #set.weight.2 "20"
+value #set.weight.3 "35"
+value #set.weight.4 "30"
+tap #tab.more
+tap #more.settings
+tap #settings.auto-match
+defaults-expect autoMatchWeights 1

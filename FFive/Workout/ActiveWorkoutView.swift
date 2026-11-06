@@ -525,10 +525,13 @@ struct SetRow: View {
 
     private enum Field { case weight, reps }
     @FocusState private var focus: Field?
+    @State private var followers: [SetEntry] = []
 
     /// Zero reads as "not entered yet", so the field shows its placeholder instead of a 0.
     private var weight: Binding<Double?> {
-        Binding(get: { set.weight == 0 ? nil : set.weight }, set: { set.weight = $0 ?? 0 })
+        Binding(
+            get: { set.weight == 0 ? nil : set.weight },
+            set: { store.setWeight($0 ?? 0, of: set, carryingTo: followers) })
     }
 
     private var isBodyweight: Bool { self.set.exercise?.isBodyweight ?? false }
@@ -574,6 +577,9 @@ struct SetRow: View {
             )
             .keyboardType(isBodyweight ? .numbersAndPunctuation : .decimalPad)
             .focused($focus, equals: .weight)
+            .onChange(of: focus) { _, new in
+                followers = new == .weight ? store.weightFollowers(of: set) : []
+            }
             .themedField()
             .contentShape(Rectangle())
             .onTapGesture { focus = .weight }

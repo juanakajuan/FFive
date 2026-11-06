@@ -12,7 +12,8 @@ struct SettingsView: View {
     }
 
     var body: some View {
-        ScrollView {
+        @Bindable var settings = store.settings
+        return ScrollView {
             VStack(alignment: .leading, spacing: 12) {
                 SectionHeading(text: "Units")
                 OutlinedGroup {
@@ -23,6 +24,24 @@ struct SettingsView: View {
                 }
                 Text(
                     "New prescriptions use this unit and its smallest jump: 5 lb, or 2.5 kg (2 kg for dumbbells). Loads you already logged keep their numbers and aren't converted."
+                )
+                .font(Theme.detail)
+                .foregroundStyle(Theme.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
+                SectionHeading(text: "Workout")
+                    .padding(.top, 20)
+                OutlinedGroup {
+                    Toggle("Auto-Match Weights", isOn: $settings.autoMatchWeights)
+                        .tint(Theme.success)
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.text)
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 44)
+                        .a11y(.settingsAutoMatch)
+                }
+                Text(
+                    "Changing a set's weight changes every later unlogged set of that exercise that had the same weight."
                 )
                 .font(Theme.detail)
                 .foregroundStyle(Theme.secondary)

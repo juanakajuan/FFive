@@ -51,6 +51,6 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Bodyweight](./bodyweight.md): set body weight from the workout menu, log added load or assistance on bodyweight lifts, and see e1RM, volume, and labels count body weight (on disk).
 - [Notes](./notes.md): a per-workout exercise note, pinning it to carry forward, editing, unpinning, and deleting it, and a day note (on disk).
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
-- [Settings](./settings.md): weight unit and app version, pushed from More (demo plus UserDefaults).
+- [Settings](./settings.md): weight unit, auto-match weights, and app version, pushed from More (demo plus UserDefaults).
 
 Not mapped yet: the Templates and Exercises tabs, a block's detail page on the Mesos tab (beyond its schedule grid), Learn, swapping or removing exercises, renaming a quick workout, and discarding a workout.

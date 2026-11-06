@@ -1,12 +1,13 @@
 # Settings
 
-Settings, pushed from the More tab, holds the weight unit (Pounds or Kilograms) and the app version. The unit applies to new prescriptions and to how loads are labeled. Already-logged loads are not converted.
+Settings, pushed from the More tab, holds the weight unit (Pounds or Kilograms), the Auto-Match Weights toggle, and the app version. The unit applies to new prescriptions and to how loads are labeled. Already-logged loads are not converted.
 
 ## Sub-features
 
 - `settings-open` opens Settings from More and shows `Version, <short> (<build>)`.
 - `settings-unit` switches between `Pounds (lb)` and `Kilograms (kg)`, stored as the `weightUnit` UserDefault. The chosen row carries the Selected trait.
 - `settings-unit-effect` labels loads in the chosen unit (the weight fields' placeholder, the History sheet, Progress, and workout details), with new targets in that unit's increments. Logged numbers are relabeled, not converted.
+- `settings-auto-match` is the `#settings.auto-match` switch, stored as the `autoMatchWeights` UserDefault (`1` or `0` in `defaults-expect`; absent means on). While on, a weight edit carries to every later set of that exercise that is not logged and had the same weight when the field took focus. Journey: `journeys/auto-match-weights.steps`, on-disk after `reset-data`. It ends with the toggle back on.
 
 ## How to get to it (user POV)
 
