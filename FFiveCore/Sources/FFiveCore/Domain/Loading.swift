@@ -39,6 +39,24 @@ extension Exercise {
         if weight == 0 { return "BW" }
         return "BW\(weight > 0 ? "+" : "\u{2212}")\(formatWeight(abs(weight)))"
     }
+
+    /// The logged weights that still leave `rir` in reserve inside the rep range, from the set's target.
+    /// The heaviest load lands on the bottom of the range and the lightest on the top. Always contains the
+    /// target weight. Nil when the target, body weight or increment is missing.
+    public func targetLoads(for set: SetEntry, rir: Int, unit: WeightUnit) -> ClosedRange<Double>? {
+        let loading = self.loading
+        guard let weight = set.targetWeight, let reps = set.targetReps, let offset = loading.offset else { return nil }
+        let increment = loading.increment(unit)
+        guard increment > 0, weight + offset > 0 else { return nil }
+        let oneRepMax = Progression.estimatedOneRepMax(weight: weight + offset, reps: reps, rir: rir)
+        let upper = Progression.load(
+            forReps: repRange.lowerBound, rir: rir, oneRepMax: oneRepMax, increment: increment, offset: offset)
+        var lower = Progression.roundUp(
+            Progression.exactLoad(forReps: repRange.upperBound, rir: rir, oneRepMax: oneRepMax, offset: offset),
+            to: increment)
+        if lower + offset <= 0 { lower = weight }
+        return min(lower, weight)...max(upper, weight)
+    }
 }
 
 extension SetEntry {

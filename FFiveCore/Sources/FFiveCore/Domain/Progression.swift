@@ -145,7 +145,11 @@ public enum Progression {
 
     /// The logged weight that leaves `rir` reps in reserve after `reps` reps, from an estimated 1RM of the moved load.
     static func load(forReps reps: Int, rir: Int, oneRepMax: Double, increment: Double, offset: Double) -> Double {
-        roundDown(oneRepMax / (1 + Double(reps + rir) / 30) - offset, to: increment)
+        roundDown(exactLoad(forReps: reps, rir: rir, oneRepMax: oneRepMax, offset: offset), to: increment)
+    }
+
+    static func exactLoad(forReps reps: Int, rir: Int, oneRepMax: Double, offset: Double) -> Double {
+        oneRepMax / (1 + Double(reps + rir) / 30) - offset
     }
 
     /// Reps that leave `rir` in reserve at `load`, from an estimated 1RM. Inverse of `estimatedOneRepMax`.
@@ -157,6 +161,11 @@ public enum Progression {
     public static func roundDown(_ weight: Double, to increment: Double) -> Double {
         guard increment > 0 else { return weight }
         return (weight / increment + 1e-9).rounded(.down) * increment
+    }
+
+    static func roundUp(_ weight: Double, to increment: Double) -> Double {
+        guard increment > 0 else { return weight }
+        return (weight / increment - 1e-9).rounded(.up) * increment
     }
 
     private static func resized(_ targets: [SetTarget], to count: Int) -> [SetTarget] {

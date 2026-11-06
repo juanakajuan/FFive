@@ -199,4 +199,70 @@ final class BodyweightTests: XCTestCase {
 
         XCTAssertEqual(target.weight, -35)
     }
+
+    func targetedExercise(
+        _ store: Store, _ name: String, muscle: Muscle, bodyweight: Double?, weight: Double?, reps: Int?
+    ) -> (Exercise, SetEntry) {
+        let workout = store.startQuickWorkout()
+        store.setBodyweight(bodyweight, of: workout)
+        store.addExercise(named: name, muscle: muscle, to: workout)
+        let exercise = workout.sortedExercises[0]
+        let set = exercise.sortedSets[0]
+        set.targetWeight = weight
+        set.targetReps = reps
+        return (exercise, set)
+    }
+
+    func testTargetLoadsSpanTheRepRangeAtTheWeeksRIR() throws {
+        let store = Store(inMemory: true)
+        let (bench, set) = targetedExercise(
+            store, "Bench Press", muscle: .chest, bodyweight: nil, weight: 100, reps: 10)
+        let loads = try XCTUnwrap(bench.targetLoads(for: set, rir: 2, unit: .lb))
+
+        XCTAssertEqual(loads, 100...110)
+    }
+
+    func testEveryLoadInTheTargetRangeStaysInsideTheRepRange() throws {
+        let store = Store(inMemory: true)
+        let (bench, set) = targetedExercise(
+            store, "Bench Press", muscle: .chest, bodyweight: nil, weight: 100, reps: 10)
+        let loads = try XCTUnwrap(bench.targetLoads(for: set, rir: 2, unit: .lb))
+        let oneRepMax = 100 * (1 + Double(10 + 2) / 30)
+
+        for load in stride(from: loads.lowerBound, through: loads.upperBound, by: 5) {
+            let reps = Progression.reps(atLoad: load, rir: 2, oneRepMax: oneRepMax)
+            XCTAssertTrue(bench.repRange.contains(reps), "\(load) lb gives \(reps) reps")
+        }
+    }
+
+    func testTargetLoadsAlwaysContainTheTargetWeight() throws {
+        let store = Store(inMemory: true)
+        let (bench, set) = targetedExercise(store, "Bench Press", muscle: .chest, bodyweight: nil, weight: 100, reps: 4)
+        let loads = try XCTUnwrap(bench.targetLoads(for: set, rir: 2, unit: .lb))
+
+        XCTAssertTrue(loads.contains(100))
+    }
+
+    func testNoTargetLoadsWithoutATargetWeightOrReps() {
+        let store = Store(inMemory: true)
+        let (noWeight, noWeightSet) = targetedExercise(
+            store, "Bench Press", muscle: .chest, bodyweight: nil, weight: nil, reps: 10)
+        let (noReps, noRepsSet) = targetedExercise(
+            store, "Bench Press", muscle: .chest, bodyweight: nil, weight: 100, reps: nil)
+
+        XCTAssertNil(noWeight.targetLoads(for: noWeightSet, rir: 2, unit: .lb))
+        XCTAssertNil(noReps.targetLoads(for: noRepsSet, rir: 2, unit: .lb))
+    }
+
+    func testBodyweightTargetLoadsNeedBodyweight() throws {
+        let store = Store(inMemory: true)
+        let (known, knownSet) = targetedExercise(store, "Pull-Up", muscle: .back, bodyweight: 180, weight: 25, reps: 8)
+        let (unknown, unknownSet) = targetedExercise(
+            store, "Pull-Up", muscle: .back, bodyweight: nil, weight: 25, reps: 8)
+        let loads = try XCTUnwrap(known.targetLoads(for: knownSet, rir: 2, unit: .lb))
+
+        XCTAssertTrue(loads.contains(25))
+        XCTAssertGreaterThan(loads.upperBound, loads.lowerBound)
+        XCTAssertNil(unknown.targetLoads(for: unknownSet, rir: 2, unit: .lb))
+    }
 }

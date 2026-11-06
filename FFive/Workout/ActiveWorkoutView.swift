@@ -604,8 +604,14 @@ struct ExerciseCard: View {
         guard let reps = set.targetReps else {
             return "Target \(exercise.weightText(weight, unit: store.settings.weightUnit))"
         }
-        return weight == 0 && !exercise.isBodyweight
-            ? "Target \(reps) reps" : "Target \(exercise.weightText(weight)) × \(reps)"
+        if weight == 0 && !exercise.isBodyweight { return "Target \(reps) reps" }
+        guard let rir = phase.rir else { return "Target \(exercise.weightText(weight)) × \(reps)" }
+        let unit = store.settings.weightUnit
+        if let loads = exercise.targetLoads(for: set, rir: rir, unit: unit), loads.lowerBound < loads.upperBound {
+            let lower = exercise.weightText(loads.lowerBound)
+            return "Target \(lower)–\(exercise.weightText(loads.upperBound, unit: unit)) · \(reps) reps or \(rir) RIR"
+        }
+        return "Target \(exercise.weightText(weight, unit: unit)) · \(reps) reps or \(rir) RIR"
     }
 }
 
