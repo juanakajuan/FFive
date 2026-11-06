@@ -3,16 +3,21 @@ import SwiftData
 
 @Model
 public final class Exercise {
-    public internal(set) var name: String
+    public internal(set) var name: String = ""
     public internal(set) var exerciseKey: String?
-    public var order: Int
+    public var order: Int = 0
     /// Where this exercise sits in the plan built from this session. Nil means the same as `order`.
     var plannedOrder: Int?
     public internal(set) var workout: Workout?
-    @Relationship(deleteRule: .cascade, inverse: \SetEntry.exercise)
-    public internal(set) var sets: [SetEntry] = []
+    @Relationship(deleteRule: .cascade, originalName: "sets", inverse: \SetEntry.exercise)
+    var storedSets: [SetEntry]?
     var muscleRaw: String?
     public internal(set) var note: String?
+
+    public internal(set) var sets: [SetEntry] {
+        get { storedSets ?? [] }
+        set { storedSets = newValue }
+    }
 
     public init(name: String, order: Int, muscle: Muscle? = nil) {
         self.name = name

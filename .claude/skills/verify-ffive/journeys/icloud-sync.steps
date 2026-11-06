@@ -1,0 +1,21 @@
+# Run after reset-data. The store mirrors to CloudKit; a write still persists across a relaunch.
+launch
+wait #tab.workout timeout=20
+tap #workout.quick
+wait text "QUICK WORKOUT"
+store-expect Workout endDate null timeout=10
+terminate
+launch
+wait text "QUICK WORKOUT" timeout=20
+tap #tab.more
+tap #more.settings
+wait nav "Settings"
+scrollto #settings.sync
+wait any "~Sign In to iCloud" timeout=15
+shot settings-sync-signed-out
+launch -seedDemo
+tap #tab.more timeout=20
+tap #more.settings
+scrollto #settings.sync
+wait any "~Off" timeout=10
+shot settings-sync-demo

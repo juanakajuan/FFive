@@ -3,6 +3,7 @@ import SwiftUI
 
 struct SettingsView: View {
     @Environment(Store.self) private var store
+    @Environment(SyncMonitor.self) private var sync
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -75,6 +76,18 @@ struct SettingsView: View {
                 .foregroundStyle(Theme.secondary)
                 .fixedSize(horizontal: false, vertical: true)
 
+                SectionHeading(text: "iCloud Sync")
+                    .padding(.top, 20)
+                OutlinedGroup {
+                    syncRow
+                }
+                Text(
+                    "Workouts, mesocycles, templates, custom exercises and notes sync through your private iCloud account to every device signed in to the same Apple ID. The settings on this screen stay on this device."
+                )
+                .font(Theme.detail)
+                .foregroundStyle(Theme.secondary)
+                .fixedSize(horizontal: false, vertical: true)
+
                 SectionHeading(text: "Data")
                     .padding(.top, 20)
                 OutlinedGroup {
@@ -119,6 +132,53 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .sensoryFeedback(.selection, trigger: store.settings.weightUnit)
         .sensoryFeedback(.selection, trigger: store.settings.appearance)
+    }
+
+    private var syncRow: some View {
+        let (title, detail, symbol, tint): (String, Text?, String, Color) =
+            switch sync.status {
+            case .off: ("Off", Text("Sample data stays on this device."), "icloud.slash", Theme.secondary)
+            case .checking: ("Checking iCloud", nil, "icloud", Theme.secondary)
+            case .noAccount:
+                (
+                    "Sign In to iCloud", Text("Sign in from the Settings app to back up and sync."), "icloud.slash",
+                    Theme.secondary
+                )
+            case .unavailable:
+                ("iCloud Unavailable", Text("Check iCloud in the Settings app."), "icloud.slash", Theme.secondary)
+            case .syncing: ("Syncing", nil, "arrow.triangle.2.circlepath.icloud", Theme.infoText)
+            case .upToDate(let date):
+                ("On", date.map { Text("Synced \($0, style: .relative) ago") }, "checkmark.icloud", Theme.success)
+            case .failed(.offline):
+                ("Offline", Text("Changes sync when you're back online."), "icloud.slash", Theme.secondary)
+            case .failed(.storageFull):
+                (
+                    "iCloud Storage Full", Text("Free up iCloud storage to keep syncing."), "exclamationmark.icloud",
+                    Theme.danger
+                )
+            case .failed(.other(let message)): ("Sync Paused", Text(message), "exclamationmark.icloud", Theme.danger)
+            }
+        return HStack(spacing: 12) {
+            Image(systemName: symbol)
+                .font(.system(size: 17, weight: .semibold))
+                .foregroundStyle(tint)
+                .frame(width: 24)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(Theme.body).foregroundStyle(Theme.text)
+                if let detail {
+                    detail.font(Theme.detail).foregroundStyle(Theme.secondary)
+                }
+            }
+            Spacer()
+            if sync.status == .syncing || sync.status == .checking {
+                ProgressView()
+            }
+        }
+        .padding(.horizontal, 12)
+        .padding(.vertical, 8)
+        .frame(minHeight: 44)
+        .accessibilityElement(children: .combine)
+        .a11y(.settingsSync)
     }
 
     private var divider: some View {

@@ -251,7 +251,7 @@ public final class Store {
         observeCommits()
         var finished = FetchDescriptor<Workout>(
             predicate: #Predicate { $0.endDate != nil }, sortBy: [SortDescriptor(\.startDate)])
-        finished.relationshipKeyPathsForPrefetching = [\.exercises]
+        finished.relationshipKeyPathsForPrefetching = [\.storedExercises]
         var byKey: [ExerciseID: (name: String, muscle: Muscle?, points: [StrengthSeries.Point])] = [:]
         for workout in (try? context.fetch(finished)) ?? [] {
             var best: [ExerciseID: (exercise: Exercise, entry: SetEntry, oneRepMax: Double)] = [:]

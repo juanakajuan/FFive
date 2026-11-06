@@ -10,8 +10,11 @@ public enum AppStore {
         PinnedNote.self, CustomTemplate.self, CustomExercise.self,
     ])
 
+    /// The on-device store mirrors to the iCloud container named in the app's entitlements. CloudKit requires every
+    /// attribute to be optional or defaulted and every relationship optional, which `CloudKitSchemaTests` checks.
     public static func makeContainer(inMemory: Bool) -> ModelContainer {
-        let configuration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: inMemory)
+        let configuration = ModelConfiguration(
+            schema: schema, isStoredInMemoryOnly: inMemory, cloudKitDatabase: inMemory ? .none : .automatic)
         do {
             return try ModelContainer(for: schema, configurations: configuration)
         } catch {

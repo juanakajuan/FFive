@@ -5,6 +5,7 @@ import SwiftUI
 @main
 struct FFiveApp: App {
     let store: Store
+    let sync: SyncMonitor
     let animationsDisabled: Bool
 
     init() {
@@ -14,6 +15,7 @@ struct FFiveApp: App {
         if mode.animationsDisabled { UIView.setAnimationsEnabled(false) }
         store = Store(inMemory: mode.isDemo)
         if mode.isDemo { DemoSeed.seed(into: store) }
+        sync = SyncMonitor(enabled: !mode.isDemo)
         Theme.applyNavigationBarAppearance()
     }
 
@@ -27,6 +29,7 @@ struct FFiveApp: App {
                     }
                 }
                 .environment(store)
+                .environment(sync)
         }
         .modelContainer(store.container)
     }

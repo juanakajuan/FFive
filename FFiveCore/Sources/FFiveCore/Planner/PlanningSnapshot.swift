@@ -17,7 +17,7 @@ struct PlanningSnapshot {
 
     init(context: ModelContext) {
         var descriptor = Workout.history
-        descriptor.relationshipKeyPathsForPrefetching = [\.exercises]
+        descriptor.relationshipKeyPathsForPrefetching = [\.storedExercises]
         var latest: [ExerciseID: Double] = [:]
         for workout in (try? context.fetch(descriptor)) ?? [] {
             for exercise in workout.sortedExercises {

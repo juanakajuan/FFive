@@ -3,11 +3,11 @@ import SwiftData
 
 @Model
 public final class SetEntry {
-    public var reps: Int
-    public var weight: Double
+    public var reps: Int = 0
+    public var weight: Double = 0
     public private(set) var isDone: Bool = false
     public private(set) var isSkipped: Bool = false
-    public var order: Int
+    public var order: Int = 0
     public internal(set) var exercise: Exercise?
     public var targetWeight: Double?
     public var targetReps: Int?
