@@ -136,6 +136,7 @@ Find ids in `A11y.swift`, and dump a tree (`tree x`) to see what is on screen. I
 - Note editor sheet: `#note.text`, `#note.save`, `#note.cancel`.
 - Exercise picker: `#picker.search`, `#picker.row.<slug>`, `#picker.cancel`. Exercises tab: `#exercises.search`, `#exercises.row.<slug>`.
 - Builder: `#builder.template.<slug>`, `#builder.blank`, `#builder.name`, `#builder.start`, `#builder.cancel`. The length stepper has no id. Its buttons are labeled `Increment` and `Decrement`.
+- Muscle priority menus, in the builder and on a block's detail page: `#muscle-priority.<muscle raw value>`, as in `#muscle-priority.chest` or `#muscle-priority.sidedelts`. The value is the current priority. Options are `button "Emphasize"`, `button "Normal"`, `button "Maintain"`.
 - Mesos tab: `#mesos.row.<slug>` opens the detail, and `#mesos.menu.<slug>` holds `#menu.view` and `#menu.end-mesocycle`. The header's `#mesos.new` (also on Templates) is disabled while a block is active. `#mesos.plan` is the empty state's button.
 - The schedule grid header is one element per day labelled `Day <n>, <day name>`, as in `wait any "Day 1, Push Day"`.
 - Schedule grid cells have no ids. Their identifiers are SF Symbol names: `checkmark.circle.fill` (finished), `circle.lefthalf.filled` (built, open), `play.circle.fill` (next, not built yet, rare because the tab builds the day it shows), `forward.circle` (skipped), `circle` (upcoming). Finished cells are always buttons that open the read-only workout. Skipped, open, and upcoming cells are buttons only in the current week of an unfinished block. A cell's long-press `Skip Day` is `#menu.skip-day`.
@@ -153,7 +154,7 @@ To watch a drive live, open the simulator panel (iOS Simulator `attach` with the
 ## Reading state
 
 - `$V store` lists the store's entity tables with row counts: `ZWORKOUT`, `ZEXERCISE`, `ZSETENTRY`, `ZMESOCYCLE`, `ZMESODAY`, `ZDAYSLOT`, `ZMUSCLEFEEDBACKRECORD`, `ZPINNEDNOTE`.
-- `$V store "<sql>"` runs a read-only query. Columns are the model properties, uppercased with a `Z` prefix: `ZWORKOUT(ZNAME, ZSTARTDATE, ZENDDATE, ZWEEK, ZDAYINDEX, ZMESOCYCLE, ZNOTE)`, `ZPINNEDNOTE(ZNAME, ZTEXT)`, `ZEXERCISE(ZNAME, ZORDER, ZMUSCLERAW, ZWORKOUT, ZNOTE)`, `ZSETENTRY(ZWEIGHT, ZREPS, ZISDONE, ZISSKIPPED, ZTARGETWEIGHT, ZTARGETREPS, ZEXERCISE)`, `ZMESOCYCLE(ZNAME, ZACCUMULATIONWEEKS, ZFINISHEDDATE, ZSKIPPEDSESSIONS)`. Dates are Core Data seconds since 2001. `ZSKIPPEDSESSIONS` is a JSON blob: read it with `cast(ZSKIPPEDSESSIONS as text)`.
+- `$V store "<sql>"` runs a read-only query. Columns are the model properties, uppercased with a `Z` prefix: `ZWORKOUT(ZNAME, ZSTARTDATE, ZENDDATE, ZWEEK, ZDAYINDEX, ZMESOCYCLE, ZNOTE)`, `ZPINNEDNOTE(ZNAME, ZTEXT)`, `ZEXERCISE(ZNAME, ZORDER, ZMUSCLERAW, ZWORKOUT, ZNOTE)`, `ZSETENTRY(ZWEIGHT, ZREPS, ZISDONE, ZISSKIPPED, ZTARGETWEIGHT, ZTARGETREPS, ZEXERCISE)`, `ZMESOCYCLE(ZNAME, ZACCUMULATIONWEEKS, ZFINISHEDDATE, ZSKIPPEDSESSIONS, ZMUSCLEPRIORITYRAW)`. Dates are Core Data seconds since 2001. `ZSKIPPEDSESSIONS` is a JSON blob: read it with `cast(ZSKIPPEDSESSIONS as text)`.
 - `$V defaults` prints the app's UserDefaults plist (`weightUnit`).
 - `$V shot <name>` takes a screenshot outside a drive, into the newest run dir.
 

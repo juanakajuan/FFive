@@ -17,6 +17,7 @@ struct MesoDetailView: View {
                 header(week: week)
                 MesoScheduleGrid(meso: meso, onOpen: open, onSkipped: { trainAfterAll = $0 })
                 WeekVolumeCard(meso: meso, week: week)
+                MusclePrioritiesCard(meso: meso)
                 if meso.isActive {
                     Button("End Mesocycle", role: .destructive) { confirmEnd = true }
                         .font(.system(size: 16, weight: .semibold))

@@ -211,6 +211,20 @@ struct MesoEditorView: View {
                 .builderRow()
                 footnote("Tap an exercise to swap it for another that trains the same muscle.")
             }
+
+            if !draft.muscles.isEmpty {
+                Section {
+                    ForEach(draft.muscles) { muscle in
+                        MusclePriorityRow(muscle: muscle, priority: draft.priorities[muscle] ?? .normal) {
+                            draft.priorities[muscle] = $0
+                        }
+                        .builderRow()
+                    }
+                    footnote(MusclePriority.explanation)
+                } header: {
+                    header("Muscle Priorities")
+                }
+            }
         }
         .listStyle(.plain)
         .scrollContentBackground(.hidden)

@@ -41,14 +41,19 @@ public enum Progression {
     ]
 
     /// Sets to add to (or remove from) one muscle in one session next week, from that session's feedback.
-    /// Table-driven on soreness x workload, nudged by pump; joint pain at moderate or worse caps it at 0.
-    /// Missing feedback returns 0.
-    public static func setDelta(_ feedback: MuscleFeedback) -> Int {
+    /// Table-driven on soreness x workload, nudged by pump and then by priority; joint pain at moderate or worse
+    /// caps it at 0. Missing feedback returns 0.
+    public static func setDelta(_ feedback: MuscleFeedback, priority: MusclePriority = .normal) -> Int {
         guard let soreness = feedback.soreness, let workload = feedback.workload else { return 0 }
         var delta = setDeltaTable[soreness.rawValue][workload.rawValue]
         switch feedback.pump {
         case .low where delta > 0: delta += 1
         case .great where delta >= 2: delta -= 1
+        default: break
+        }
+        switch priority {
+        case .emphasize where delta > 0: delta += 1
+        case .maintain: delta = min(delta, 0)
         default: break
         }
         delta = min(3, max(-1, delta))
@@ -78,10 +83,14 @@ public enum Progression {
         return result
     }
 
-    static func initialSetsPerExercise(muscle: Muscle, sessionsPerWeek: Int, exercisesInSession: Int) -> Int {
+    /// A muscle starts the block at MEV, or at MV when it is maintained, split over its sessions and exercises.
+    static func initialSetsPerExercise(
+        muscle: Muscle, priority: MusclePriority = .normal, sessionsPerWeek: Int, exercisesInSession: Int
+    ) -> Int {
         let slots = max(1, sessionsPerWeek) * max(1, exercisesInSession)
-        let share = (muscle.landmarks.mev + slots - 1) / slots
-        return max(2, share)
+        let weekly = priority == .maintain ? muscle.landmarks.mv : muscle.landmarks.mev
+        let share = (weekly + slots - 1) / slots
+        return max(priority == .maintain ? 1 : 2, share)
     }
 
     /// Next week's targets for one exercise from what was logged last week.

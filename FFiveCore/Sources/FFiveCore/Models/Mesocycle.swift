@@ -12,6 +12,8 @@ public final class Mesocycle {
     @Relationship(deleteRule: .nullify, inverse: \Workout.mesocycle)
     public internal(set) var workouts: [Workout] = []
     var skippedSessions: [SessionKey] = []
+    /// Muscle raw value to priority raw value. A muscle missing here is trained at normal priority.
+    var musclePriorityRaw: [String: String] = [:]
 
     init(name: String, accumulationWeeks: Int, startDate: Date = .now) {
         self.name = name
@@ -30,6 +32,21 @@ public final class Mesocycle {
         days[dayIndex].name = name
         for workout in workouts where workout.dayIndex == dayIndex { workout.name = name }
     }
+    public func priority(of muscle: Muscle) -> MusclePriority {
+        musclePriorityRaw[muscle.rawValue].flatMap(MusclePriority.init(rawValue:)) ?? .normal
+    }
+
+    /// Takes effect from the next session built; sessions already built keep their sets.
+    func setPriority(_ priority: MusclePriority, of muscle: Muscle) {
+        musclePriorityRaw[muscle.rawValue] = priority == .normal ? nil : priority.rawValue
+    }
+
+    /// Every muscle a day of the block trains, in catalog order.
+    public var muscles: [Muscle] {
+        let trained = Set(days.flatMap(\.slots).compactMap(\.muscle))
+        return Muscle.allCases.filter(trained.contains)
+    }
+
     public var totalWeeks: Int { accumulationWeeks + 1 }
 
     public func phase(week: Int) -> WeekPhase {

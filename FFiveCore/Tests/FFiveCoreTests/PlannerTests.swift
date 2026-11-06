@@ -417,6 +417,60 @@ final class PlannerTests: XCTestCase {
         expect("skip: finished sessions survive skipping the rest", meso.workouts.filter(\.isFinished).count, 3)
     }
 
+    func testMusclePriorities() {
+        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        var draft = MesoDraft(template: nil)
+        draft.days = [
+            .init(
+                name: "A",
+                slots: [
+                    .init(exercise: "Bench Press", muscle: .chest), .init(exercise: "Lat Pulldown", muscle: .back),
+                    .init(exercise: "Leg Extension", muscle: .quads),
+                ])
+        ]
+        draft.priorities = [.chest: .maintain, .back: .emphasize, .biceps: .maintain]
+        expect("draft lists its trained muscles in catalog order", draft.muscles, [.chest, .back, .quads])
+        let meso = MesoPlanner.start(draft, in: context)
+        expect("start keeps the trained muscles' priorities", meso.priority(of: .chest), .maintain)
+        expect("start keeps emphasis", meso.priority(of: .back), .emphasize)
+        expect("an unset muscle is normal", meso.priority(of: .quads), .normal)
+        expect("start drops priorities for muscles no day trains", meso.priority(of: .biceps), .normal)
+        expect("only non-normal priorities are stored", meso.musclePriorityRaw.count, 2)
+
+        func key(_ week: Int) -> SessionKey { SessionKey(week: week, dayIndex: 0) }
+        func planned(_ week: Int) -> [String: Int] {
+            Dictionary(
+                uniqueKeysWithValues: MesoPlanner.plan(meso, at: key(week), unit: .lb, snapshot: snapshot(context)).map
+                {
+                    ($0.name, $0.targets.count)
+                })
+        }
+        expect(
+            "week 1: maintained chest starts at MV 8, emphasized back and normal quads at MEV",
+            planned(0), ["Bench Press": 8, "Lat Pulldown": 10, "Leg Extension": 8])
+
+        let w0 = MesoPlanner.workout(for: meso, at: key(0), unit: .lb, snapshot: snapshot(context), in: context)
+        for exercise in w0.exercises {
+            for set in exercise.sets {
+                (set.weight, set.reps) = (100, 10)
+                set.status = .done
+            }
+        }
+        for muscle in [Muscle.chest, .back, .quads] {
+            w0.updateFeedback(for: muscle) {
+                $0 = MuscleFeedback(soreness: .healedEarly, pump: .moderate, workload: .good, jointPain: JointPain.none)
+            }
+        }
+        w0.finish(in: context)
+        expect(
+            "week 2 on the same +1 feedback: maintain holds, emphasize adds 2, normal adds 1",
+            planned(1), ["Bench Press": 8, "Lat Pulldown": 12, "Leg Extension": 9])
+
+        meso.setPriority(.normal, of: .chest)
+        expect("a priority change re-plans the next unbuilt week", planned(1)["Bench Press"], 9)
+        expect("setting normal clears the stored entry", meso.musclePriorityRaw[Muscle.chest.rawValue], nil)
+    }
+
     func testStore() {
         let url = FileManager.default.temporaryDirectory.appendingPathComponent("planner-\(UUID().uuidString).store")
         defer { try? FileManager.default.removeItem(at: url) }
