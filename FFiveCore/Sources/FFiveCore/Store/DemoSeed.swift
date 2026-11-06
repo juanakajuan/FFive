@@ -101,7 +101,7 @@ public enum DemoSeed {
             workout.exercises.append(exercise)
             for (index, (weight, reps)) in sets.enumerated() {
                 let set = SetEntry(reps: reps, weight: converted(weight, unit), order: index)
-                set.isDone = true
+                set.status = .done
                 exercise.sets.append(set)
             }
         }
@@ -120,7 +120,7 @@ public enum DemoSeed {
                     to: exercise.loading.increment(unit))
                 set.reps = Progression.startingReps(in: exercise.repRange) + 1
             }
-            set.isDone = true
+            set.status = .done
         }
     }
 

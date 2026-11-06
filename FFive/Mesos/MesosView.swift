@@ -10,8 +10,7 @@ struct MesosView: View {
     @State private var showingBuilder = false
     @State private var ending: Mesocycle?
 
-    /// The Workout tab trains the newest unfinished block, so that one is "current".
-    private var current: Mesocycle? { mesos.first { $0.finishedDate == nil } }
+    private var current: Mesocycle? { mesos.first(where: \.isActive) }
 
     var body: some View {
         NavigationStack(path: $path) {
@@ -29,7 +28,6 @@ struct MesosView: View {
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .background(Theme.surface)
             .screenHeader("Mesocycles") {
-                // Starting a block doesn't end the current one, so creation waits until it is ended.
                 HeaderAddButton(label: "New Mesocycle") { showingBuilder = true }
                     .disabled(current != nil)
                     .a11y(.mesosNew)
@@ -71,7 +69,7 @@ struct MesosView: View {
                     Spacer(minLength: 8)
                     if isCurrent {
                         StatusBadge(text: "Current")
-                    } else if meso.finishedDate != nil {
+                    } else if !meso.isActive {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.system(size: 22))
                             .symbolRenderingMode(.palette)

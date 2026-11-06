@@ -5,7 +5,7 @@ import SwiftData
 public final class SetEntry {
     public var reps: Int
     public var weight: Double
-    public internal(set) var isDone: Bool = false
+    public private(set) var isDone: Bool = false
     public private(set) var isSkipped: Bool = false
     public var order: Int
     public internal(set) var exercise: Exercise?
@@ -30,7 +30,6 @@ public final class SetEntry {
         targetReps = target.reps
     }
 
-    /// Writes both stored flags, so a set is never done and skipped at once.
     public internal(set) var status: SetStatus {
         get { isDone ? .done : isSkipped ? .skipped : .pending }
         set {
