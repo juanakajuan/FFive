@@ -51,7 +51,10 @@ final class TrainingExportTests: XCTestCase {
         XCTAssertEqual(firstSet.reps, 8)
         XCTAssertEqual(exportedSession.feedback, [.init(muscle: "chest", pump: "great")])
         XCTAssertEqual(export.workouts.map { $0.exercises.map(\.name) }, [["Landmine Press"]], "free-form sessions")
-        XCTAssertEqual(export.customExercises, [.init(name: "Landmine Press", muscle: "frontDelts")])
+        XCTAssertEqual(
+            export.customExercises, [.init(name: "Landmine Press", muscle: "frontDelts")],
+            "\(quick.exercises.map { ($0.key.rawValue, $0.info?.name ?? "nil", $0.muscleRaw ?? "nil", $0.workout === quick) })"
+        )
         XCTAssertEqual(export.templates.map(\.name), ["Mine"])
         XCTAssertEqual(export.pinnedNotes, [.init(exercise: "Bench Press", text: "Shoulder felt fine")])
     }
