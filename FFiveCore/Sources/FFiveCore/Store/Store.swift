@@ -125,6 +125,19 @@ public final class Store {
         commit()
     }
 
+    /// The later unlogged sets that share `set`'s weight right now. Capture this once when editing starts: clearing
+    /// the field writes 0 on the way to the new number, and a recount then would sweep in unrelated empty sets.
+    public func weightFollowers(of set: SetEntry) -> [SetEntry] {
+        guard settings.autoMatchWeights, let exercise = set.exercise else { return [] }
+        return exercise.laterSets(matchingWeightOf: set)
+    }
+
+    public func setWeight(_ weight: Double, of set: SetEntry, carryingTo followers: [SetEntry]) {
+        set.weight = weight
+        for follower in followers where follower.status != .done { follower.weight = weight }
+        commit()
+    }
+
     public func addSet(to exercise: Exercise) {
         exercise.addSet()
         commit()
