@@ -30,7 +30,7 @@ scan() {
                     pending = substr(s, RSTART, RLENGTH)
                     sub(/.*struct[ \t]+/, "", pending)
                 }
-                if (isView && (s ~ /[cC]ontext\.(delete|insert|save)\(/ || s ~ /\.(finishedDate|endDate)[ \t]*[-+]?=[^=]/))
+                if (isView && (s ~ /[cC]ontext\.(delete|insert|save)\(/ || s ~ /\.(finishedDate|endDate)[ \t]*[-+]?=[^=]/ || s ~ /set:[ \t]*\{[ \t]*[a-z][A-Za-z0-9_]*\.[A-Za-z0-9_]+[ \t]*[-+]?=[^=]/))
                     hit("view-writes", i, "A view must not write model state. Move the write into a method on the model or its Store and call that from the view.")
                 if (s ~ /@ViewBuilder[ \t]+((private|fileprivate|public|internal)[ \t]+)?(let|var)[ \t]+[A-Za-z0-9_]+[ \t]*:[ \t]*\(\)[ \t]*->/)
                     hit("no-stored-builder", i, "A stored builder closure froze pushed screens (1eeaf4d). Store the built view instead: `let content: Content`, set in `init(@ViewBuilder content: () -> Content)`.")

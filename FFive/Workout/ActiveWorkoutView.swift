@@ -537,7 +537,7 @@ struct SetRow: View {
     private var isBodyweight: Bool { self.set.exercise?.isBodyweight ?? false }
 
     private var reps: Binding<Int?> {
-        Binding(get: { set.reps == 0 ? nil : set.reps }, set: { set.reps = $0 ?? 0 })
+        Binding(get: { set.reps == 0 ? nil : set.reps }, set: { store.setReps($0 ?? 0, of: set) })
     }
 
     private var setType: Binding<SetType> {
