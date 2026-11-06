@@ -1,0 +1,35 @@
+# feedback-help: each feedback and soreness question has a help button that lists a one-line meaning for every answer.
+launch -seedDemo
+wait text "WEEK 2 DAY 1" timeout=20
+scrollto #set.log.5
+tap #set.log.1
+wait #feedback.save
+shot 01-feedback-sheet
+absent text "~taking a beating"
+tap #chip.help.joint-pain
+wait text "~The joints are taking a beating from this exercise."
+wait text "~Sharp or lasting pain"
+shot 02-joint-pain-help
+tap #chip.help.joint-pain
+absent text "~taking a beating"
+tap #chip.help.pump
+wait text "~Very full and tight"
+tap #chip.help.workload
+wait text "~About all you could do"
+shot 03-pump-workload-help
+tap #chip.great
+tap #chip.pretty-good
+scrollto #chip.none
+tap #chip.none
+tap #feedback.save
+absent #feedback.save
+scrollto #set.log.5
+tap #set.log.1
+wait #soreness.save
+tap #chip.help.soreness-after-that-session
+wait text "~Still sore now"
+wait text "~Sore until about today"
+shot 04-soreness-help
+tap #chip.healed-just-in-time
+tap #soreness.save
+absent #soreness.save
