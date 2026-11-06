@@ -3,19 +3,21 @@ import SwiftUI
 import UIKit
 
 enum Theme {
-    static let page = Color(rgb: 0x0A0A0B)
-    static let surface = Color(rgb: 0x161718)
-    static let raised = Color(rgb: 0x222326)
-    static let field = Color(rgb: 0x0A0A0B)
-    static let text = Color(rgb: 0xF3F5F7)
-    static let secondary = Color(rgb: 0xF3F5F7).opacity(0.55)
-    static let hairline = Color(rgb: 0xF4F6F8).opacity(0.1)
-    static let infoFill = Color(rgb: 0x3D4576)
-    static let infoText = Color(rgb: 0x7D8FF2)
-    static let noteFill = Color(rgb: 0x746539)
-    static let success = Color(rgb: 0x2E8B62)
-    static let danger = Color(rgb: 0xE5484D)
-    static let accent = Color(rgb: 0x2F6FEB)
+    static let page = Color(light: 0xEDEEF0, dark: 0x0A0A0B)
+    static let surface = Color(light: 0xFFFFFF, dark: 0x161718)
+    static let raised = Color(light: 0xE5E6E9, dark: 0x222326)
+    static let field = Color(light: 0xF1F2F4, dark: 0x0A0A0B)
+    static let text = Color(light: 0x111214, dark: 0xF3F5F7)
+    static let secondary = Color(light: 0x111214, dark: 0xF3F5F7, lightAlpha: 0.62, darkAlpha: 0.55)
+    static let hairline = Color(light: 0x111214, dark: 0xF4F6F8, lightAlpha: 0.14, darkAlpha: 0.1)
+    static let infoFill = Color(light: 0xDCE1FA, dark: 0x3D4576)
+    static let infoText = Color(light: 0x3346B8, dark: 0x7D8FF2)
+    static let noteFill = Color(light: 0xF1E3B5, dark: 0x746539)
+    static let success = Color(light: 0x237A54, dark: 0x2E8B62)
+    static let danger = Color(light: 0xC62F33, dark: 0xE5484D)
+    static let accent = Color(light: 0x2F6FEB, dark: 0x2F6FEB)
+    /// The unlit body in a muscle icon, which sits on a tinted tag.
+    static let figure = Color(light: 0x111214, dark: 0x0A0A0B, lightAlpha: 0.22, darkAlpha: 0.6)
 
     static let cornerRadius: CGFloat = 4
     static let gutter: CGFloat = 16
@@ -30,10 +32,11 @@ enum Theme {
 
     static func applyNavigationBarAppearance() {
         let text = UIColor(Theme.text)
+        let surface = UIColor(Theme.surface)
 
         let nav = UINavigationBarAppearance()
         nav.configureWithOpaqueBackground()
-        nav.backgroundColor = UIColor(Theme.surface)
+        nav.backgroundColor = surface
         nav.shadowColor = .clear
         nav.titleTextAttributes = [.foregroundColor: text, .font: UIFont.systemFont(ofSize: 17, weight: .semibold)]
         nav.largeTitleTextAttributes = [.foregroundColor: text, .font: UIFont.systemFont(ofSize: 26, weight: .bold)]
@@ -42,7 +45,7 @@ enum Theme {
         // transparent over the same color.
         let edge = UINavigationBarAppearance()
         edge.configureWithTransparentBackground()
-        edge.backgroundColor = UIColor(Theme.surface)
+        edge.backgroundColor = surface
         edge.titleTextAttributes = nav.titleTextAttributes
         edge.largeTitleTextAttributes = nav.largeTitleTextAttributes
         UINavigationBar.appearance().scrollEdgeAppearance = edge
@@ -50,21 +53,39 @@ enum Theme {
     }
 }
 
-extension Color {
-    init(rgb: UInt32) {
+extension UIColor {
+    convenience init(rgb: UInt32, alpha: CGFloat = 1) {
         self.init(
-            red: Double((rgb >> 16) & 0xFF) / 255, green: Double((rgb >> 8) & 0xFF) / 255,
-            blue: Double(rgb & 0xFF) / 255)
+            red: CGFloat((rgb >> 16) & 0xFF) / 255, green: CGFloat((rgb >> 8) & 0xFF) / 255,
+            blue: CGFloat(rgb & 0xFF) / 255, alpha: alpha)
+    }
+}
+
+extension Color {
+    init(light: UInt32, dark: UInt32, lightAlpha: CGFloat = 1, darkAlpha: CGFloat = 1) {
+        let light = UIColor(rgb: light, alpha: lightAlpha)
+        let dark = UIColor(rgb: dark, alpha: darkAlpha)
+        self.init(uiColor: UIColor { $0.userInterfaceStyle == .light ? light : dark })
+    }
+}
+
+extension Appearance {
+    var colorScheme: ColorScheme? {
+        switch self {
+        case .system: nil
+        case .dark: .dark
+        case .light: .light
+        }
     }
 }
 
 extension Muscle {
     var tint: Color {
         switch self {
-        case .chest, .frontDelts, .sideDelts, .rearDelts, .triceps: Color(rgb: 0xFB4934)
-        case .back, .biceps, .traps, .forearms: Color(rgb: 0x83A598)
-        case .quads, .hamstrings, .glutes: Color(rgb: 0xB8BB26)
-        case .calves, .abs: Color(rgb: 0xD3869B)
+        case .chest, .frontDelts, .sideDelts, .rearDelts, .triceps: Color(light: 0xB8231A, dark: 0xFB4934)
+        case .back, .biceps, .traps, .forearms: Color(light: 0x2F6B5E, dark: 0x83A598)
+        case .quads, .hamstrings, .glutes: Color(light: 0x5E6B0C, dark: 0xB8BB26)
+        case .calves, .abs: Color(light: 0x9B3F6A, dark: 0xD3869B)
         }
     }
 }

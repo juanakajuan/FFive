@@ -15,7 +15,7 @@ struct MuscleIcon: View {
                 y: (size.height - crop.height * scale) / 2 - crop.minY * scale)
             context.scaleBy(x: scale, y: scale)
             for part in BodyPart.allCases where part.isVisible(from: facing) {
-                context.fill(part.path, with: .color(part == lit ? muscle.tint : Theme.page.opacity(0.6)))
+                context.fill(part.path, with: .color(part == lit ? muscle.tint : Theme.figure))
             }
         }
         .frame(width: 18, height: 18)
