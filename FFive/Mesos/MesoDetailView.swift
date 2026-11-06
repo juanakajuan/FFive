@@ -10,17 +10,14 @@ struct MesoDetailView: View {
     @State private var confirmEnd = false
     @State private var trainAfterAll: SessionKey?
 
-    private var isActive: Bool { meso.finishedDate == nil }
-
     var body: some View {
         let week = meso.nextUp?.week ?? meso.accumulationWeeks
         ScrollView {
             VStack(spacing: Theme.gutter) {
                 header(week: week)
-                // Only the active block trains from the Workout tab, so a finished block's days don't open anything.
                 MesoScheduleGrid(meso: meso, onOpen: open, onSkipped: { trainAfterAll = $0 })
                 WeekVolumeCard(meso: meso, week: week)
-                if isActive {
+                if meso.isActive {
                     Button("End Mesocycle", role: .destructive) { confirmEnd = true }
                         .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(Theme.danger)
@@ -43,7 +40,7 @@ struct MesoDetailView: View {
     }
 
     private func open(_ key: SessionKey) {
-        if isActive { router.openSession(key, in: meso) }
+        router.openSession(key, in: meso)
     }
 
     private func header(week: Int) -> some View {
@@ -52,10 +49,10 @@ struct MesoDetailView: View {
                 .font(.system(size: 22, weight: .bold))
                 .foregroundStyle(Theme.text)
             HStack(spacing: 8) {
-                Text(isActive ? "Week \(week + 1) of \(meso.totalWeeks)" : "\(meso.totalWeeks) weeks")
+                Text(meso.isActive ? "Week \(week + 1) of \(meso.totalWeeks)" : "\(meso.totalWeeks) weeks")
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
-                if isActive {
+                if meso.isActive {
                     PhaseBadge(phase: meso.phase(week: week))
                 } else {
                     StatusBadge(text: "Finished")

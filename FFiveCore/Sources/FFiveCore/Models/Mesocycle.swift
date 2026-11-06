@@ -21,6 +21,7 @@ public final class Mesocycle {
 
     var sortedDays: [MesoDay] { days.sorted { $0.order < $1.order } }
     public var dayNames: [String] { sortedDays.map(\.name) }
+    public var isActive: Bool { finishedDate == nil }
 
     /// Later weeks are built from the day's name, so renaming it also relabels the sessions already built.
     func renameDay(_ dayIndex: Int, to name: String) {

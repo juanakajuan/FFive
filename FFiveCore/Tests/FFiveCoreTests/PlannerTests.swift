@@ -24,7 +24,7 @@ final class PlannerTests: XCTestCase {
         let row = Exercise(name: "Barbell Row", order: 0, muscle: .back)
         history.exercises.append(row)
         let rowSet = SetEntry(reps: 8, weight: 200, order: 0)
-        rowSet.isDone = true
+        rowSet.status = .done
         row.sets.append(rowSet)
         history.endDate = t0 - 10 * day + 3600
 
@@ -66,7 +66,7 @@ final class PlannerTests: XCTestCase {
                     let (weight, reps) = set.targetWeight.map { ($0, set.targetReps ?? 0) } ?? loads[exercise.name]!
                     set.weight = weight
                     set.reps = reps
-                    set.isDone = true
+                    set.status = .done
                 }
             }
         }
@@ -149,7 +149,7 @@ final class PlannerTests: XCTestCase {
             "answering soreness re-plans the untouched muscle (never sore + easy -> +3)", counts(w1a)["Calf Raise"], 11)
 
         let bench = w1a.sortedExercises.first { $0.name == "Bench Press" }!
-        for set in bench.sortedSets.dropLast() { set.isDone = true }
+        for set in bench.sortedSets.dropLast() { set.status = .done }
         w1a.finish(in: context)
         expect("finishing a block session keeps undone sets for next week", bench.sets.count, 5)
         expect("next up moves to week 2 day 2", meso.nextUp, SessionKey(week: 1, dayIndex: 1))
@@ -218,7 +218,7 @@ final class PlannerTests: XCTestCase {
             for set in workout.exercises.flatMap(\.sets) {
                 set.weight = set.targetWeight ?? 100
                 set.reps = set.targetReps ?? 10
-                set.isDone = true
+                set.status = .done
             }
             workout.finish(in: context)
         }
@@ -345,7 +345,7 @@ final class PlannerTests: XCTestCase {
             for exercise in workout.exercises {
                 for set in exercise.sets {
                     (set.weight, set.reps) = set.targetWeight.map { ($0, set.targetReps ?? 0) } ?? loads[exercise.name]!
-                    set.isDone = true
+                    set.status = .done
                 }
             }
         }
@@ -390,7 +390,7 @@ final class PlannerTests: XCTestCase {
         expect("skip: weekly volume counts the skipped day as 0 sets", chest.map { [$0.planned, $0.done] }, [8, 0])
 
         let w1b = session(1, 1)
-        w1b.sortedExercises[0].sortedSets[0].isDone = true
+        w1b.sortedExercises[0].sortedSets[0].status = .done
         meso.skip(key(1, 1), in: context)
         expect("skip: refused once a set is done", meso.status(at: key(1, 1)), .inProgress(w1b))
         meso.skip(key(0, 0), in: context)
@@ -473,7 +473,7 @@ final class PlannerTests: XCTestCase {
         let meso = MesoPlanner.start(draft, in: context)
         let started = MesoPlanner.workout(
             for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb, snapshot: .empty, in: context)
-        started.sortedExercises[0].sortedSets[0].isDone = true
+        started.sortedExercises[0].sortedSets[0].status = .done
         let untouched = MesoPlanner.workout(
             for: meso, at: SessionKey(week: 0, dayIndex: 1), unit: .lb, snapshot: .empty, in: context)
 
@@ -511,7 +511,7 @@ final class PlannerTests: XCTestCase {
                 for setOrder in 0..<2 {
                     let (weight, reps) = load(order + setOrder)
                     let set = SetEntry(reps: reps, weight: weight, order: setOrder)
-                    set.isDone = done
+                    set.status = done ? .done : .pending
                     exercise.sets.append(set)
                 }
             }
@@ -556,7 +556,7 @@ final class PlannerTests: XCTestCase {
         let bench = Exercise(name: "Bench Press", order: 0, muscle: .chest)
         open.exercises.append(bench)
         let heavy = SetEntry(reps: 10, weight: 500, order: 0)
-        heavy.isDone = true
+        heavy.status = .done
         bench.sets.append(heavy)
         let benchID = ExerciseID(folding: "Bench Press")
         expect(
@@ -572,7 +572,7 @@ final class PlannerTests: XCTestCase {
             let exercise = Exercise(name: "Bench Press", order: order, muscle: .chest)
             twice.exercises.append(exercise)
             let set = SetEntry(reps: 8, weight: weight, order: 0)
-            set.isDone = true
+            set.status = .done
             exercise.sets.append(set)
         }
         twice.endDate = twice.startDate + 3600

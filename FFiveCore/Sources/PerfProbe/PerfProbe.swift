@@ -106,7 +106,7 @@ struct PerfProbe {
                 workout.exercises.append(exercise)
                 for setOrder in 0..<3 {
                     let set = SetEntry(reps: 8, weight: 100, order: setOrder)
-                    set.isDone = true
+                    set.status = .done
                     exercise.sets.append(set)
                 }
             }

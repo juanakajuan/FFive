@@ -69,9 +69,9 @@ struct ProgressScreen: View {
 
     @ViewBuilder
     private var volume: some View {
-        if let meso = mesos.first(where: { $0.persistentModelID == selectedMeso }) ?? mesos.first(where: {
-            $0.finishedDate == nil
-        }) ?? mesos.first {
+        if let meso = mesos.first(where: { $0.persistentModelID == selectedMeso }) ?? mesos.first(where: \.isActive)
+            ?? mesos.first
+        {
             let week = min(selectedWeek ?? meso.nextUp?.week ?? meso.accumulationWeeks, meso.accumulationWeeks)
             let volumes = store.weeklyVolume(meso, week: week)
             heading("Sets per muscle · \(meso.phase(week: week) == .deload ? "Deload" : "Week \(week + 1)")")

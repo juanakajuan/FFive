@@ -64,7 +64,6 @@ struct TemplatesView: View {
             }
             .background(Theme.surface)
             .screenHeader("Templates") {
-                // Starting a block doesn't end the current one, so creation waits until it is ended.
                 HeaderAddButton(label: "New Mesocycle") { builder = .blank }
                     .disabled(!activeMesos.isEmpty)
                     .a11y(.mesosNew)

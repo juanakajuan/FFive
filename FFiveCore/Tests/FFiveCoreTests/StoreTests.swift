@@ -557,7 +557,7 @@ final class StoreTests: XCTestCase {
             let exercise = Exercise(name: lift.name, order: order, muscle: lift.muscle)
             workout.exercises.append(exercise)
             let set = SetEntry(reps: 8, weight: lift.weight, order: 0)
-            set.isDone = true
+            set.status = .done
             exercise.sets.append(set)
         }
         workout.endDate = start + minutes * 60
