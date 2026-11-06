@@ -34,6 +34,47 @@ final class SettingsTests: XCTestCase {
         XCTAssertFalse(Settings(defaults: defaults).autoMatchWeights)
     }
 
+    func testEquipmentDefaultsToAllAndDoesNotFilter() throws {
+        let settings = Settings(defaults: try XCTUnwrap(UserDefaults(suiteName: suite)))
+        XCTAssertEqual(settings.equipment, Set(Equipment.allCases), "a fresh install has every kind of equipment")
+        XCTAssertFalse(settings.filtersEquipment, "so nothing is hidden")
+    }
+
+    func testEquipmentChoicePersistsAcrossLaunches() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        let settings = Settings(defaults: defaults)
+        settings.toggle(.barbell)
+
+        let reloaded = Settings(defaults: defaults)
+        XCTAssertFalse(reloaded.equipment.contains(.barbell), "a toggled-off item stays off on the next launch")
+        XCTAssertEqual(reloaded.equipment.count, Equipment.allCases.count - 1)
+        XCTAssertTrue(reloaded.filtersEquipment)
+
+        reloaded.toggle(.barbell)
+        XCTAssertFalse(Settings(defaults: defaults).filtersEquipment, "toggling it back on restores the full set")
+    }
+
+    func testEquipmentKeepsTheLastItem() throws {
+        let settings = Settings(defaults: try XCTUnwrap(UserDefaults(suiteName: suite)))
+        for item in Equipment.allCases { settings.toggle(item) }
+        XCTAssertEqual(settings.equipment.count, 1, "the last remaining item cannot be removed")
+        let last = try XCTUnwrap(settings.equipment.first)
+        settings.toggle(last)
+        XCTAssertEqual(settings.equipment, [last])
+    }
+
+    func testUnreadableEquipmentFallsBackToAll() throws {
+        let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
+        defaults.set(["jetpack", "trampoline"], forKey: "equipment")
+        XCTAssertEqual(Settings(defaults: defaults).equipment, Set(Equipment.allCases), "unknown values count as none")
+
+        defaults.set([String](), forKey: "equipment")
+        XCTAssertEqual(Settings(defaults: defaults).equipment, Set(Equipment.allCases), "an empty list falls back too")
+
+        defaults.set(["dumbbell", "jetpack"], forKey: "equipment")
+        XCTAssertEqual(Settings(defaults: defaults).equipment, [.dumbbell], "unknown values are dropped, known kept")
+    }
+
     func testStorePlansInTheSettingsUnit() throws {
         let defaults = try XCTUnwrap(UserDefaults(suiteName: suite))
         defaults.set("kg", forKey: "weightUnit")

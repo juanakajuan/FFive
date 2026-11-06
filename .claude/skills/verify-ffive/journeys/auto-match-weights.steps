@@ -44,7 +44,7 @@ store-expect SetEntry weight 30
 tap #tab.more
 tap #more.settings
 wait nav "Settings"
-wait #settings.auto-match
+scrollto #settings.auto-match
 shot 04-settings-toggle-on
 tap #settings.auto-match
 defaults-expect autoMatchWeights 0
@@ -64,5 +64,6 @@ value #set.weight.3 "35"
 value #set.weight.4 "30"
 tap #tab.more
 tap #more.settings
+scrollto #settings.auto-match
 tap #settings.auto-match
 defaults-expect autoMatchWeights 1

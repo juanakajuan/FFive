@@ -8,6 +8,11 @@ public struct ExerciseListing: Hashable, Identifiable {
 
     public var equipment: String { info?.equipment.displayName ?? "Custom" }
 
+    /// Custom exercises always fit, since the lifter made them.
+    public func fits(_ equipment: Set<Equipment>) -> Bool {
+        info.map { equipment.contains($0.equipment) } ?? true
+    }
+
     public static func == (lhs: Self, rhs: Self) -> Bool { lhs.id == rhs.id }
     public func hash(into hasher: inout Hasher) { hasher.combine(id) }
 }

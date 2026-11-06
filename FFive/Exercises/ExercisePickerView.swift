@@ -9,20 +9,34 @@ struct ExercisePickerView: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
     @State private var search = ""
+    @State private var equipmentOnly = true
 
     private var query: String { search.trimmingCharacters(in: .whitespaces) }
 
     var body: some View {
-        let entries = store.library(muscle: muscle, equipment: nil, search: search)
+        let settings = store.settings
+        let all = store.library(muscle: muscle, equipment: nil, search: search)
+        let entries = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
         NavigationStack {
             VStack(spacing: 0) {
                 SearchBox(prompt: "Search or create exercise", text: $search)
                     .accessibilityAddTraits(.isSearchField)
                     .a11y(.pickerSearch)
                     .padding(.horizontal, Theme.gutter)
-                    .padding(.bottom, 12)
+                    .padding(.bottom, settings.filtersEquipment ? 0 : 12)
+                if settings.filtersEquipment {
+                    EquipmentScopeToggle(isOn: $equipmentOnly)
+                        .padding(.bottom, 4)
+                }
                 List {
-                    if !query.isEmpty && !entries.contains(where: { $0.id == ExerciseID(folding: query) }) {
+                    if entries.isEmpty && !all.isEmpty {
+                        Text("Only exercises for equipment you don\u{2019}t have match.")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondary)
+                            .themedRow(vertical: 8)
+                            .listRowSeparator(.hidden)
+                    }
+                    if !query.isEmpty && !all.contains(where: { $0.id == ExerciseID(folding: query) }) {
                         createRow
                             .themedRow()
                         Text("Custom exercises need the muscle they train so volume and progression can count them.")
