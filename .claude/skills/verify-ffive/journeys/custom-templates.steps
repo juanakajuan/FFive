@@ -1,0 +1,58 @@
+launch
+tap #tab.templates timeout=20
+wait text "Custom templates"
+tap #tab.mesos
+tap #mesos.plan
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+tap #builder.save-template
+wait alert "Save as Template"
+replace field "Template name" "My Upper Lower"
+sleep 1
+tap button "Save"
+absent alert "Save as Template"
+store-expect CustomTemplate name "My Upper Lower"
+tap button "New Mesocycle"
+tap #builder.cancel
+tap #tab.templates
+wait #templates.custom.my-upper-lower
+tap #templates.menu.my-upper-lower
+tap #menu.rename-template
+wait alert "Rename Template"
+replace field "Template name" "UL Hypertrophy"
+sleep 1
+tap button "Save"
+absent alert "Rename Template"
+wait #templates.custom.ul-hypertrophy
+store-expect CustomTemplate name "UL Hypertrophy"
+tap #templates.custom.ul-hypertrophy
+wait nav "Customize"
+value #builder.name "UL Hypertrophy"
+tap #builder.cancel
+tap #tab.mesos
+tap #mesos.plan
+wait #builder.custom-template.ul-hypertrophy
+tap #builder.custom-template.ul-hypertrophy
+wait nav "Customize"
+value #builder.name "UL Hypertrophy"
+tap #builder.start
+store-expect Mesocycle name "UL Hypertrophy"
+tap #tab.mesos
+tap #mesos.row.ul-hypertrophy
+scrollto #meso.save-template
+tap #meso.save-template
+wait alert "Save as Template"
+replace field "Template name" "From Block"
+sleep 1
+tap button "Save"
+absent alert "Save as Template"
+store-expect CustomTemplate name "From Block"
+launch
+tap #tab.templates timeout=20
+wait #templates.custom.from-block
+wait #templates.custom.ul-hypertrophy
+tap #templates.menu.from-block
+tap #menu.delete-template
+tap #dialog.delete-template
+absent #templates.custom.from-block
+wait #templates.custom.ul-hypertrophy

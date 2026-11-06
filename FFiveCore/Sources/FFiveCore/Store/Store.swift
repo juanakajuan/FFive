@@ -52,6 +52,39 @@ public final class Store {
         commit()
     }
 
+    public func saveTemplate(from draft: MesoDraft, named name: String) {
+        saveTemplate(CustomTemplate.layout(of: draft), named: name, fallback: draft.name)
+    }
+
+    public func saveTemplate(from meso: Mesocycle, named name: String) {
+        saveTemplate(CustomTemplate.layout(of: meso), named: name, fallback: meso.name)
+    }
+
+    private func saveTemplate(_ days: [CustomTemplate.Layout.Day], named name: String, fallback: String) {
+        guard !days.isEmpty else { return }
+        context.insert(CustomTemplate(name: uniqueTemplateName(name.noteText ?? fallback), days: days))
+        commit()
+    }
+
+    public func rename(_ template: CustomTemplate, to name: String) {
+        guard let name = name.noteText, name != template.name else { return }
+        template.name = uniqueTemplateName(name)
+        commit()
+    }
+
+    public func delete(_ template: CustomTemplate) {
+        context.delete(template)
+        commit()
+    }
+
+    /// Every template name, built-in or custom, stays unique, so a name picks out one template.
+    func uniqueTemplateName(_ wanted: String) -> String {
+        let custom = (try? context.fetch(CustomTemplate.all)) ?? []
+        let taken = Set((ExerciseCatalog.templates.map(\.name) + custom.map(\.name)).map { $0.lowercased() })
+        guard taken.contains(wanted.lowercased()) else { return wanted }
+        return (2...).lazy.map { "\(wanted) \($0)" }.first { !taken.contains($0.lowercased()) }!
+    }
+
     public func skip(_ key: SessionKey, of meso: Mesocycle) {
         meso.skip(key, in: context)
         commit()

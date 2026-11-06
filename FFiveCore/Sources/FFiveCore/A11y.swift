@@ -65,6 +65,14 @@ public enum A11y: String, CaseIterable {
     case builderName = "builder.name"
     case builderStart = "builder.start"
     case builderCancel = "builder.cancel"
+    case builderSaveTemplate = "builder.save-template"
+    case builderCustomTemplate = "builder.custom-template"
+    case templatesCustom = "templates.custom"
+    case templatesMenu = "templates.menu"
+    case menuRenameTemplate = "menu.rename-template"
+    case menuDeleteTemplate = "menu.delete-template"
+    case dialogDeleteTemplate = "dialog.delete-template"
+    case mesoSaveTemplate = "meso.save-template"
     case mesosNew = "mesos.new"
     case mesosPlan = "mesos.plan"
     case mesosRow = "mesos.row"
@@ -81,7 +89,8 @@ public enum A11y: String, CaseIterable {
         .setWeight, .setReps, .setMenu, .setLog, .exerciseMenu, .exerciseCue, .exerciseHistory, .exercisePin,
     ]
     static let keyed: Set<A11y> = [
-        .pickerRow, .exercisesRow, .builderTemplate, .mesosRow, .mesosMenu, .musclePriority, .segment, .chip,
+        .pickerRow, .exercisesRow, .builderTemplate, .builderCustomTemplate, .templatesCustom, .templatesMenu,
+        .mesosRow, .mesosMenu, .musclePriority, .segment, .chip,
         .strengthRow, .historyRow,
         .settingsUnit,
     ]

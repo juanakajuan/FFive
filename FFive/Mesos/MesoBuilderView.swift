@@ -4,13 +4,14 @@ import SwiftUI
 
 struct MesoBuilderView: View {
     enum Route: Hashable {
-        case template(String)
+        case template(ProgramTemplate)
         case blank
     }
 
     var startAt: Route?
 
     @Environment(\.dismiss) private var dismiss
+    @Query(CustomTemplate.all) private var customTemplates: [CustomTemplate]
     @State private var path: [Route] = []
 
     var body: some View {
@@ -33,7 +34,7 @@ struct MesoBuilderView: View {
                 if startAt == nil, DemoLaunch.route == .builder, path.isEmpty,
                     let first = ExerciseCatalog.templates.first
                 {
-                    path = [.template(first.name)]
+                    path = [.template(first)]
                 }
             }
         }
@@ -42,13 +43,31 @@ struct MesoBuilderView: View {
     private var templateList: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                if !customTemplates.isEmpty {
+                    SectionHeading(text: "Your templates")
+                        .padding(.horizontal, Theme.gutter)
+                        .padding(.top, 16)
+                        .padding(.bottom, 10)
+                    TemplateGroup {
+                        ForEach(customTemplates) { saved in
+                            NavigationLink(value: Route.template(saved.template)) {
+                                TemplateListRow(template: saved.template, isCustom: true)
+                            }
+                            .buttonStyle(.plain)
+                            .a11y(.builderCustomTemplate, key: saved.name)
+                            if saved.id != customTemplates.last?.id {
+                                Rectangle().fill(Theme.hairline).frame(height: 1)
+                            }
+                        }
+                    }
+                }
                 SectionHeading(text: "Start from a template")
                     .padding(.horizontal, Theme.gutter)
                     .padding(.top, 16)
                     .padding(.bottom, 10)
                 TemplateGroup {
                     ForEach(ExerciseCatalog.templates) { template in
-                        NavigationLink(value: Route.template(template.name)) {
+                        NavigationLink(value: Route.template(template)) {
                             TemplateListRow(template: template)
                         }
                         .buttonStyle(.plain)
@@ -86,7 +105,7 @@ struct MesoBuilderView: View {
     private func editor(_ route: Route) -> some View {
         let template: ProgramTemplate? =
             switch route {
-            case .template(let name): ExerciseCatalog.templates.first { $0.name == name }
+            case .template(let template): template
             case .blank: nil
             }
         return MesoEditorView(draft: MesoDraft(template: template)) { dismiss() }
@@ -100,6 +119,7 @@ struct MesoEditorView: View {
     @Environment(Store.self) private var store
     @Query(Mesocycle.active) private var activeMesos: [Mesocycle]
     @State private var picker: PickerRequest?
+    @State private var templateName: String?
 
     private enum PickerRequest: Identifiable {
         case add(day: UUID)
@@ -232,7 +252,26 @@ struct MesoEditorView: View {
         .environment(\.defaultMinListRowHeight, 48)
         .navigationTitle("Customize")
         .navigationBarTitleDisplayMode(.inline)
-        .toolbar { EditButton() }
+        .toolbar {
+            ToolbarItemGroup(placement: .primaryAction) {
+                Button("Save as Template", systemImage: "square.and.arrow.down") { templateName = draft.name }
+                    .disabled(!draft.isStartable)
+                    .a11y(.builderSaveTemplate)
+                EditButton()
+            }
+        }
+        .alert(
+            "Save as Template",
+            isPresented: Binding(get: { templateName != nil }, set: { if !$0 { templateName = nil } })
+        ) {
+            TextField("Template name", text: Binding(get: { templateName ?? "" }, set: { templateName = $0 }))
+            Button("Save") {
+                if let templateName { store.saveTemplate(from: draft, named: templateName) }
+            }
+            Button("Cancel", role: .cancel) {}
+        } message: {
+            Text("Saves these days and exercises so you can start from them again.")
+        }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
                 if let current = activeMesos.first {
