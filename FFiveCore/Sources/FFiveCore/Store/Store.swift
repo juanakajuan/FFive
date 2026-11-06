@@ -72,6 +72,13 @@ public final class Store {
         commit()
     }
 
+    public func rename(_ meso: Mesocycle, to name: String) {
+        let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !name.isEmpty else { return }
+        meso.name = name
+        commit()
+    }
+
     public func unskip(_ key: SessionKey, of meso: Mesocycle) {
         meso.unskip(key)
         commit()
