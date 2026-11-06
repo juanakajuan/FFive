@@ -497,13 +497,13 @@ struct ExerciseCard: View {
             .padding(.top, 10)
 
             if !sets.isEmpty {
-                let improvements = exercise.improvements(over: store.lastFinishedExercise(exercise.key))
+                let comparisons = exercise.comparisons(with: store.lastFinishedExercise(exercise.key))
                 columnHeaders.padding(.top, 14)
                 ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
                     if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
                     SetRow(
                         set: set, number: index + 1, unit: unit, rir: phase?.rir,
-                        improvement: improvements[ObjectIdentifier(set)], onCompleted: onSetCompleted,
+                        comparison: comparisons[ObjectIdentifier(set)], onCompleted: onSetCompleted,
                         onLogBlocked: onLogBlocked, onAdd: { store.addSet(to: exercise) }
                     ) { store.deleteSet(set, from: exercise) }
                 }
@@ -616,8 +616,8 @@ struct SetRow: View {
     let number: Int
     let unit: WeightUnit
     let rir: Int?
-    /// What this logged set gained over the same working set last session, marked beside its log box.
-    let improvement: SetImprovement?
+    /// How this logged set did against its target, or last session's set without one, marked beside its log box.
+    let comparison: SetComparison?
     var onCompleted: () -> Void
     var onLogBlocked: ((SetEntry) -> Void)?
     var onAdd: () -> Void
@@ -628,7 +628,7 @@ struct SetRow: View {
     private enum Field { case weight, reps }
     @FocusState private var focus: Field?
     @State private var followers: [SetEntry] = []
-    @State private var showingImprovement = false
+    @State private var showingComparison = false
 
     /// Zero reads as "not entered yet", so the field shows its placeholder instead of a 0.
     private var weight: Binding<Double?> {
@@ -650,15 +650,15 @@ struct SetRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             fields
-            if showingImprovement, let improvement {
-                Callout(text: improvementText(improvement), systemImage: "arrow.up.circle.fill")
+            if showingComparison, let comparison {
+                Callout(text: comparisonText(comparison), systemImage: "\(comparison.outcome.symbol).circle.fill")
                     .padding(.horizontal, Theme.gutter)
                     .padding(.bottom, 8)
                     .transition(.opacity)
             }
         }
-        .onChange(of: improvement == nil) { _, gone in
-            if gone { showingImprovement = false }
+        .onChange(of: comparison == nil) { _, gone in
+            if gone { showingComparison = false }
         }
     }
 
@@ -754,21 +754,21 @@ struct SetRow: View {
             .accessibilityValue(set.status == .skipped ? "Skipped" : "")
             .accessibilityAddTraits(set.isDone ? .isSelected : [])
             .overlay(alignment: .leading) {
-                if improvement != nil {
+                if let outcome = comparison?.outcome {
                     Button {
-                        withAnimation(.snappy) { showingImprovement.toggle() }
+                        withAnimation(.snappy) { showingComparison.toggle() }
                     } label: {
-                        Image(systemName: "arrow.up")
+                        Image(systemName: outcome.symbol)
                             .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(Theme.success)
+                            .foregroundStyle(outcome.color)
                             .frame(width: 20, height: 44)
                             .contentShape(Rectangle())
                     }
                     .buttonStyle(.plain)
                     .padding(.leading, 16)
-                    .accessibilityLabel("Set \(number) beat last session")
-                    .accessibilityHint("Shows what improved")
-                    .a11y(.setBeat, number)
+                    .accessibilityLabel("Set \(number) \(outcome.verb)")
+                    .accessibilityHint("Shows what changed")
+                    .a11y(.setVsLast, number)
                 }
             }
         }
@@ -776,23 +776,46 @@ struct SetRow: View {
         .frame(minHeight: 52)
     }
 
-    private func improvementText(_ improvement: SetImprovement) -> String {
+    private func comparisonText(_ comparison: SetComparison) -> String {
         let unit = store.settings.weightUnit
-        let exercise = set.exercise
-        func load(_ weight: Double) -> String { exercise?.weightText(weight, unit: unit) ?? formatWeight(weight) }
-        let was = "Last time \(load(improvement.previous.weight)) × \(improvement.previous.reps)."
-        let reps = improvement.addedReps
-        let gained: String
-        switch (improvement.addedWeight > 0, reps > 0) {
-        case (true, true):
-            gained =
-                "Up \(formatWeight(improvement.addedWeight)) \(unit.rawValue) and \(reps) more \(reps == 1 ? "rep" : "reps")."
-        case (true, false):
-            gained = "Up \(formatWeight(improvement.addedWeight)) \(unit.rawValue) for the same reps."
-        default:
-            gained = "\(reps) more \(reps == 1 ? "rep" : "reps") at the same load."
+        func load(_ weight: Double) -> String { set.exercise?.weightText(weight, unit: unit) ?? formatWeight(weight) }
+        let expected = comparison.expected
+        let basis = comparison.basis == .target ? "Target" : "Last time"
+        let reference = "\(basis) \(load(expected.weight)) × \(expected.reps)."
+        let gap = abs(set.reps - comparison.expectedReps)
+        let reps = "\(gap) \(gap == 1 ? "rep" : "reps")"
+        let atLoad = set.weight == expected.weight ? "" : " at \(load(set.weight))"
+        switch comparison.outcome {
+        case .above: return "\(reps) more than expected\(atLoad). \(reference)"
+        case .met: return "Right on what was expected\(atLoad). \(reference)"
+        case .below: return "\(reps) fewer than expected\(atLoad). \(reference)"
         }
-        return "\(gained) \(was)"
+    }
+}
+
+extension SetComparison.Outcome {
+    fileprivate var symbol: String {
+        switch self {
+        case .above: "arrow.up"
+        case .met: "equal"
+        case .below: "arrow.down"
+        }
+    }
+
+    fileprivate var color: Color {
+        switch self {
+        case .above: Theme.success
+        case .met: Theme.secondary
+        case .below: Theme.danger
+        }
+    }
+
+    fileprivate var verb: String {
+        switch self {
+        case .above: "beat what was expected"
+        case .met: "met what was expected"
+        case .below: "fell short of what was expected"
+        }
     }
 }
 
