@@ -32,7 +32,7 @@ struct MesoBuilderView: View {
             .navigationDestination(for: Route.self, destination: editor)
             .onAppear {
                 if startAt == nil, DemoLaunch.route == .builder, path.isEmpty,
-                    let first = ExerciseCatalog.templates.first
+                    let first = ExerciseCatalog.defaultTemplate
                 {
                     path = [.template(first)]
                 }
@@ -51,7 +51,7 @@ struct MesoBuilderView: View {
                     TemplateGroup {
                         ForEach(customTemplates) { saved in
                             NavigationLink(value: Route.template(saved.template)) {
-                                TemplateListRow(template: saved.template, isCustom: true)
+                                TemplateListRow(template: saved.template)
                             }
                             .buttonStyle(.plain)
                             .a11y(.builderCustomTemplate, key: saved.name)

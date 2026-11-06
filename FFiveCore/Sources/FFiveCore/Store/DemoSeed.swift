@@ -29,7 +29,7 @@ public enum DemoSeed {
                 ("Lat Pulldown", .back, [(130, 11), (130, 10)]),
             ], unit: unit, context: context)
 
-        guard let template = ExerciseCatalog.templates.first else {
+        guard let template = ExerciseCatalog.defaultTemplate else {
             store.commit()
             return
         }

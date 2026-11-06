@@ -19,10 +19,14 @@ shot 01-session-before-end
 tap #workout.menu
 tap #menu.end-mesocycle
 tap #dialog.end-mesocycle
+wait nav "Ending Block Summary" timeout=10
+wait text "Sets per Muscle"
+shot 02-summary-after-end
+tap #sheet.done
 wait #workout.plan timeout=10
 store-expect Mesocycle finishedDate not-null
 store-expect Workout endDate not-null
-shot 02-empty-after-end
+shot 03-empty-after-end
 tap #tab.more
 tap #more.progress
 tap #segment.history

@@ -37,7 +37,7 @@ public final class CustomTemplate {
                 name: day.name, exerciseNames: day.slots.map(\.exercise),
                 slots: day.slots.map { TemplateSlot(muscle: $0.muscle, exercise: $0.exercise) })
         }
-        return ProgramTemplate(name: name, summary: days.map(\.name).joined(separator: ", "), days: days)
+        return ProgramTemplate(name: name, emphasis: nil, summary: days.map(\.name).joined(separator: ", "), days: days)
     }
 }
 

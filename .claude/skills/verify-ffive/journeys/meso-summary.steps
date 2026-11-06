@@ -1,0 +1,36 @@
+# meso-summary: open a block's summary, rename the block, and end it into the summary sheet (demo).
+launch -seedDemo
+tap #tab.mesos timeout=20
+tap #mesos.row.full-body-3-days
+wait nav "Full Body, 3 Days"
+shot 01-detail
+tap #meso.menu
+tap #menu.summary
+wait nav "Full Body, 3 Days Summary"
+wait text "Sets per Muscle"
+shot 02-summary-top
+scrollto text "Feedback"
+shot 03-summary-feedback
+tap button "Full Body, 3 Days"
+wait nav "Full Body, 3 Days"
+tap #meso.menu
+sleep 1
+tap #menu.rename
+wait alert "Rename Mesocycle"
+replace field "Mesocycle name" "Spring Block"
+sleep 1
+shot 04-rename
+tap button "Save"
+absent alert "Rename Mesocycle"
+wait nav "Spring Block"
+shot 05-renamed
+scrollto button "End Mesocycle"
+tap button "End Mesocycle"
+tap #dialog.end-mesocycle
+wait nav "Spring Block Summary" timeout=10
+wait #sheet.done
+shot 06-summary-on-end
+tap #sheet.done
+absent nav "Spring Block Summary"
+exists text "Finished"
+shot 07-after-end

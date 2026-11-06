@@ -49,7 +49,8 @@ final class CustomTemplateTests: XCTestCase {
         store.saveTemplate(from: meso, named: "")
 
         let saved = try XCTUnwrap(templates(store).first)
-        XCTAssertEqual(saved.name, "Full Body, 3 Days 2", "a blank name falls back to the block's, kept unique")
+        XCTAssertEqual(
+            saved.name, "\(ExerciseCatalog.templates[0].name) 2", "a blank name falls back to the block's, kept unique")
         XCTAssertEqual(saved.days.map(\.name), meso.dayNames)
         XCTAssertEqual(saved.days.map(\.slots.count), meso.sortedDays.map(\.slots.count))
     }

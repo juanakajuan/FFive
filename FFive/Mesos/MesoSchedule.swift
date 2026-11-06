@@ -152,7 +152,7 @@ extension View {
 }
 
 extension View {
-    fileprivate func scheduleCard() -> some View {
+    func scheduleCard() -> some View {
         padding(Theme.gutter)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))

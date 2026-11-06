@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 public final class Mesocycle {
-    public var name: String = ""
+    public internal(set) var name: String = ""
     public internal(set) var startDate: Date = Date.now
     public var accumulationWeeks: Int = 4
     public internal(set) var finishedDate: Date?

@@ -52,4 +52,22 @@ final class CatalogTests: XCTestCase {
             }
         }
     }
+
+    func testTemplatesCoverEveryScheduleAndEmphasis() {
+        let templates = ExerciseCatalog.templates
+        XCTAssertEqual(Set(templates.map(\.name)).count, templates.count, "template names are unique")
+        for days in 2...6 {
+            XCTAssertTrue(templates.contains { $0.days.count == days }, "no template for \(days) days a week")
+        }
+        for emphasis in TemplateEmphasis.allCases {
+            XCTAssertTrue(templates.contains { $0.emphasis == emphasis }, "no \(emphasis) template")
+        }
+        for template in templates {
+            for day in template.days {
+                XCTAssertEqual(
+                    Set(day.slots.map(\.exercise)).count, day.slots.count,
+                    "\(template.name), \(day.name) repeats an exercise")
+            }
+        }
+    }
 }

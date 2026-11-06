@@ -171,8 +171,28 @@ public struct TemplateDay: Hashable {
     public let slots: [TemplateSlot]
 }
 
+public enum TemplateEmphasis: String, CaseIterable, Identifiable {
+    case balanced, upperBody, lowerBody, glutes, chestAndTriceps, backAndBiceps, armsAndShoulders, timeSaver
+    public var id: String { rawValue }
+
+    public var displayName: String {
+        switch self {
+        case .balanced: "Balanced"
+        case .upperBody: "Upper Body"
+        case .lowerBody: "Lower Body"
+        case .glutes: "Glutes"
+        case .chestAndTriceps: "Chest & Triceps"
+        case .backAndBiceps: "Back & Biceps"
+        case .armsAndShoulders: "Arms & Shoulders"
+        case .timeSaver: "Time-Saver"
+        }
+    }
+}
+
 public struct ProgramTemplate: Identifiable, Hashable {
     public let name: String
+    /// Nil for a custom template.
+    public let emphasis: TemplateEmphasis?
     public let summary: String
     public let days: [TemplateDay]
     public var id: String { name }
