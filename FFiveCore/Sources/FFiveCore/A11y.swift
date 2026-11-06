@@ -16,6 +16,8 @@ public enum A11y: String, CaseIterable {
     case workoutMenu = "workout.menu"
     case workoutFinish = "workout.finish"
     case keyboardDone = "keyboard.done"
+    case keyboardPrevious = "keyboard.previous"
+    case keyboardNext = "keyboard.next"
     case sheetDone = "sheet.done"
     case menuAddExercise = "menu.add-exercise"
     case menuReorder = "menu.reorder"
