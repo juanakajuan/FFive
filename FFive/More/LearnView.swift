@@ -64,6 +64,24 @@ extension Learn {
         }
     }
 
+    /// An article opened from outside Learn, such as a workout tip.
+    struct ArticleSheet: View {
+        let article: Article
+        @Environment(\.dismiss) private var dismiss
+
+        var body: some View {
+            NavigationStack {
+                ArticleView(article: article)
+                    .toolbar {
+                        ToolbarItem(placement: .confirmationAction) {
+                            Button("Done") { dismiss() }
+                                .a11y(.sheetDone)
+                        }
+                    }
+            }
+        }
+    }
+
     fileprivate struct ArticleView: View {
         let article: Article
 

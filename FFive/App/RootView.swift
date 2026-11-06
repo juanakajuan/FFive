@@ -90,6 +90,7 @@ struct RootView: View {
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillHideNotification)) { _ in
             keyboardShown = false
         }
+        .dismissesKeyboardOnTapOutside()
         .environment(router)
         .tint(Theme.text)
         .preferredColorScheme(store.settings.appearance.colorScheme)
