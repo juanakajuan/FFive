@@ -275,7 +275,9 @@ struct ActiveWorkoutView: View {
             onSetCompleted: setCompleted,
             isLocked: unrated != nil,
             onLogBlocked: logGate(for: exercise, unrated: unrated, soreness: muscle.flatMap { pendingSoreness[$0] }),
-            showsFeedbackRequired: feedbackRequired?.exercise == exercise.persistentModelID,
+            feedbackRequiredFor: feedbackRequired.flatMap {
+                $0.exercise == exercise.persistentModelID ? $0.muscle : nil
+            },
             onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
             jointPain: jointPain(for: muscle),
             onShowHistory: { historyFor = exercise },
@@ -420,7 +422,8 @@ struct ExerciseCard: View {
     var isLocked = false
     /// Called instead of logging an unlogged set, with that set.
     var onLogBlocked: ((SetEntry) -> Void)?
-    var showsFeedbackRequired = false
+    /// The muscle whose feedback a refused log tap here waits for, shown over the card.
+    var feedbackRequiredFor: Muscle?
     var onSwap: (() -> Void)?
     var jointPain: Binding<JointPain?>?
     var onShowHistory: () -> Void
@@ -497,8 +500,9 @@ struct ExerciseCard: View {
         .surfaceCard(tag: exercise.muscle)
         .opacity(isLocked ? 0.4 : 1)
         .overlay {
-            if showsFeedbackRequired {
-                FeedbackRequiredToast().transition(.scale(scale: 0.9).combined(with: .opacity))
+            if let feedbackRequiredFor {
+                FeedbackRequiredToast(muscle: feedbackRequiredFor).transition(
+                    .scale(scale: 0.9).combined(with: .opacity))
             }
         }
     }
@@ -890,8 +894,10 @@ struct FeedbackCard: View {
 }
 
 private struct FeedbackRequiredToast: View {
+    let muscle: Muscle
+
     var body: some View {
-        Label("Your feedback is required", systemImage: "info.circle")
+        Label("Rate \(muscle.displayName.lowercased()) first", systemImage: "info.circle")
             .font(Theme.body.weight(.semibold))
             .foregroundStyle(.white)
             .padding(.horizontal, 20)

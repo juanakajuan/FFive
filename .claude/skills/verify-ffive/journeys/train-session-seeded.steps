@@ -8,6 +8,7 @@ wait text "How did quads feel today?"
 scrollto #set.log.5
 tap #set.log.1
 wait #feedback.required
+exists text "Rate quads first"
 shot 01-feedback-required
 wait #feedback.save
 tap #chip.great
