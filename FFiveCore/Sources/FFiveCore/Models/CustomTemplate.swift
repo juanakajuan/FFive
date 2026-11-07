@@ -54,7 +54,11 @@ extension CustomTemplate {
 
     static func layout(of draft: MesoDraft) -> [Layout.Day] {
         draft.days.filter { !$0.slots.isEmpty }.map { day in
-            Layout.Day(name: day.name, slots: day.slots.map { Layout.Slot(exercise: $0.exercise, muscle: $0.muscle) })
+            Layout.Day(
+                name: day.name,
+                slots: day.slots.compactMap { slot in
+                    slot.exercise.map { Layout.Slot(exercise: $0, muscle: slot.muscle) }
+                })
         }
     }
 

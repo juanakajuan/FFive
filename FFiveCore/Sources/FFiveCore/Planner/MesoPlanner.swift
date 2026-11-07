@@ -2,12 +2,13 @@ import Foundation
 import SwiftData
 
 public struct MesoDraft {
+    /// A muscle trained on a day, with the exercise for it once one is chosen.
     public struct Slot: Identifiable, Hashable {
         public let id = UUID()
-        public var exercise: String
+        public var exercise: String?
         public var muscle: Muscle
 
-        public init(exercise: String, muscle: Muscle) {
+        public init(exercise: String? = nil, muscle: Muscle) {
             self.exercise = exercise
             self.muscle = muscle
         }
@@ -40,7 +41,9 @@ public struct MesoDraft {
             } ?? [Day(name: "Day 1", slots: [])]
     }
 
-    public var isStartable: Bool { days.contains { !$0.slots.isEmpty } }
+    public var isStartable: Bool { days.contains { !$0.slots.isEmpty } && !hasEmptySlot }
+
+    public var hasEmptySlot: Bool { days.contains { $0.slots.contains { $0.exercise == nil } } }
 
     /// Every muscle a day of the draft trains, in catalog order.
     public var muscles: [Muscle] {
@@ -90,8 +93,9 @@ enum MesoPlanner {
             let day = MesoDay(name: draftDay.name, order: order, weekday: draftDay.weekday)
             meso.days.append(day)
             for (slotOrder, slot) in draftDay.slots.enumerated() {
-                CustomExercise.ensure(named: slot.exercise, muscle: slot.muscle, in: context)
-                day.slots.append(DaySlot(exerciseName: slot.exercise, muscle: slot.muscle, order: slotOrder))
+                guard let exercise = slot.exercise else { continue }
+                CustomExercise.ensure(named: exercise, muscle: slot.muscle, in: context)
+                day.slots.append(DaySlot(exerciseName: exercise, muscle: slot.muscle, order: slotOrder))
             }
         }
         return meso
