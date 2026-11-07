@@ -56,18 +56,45 @@ final class CatalogTests: XCTestCase {
     func testTemplatesCoverEveryScheduleAndEmphasis() {
         let templates = ExerciseCatalog.templates
         XCTAssertEqual(Set(templates.map(\.name)).count, templates.count, "template names are unique")
-        for days in 2...6 {
-            XCTAssertTrue(templates.contains { $0.days.count == days }, "no template for \(days) days a week")
+        for emphasis in TemplateEmphasis.allCases where emphasis != .timeSaver {
+            for days in 2...6 {
+                XCTAssertTrue(
+                    templates.contains { $0.emphasis == emphasis && $0.days.count == days },
+                    "no \(emphasis.displayName) template for \(days) days a week")
+            }
         }
-        for emphasis in TemplateEmphasis.allCases {
-            XCTAssertTrue(templates.contains { $0.emphasis == emphasis }, "no \(emphasis) template")
-        }
+        XCTAssertTrue(templates.contains { $0.emphasis == .timeSaver }, "no time-saver template")
         for template in templates {
             for day in template.days {
                 XCTAssertEqual(
                     Set(day.slots.map(\.exercise)).count, day.slots.count,
                     "\(template.name), \(day.name) repeats an exercise")
             }
+        }
+    }
+
+    func testEquipmentOnlyTemplatesUseOnlyThatEquipment() {
+        for (prefix, equipment) in [("Barbell-Only", Equipment.barbell), ("Dumbbell-Only", .dumbbell)] {
+            let matching = ExerciseCatalog.templates.filter { $0.name.hasPrefix(prefix) }
+            XCTAssertFalse(matching.isEmpty, "no \(prefix) template")
+            for template in matching {
+                XCTAssertEqual(template.emphasis, .timeSaver, "\(template.name) is a short-session template")
+                for day in template.days {
+                    XCTAssertLessThanOrEqual(day.slots.count, 4, "\(template.name), \(day.name) is not short")
+                    for name in day.exerciseNames {
+                        XCTAssertEqual(
+                            ExerciseCatalog.info(ExerciseID(folding: name))?.equipment, equipment,
+                            "\(template.name), \(day.name): \(name) needs other equipment")
+                    }
+                }
+            }
+        }
+    }
+
+    func testGluteTemplatesTrainAbsTwiceAWeek() {
+        for template in ExerciseCatalog.templates where template.emphasis == .glutesAndAbs {
+            let abDays = template.days.filter { day in day.slots.contains { $0.muscle == .abs } }
+            XCTAssertGreaterThanOrEqual(abDays.count, 2, "\(template.name) trains abs on fewer than two days")
         }
     }
 }

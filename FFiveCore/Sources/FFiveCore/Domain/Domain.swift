@@ -237,17 +237,19 @@ public struct TemplateDay: Hashable {
 }
 
 public enum TemplateEmphasis: String, CaseIterable, Identifiable {
-    case balanced, upperBody, lowerBody, glutes, chestAndTriceps, backAndBiceps, armsAndShoulders, timeSaver
+    case wholeBody, upperBody, lowerBody, glutesAndAbs, chestAndTriceps, backAndBiceps, chestAndBack, armsAndShoulders
+    case timeSaver
     public var id: String { rawValue }
 
     public var displayName: String {
         switch self {
-        case .balanced: "Balanced"
+        case .wholeBody: "Whole Body"
         case .upperBody: "Upper Body"
         case .lowerBody: "Lower Body"
-        case .glutes: "Glutes"
+        case .glutesAndAbs: "Glutes & Abs"
         case .chestAndTriceps: "Chest & Triceps"
         case .backAndBiceps: "Back & Biceps"
+        case .chestAndBack: "Chest & Back"
         case .armsAndShoulders: "Arms & Shoulders"
         case .timeSaver: "Time-Saver"
         }
