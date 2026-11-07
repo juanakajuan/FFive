@@ -5,12 +5,22 @@ public struct MesoDraft {
     /// A muscle trained on a day, with the exercise for it once one is chosen.
     public struct Slot: Identifiable, Hashable {
         public let id = UUID()
-        public var exercise: String?
+        /// Changing the exercise drops the starting targets, which were logged on the old one.
+        public var exercise: String? {
+            didSet { if exercise != oldValue { startingTargets = nil } }
+        }
         public var muscle: Muscle
+        /// The first session's sets, carried from a recent block this draft copies. Nil plans them fresh.
+        public internal(set) var startingTargets: [SetTarget]?
 
         public init(exercise: String? = nil, muscle: Muscle) {
             self.exercise = exercise
             self.muscle = muscle
+        }
+
+        init(exercise: String, muscle: Muscle, startingTargets: [SetTarget]?) {
+            self.init(exercise: exercise, muscle: muscle)
+            self.startingTargets = startingTargets
         }
     }
 
@@ -95,7 +105,9 @@ enum MesoPlanner {
             for (slotOrder, slot) in draftDay.slots.enumerated() {
                 guard let exercise = slot.exercise else { continue }
                 CustomExercise.ensure(named: exercise, muscle: slot.muscle, in: context)
-                day.slots.append(DaySlot(exerciseName: exercise, muscle: slot.muscle, order: slotOrder))
+                let daySlot = DaySlot(exerciseName: exercise, muscle: slot.muscle, order: slotOrder)
+                daySlot.startingTargets = slot.startingTargets
+                day.slots.append(daySlot)
             }
         }
         return meso
@@ -178,10 +190,11 @@ enum MesoPlanner {
         return days[dayIndex].sortedSlots.map { slot in
             PlannedExercise(
                 name: slot.exerciseName, key: slot.key, muscle: slot.muscle,
-                targets: freshTargets(
-                    for: slot.key,
-                    count: initialSetCount(of: slot, dayIndex: dayIndex, in: meso),
-                    rir: rir, unit: unit, snapshot: snapshot, bodyweight: snapshot.bodyweight))
+                targets: slot.startingTargets
+                    ?? freshTargets(
+                        for: slot.key,
+                        count: initialSetCount(of: slot, dayIndex: dayIndex, in: meso),
+                        rir: rir, unit: unit, snapshot: snapshot, bodyweight: snapshot.bodyweight))
         }
     }
 
@@ -278,6 +291,7 @@ enum MesoPlanner {
     }
 
     private static func initialSetCount(of slot: DaySlot, dayIndex: Int, in meso: Mesocycle) -> Int {
+        if let carried = slot.startingTargets { return carried.count }
         guard let muscle = slot.muscle else { return 2 }
         let sessions = meso.days.filter { $0.slots.contains { $0.muscleRaw == slot.muscleRaw } }.count
         let inSession = meso.sortedDays[dayIndex].slots.filter { $0.muscleRaw == slot.muscleRaw }.count
