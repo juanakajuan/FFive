@@ -1,0 +1,35 @@
+# guided-plan: pick days a week and muscle priorities, build the plan, autofill it, start it.
+# Before: ffive-verify reset-data.
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+wait #builder.guided
+shot 01-start-screen
+tap #builder.guided
+wait nav "Guided Plan"
+value #muscle-priority.abs "Maintain"
+value #muscle-priority.chest "Normal"
+tap #builder.guided-days
+tap button "3"
+tap #muscle-priority.chest
+tap button "Emphasize"
+value #muscle-priority.chest "Emphasize"
+shot 02-guided
+tap #builder.guided-build
+wait nav "Customize"
+replace #builder.name "Guided Block"
+value field "Day name" "Full Body A"
+wait text "Choose an exercise"
+shot 03-editor-slots
+tap #builder.menu
+tap #menu.autofill
+absent text "Choose an exercise"
+scrollto #muscle-priority.chest
+value #muscle-priority.chest "Emphasize"
+shot 04-autofilled
+tap #builder.start
+absent nav "Customize" timeout=10
+store-expect Mesocycle name "Guided Block"
+store-expect MesoDay name "Full Body C"
+store-expect DaySlot muscleRaw abs
