@@ -1,0 +1,59 @@
+# copy-mesocycle (on disk): log a set in a Full Body block, end it, then plan the next block as a copy of it. The copy keeps
+# the days and exercises, and its first session starts from the weight and reps logged.
+# Before: ffive-verify reset-data. After: ffive-verify store "select ZNAME, ZFINISHEDDATE from ZMESOCYCLE"
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+absent #builder.copy-source.full-body-3-days
+tap #builder.template.full-body-3-days
+wait nav "Customize"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+replace #set.weight.1 "135"
+replace #set.reps.1 "9"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+tap #workout.menu
+tap #menu.end-mesocycle
+tap #dialog.end-mesocycle
+wait text "Sets per Muscle" timeout=10
+tap #sheet.done
+wait #workout.plan timeout=10
+store-expect Mesocycle finishedDate not-null
+tap #workout.plan
+wait nav "New Mesocycle"
+wait text "Copy a mesocycle"
+wait text "FINISHED*"
+shot 01-start-screen
+tap #builder.copy-source.full-body-3-days
+wait nav "Copy Full Body, 3 Days"
+wait text "~Week 1 starts from the weights and reps logged"
+wait text "4 sets of 135 lb*9"
+shot 02-review-week-1
+tap button "Week 2"
+absent text "4 sets of 135 lb*9"
+wait text "Full Body B"
+shot 03-review-week-2
+tap button "Week 1"
+wait text "4 sets of 135 lb*9"
+tap #builder.copy-use
+wait nav "Customize"
+value #builder.name "Full Body, 3 Days"
+replace #builder.name "Copied Block"
+shot 04-editor-prefilled
+# Let the keyboard settle, or the tap only ends editing.
+sleep 1
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+wait text "~Copied Block"
+value #set.weight.1 "135"
+value #set.reps.1 "9"
+value #set.weight.2 "135"
+store-expect Mesocycle name "Copied Block"
+store-expect SetEntry targetWeight 135
+shot 05-first-session
+launch
+wait text "WEEK 1 DAY 1" timeout=20
+value #set.weight.1 "135"

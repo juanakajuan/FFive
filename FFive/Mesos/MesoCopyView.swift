@@ -97,10 +97,13 @@ struct MesoCopyView: View {
 
     private func setsText(_ targets: [SetTarget]) -> String {
         let unit = store.settings.weightUnit.rawValue
-        return targets.map { target in
+        let text = { (target: SetTarget) in
             "\(target.weight.map { "\(formatWeight($0)) \(unit)" } ?? "?") × \(target.reps.map(String.init) ?? "?")"
         }
-        .joined(separator: ", ")
+        if let first = targets.first, targets.allSatisfy({ $0 == first }) {
+            return "\(targets.count) \(targets.count == 1 ? "set" : "sets") of \(text(first))"
+        }
+        return targets.map(text).joined(separator: ", ")
     }
 }
 
