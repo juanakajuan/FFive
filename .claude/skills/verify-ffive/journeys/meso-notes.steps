@@ -1,0 +1,56 @@
+# meso-notes: add, read and delete notes on the active block from the workout menu and the meso detail screen.
+# Before: ffive-verify reset-data. After: ffive-verify store "select ZNAME, cast(ZNOTES as text) from ZMESOCYCLE"
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+replace #builder.name "Verify Block"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+tap #workout.menu
+wait #menu.meso-notes
+shot 01-workout-menu
+tap #menu.meso-notes
+wait nav "Verify Block Notes"
+type #meso-note.text "Sleep has been rough this block, keep RIR honest"
+wait text "48/500"
+shot 02-notes-composer
+tap #meso-note.add
+wait text "Sleep has been rough this block, keep RIR honest"
+store-expect Mesocycle name "Verify Block"
+shot 03-notes-added
+tap #sheet.done
+absent nav "Verify Block Notes"
+tap #tab.mesos
+tap #mesos.row.verify-block
+wait nav "Verify Block"
+scrollto #meso-notes.edit
+wait text "Sleep has been rough this block, keep RIR honest"
+shot 04-detail-card
+tap #meso-notes.edit
+wait nav "Verify Block Notes"
+type #meso-note.text "Swap to cambered bar next block"
+tap #meso-note.add
+wait text "Swap to cambered bar next block"
+count #meso-note.delete.1 "1"
+shot 05-two-notes
+tap #meso-note.delete.2
+absent text "Sleep has been rough this block, keep RIR honest"
+wait text "Swap to cambered bar next block"
+shot 06-after-delete
+tap #sheet.done
+absent nav "Verify Block Notes"
+tap #meso.menu
+tap #menu.summary
+wait nav "Verify Block Summary"
+wait text "Swap to cambered bar next block"
+shot 07-summary
+launch
+tap #tab.mesos timeout=20
+tap #mesos.row.verify-block
+scrollto #meso-notes.edit
+wait text "Swap to cambered bar next block"
+absent text "Sleep has been rough this block, keep RIR honest"
+shot 08-after-relaunch

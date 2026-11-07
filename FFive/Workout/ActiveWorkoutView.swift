@@ -13,6 +13,7 @@ struct ActiveWorkoutView: View {
     @State private var picker: PickerRequest?
     @State private var showingSchedule = false
     @State private var showingReorder = false
+    @State private var notesFor: Mesocycle?
     @State private var confirmDiscard = false
     @State private var confirmReset = false
     @State private var confirmEnd = false
@@ -154,6 +155,7 @@ struct ActiveWorkoutView: View {
                     saveNote($0, to: edit.target)
                 }
             }
+            .sheet(item: $notesFor) { MesoNotesScreen(meso: $0) }
             .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
             .sheet(item: $article) { Learn.ArticleSheet(article: $0) }
             .sheet(item: $sorenessAsk) { ask in
@@ -417,6 +419,10 @@ struct ActiveWorkoutView: View {
             noteEdit = NoteEdit(target: .day, draft: workout.note ?? "")
         }
         .a11y(.menuWorkoutNote)
+        if let activeMeso {
+            Button("Mesocycle Notes", systemImage: "list.bullet.clipboard") { notesFor = activeMeso }
+                .a11y(.menuMesoNotes)
+        }
         Button(
             workout.bodyweight.map { "Bodyweight · \(formatWeight($0)) \(store.settings.weightUnit.rawValue)" }
                 ?? "Set Bodyweight",

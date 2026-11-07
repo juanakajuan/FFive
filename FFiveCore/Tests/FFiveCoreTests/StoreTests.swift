@@ -23,6 +23,25 @@ final class StoreTests: XCTestCase {
         return (store, try XCTUnwrap(store.context.fetch(Mesocycle.active).first))
     }
 
+    func testMesoNotesAddInOrderAndDeleteOne() throws {
+        let (store, meso) = try startedStore()
+
+        store.addNote("  Sleep has been poor \n", to: meso)
+        store.addNote("   ", to: meso)
+        store.addNote(String(repeating: "x", count: MesoNote.maxLength + 20), to: meso)
+
+        XCTAssertEqual(meso.notes.count, 2, "a blank note adds nothing")
+        XCTAssertEqual(meso.notes[0].text, "Sleep has been poor", "the detail screen shows the trimmed note first")
+        XCTAssertEqual(meso.notes[1].text.count, MesoNote.maxLength, "a long note is cut to the limit")
+        XCTAssertFalse(store.context.hasChanges, "the notes are saved")
+
+        store.deleteNote(meso.notes[0], from: meso)
+
+        XCTAssertEqual(meso.notes.map(\.text.count), [MesoNote.maxLength], "only the deleted note is gone")
+        XCTAssertFalse(store.context.hasChanges, "the delete is saved")
+        XCTAssertNil(store.failure)
+    }
+
     func testEndWithOpenLoggedSessionKeepsItInHistory() throws {
         let (store, meso) = try startedStore()
         let started = store.buildSession(meso, at: day1)

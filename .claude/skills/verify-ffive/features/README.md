@@ -8,7 +8,7 @@ This directory is the maintained source for verifying FFive's user-facing behavi
 - `ffive-verify launch` printed `READY`, and `ffive-verify doctor` prints `HEALTHY` with an install stamp that matches the source.
 - **Demo baseline** (read-only journeys): every drive starts with `launch -seedDemo`. The block "Full Body, 3 Days" is at Week 2 of 5. Week 1 is finished, Week 2 · Day 1 is in progress with Squat logged, and Week 2 · Day 3 is skipped. The Workout tab opens on `WEEK 2 DAY 1`. "Morning Workout" and "Evening Workout" are free-form history.
 - **On-disk baseline** (write journeys): `ffive-verify reset-data`, then a bare `launch`. The Workout tab shows `Plan a Mesocycle` and `Quick Workout`.
-- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, coaching-tips, reorder-exercises, reset-and-rename-day, muscle-priorities, end-mesocycle, and rename-mesocycle each start from their own `reset-data`.
+- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, coaching-tips, reorder-exercises, reset-and-rename-day, muscle-priorities, end-mesocycle, rename-mesocycle, and meso-notes each start from their own `reset-data`.
 - Never drive a simulator that `ffive-verify launch` did not create in this checkout.
 
 ## Driving conventions
@@ -52,6 +52,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Reorder exercises](./reorder-exercises.md): drag a session's exercises into a new order, for this session or later weeks too (on disk and demo).
 - [Set type](./set-type.md): mark a set Regular, Myorep, or Myorep match from its menu; the type shows on the row and in history (on disk).
 - [Bodyweight](./bodyweight.md): set body weight from the workout menu, log added load or assistance on bodyweight lifts, and see e1RM, volume, and labels count body weight (on disk).
+- [Mesocycle notes](./meso-notes.md): a list of notes on the active block, added and deleted from the workout menu or the block's detail page, and shown in its summary (on disk).
 - [Notes](./notes.md): a per-workout exercise note, pinning it to carry forward, editing, unpinning, and deleting it, and a day note (on disk).
 - [Exercise history](./exercise-history.md): the history button on an exercise card lists every finished session of it, grouped by meso, and opens each one (demo).
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).

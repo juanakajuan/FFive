@@ -20,6 +20,9 @@ struct MesoSummaryView: View {
                     StrengthChangeCard(changes: summary.strength, unit: store.settings.weightUnit)
                     FeedbackTrendCard(summary: summary)
                 }
+                if !meso.notes.isEmpty {
+                    MesoNotesCard(meso: meso)
+                }
             }
             .padding(.bottom, Theme.gutter)
         }
