@@ -1,0 +1,50 @@
+# Copy a built-in template from its preview, a custom one from its row menu, and a taken copy name.
+launch
+tap #tab.templates timeout=20
+tap #templates.template.upper-lower-4-days
+wait nav "Upper*4 Days"
+tap #template-preview.menu
+wait #menu.copy-template
+absent #menu.edit-template
+shot builtin-menu
+tap #menu.copy-template
+wait nav "Edit Template"
+absent #builder.name
+shot builtin-copy-edit
+store-expect CustomTemplate name "Upper/Lower, 4 Days copy"
+tap #builder.update-template
+wait nav "Upper*4 Days"
+tap button "BackButton"
+wait #templates.custom.upper-lower-4-days-copy
+shot list-after-builtin-copy
+tap #templates.menu.upper-lower-4-days-copy
+wait #menu.copy-template
+shot custom-row-menu
+tap #menu.copy-template
+wait nav "Edit Template"
+store-expect CustomTemplate name "Upper/Lower, 4 Days copy copy"
+tap #builder.update-template
+wait #templates.custom.upper-lower-4-days-copy-copy
+tap #templates.custom.upper-lower-4-days-copy
+wait nav "Upper*4 Days copy"
+tap #template-preview.menu
+wait #menu.edit-template
+shot custom-preview-menu
+tap #menu.copy-template
+wait nav "Edit Template"
+store-expect CustomTemplate name "Upper/Lower, 4 Days copy copy 2"
+tap #builder.update-template
+tap button "BackButton"
+tap #templates.template.upper-lower-4-days
+tap #template-preview.menu
+tap #menu.copy-template
+wait nav "Edit Template"
+store-expect CustomTemplate name "Upper/Lower, 4 Days copy 2"
+tap #builder.update-template
+tap button "BackButton"
+wait #templates.custom.upper-lower-4-days-copy-2
+shot list-final
+launch
+tap #tab.templates timeout=20
+wait #templates.custom.upper-lower-4-days-copy-2
+wait #templates.custom.upper-lower-4-days-copy-copy-2

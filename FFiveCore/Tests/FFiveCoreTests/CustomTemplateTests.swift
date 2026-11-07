@@ -66,6 +66,24 @@ final class CustomTemplateTests: XCTestCase {
         XCTAssertEqual(try templates(store).map(\.name).sorted(), ["PPL", "Upper/Lower, 4 Days 2", "ppl 2"])
     }
 
+    func testCopyKeepsTheDaysUnderAFreeCopyName() throws {
+        let store = Store(inMemory: true)
+        let builtIn = ExerciseCatalog.templates[0]
+
+        let first = store.copyTemplate(builtIn)
+        let second = store.copyTemplate(builtIn)
+        let ofCustom = store.copyTemplate(first.template)
+
+        XCTAssertEqual(first.name, "\(builtIn.name) copy")
+        XCTAssertEqual(second.name, "\(builtIn.name) copy 2", "a taken copy name gets the next free number")
+        XCTAssertEqual(ofCustom.name, "\(builtIn.name) copy copy")
+        XCTAssertEqual(first.template.days.map(\.name), builtIn.days.map(\.name))
+        XCTAssertEqual(first.template.days.map(\.slots), builtIn.days.map(\.slots))
+        XCTAssertEqual(ofCustom.template.days, first.template.days)
+        XCTAssertEqual(try templates(store).count, 3)
+        XCTAssertNil(store.failure)
+    }
+
     func testRenameAndDelete() throws {
         let store = Store(inMemory: true)
         store.saveTemplate(from: MesoDraft(template: ExerciseCatalog.templates[0]), named: "A")

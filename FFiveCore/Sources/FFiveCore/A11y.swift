@@ -128,6 +128,7 @@ public enum A11y: String, CaseIterable {
     case templatesMenu = "templates.menu"
     case menuRenameTemplate = "menu.rename-template"
     case menuDeleteTemplate = "menu.delete-template"
+    case menuCopyTemplate = "menu.copy-template"
     case dialogDeleteTemplate = "dialog.delete-template"
     case templatesTemplate = "templates.template"
     case templatePreviewDay = "template-preview.day"
