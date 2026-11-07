@@ -6,6 +6,7 @@ struct MesoBuilderView: View {
     enum Route: Hashable {
         case template(ProgramTemplate)
         case blank
+        case guided
         case copy(Mesocycle)
     }
 
@@ -79,6 +80,31 @@ struct MesoBuilderView: View {
                         }
                     }
                 }
+                SectionHeading(text: "Plan it for me")
+                    .padding(.horizontal, Theme.gutter)
+                    .padding(.top, 16)
+                    .padding(.bottom, 10)
+                TemplateGroup {
+                    NavigationLink(value: Route.guided) {
+                        HStack(spacing: 10) {
+                            Image(systemName: "wand.and.stars").font(.system(size: 18))
+                            VStack(alignment: .leading, spacing: 3) {
+                                Text("Guided plan").font(.system(size: 16, weight: .semibold))
+                                Text("Pick your days a week and what to grow")
+                                    .font(Theme.caption)
+                                    .foregroundStyle(Theme.secondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .medium)).foregroundStyle(
+                                Theme.secondary)
+                        }
+                        .foregroundStyle(Theme.text)
+                        .padding(.vertical, 14)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .a11y(.builderGuided)
+                }
                 SectionHeading(text: "Start from a template")
                     .padding(.horizontal, Theme.gutter)
                     .padding(.top, 16)
@@ -125,6 +151,7 @@ struct MesoBuilderView: View {
         switch route {
         case .template(let template): MesoEditorView(draft: MesoDraft(template: template)) { dismiss() }
         case .blank: MesoEditorView(draft: MesoDraft(template: nil)) { dismiss() }
+        case .guided: MesoGuidedView { dismiss() }
         case .copy(let source): MesoCopyView(source: source) { dismiss() }
         }
     }
