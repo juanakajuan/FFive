@@ -55,6 +55,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Mesocycle notes](./meso-notes.md): a list of notes on the active block, added and deleted from the workout menu or the block's detail page, and shown in its summary (on disk).
 - [Notes](./notes.md): a per-workout exercise note, pinning it to carry forward, editing, unpinning, and deleting it, and a day note (on disk).
 - [Exercise history](./exercise-history.md): the history button on an exercise card lists every finished session of it, grouped by meso, and opens each one (demo).
+- [Last performed](./last-performed.md): exercise picker rows and the exercise detail page show the date of the newest finished session (demo).
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
 - [Coaching tips](./coaching-tips.md): a starting-load tip on a calibration set and a rest tip after a log, each linking to its Learn article and staying closed once dismissed (on disk plus UserDefaults).
 - [Settings](./settings.md): weight unit, auto-match weights, iCloud sync status, and app version, pushed from More (demo plus UserDefaults).
