@@ -80,6 +80,7 @@ public enum A11y: String, CaseIterable {
     case exercisesSearch = "exercises.search"
     case exercisesRow = "exercises.row"
     case exercisesShowHidden = "exercises.show-hidden"
+    case exercisesNew = "exercises.new"
     case editorName = "editor.name"
     case editorMuscle = "editor.muscle"
     case editorEquipment = "editor.equipment"
