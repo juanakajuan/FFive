@@ -1,0 +1,14 @@
+# The workout's history button lists every finished session of the exercise, grouped by meso, and opens each one.
+launch -seedDemo
+wait #exercise.history.1 timeout=20
+tap #exercise.history.1
+wait #sheet.done
+wait text "Full Body, 3 Days"
+wait any "Week 1*Day 1*Full Body A*Set 1, 185 lb*6*"
+swipe up
+wait text "Quick Workouts"
+wait any "Morning Workout*Set 1, 205 lb*6*"
+shot history
+tap #exercise-history.session.1
+wait nav "Full Body A"
+shot detail

@@ -109,6 +109,7 @@ public enum A11y: String, CaseIterable {
     case chipHelp = "chip.help"
     case strengthRow = "strength.row"
     case historyRow = "history.row"
+    case exerciseHistorySession = "exercise-history.session"
     case settingsUnit = "settings.unit"
     case settingsAutoMatch = "settings.auto-match"
     case settingsEquipment = "settings.equipment"
@@ -119,7 +120,7 @@ public enum A11y: String, CaseIterable {
 
     static let indexed: Set<A11y> = [
         .setWeight, .setReps, .setMenu, .setLog, .setRecommendation, .setVsLast, .exerciseMenu, .exerciseCue,
-        .exerciseHistory,
+        .exerciseHistory, .exerciseHistorySession,
         .exercisePin,
         .tipLearnMore, .tipDismiss,
     ]

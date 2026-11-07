@@ -249,6 +249,11 @@ public final class Store {
         MesoPlanner.lastFinishedExercise(key, in: context)
     }
 
+    public func exerciseHistory(_ key: ExerciseID) -> [ExerciseHistoryGroup] {
+        observeCommits()
+        return ExerciseHistoryGroup.groups(of: key, in: context)
+    }
+
     public func weekStats(now: Date = .now) -> WeekStats {
         observeCommits()
         let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: now)?.start ?? now

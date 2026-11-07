@@ -53,6 +53,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Set type](./set-type.md): mark a set Regular, Myorep, or Myorep match from its menu; the type shows on the row and in history (on disk).
 - [Bodyweight](./bodyweight.md): set body weight from the workout menu, log added load or assistance on bodyweight lifts, and see e1RM, volume, and labels count body weight (on disk).
 - [Notes](./notes.md): a per-workout exercise note, pinning it to carry forward, editing, unpinning, and deleting it, and a day note (on disk).
+- [Exercise history](./exercise-history.md): the history button on an exercise card lists every finished session of it, grouped by meso, and opens each one (demo).
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
 - [Coaching tips](./coaching-tips.md): a starting-load tip on a calibration set and a rest tip after a log, each linking to its Learn article and staying closed once dismissed (on disk plus UserDefaults).
 - [Settings](./settings.md): weight unit, auto-match weights, iCloud sync status, and app version, pushed from More (demo plus UserDefaults).
