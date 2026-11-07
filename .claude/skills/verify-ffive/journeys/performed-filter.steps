@@ -1,0 +1,55 @@
+# performed-filter: the Exercises tab and the picker filter to exercises with a logged set in a finished workout. On disk.
+# Before: ffive-verify reset-data.
+launch
+tap button "Done" timeout=15
+tap #tab.exercises timeout=20
+wait #exercises.row.ab-wheel
+tap button "Filters"
+tap #exercises.performed-only
+wait text "No exercises match."
+shot exercises-empty
+tap #tab.workout
+tap #workout.quick timeout=10
+wait #workout.menu timeout=10
+tap #workout.menu
+tap #menu.add-exercise
+wait nav "Add Exercise"
+tap #picker.performed-only
+selected #picker.performed-only
+wait text "No exercises performed yet"
+shot picker-empty
+tap #picker.performed-only
+unselected #picker.performed-only
+tap #picker.row.bench-press
+absent nav "Add Exercise"
+type #set.weight.1 "100"
+type #set.reps.1 "8"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+# Logged but not finished: still not performed.
+tap #tab.exercises
+tap button "Filters"
+tap #exercises.performed-only
+wait text "No exercises match."
+tap #tab.workout
+tap #workout.finish timeout=10
+store-expect Workout endDate not-null
+tap #tab.exercises timeout=20
+tap button "Filters"
+tap #exercises.performed-only
+wait button "~Performed"
+wait #exercises.row.bench-press
+absent #exercises.row.ab-wheel
+shot exercises-performed
+tap #tab.workout
+tap #workout.quick timeout=10
+wait #workout.menu timeout=10
+tap #workout.menu
+tap #menu.add-exercise
+wait nav "Add Exercise"
+wait #picker.row.cable-fly
+tap #picker.performed-only
+wait #picker.row.bench-press
+absent #picker.row.cable-fly
+shot picker-performed

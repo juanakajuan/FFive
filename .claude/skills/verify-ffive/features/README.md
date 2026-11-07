@@ -60,6 +60,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Notes](./notes.md): a per-workout exercise note, pinning it to carry forward, editing, unpinning, and deleting it, and a day note (on disk).
 - [Exercise history](./exercise-history.md): the history button on an exercise card lists every finished session of it, grouped by meso, and opens each one (demo).
 - [Last performed](./last-performed.md): exercise picker rows and the exercise detail page show the date of the newest finished session (demo).
+- [Performed filter](./performed-filter.md): the Exercises tab's Filters menu and the picker can list only exercises with a logged set in a finished workout (on disk).
 - [Suggest an exercise](./suggest-exercise.md): the picker's Suggest button cycles fitting exercises for the muscle, done-before first, and changes nothing until Add (demo).
 - [Muscle slots in the builder](./muscle-slots.md): a builder day holds muscle-only slots that block Start; the editor menu autofills, clears and resets them (on disk).
 - [Manage builder days](./manage-days.md): the editor menu's Manage Days sheet drags days into a new training order, renames and deletes them; the started block trains them in that order (on disk).
