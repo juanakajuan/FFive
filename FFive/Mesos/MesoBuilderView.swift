@@ -113,13 +113,21 @@ struct MesoBuilderView: View {
 }
 
 struct MesoEditorView: View {
-    @State var draft: MesoDraft
+    @State private var draft: MesoDraft
+    private let original: MesoDraft
     var onStart: () -> Void
+
+    init(draft: MesoDraft, onStart: @escaping () -> Void) {
+        _draft = State(initialValue: draft)
+        original = draft
+        self.onStart = onStart
+    }
 
     @Environment(Store.self) private var store
     @Query(Mesocycle.active) private var activeMesos: [Mesocycle]
     @State private var picker: PickerRequest?
     @State private var templateName: String?
+    @State private var confirmReset = false
 
     private enum PickerRequest: Identifiable {
         case add(day: UUID)
@@ -186,13 +194,13 @@ struct MesoEditorView: View {
                         } label: {
                             HStack(spacing: 10) {
                                 VStack(alignment: .leading, spacing: 3) {
-                                    Text(slot.exercise)
+                                    Text(slot.exercise ?? "Choose an exercise")
                                         .font(Theme.body)
-                                        .foregroundStyle(Theme.text)
+                                        .foregroundStyle(slot.exercise == nil ? Theme.infoText : Theme.text)
                                     MuscleDotLabel(muscle: slot.muscle)
                                 }
                                 Spacer()
-                                Image(systemName: "arrow.triangle.2.circlepath")
+                                Image(systemName: slot.exercise == nil ? "plus.circle" : "arrow.triangle.2.circlepath")
                                     .font(.system(size: 14))
                                     .foregroundStyle(Theme.secondary)
                             }
@@ -210,6 +218,23 @@ struct MesoEditorView: View {
                             .font(Theme.body)
                             .foregroundStyle(Theme.infoText)
                     }
+                    .builderRow()
+                    Picker(
+                        selection: Binding<Muscle?>(
+                            get: { nil },
+                            set: { muscle in
+                                guard let muscle else { return }
+                                update(day.id) { $0.slots.append(MesoDraft.Slot(muscle: muscle)) }
+                            })
+                    ) {
+                        ForEach(Muscle.allCases) { Text($0.displayName).tag(Muscle?.some($0)) }
+                    } label: {
+                        Label("Add Muscle", systemImage: "plus.square.dashed")
+                            .font(Theme.body)
+                            .foregroundStyle(Theme.infoText)
+                    }
+                    .tint(Theme.secondary)
+                    .a11y(.builderAddMuscle)
                     .builderRow()
                     if day.slots.isEmpty {
                         footnote("Add at least one exercise, or remove this day.")
@@ -238,7 +263,9 @@ struct MesoEditorView: View {
                         .foregroundStyle(Theme.infoText)
                 }
                 .builderRow()
-                footnote("Tap an exercise to swap it for another that trains the same muscle.")
+                footnote(
+                    "Tap an exercise to swap it for another that trains the same muscle. Add a muscle to choose its exercise later."
+                )
             }
 
             if !draft.muscles.isEmpty {
@@ -267,7 +294,24 @@ struct MesoEditorView: View {
                     .disabled(!draft.isStartable)
                     .a11y(.builderSaveTemplate)
                 EditButton()
+                Menu("Options", systemImage: "ellipsis.circle") {
+                    Button("Autofill Exercises", systemImage: "wand.and.stars", action: autofill)
+                        .disabled(!draft.hasEmptySlot)
+                        .a11y(.menuAutofill)
+                    Button("Clear Exercises", systemImage: "eraser") { draft.clearExercises() }
+                        .disabled(!draft.days.contains { $0.slots.contains { $0.exercise != nil } })
+                        .a11y(.menuClearExercises)
+                    Button("Reset", systemImage: "arrow.counterclockwise", role: .destructive) { confirmReset = true }
+                        .a11y(.menuReset)
+                }
+                .a11y(.builderMenu)
             }
+        }
+        .confirmationDialog("Reset this mesocycle?", isPresented: $confirmReset, titleVisibility: .visible) {
+            Button("Reset", role: .destructive) { draft = original }
+                .a11y(.dialogReset)
+        } message: {
+            Text("Days, exercises and settings go back to how they were when you opened this screen.")
         }
         .alert(
             "Save as Template",
@@ -283,6 +327,11 @@ struct MesoEditorView: View {
         }
         .safeAreaInset(edge: .bottom) {
             VStack(spacing: 8) {
+                if draft.hasEmptySlot {
+                    Text("Choose an exercise for every muscle, or autofill them from the menu.")
+                        .font(Theme.caption)
+                        .foregroundStyle(Theme.secondary)
+                }
                 if let current = activeMesos.first {
                     Text("End \(current.name) before starting a new mesocycle.")
                         .font(Theme.caption)
@@ -305,7 +354,10 @@ struct MesoEditorView: View {
                     update(dayID) { $0.slots.append(MesoDraft.Slot(exercise: name, muscle: muscle)) }
                 }
             case .swap(let dayID, let slot):
-                ExercisePickerView(title: "Swap \(slot.exercise)", muscle: slot.muscle) { name, muscle in
+                ExercisePickerView(
+                    title: slot.exercise.map { "Swap \($0)" } ?? "Choose \(slot.muscle.displayName)",
+                    muscle: slot.muscle
+                ) { name, muscle in
                     update(dayID) { day in
                         guard let index = day.slots.firstIndex(where: { $0.id == slot.id }) else { return }
                         day.slots[index].exercise = name
@@ -334,6 +386,12 @@ struct MesoEditorView: View {
     private func update(_ dayID: UUID, _ change: (inout MesoDraft.Day) -> Void) {
         guard let index = draft.days.firstIndex(where: { $0.id == dayID }) else { return }
         change(&draft.days[index])
+    }
+
+    private func autofill() {
+        draft.autofill(
+            from: store.library(muscle: nil, equipment: nil, search: ""), equipment: store.settings.equipment,
+            lastPerformed: store.lastPerformed())
     }
 
     private func start() {
