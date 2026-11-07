@@ -14,6 +14,7 @@ public final class Mesocycle {
     var skippedSessions: [SessionKey] = []
     /// Muscle raw value to priority raw value. A muscle missing here is trained at normal priority.
     var musclePriorityRaw: [String: String] = [:]
+    public internal(set) var notes: [MesoNote] = []
 
     public internal(set) var days: [MesoDay] {
         get { storedDays ?? [] }
@@ -55,6 +56,15 @@ public final class Mesocycle {
     public var muscles: [Muscle] {
         let trained = Set(days.flatMap(\.slots).compactMap(\.muscle))
         return Muscle.allCases.filter(trained.contains)
+    }
+
+    func addNote(_ text: String) {
+        guard let note = MesoNote(text: text) else { return }
+        notes.append(note)
+    }
+
+    func deleteNote(_ note: MesoNote) {
+        notes.removeAll { $0.id == note.id }
     }
 
     public var totalWeeks: Int { accumulationWeeks + 1 }

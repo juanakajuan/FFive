@@ -115,6 +115,17 @@ public final class Store {
         commit()
     }
 
+    /// Blank text adds nothing; text past `MesoNote.maxLength` is cut to it.
+    public func addNote(_ text: String, to meso: Mesocycle) {
+        meso.addNote(text)
+        commit()
+    }
+
+    public func deleteNote(_ note: MesoNote, from meso: Mesocycle) {
+        meso.deleteNote(note)
+        commit()
+    }
+
     public func setPriority(_ priority: MusclePriority, of muscle: Muscle, in meso: Mesocycle) {
         meso.setPriority(priority, of: muscle)
         commit()

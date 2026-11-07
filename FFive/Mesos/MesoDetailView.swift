@@ -11,6 +11,7 @@ struct MesoDetailView: View {
     @State private var trainAfterAll: SessionKey?
     @State private var templateName: String?
     @State private var renameDraft: String?
+    @State private var showingNotes = false
 
     var body: some View {
         let week = meso.nextUp?.week ?? meso.accumulationWeeks
@@ -20,6 +21,7 @@ struct MesoDetailView: View {
                 MesoScheduleGrid(meso: meso, onOpen: open, onSkipped: { trainAfterAll = $0 })
                 WeekVolumeCard(meso: meso, week: week)
                 MusclePrioritiesCard(meso: meso)
+                MesoNotesCard(meso: meso) { showingNotes = true }
                 Button("Save as Template") { templateName = meso.name }
                     .font(.system(size: 16, weight: .semibold))
                     .foregroundStyle(Theme.text)
@@ -65,6 +67,7 @@ struct MesoDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         }
+        .sheet(isPresented: $showingNotes) { MesoNotesScreen(meso: meso) }
         .trainAfterAllDialog($trainAfterAll, of: meso, store: store, onOpen: open)
         .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
             Button("End Mesocycle", role: .destructive) { router.end(meso, store: store) }
