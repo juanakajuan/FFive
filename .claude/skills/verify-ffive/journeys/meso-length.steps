@@ -1,0 +1,34 @@
+# meso-length: add and remove training weeks from the Workout tab's schedule sheet while the block runs.
+# Before: ffive-verify reset-data. After: ffive-verify store "select ZACCUMULATIONWEEKS from ZMESOCYCLE"
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+replace #builder.name "Length Block"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+tap #workout.schedule
+wait any "4 training weeks, then 1 deload week"
+count image "circle" "16"
+shot 01-four-weeks
+tap button "~Increment"
+wait any "5 training weeks, then 1 deload week"
+store-expect Mesocycle accumulationWeeks 5
+count image "circle" "20"
+shot 02-five-weeks
+tap button "~Decrement"
+tap button "~Decrement"
+wait any "3 training weeks, then 1 deload week"
+store-expect Mesocycle accumulationWeeks 3
+count image "circle" "12"
+shot 03-three-weeks
+tap button "~Decrement"
+wait any "3 training weeks, then 1 deload week"
+tap #sheet.done
+launch
+wait text "WEEK 1 DAY 1" timeout=20
+tap #workout.schedule
+wait any "3 training weeks, then 1 deload week"
+shot 04-after-relaunch

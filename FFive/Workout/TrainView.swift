@@ -182,6 +182,7 @@ struct ScheduleSheet: View {
             ScrollView {
                 VStack(spacing: 16) {
                     MesoScheduleGrid(meso: meso, onOpen: open, onSkipped: { trainAfterAll = $0 })
+                    MesoLengthCard(meso: meso)
                     WeekVolumeCard(meso: meso, week: week)
                 }
                 .padding(Theme.gutter)
