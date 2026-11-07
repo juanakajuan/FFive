@@ -9,16 +9,22 @@ import SwiftData
 enum CloudKitSchema {
     static let containerID = "iCloud.com.juanix.FFive"
 
-    /// One `RecordType.field` line per field, sorted. Core Data mirrors each entity to a `CD_` record
-    /// type, each attribute and to-one relationship to a `CD_` field, and to-many relationships to nothing.
+    /// One `RecordType.field` line per field, sorted, matching what `initializeCloudKitSchema` creates.
+    /// Core Data mirrors each entity to a `CD_` record type and each attribute and to-one relationship
+    /// to a `CD_` field. A string or data field also gets a `_ckAsset` field for values too large for a
+    /// record, and every type gets `moveReceipt`. To-many relationships map to no field.
     static var fields: [String] {
         guard let model = NSManagedObjectModel.makeManagedObjectModel(for: AppStore.models)
         else { return [] }
         return model.entities.flatMap { entity -> [String] in
-            let type = "CD_\(entity.name ?? "")"
-            let attributes = entity.attributesByName.keys
             let toOne = entity.relationshipsByName.filter { !$0.value.isToMany }.keys
-            return (["entityName"] + attributes + toOne).map { "\(type).CD_\($0)" }
+            let overflow = entity.attributesByName.compactMap { name, attribute in
+                [.stringAttributeType, .binaryDataAttributeType, .transformableAttributeType]
+                    .contains(attribute.attributeType) ? "\(name)_ckAsset" : nil
+            }
+            let names =
+                ["entityName", "moveReceipt", "moveReceipt_ckAsset"] + entity.attributesByName.keys + toOne + overflow
+            return names.map { "CD_\(entity.name ?? "").CD_\($0)" }
         }
         .sorted()
     }
