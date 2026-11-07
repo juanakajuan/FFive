@@ -173,6 +173,7 @@ struct MesoEditorView: View {
     @State private var picker: PickerRequest?
     @State private var templateName: String?
     @State private var confirmReset = false
+    @State private var managingDays = false
 
     private enum PickerRequest: Identifiable {
         case add(day: UUID)
@@ -360,6 +361,8 @@ struct MesoEditorView: View {
                     .a11y(.builderSaveTemplate)
                 EditButton()
                 Menu("Options", systemImage: "ellipsis.circle") {
+                    Button("Manage Days", systemImage: "list.number") { managingDays = true }
+                        .a11y(.menuManageDays)
                     Button("Autofill Exercises", systemImage: "wand.and.stars", action: autofill)
                         .disabled(!draft.hasEmptySlot)
                         .a11y(.menuAutofill)
@@ -412,6 +415,7 @@ struct MesoEditorView: View {
             .background(Theme.surface)
             .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
         }
+        .sheet(isPresented: $managingDays) { ManageDaysView(draft: $draft) }
         .sheet(item: $picker) { request in
             switch request {
             case .add(let dayID):
@@ -462,6 +466,59 @@ struct MesoEditorView: View {
     private func start() {
         guard (try? store.startMesocycle(draft)) != nil else { return }
         onStart()
+    }
+}
+
+/// Lists the draft's days to drag into the order the block trains them, rename or delete.
+/// A day's weekday label moves with it.
+struct ManageDaysView: View {
+    @Binding var draft: MesoDraft
+    @Environment(\.dismiss) private var dismiss
+
+    var body: some View {
+        NavigationStack {
+            List {
+                ForEach($draft.days) { $day in
+                    let index = (draft.days.firstIndex { $0.id == day.id } ?? 0) + 1
+                    VStack(alignment: .leading, spacing: 6) {
+                        TextField(
+                            "Day name", text: $day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary)
+                        )
+                        .builderField()
+                        .a11y(.manageDaysName, index)
+                        Text(details(day, index: index))
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondary)
+                    }
+                    .builderRow()
+                    .deleteDisabled(draft.days.count == 1)
+                }
+                .onMove { draft.moveDays(fromOffsets: $0, toOffset: $1) }
+                .onDelete { draft.days.remove(atOffsets: $0) }
+                Text("Drag a day to change the order the block trains it in. Its weekday moves with it.")
+                    .font(Theme.caption)
+                    .foregroundStyle(Theme.secondary)
+                    .listRowBackground(Theme.surface)
+                    .listRowSeparator(.hidden)
+            }
+            .listStyle(.plain)
+            .scrollContentBackground(.hidden)
+            .background(Theme.surface)
+            .environment(\.editMode, .constant(.active))
+            .navigationTitle("Manage Days")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Done") { dismiss() }
+                        .a11y(.manageDaysDone)
+                }
+            }
+        }
+    }
+
+    private func details(_ day: MesoDraft.Day, index: Int) -> String {
+        let exercises = day.slots.count == 1 ? "1 exercise" : "\(day.slots.count) exercises"
+        return ["Day \(index)", day.weekday?.name, exercises].compactMap { $0 }.joined(separator: " · ")
     }
 }
 
