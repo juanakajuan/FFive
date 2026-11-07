@@ -12,6 +12,7 @@ struct ExercisePickerView: View {
     @State private var creating = false
     @FocusState private var searchFocused: Bool
     @State private var equipmentOnly = true
+    @State private var detail: ExerciseListing?
 
     private var query: String { search.trimmingCharacters(in: .whitespaces) }
 
@@ -92,6 +93,8 @@ struct ExercisePickerView: View {
                         .a11y(.pickerCancel)
                 }
             }
+            .navigationDestination(item: $detail) { ExerciseDetailView(listing: $0) }
+            .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
             .sheet(isPresented: $creating) {
                 CustomExerciseEditor(draft: CustomExerciseDraft(name: query, muscle: muscle ?? .chest)) { saved in
                     pick(saved.name, saved.muscle)
@@ -101,6 +104,25 @@ struct ExercisePickerView: View {
     }
 
     private func row(_ entry: ExerciseListing, lastPerformed: Date?) -> some View {
+        HStack(spacing: 4) {
+            pickButton(entry, lastPerformed: lastPerformed)
+            Button {
+                searchFocused = false
+                detail = entry
+            } label: {
+                Image(systemName: "info.circle")
+                    .font(.system(size: 20))
+                    .foregroundStyle(Theme.infoText)
+                    .frame(width: 44, height: 44)
+                    .contentShape(Rectangle())
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("\(entry.name) details")
+            .a11y(.pickerDetail, key: entry.name)
+        }
+    }
+
+    private func pickButton(_ entry: ExerciseListing, lastPerformed: Date?) -> some View {
         Button {
             pick(entry.name, entry.muscle)
         } label: {
