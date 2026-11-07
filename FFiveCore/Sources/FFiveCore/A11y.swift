@@ -77,6 +77,8 @@ public enum A11y: String, CaseIterable {
     case pickerSearch = "picker.search"
     case pickerRow = "picker.row"
     case pickerCancel = "picker.cancel"
+    case pickerSuggest = "picker.suggest"
+    case pickerSuggestionAdd = "picker.suggestion-add"
     case exercisesSearch = "exercises.search"
     case exercisesRow = "exercises.row"
     case exercisesShowHidden = "exercises.show-hidden"

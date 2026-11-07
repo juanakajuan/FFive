@@ -12,6 +12,7 @@ struct ExercisePickerView: View {
     @State private var creating = false
     @FocusState private var searchFocused: Bool
     @State private var equipmentOnly = true
+    @State private var suggested: ExerciseListing?
 
     private var query: String { search.trimmingCharacters(in: .whitespaces) }
 
@@ -31,6 +32,9 @@ struct ExercisePickerView: View {
                 if settings.filtersEquipment {
                     EquipmentScopeToggle(isOn: $equipmentOnly)
                         .padding(.bottom, 4)
+                }
+                if let suggested {
+                    suggestionCard(suggested, lastPerformed: lastPerformed[suggested.id])
                 }
                 List {
                     if entries.isEmpty && !all.isEmpty {
@@ -91,6 +95,17 @@ struct ExercisePickerView: View {
                     Button("Cancel") { dismiss() }
                         .a11y(.pickerCancel)
                 }
+                if let muscle {
+                    ToolbarItem(placement: .primaryAction) {
+                        Button("Suggest", systemImage: "sparkles") {
+                            suggested = ExerciseListing.suggestion(
+                                after: suggested?.id,
+                                in: store.library(muscle: muscle, equipment: nil, search: ""),
+                                muscle: muscle, equipment: settings.equipment, lastPerformed: lastPerformed)
+                        }
+                        .a11y(.pickerSuggest)
+                    }
+                }
             }
             .sheet(isPresented: $creating) {
                 CustomExerciseEditor(draft: CustomExerciseDraft(name: query, muscle: muscle ?? .chest)) { saved in
@@ -135,6 +150,45 @@ struct ExercisePickerView: View {
                 .compactMap(\.self).joined(separator: ", ")
         )
         .a11y(.pickerRow, key: entry.name)
+    }
+
+    private func suggestionCard(_ entry: ExerciseListing, lastPerformed: Date?) -> some View {
+        HStack(spacing: 12) {
+            VStack(alignment: .leading, spacing: 4) {
+                Text("Suggested")
+                    .font(Theme.tag)
+                    .textCase(.uppercase)
+                    .foregroundStyle(Theme.infoText)
+                Text(entry.name)
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.text)
+                Text(
+                    [entry.equipment, lastPerformed.map { "last performed \($0.formatted(.lastPerformed))" }]
+                        .compactMap(\.self).joined(separator: " \u{2022} ")
+                )
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondary)
+            }
+            .accessibilityElement(children: .combine)
+            Spacer(minLength: 0)
+            Button {
+                pick(entry.name, entry.muscle)
+            } label: {
+                Text("Add")
+                    .font(Theme.columnHeader)
+                    .foregroundStyle(.white)
+                    .padding(.horizontal, 14)
+                    .padding(.vertical, 8)
+                    .background(Theme.accent, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel("Add \(entry.name)")
+            .a11y(.pickerSuggestionAdd)
+        }
+        .padding(12)
+        .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+        .padding(.horizontal, Theme.gutter)
+        .padding(.bottom, 8)
     }
 
     private var createRow: some View {
