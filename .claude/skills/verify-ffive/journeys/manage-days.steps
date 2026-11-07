@@ -1,0 +1,37 @@
+# manage-days: reorder, rename and delete builder days, then start the block and train them in the new order.
+# Before: ffive-verify reset-data. After: ffive-verify store "select ZORDER, ZNAME, ZWEEKDAYRAW from ZMESODAY order by ZORDER"
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+scrollto #builder.weekday.4
+tap #builder.weekday.4
+tap button "Friday"
+wait any "Weekday, Friday"
+tap #builder.menu
+tap #menu.manage-days
+wait nav "Manage Days"
+value #manage-days.name.4 "Lower B"
+shot 01-before
+drag button "Reorder Day 4*" to button "Reorder Day 1*"
+wait text "Day 1*Friday*6 exercises"
+value #manage-days.name.1 "Lower B"
+value #manage-days.name.2 "Upper A"
+replace #manage-days.name.2 "Upper Heavy"
+tap image "remove" #3
+tap button "Delete"
+absent field "Upper B"
+shot 02-after
+tap #manage-days.done
+wait nav "Customize"
+shot 03-editor
+tap #builder.start
+wait text "WEEK 1 FRIDAY" timeout=10
+wait text "Lower B*"
+shot 04-first-session
+tap #workout.schedule
+wait any "Day 1, Friday, Lower B"
+wait any "Day 2, Upper Heavy"
+wait any "Day 3, Lower A"
+shot 05-schedule

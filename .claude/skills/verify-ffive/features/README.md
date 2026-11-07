@@ -8,7 +8,7 @@ This directory is the maintained source for verifying FFive's user-facing behavi
 - `ffive-verify launch` printed `READY`, and `ffive-verify doctor` prints `HEALTHY` with an install stamp that matches the source.
 - **Demo baseline** (read-only journeys): every drive starts with `launch -seedDemo`. The block "Full Body, 3 Days" is at Week 2 of 5. Week 1 is finished, Week 2 · Day 1 is in progress with Squat logged, and Week 2 · Day 3 is skipped. The Workout tab opens on `WEEK 2 DAY 1`. "Morning Workout" and "Evening Workout" are free-form history.
 - **On-disk baseline** (write journeys): `ffive-verify reset-data`, then a bare `launch`. The Workout tab shows `Plan a Mesocycle` and `Quick Workout`.
-- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, coaching-tips, reorder-exercises, swap-exercise, reset-and-rename-day, muscle-priorities, end-mesocycle, delete-mesocycle, rename-mesocycle, meso-notes, meso-length, weekday-labels, and copy-mesocycle each start from their own `reset-data`.
+- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, coaching-tips, reorder-exercises, swap-exercise, reset-and-rename-day, muscle-priorities, end-mesocycle, delete-mesocycle, rename-mesocycle, meso-notes, meso-length, weekday-labels, copy-mesocycle, and manage-days each start from their own `reset-data`.
 - Never drive a simulator that `ffive-verify launch` did not create in this checkout.
 
 ## Driving conventions
@@ -62,6 +62,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Last performed](./last-performed.md): exercise picker rows and the exercise detail page show the date of the newest finished session (demo).
 - [Suggest an exercise](./suggest-exercise.md): the picker's Suggest button cycles fitting exercises for the muscle, done-before first, and changes nothing until Add (demo).
 - [Muscle slots in the builder](./muscle-slots.md): a builder day holds muscle-only slots that block Start; the editor menu autofills, clears and resets them (on disk).
+- [Manage builder days](./manage-days.md): the editor menu's Manage Days sheet drags days into a new training order, renames and deletes them; the started block trains them in that order (on disk).
 - [Exercise detail from the picker](./picker-detail.md): a picker row's info button opens that exercise's detail on top of the picker; back keeps the search (demo).
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
 - [Coaching tips](./coaching-tips.md): a starting-load tip on a calibration set and a rest tip after a log, each linking to its Learn article and staying closed once dismissed (on disk plus UserDefaults).

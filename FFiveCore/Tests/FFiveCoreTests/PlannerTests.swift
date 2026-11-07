@@ -483,6 +483,32 @@ final class PlannerTests: XCTestCase {
         expect("skip: finished sessions survive skipping the rest", meso.workouts.filter(\.isFinished).count, 3)
     }
 
+    func testMovedDaysTrainInTheirNewOrder() {
+        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        var draft = MesoDraft(template: nil)
+        draft.days = [
+            .init(name: "Push", weekday: .monday, slots: [.init(exercise: "Bench Press", muscle: .chest)]),
+            .init(name: "Pull", weekday: .wednesday, slots: [.init(exercise: "Barbell Row", muscle: .back)]),
+            .init(name: "Legs", weekday: .friday, slots: [.init(exercise: "Calf Raise", muscle: .calves)]),
+        ]
+        draft.moveDays(fromOffsets: [2], toOffset: 0)
+        expect("drag up", draft.days.map(\.name), ["Legs", "Push", "Pull"])
+        draft.moveDays(fromOffsets: [0], toOffset: 2)
+        expect("drag down", draft.days.map(\.name), ["Push", "Legs", "Pull"])
+        draft.moveDays(fromOffsets: [1], toOffset: 1)
+        expect("drop in place", draft.days.map(\.name), ["Push", "Legs", "Pull"])
+        draft.moveDays(fromOffsets: [0, 2], toOffset: 3)
+        expect("drag several to the end", draft.days.map(\.name), ["Legs", "Push", "Pull"])
+
+        let meso = MesoPlanner.start(draft, in: context)
+        expect("block days follow the draft", meso.dayNames, ["Legs", "Push", "Pull"])
+        expect("weekdays move with their days", meso.weekdays, [.friday, .monday, .wednesday])
+        expect("the moved day trains first", meso.nextUp, SessionKey(week: 0, dayIndex: 0))
+        let first = MesoPlanner.workout(
+            for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb, snapshot: snapshot(context), in: context)
+        expect("first session holds the moved day's exercises", first.sortedExercises.map(\.name), ["Calf Raise"])
+    }
+
     func testMusclePriorities() {
         let context = ModelContext(AppStore.makeContainer(inMemory: true))
         var draft = MesoDraft(template: nil)

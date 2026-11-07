@@ -60,6 +60,15 @@ public struct MesoDraft {
         let trained = Set(days.flatMap(\.slots).map(\.muscle))
         return Muscle.allCases.filter(trained.contains)
     }
+
+    /// Moves the days at `offsets` to just before the day now at `destination`, as `List.onMove` reports a drag.
+    /// A day keeps its name, weekday and slots, and the block trains its days in this order.
+    public mutating func moveDays(fromOffsets offsets: IndexSet, toOffset destination: Int) {
+        let moving = offsets.map { days[$0] }
+        let shift = offsets.filter { $0 < destination }.count
+        days = days.indices.filter { !offsets.contains($0) }.map { days[$0] }
+        days.insert(contentsOf: moving, at: destination - shift)
+    }
 }
 
 /// Whether a change to a block session stays in it or is handed on to later weeks of its day.
