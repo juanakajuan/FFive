@@ -85,6 +85,8 @@ struct TemplatesView: View {
                             ForEach(TemplateVariant.allCases) { Text($0.displayName).tag(TemplateVariant?.some($0)) }
                         }
                     }
+                    // Each picker is a titled submenu, so the four "All" rows don't stack untitled in one list.
+                    .pickerStyle(.menu)
                 }
                 .background(Theme.surface)
             }

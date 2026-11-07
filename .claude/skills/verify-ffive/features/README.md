@@ -44,6 +44,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Copy a mesocycle](./copy-mesocycle.md): plan a block as a copy of a past one, pick a source week, review its days, and start with its logged loads (on disk).
 - [Custom templates](./custom-templates.md): save a builder draft or a block as a template, find it on the Templates tab and in the builder, rename and delete it (on disk).
 - [Template preview](./template-preview.md): tap a template on the Templates tab for a read-only preview of its days, exercises and muscle focus, plan from it, and edit, rename or delete a custom one (on disk).
+- [Template variants and filters](./template-variants.md): women's versions of the whole-body templates, marked in the list, and the Templates tab's Source and Variant filters (demo).
 - [Muscle priorities](./muscle-priorities.md): mark muscles Emphasize, Normal, or Maintain in the builder or on the block's detail page; maintained muscles start at MV (on disk).
 - [Train a planned session](./train-session.md): the block's session shows on the Workout tab; log or skip sets against targets, give feedback and soreness, and finish (on disk and demo).
 - [Skip a day](./skip-day.md): skip from the workout menu or the schedule grid, then train it after all (on disk).

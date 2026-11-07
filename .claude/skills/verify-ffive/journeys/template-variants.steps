@@ -1,0 +1,48 @@
+# Women's template variants and the Source and Variant filters on the Templates tab (#95).
+# Before: any store; runs on -seedDemo and saves one custom template in memory.
+launch -seedDemo
+tap #tab.mesos timeout=20
+tap #mesos.new
+tap #builder.template.upper-lower-4-days
+tap #builder.save-template
+replace field "Template name" "My Split"
+sleep 1
+tap button "Save"
+absent alert "Save as Template"
+tap button "New Mesocycle"
+tap #builder.cancel
+tap #tab.templates
+wait #templates.custom.my-split
+wait #templates.template.full-body-2-days
+wait #templates.template.women-s-full-body-2-days
+wait text "~WOMEN'S"
+shot all
+tap button "Filters"
+tap button "Variant"
+tap button "Women's"
+wait button "Women's"
+absent #templates.template.full-body-2-days
+absent #templates.custom.my-split
+wait #templates.template.women-s-full-body-2-days
+wait text "No custom templates match."
+shot variant-women
+tap button "Women's"
+tap button "Source"
+tap button "Custom"
+wait button "~Custom"
+absent text "FFive templates"
+wait text "No custom templates match."
+shot women-and-custom
+tap button "~Custom"
+tap button "Variant"
+tap button "All"
+wait #templates.custom.my-split
+absent text "FFive templates"
+shot custom-only
+tap button "Custom"
+tap button "Source"
+tap button "Built-in"
+wait button "Built-in"
+absent text "Custom templates"
+wait #templates.template.full-body-2-days
+shot builtin-only
