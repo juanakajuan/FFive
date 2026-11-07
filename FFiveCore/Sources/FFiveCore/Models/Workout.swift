@@ -11,6 +11,8 @@ public final class Workout {
     public internal(set) var mesocycle: Mesocycle?
     public internal(set) var week: Int?
     public internal(set) var dayIndex: Int?
+    /// Copied from the block day when the session is built, so a session-only relabel stays on this session.
+    var weekdayRaw: String?
     @Relationship(deleteRule: .cascade, originalName: "feedback", inverse: \MuscleFeedbackRecord.workout)
     var storedFeedback: [MuscleFeedbackRecord]?
     public internal(set) var note: String?
@@ -30,6 +32,11 @@ public final class Workout {
     public init(name: String, startDate: Date = .now) {
         self.name = name
         self.startDate = startDate
+    }
+
+    public internal(set) var weekday: Weekday? {
+        get { weekdayRaw.flatMap(Weekday.init(rawValue:)) }
+        set { weekdayRaw = newValue?.rawValue }
     }
 
     func setBodyweight(_ weight: Double?) {

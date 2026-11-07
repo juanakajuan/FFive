@@ -29,6 +29,7 @@ struct TrainingExport: Codable, Equatable {
 
     struct Day: Codable, Equatable {
         var name: String
+        var weekday: String?
         var slots: [Slot]
     }
 
@@ -43,6 +44,7 @@ struct TrainingExport: Codable, Equatable {
         var endDate: Date?
         var week: Int?
         var dayIndex: Int?
+        var weekday: String?
         var bodyweight: Double?
         var note: String?
         var exercises: [ExerciseValue]
@@ -138,6 +140,7 @@ extension TrainingExport.Meso {
             days: meso.sortedDays.map { day in
                 TrainingExport.Day(
                     name: day.name,
+                    weekday: day.weekdayRaw,
                     slots: day.sortedSlots.map { TrainingExport.Slot(exercise: $0.exerciseName, muscle: $0.muscleRaw) })
             },
             musclePriorities: meso.musclePriorityRaw,
@@ -162,6 +165,7 @@ extension TrainingExport.Session {
             endDate: workout.endDate,
             week: workout.week,
             dayIndex: workout.dayIndex,
+            weekday: workout.weekdayRaw,
             bodyweight: workout.bodyweight,
             note: workout.note,
             exercises: workout.sortedExercises.map { exercise in

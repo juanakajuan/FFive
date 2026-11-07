@@ -16,10 +16,12 @@ public struct MesoDraft {
     public struct Day: Identifiable, Hashable {
         public let id = UUID()
         public var name: String
+        public var weekday: Weekday?
         public var slots: [Slot]
 
-        public init(name: String, slots: [Slot]) {
+        public init(name: String, weekday: Weekday? = nil, slots: [Slot]) {
             self.name = name
+            self.weekday = weekday
             self.slots = slots
         }
     }
@@ -84,7 +86,7 @@ enum MesoPlanner {
         context.insert(meso)
         for muscle in draft.muscles { meso.setPriority(draft.priorities[muscle] ?? .normal, of: muscle) }
         for (order, draftDay) in draft.days.filter({ !$0.slots.isEmpty }).enumerated() {
-            let day = MesoDay(name: draftDay.name, order: order)
+            let day = MesoDay(name: draftDay.name, order: order, weekday: draftDay.weekday)
             meso.days.append(day)
             for (slotOrder, slot) in draftDay.slots.enumerated() {
                 CustomExercise.ensure(named: slot.exercise, muscle: slot.muscle, in: context)
@@ -102,9 +104,10 @@ enum MesoPlanner {
         if let existing = meso.workout(at: key) { return existing }
         let planned = plan(meso, at: key, unit: unit, snapshot: snapshot)
         let days = meso.sortedDays
-        let workout = Workout(
-            name: days.indices.contains(key.dayIndex) ? days[key.dayIndex].name : "Day \(key.dayIndex + 1)")
+        let day = days.indices.contains(key.dayIndex) ? days[key.dayIndex] : nil
+        let workout = Workout(name: day?.name ?? "Day \(key.dayIndex + 1)")
         context.insert(workout)
+        workout.weekday = day?.weekday
         workout.week = key.week
         workout.dayIndex = key.dayIndex
         workout.bodyweight = snapshot.bodyweight

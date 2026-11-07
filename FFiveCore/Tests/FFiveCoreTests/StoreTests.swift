@@ -111,6 +111,58 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(first.name, "Pull", "sessions of the same day agree")
     }
 
+    func testBuilderWeekdaysLabelTheDaysAndTheirSessions() throws {
+        let store = Store(inMemory: true)
+        var draft = twoDayDraft()
+        draft.days[0].weekday = .thursday
+        try store.startMesocycle(draft)
+        let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
+
+        XCTAssertEqual(meso.weekdays, [.thursday, nil])
+        XCTAssertEqual(store.buildSession(meso, at: day1).weekday, .thursday)
+        XCTAssertNil(store.buildSession(meso, at: day2).weekday)
+    }
+
+    func testRelabelingThisSessionLeavesTheOtherWeeks() throws {
+        let (store, meso) = try startedStore()
+        let first = store.buildSession(meso, at: day1)
+
+        store.relabel(first, as: .friday, scope: .thisSession)
+
+        XCTAssertEqual(first.weekday, .friday)
+        XCTAssertEqual(meso.weekdays, [nil, nil], "the block day keeps its label")
+        XCTAssertNil(store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0)).weekday)
+        XCTAssertFalse(store.context.hasChanges, "the label is saved")
+    }
+
+    func testRelabelingEveryWeekRelabelsTheDayEverywhere() throws {
+        let (store, meso) = try startedStore()
+        let first = store.buildSession(meso, at: day1)
+        let other = store.buildSession(meso, at: day2)
+        store.relabel(first, as: .friday, scope: .thisSession)
+        let later = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0))
+
+        store.relabel(later, as: .monday, scope: .everyWeek)
+
+        XCTAssertEqual(meso.weekdays, [.monday, nil])
+        XCTAssertEqual(first.weekday, .monday, "a session-only label gives way to the day's")
+        XCTAssertNil(other.weekday)
+        XCTAssertEqual(store.buildSession(meso, at: SessionKey(week: 2, dayIndex: 0)).weekday, .monday)
+
+        store.relabel(first, as: nil, scope: .everyWeek)
+        XCTAssertEqual(meso.weekdays, [nil, nil], "the label can be cleared")
+        XCTAssertNil(later.weekday)
+    }
+
+    func testRelabelingAQuickWorkoutDoesNothing() throws {
+        let store = Store(inMemory: true)
+        let quick = store.startQuickWorkout()
+
+        store.relabel(quick, as: .monday, scope: .everyWeek)
+
+        XCTAssertNil(quick.weekday)
+    }
+
     func testRenamingAQuickWorkoutChangesOnlyIt() throws {
         let (store, meso) = try startedStore()
         let day = store.buildSession(meso, at: day1)

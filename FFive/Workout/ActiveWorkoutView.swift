@@ -18,6 +18,7 @@ struct ActiveWorkoutView: View {
     @State private var confirmReset = false
     @State private var confirmEnd = false
     @State private var renameDraft: String?
+    @State private var relabelTo: WeekdayChoice?
     @State private var bodyweightDraft: String?
     @State private var article: Learn.Article?
     @State private var noteEdit: NoteEdit?
@@ -132,6 +133,16 @@ struct ActiveWorkoutView: View {
                     if let name = renameDraft { store.rename(workout, to: name) }
                 }
                 Button("Cancel", role: .cancel) {}
+            }
+            .confirmationDialog(
+                relabelTo.map { $0.weekday.map { "Label this day \($0.name)?" } ?? "Clear this day's weekday?" } ?? "",
+                isPresented: Binding(get: { relabelTo != nil }, set: { if !$0 { relabelTo = nil } }),
+                titleVisibility: .visible, presenting: relabelTo
+            ) { choice in
+                Button("Every Week") { store.relabel(workout, as: choice.weekday, scope: .everyWeek) }
+                    .a11y(.dialogWeekdayEveryWeek)
+                Button("This Session Only") { store.relabel(workout, as: choice.weekday, scope: .thisSession) }
+                    .a11y(.dialogWeekdaySession)
             }
             .alert(
                 "Bodyweight",
@@ -383,7 +394,8 @@ struct ActiveWorkoutView: View {
     private var headerTitle: Text {
         guard let key = workout.key, let phase = workout.phase else { return Text("Quick Workout") }
         let lead = phase == .deload ? "Deload" : "Week \(key.week + 1)"
-        return Text("\(lead) ") + Text("Day \(key.dayIndex + 1)").foregroundStyle(Theme.secondary)
+        let day = workout.weekday?.name ?? "Day \(key.dayIndex + 1)"
+        return Text("\(lead) ") + Text(day).foregroundStyle(Theme.secondary)
     }
 
     private var headerSubtitle: Text {
@@ -433,6 +445,17 @@ struct ActiveWorkoutView: View {
         .a11y(.menuBodyweight)
         Button(workout.mesocycle == nil ? "Rename" : "Rename Day", systemImage: "pencil") { renameDraft = workout.name }
             .a11y(.menuRename)
+        if workout.mesocycle != nil {
+            Menu("Relabel", systemImage: "calendar.day.timeline.left") {
+                ForEach(Weekday.allCases) { day in
+                    weekdayButton(day.name, day)
+                }
+                if workout.weekday != nil {
+                    weekdayButton("No Weekday", nil)
+                }
+            }
+            .a11y(.menuRelabel)
+        }
         if workout.mesocycle != nil, workout.setProgress > 0 {
             Button("Reset Workout", systemImage: "arrow.counterclockwise", role: .destructive) { confirmReset = true }
                 .a11y(.menuReset)
@@ -442,6 +465,14 @@ struct ActiveWorkoutView: View {
         if activeMeso != nil {
             Button("End Mesocycle", systemImage: "flag.checkered", role: .destructive) { confirmEnd = true }
                 .a11y(.menuEndMesocycle)
+        }
+    }
+
+    private func weekdayButton(_ title: String, _ weekday: Weekday?) -> some View {
+        Button {
+            relabelTo = WeekdayChoice(weekday: weekday)
+        } label: {
+            if weekday == workout.weekday { Label(title, systemImage: "checkmark") } else { Text(title) }
         }
     }
 
@@ -1153,4 +1184,10 @@ private struct NoteEditor: View {
         .presentationDetents([.medium])
         .onAppear { focused = true }
     }
+}
+
+/// A weekday picked from Relabel, waiting for the lifter to say how far it reaches. Nil weekday clears the label.
+private struct WeekdayChoice: Identifiable {
+    let weekday: Weekday?
+    var id: String { weekday?.rawValue ?? "none" }
 }

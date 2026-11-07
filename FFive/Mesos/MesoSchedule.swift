@@ -12,6 +12,7 @@ struct MesoScheduleGrid: View {
     var body: some View {
         let next = meso.nextUp
         let dayNames = meso.dayNames
+        let weekdays = meso.weekdays
         VStack(alignment: .leading, spacing: 12) {
             Text("Schedule").font(Theme.cardTitle).foregroundStyle(Theme.text)
             Grid(horizontalSpacing: 6, verticalSpacing: 8) {
@@ -19,7 +20,7 @@ struct MesoScheduleGrid: View {
                     Color.clear.gridCellUnsizedAxes([.horizontal, .vertical])
                     ForEach(meso.days.indices, id: \.self) { day in
                         VStack(spacing: 2) {
-                            Text("D\(day + 1)").font(Theme.tag)
+                            Text(weekdays[day]?.shortName.uppercased() ?? "D\(day + 1)").font(Theme.tag)
                             Text(dayNames[day])
                                 .font(Theme.caption)
                                 .lineLimit(1)
@@ -28,7 +29,9 @@ struct MesoScheduleGrid: View {
                         }
                         .foregroundStyle(Theme.secondary)
                         .accessibilityElement(children: .ignore)
-                        .accessibilityLabel("Day \(day + 1), \(dayNames[day])")
+                        .accessibilityLabel(
+                            (["Day \(day + 1)", weekdays[day]?.name, dayNames[day]] as [String?])
+                                .compactMap { $0 }.joined(separator: ", "))
                     }
                 }
                 ForEach(0..<meso.totalWeeks, id: \.self) { week in

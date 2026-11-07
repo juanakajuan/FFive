@@ -14,7 +14,7 @@ final class TrainingExportTests: XCTestCase {
     func testExportCarriesEveryKindOfRecord() throws {
         let store = Store(inMemory: true)
         var draft = MesoDraft(template: nil)
-        draft.days = [.init(name: "Push", slots: [.init(exercise: "Bench Press", muscle: .chest)])]
+        draft.days = [.init(name: "Push", weekday: .monday, slots: [.init(exercise: "Bench Press", muscle: .chest)])]
         try store.startMesocycle(draft)
         let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
         let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
@@ -43,9 +43,11 @@ final class TrainingExportTests: XCTestCase {
         XCTAssertEqual(export.weightUnit, "lb")
         let exportedMeso = try XCTUnwrap(export.mesocycles.first)
         XCTAssertEqual(
-            exportedMeso.days, [.init(name: "Push", slots: [.init(exercise: "Bench Press", muscle: "chest")])])
+            exportedMeso.days,
+            [.init(name: "Push", weekday: "monday", slots: [.init(exercise: "Bench Press", muscle: "chest")])])
         let exportedSession = try XCTUnwrap(exportedMeso.workouts.first)
         XCTAssertEqual(exportedSession.week, 0)
+        XCTAssertEqual(exportedSession.weekday, "monday")
         XCTAssertNotNil(exportedSession.endDate)
         let firstSet = try XCTUnwrap(exportedSession.exercises.first?.sets.first)
         XCTAssertEqual(firstSet.status, "done")

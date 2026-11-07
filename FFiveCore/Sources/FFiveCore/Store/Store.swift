@@ -108,6 +108,16 @@ public final class Store {
         commit()
     }
 
+    /// Nil clears the label. A session outside a block has no day to label, so it is left alone.
+    public func relabel(_ workout: Workout, as weekday: Weekday?, scope: WeekdayScope) {
+        guard let meso = workout.mesocycle, let dayIndex = workout.dayIndex else { return }
+        switch scope {
+        case .thisSession: workout.weekday = weekday
+        case .everyWeek: meso.relabelDay(dayIndex, as: weekday)
+        }
+        commit()
+    }
+
     public func rename(_ meso: Mesocycle, to name: String) {
         let name = name.trimmingCharacters(in: .whitespacesAndNewlines)
         guard !name.isEmpty else { return }
