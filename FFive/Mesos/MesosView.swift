@@ -10,6 +10,7 @@ struct MesosView: View {
     @State private var path = NavigationPath()
     @State private var showingBuilder = false
     @State private var ending: Mesocycle?
+    @State private var deleting: Mesocycle?
 
     private var current: Mesocycle? { mesos.first(where: \.isActive) }
 
@@ -46,6 +47,16 @@ struct MesosView: View {
                     .a11y(.dialogEndMesocycle)
             } message: { _ in
                 Text("Logged sessions stay in Progress. You can plan a new block right after.")
+            }
+            .confirmationDialog(
+                "Delete this mesocycle?",
+                isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                titleVisibility: .visible, presenting: deleting
+            ) { meso in
+                Button("Delete Mesocycle", role: .destructive) { router.delete(meso, store: store) }
+                    .a11y(.dialogDeleteMesocycle)
+            } message: { meso in
+                Text(deleteMessage(meso))
             }
         }
     }
@@ -94,6 +105,8 @@ struct MesosView: View {
                     Button("Summary", systemImage: "chart.bar") { path.append(MesoSummaryRoute(meso: meso)) }
                         .a11y(.menuSummary)
                 }
+                Button("Delete", systemImage: "trash", role: .destructive) { deleting = meso }
+                    .a11y(.menuDeleteMesocycle)
             } label: {
                 Image(systemName: "ellipsis")
                     .rotationEffect(.degrees(90))
@@ -124,6 +137,18 @@ struct MesosView: View {
         }
         .padding(Theme.gutter * 2)
     }
+}
+
+/// Shared by the list and the detail screen, so both confirmations name what goes with the block.
+func deleteMessage(_ meso: Mesocycle) -> String {
+    let count = meso.loggedWorkoutCount
+    let workouts =
+        switch count {
+        case 0: "It has no logged workouts."
+        case 1: "Its 1 logged workout leaves History and Progress."
+        default: "Its \(count) logged workouts leave History and Progress."
+        }
+    return workouts + " This can't be undone."
 }
 
 #Preview {

@@ -59,6 +59,29 @@ final class StoreTests: XCTestCase {
         XCTAssertNil(store.failure)
     }
 
+    func testDeleteMesocycleTakesItsWorkoutsOutOfHistory() throws {
+        let (store, meso) = try startedStore()
+        let finished = store.buildSession(meso, at: day1)
+        store.logEntered(finished.sortedExercises[0].sortedSets[0])
+        store.finish(finished)
+        let open = store.buildSession(meso, at: day2)
+        store.logEntered(open.sortedExercises[0].sortedSets[0])
+        let quick = store.startQuickWorkout()
+        store.finish(quick)
+        XCTAssertEqual(meso.loggedWorkoutCount, 2, "both sessions with a logged set go with the block")
+
+        store.deleteMesocycle(meso)
+
+        XCTAssertTrue(try store.context.fetch(FetchDescriptor<Mesocycle>()).isEmpty, "the block is gone")
+        XCTAssertEqual(
+            try store.context.fetch(Workout.history).map(\.name), [quick.name], "only the quick workout stays")
+        XCTAssertTrue(try store.context.fetch(Workout.open).isEmpty, "the open session goes too")
+        XCTAssertTrue(
+            try store.context.fetch(FetchDescriptor<SetEntry>()).allSatisfy { $0.exercise?.workout === quick })
+        XCTAssertTrue(try store.context.fetch(FetchDescriptor<MesoDay>()).isEmpty, "its days go too")
+        XCTAssertNil(store.failure)
+    }
+
     func testResetClearsLoggedSetsAndKeepsThePrescription() throws {
         let (store, meso) = try startedStore()
         let workout = store.buildSession(meso, at: day1)
