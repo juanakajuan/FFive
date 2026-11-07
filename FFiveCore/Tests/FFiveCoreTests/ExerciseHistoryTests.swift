@@ -59,4 +59,39 @@ final class ExerciseHistoryTests: XCTestCase {
             "the newest finished session with a logged set, not the open or empty ones")
         XCTAssertNil(store.lastPerformed()[ExerciseID(folding: "Squat")], "an exercise never done has no date")
     }
+
+    func testPerformedOnlyKeepsExercisesWithALoggedSetInAFinishedWorkout() {
+        let store = Store(inMemory: true)
+        let names = { (performedOnly: Bool) in
+            store.library(muscle: nil, equipment: nil, search: "", performedOnly: performedOnly).map(\.name)
+        }
+        XCTAssertEqual(names(true), [], "nothing logged yet")
+        XCTAssertEqual(names(false).count, store.library(muscle: nil, equipment: nil, search: "").count)
+
+        let done = store.startQuickWorkout()
+        store.addExercise(named: "Bench Press", muscle: .chest, to: done)
+        store.addExercise(named: "Squat", muscle: .quads, to: done)
+        let benchSets = done.exercises.first { $0.key == ExerciseID(folding: "Bench Press") }?.sortedSets ?? []
+        for set in benchSets {
+            set.weight = 100
+            set.reps = 8
+            store.log(set, done: true)
+        }
+        store.finish(done)
+
+        let open = store.startQuickWorkout()
+        store.addExercise(named: "Deadlift", muscle: .hamstrings, to: open)
+        for set in open.exercises.flatMap(\.sortedSets) {
+            set.weight = 100
+            set.reps = 5
+            store.log(set, done: true)
+        }
+
+        XCTAssertEqual(
+            names(true), ["Bench Press"],
+            "an exercise with no logged set, or logged only in an open workout, is left out")
+        XCTAssertEqual(
+            store.library(muscle: .quads, equipment: nil, search: "", performedOnly: true).map(\.name), [],
+            "it combines with the other filters")
+    }
 }

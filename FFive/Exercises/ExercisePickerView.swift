@@ -12,6 +12,7 @@ struct ExercisePickerView: View {
     @State private var creating = false
     @FocusState private var searchFocused: Bool
     @State private var equipmentOnly = true
+    @State private var performedOnly = false
     @State private var suggested: ExerciseListing?
     @State private var detail: ExerciseListing?
 
@@ -19,7 +20,7 @@ struct ExercisePickerView: View {
 
     var body: some View {
         let settings = store.settings
-        let all = store.library(muscle: muscle, equipment: nil, search: search)
+        let all = store.library(muscle: muscle, equipment: nil, search: search, performedOnly: performedOnly)
         let entries = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
         let lastPerformed = store.lastPerformed()
         NavigationStack {
@@ -34,6 +35,14 @@ struct ExercisePickerView: View {
                     EquipmentScopeToggle(isOn: $equipmentOnly)
                         .padding(.bottom, 4)
                 }
+                Toggle("Only exercises I\u{2019}ve performed", isOn: $performedOnly)
+                    .font(Theme.detail)
+                    .foregroundStyle(Theme.secondary)
+                    .tint(Theme.accent)
+                    .padding(.horizontal, Theme.gutter)
+                    .frame(minHeight: 44)
+                    .padding(.bottom, 4)
+                    .a11y(.pickerPerformedOnly)
                 if let suggested {
                     suggestionCard(suggested, lastPerformed: lastPerformed[suggested.id])
                 }
@@ -82,7 +91,12 @@ struct ExercisePickerView: View {
             }
             .background(Theme.surface)
             .overlay {
-                if entries.isEmpty && query.isEmpty {
+                if entries.isEmpty && query.isEmpty && performedOnly {
+                    ContentUnavailableView(
+                        "No exercises performed yet",
+                        systemImage: "clock.arrow.circlepath",
+                        description: Text("Exercises show here once you log a set of them in a finished workout."))
+                } else if entries.isEmpty && query.isEmpty {
                     ContentUnavailableView(
                         "Search to add an exercise",
                         systemImage: "magnifyingglass",

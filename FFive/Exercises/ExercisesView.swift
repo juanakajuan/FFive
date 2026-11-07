@@ -8,13 +8,16 @@ struct ExercisesView: View {
     @State private var muscle: Muscle?
     @State private var equipment: Equipment?
     @State private var showHidden = false
+    @State private var performedOnly = false
     @State private var equipmentOnly = true
     @State private var creating = false
     @State private var path = NavigationPath()
 
     var body: some View {
         let settings = store.settings
-        let all = store.library(muscle: muscle, equipment: equipment, search: search, includeHidden: showHidden)
+        let all = store.library(
+            muscle: muscle, equipment: equipment, search: search, includeHidden: showHidden,
+            performedOnly: performedOnly)
         let listings = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
         NavigationStack(path: $path) {
             ScrollView {
@@ -57,6 +60,8 @@ struct ExercisesView: View {
                         .pickerStyle(.menu)
                         Toggle("Show hidden", isOn: $showHidden)
                             .a11y(.exercisesShowHidden)
+                        Toggle("Only exercises I\u{2019}ve performed", isOn: $performedOnly)
+                            .a11y(.exercisesPerformedOnly)
                     }
                 }
                 .background(Theme.surface)
@@ -85,7 +90,10 @@ struct ExercisesView: View {
     }
 
     private var filterLabel: String {
-        let names = [muscle?.displayName, equipment?.displayName, showHidden ? "Hidden" : nil].compactMap { $0 }
+        let names = [
+            muscle?.displayName, equipment?.displayName, showHidden ? "Hidden" : nil,
+            performedOnly ? "Performed" : nil,
+        ].compactMap { $0 }
         return names.isEmpty ? "Filters" : names.joined(separator: " \u{00B7} ")
     }
 
