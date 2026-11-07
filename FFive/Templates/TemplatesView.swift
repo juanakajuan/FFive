@@ -59,12 +59,11 @@ struct TemplatesView: View {
                     } else {
                         TemplateGroup {
                             ForEach(builtIn) { template in
-                                Button {
-                                    builder = .template(template)
-                                } label: {
+                                NavigationLink(value: TemplatePreviewScreen.Subject.builtIn(template)) {
                                     TemplateListRow(template: template)
                                 }
                                 .buttonStyle(.plain)
+                                .a11y(.templatesTemplate, key: template.name)
                                 if template.id != builtIn.last?.id {
                                     Rectangle().fill(Theme.hairline).frame(height: 1)
                                 }
@@ -97,6 +96,7 @@ struct TemplatesView: View {
                 HeaderAddButton(label: "New Mesocycle") { builder = .blank }
                     .a11y(.mesosNew)
             }
+            .navigationDestination(for: TemplatePreviewScreen.Subject.self) { TemplatePreviewScreen(subject: $0) }
             .sheet(item: $builder) { MesoBuilderView(startAt: $0) }
             .alert(
                 "Rename Template",
@@ -124,9 +124,7 @@ struct TemplatesView: View {
     private func customRow(_ saved: CustomTemplate) -> some View {
         let template = saved.template
         return HStack(spacing: 12) {
-            Button {
-                builder = .template(template)
-            } label: {
+            NavigationLink(value: TemplatePreviewScreen.Subject.custom(saved)) {
                 TemplateListRow(template: template)
             }
             .buttonStyle(.plain)

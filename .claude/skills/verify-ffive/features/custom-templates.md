@@ -27,11 +27,11 @@ Preconditions:
 
 - **Save a draft.** Steps: `tap #builder.template.upper-lower-4-days`, `tap #builder.save-template`, `replace field "Template name" "My Upper Lower"`, `sleep 1`, `tap button "Save"`, `store-expect CustomTemplate name "My Upper Lower"`.
 - **List and rename.** Steps: `tap #tab.templates`, `wait #templates.custom.my-upper-lower`, `tap #templates.menu.my-upper-lower`, `tap #menu.rename-template`, then replace the field and Save as above. `wait #templates.custom.<new slug>`.
-- **Start from one.** Steps: `tap #builder.custom-template.<slug>`, `value #builder.name "<name>"`.
+- **Start from one.** Steps: `tap #builder.custom-template.<slug>`, `value #builder.name "<name>"`. From the Templates tab a row opens the preview first; see `template-preview.md`.
 - **Save a block.** Steps: `tap #mesos.row.<slug>`, `scrollto #meso.save-template`, `tap #meso.save-template`, then name it and Save.
 - **Delete.** Steps: `tap #templates.menu.<slug>`, `tap #menu.delete-template`, `tap #dialog.delete-template`, `absent #templates.custom.<slug>`.
 
 ## Gotchas
 
 - The name alert's field and buttons carry no ids. Address them as `field "Template name"` and `button "Save"`.
-- `Customize` is pushed when reached from the template list, so `#builder.cancel` is one screen back, behind `button "New Mesocycle"`. From a Templates tab row the builder opens straight on `Customize` and Cancel is there.
+- `Customize` is pushed when reached from the template list, so `#builder.cancel` is one screen back, behind `button "New Mesocycle"`. From a Templates tab row the preview opens first; its `#template-preview.plan` opens the builder straight on `Customize` and Cancel is there.

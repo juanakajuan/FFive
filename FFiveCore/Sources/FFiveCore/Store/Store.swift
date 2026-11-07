@@ -74,6 +74,14 @@ public final class Store {
         commit()
     }
 
+    /// Replaces the template's days with the draft's. An edit that leaves no exercise keeps the old days.
+    public func updateTemplate(_ template: CustomTemplate, from draft: MesoDraft) {
+        let days = CustomTemplate.layout(of: draft)
+        guard !days.isEmpty else { return }
+        template.days = days
+        commit()
+    }
+
     public func rename(_ template: CustomTemplate, to name: String) {
         guard let name = name.noteText, name != template.name else { return }
         template.name = uniqueTemplateName(name)

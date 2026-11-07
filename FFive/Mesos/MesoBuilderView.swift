@@ -8,6 +8,8 @@ struct MesoBuilderView: View {
         case blank
         case guided
         case copy(Mesocycle)
+        /// Edits a custom template's days in place instead of starting a block.
+        case editTemplate(CustomTemplate)
     }
 
     var startAt: Route?
@@ -153,6 +155,8 @@ struct MesoBuilderView: View {
         case .blank: MesoEditorView(draft: MesoDraft(template: nil)) { dismiss() }
         case .guided: MesoGuidedView { dismiss() }
         case .copy(let source): MesoCopyView(source: source) { dismiss() }
+        case .editTemplate(let saved):
+            MesoEditorView(draft: MesoDraft(template: saved.template), editing: saved) { dismiss() }
         }
     }
 }
@@ -160,11 +164,15 @@ struct MesoBuilderView: View {
 struct MesoEditorView: View {
     @State private var draft: MesoDraft
     private let original: MesoDraft
+    /// The custom template this screen saves back to. Editing a template hides what only a block keeps:
+    /// name, length, schedule, weekdays and priorities.
+    private let editing: CustomTemplate?
     var onStart: () -> Void
 
-    init(draft: MesoDraft, onStart: @escaping () -> Void) {
+    init(draft: MesoDraft, editing: CustomTemplate? = nil, onStart: @escaping () -> Void) {
         _draft = State(initialValue: draft)
         original = draft
+        self.editing = editing
         self.onStart = onStart
     }
 
@@ -189,54 +197,58 @@ struct MesoEditorView: View {
 
     var body: some View {
         List {
-            Section {
-                TextField(
-                    "Mesocycle name", text: $draft.name, prompt: Text("Mesocycle name").foregroundStyle(Theme.secondary)
-                )
-                .builderField()
-                .builderRow()
-                .a11y(.builderName)
-            } header: {
-                header("Name")
-            }
-
-            Section {
-                Stepper(value: $draft.accumulationWeeks, in: Mesocycle.accumulationWeekRange) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("\(draft.accumulationWeeks) training weeks")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.text)
-                        Text("then 1 deload week").font(Theme.caption).foregroundStyle(Theme.secondary)
-                    }
-                }
-                .builderRow()
-                RIRSchedule(accumulationWeeks: draft.accumulationWeeks)
+            if editing == nil {
+                Section {
+                    TextField(
+                        "Mesocycle name", text: $draft.name,
+                        prompt: Text("Mesocycle name").foregroundStyle(Theme.secondary)
+                    )
+                    .builderField()
                     .builderRow()
-                footnote(
-                    "Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next block starts fresh."
-                )
-            } header: {
-                header("Length")
-            }
-
-            Section {
-                Picker(
-                    "Starts on",
-                    selection: Binding(get: { draft.startWeekday }, set: { $0.map { draft.schedule(startingOn: $0) } })
-                ) {
-                    if draft.startWeekday == nil { Text("Choose").tag(Weekday?.none) }
-                    ForEach(Weekday.allCases) { Text($0.name).tag(Weekday?.some($0)) }
+                    .a11y(.builderName)
+                } header: {
+                    header("Name")
                 }
-                .font(Theme.body)
-                .foregroundStyle(Theme.text)
-                .tint(Theme.secondary)
-                .a11y(.builderStartWeekday)
-                .builderRow()
-                footnote(
-                    "Each day gets a weekday that spreads rest through the week. Change any of them below."
-                )
-            } header: {
-                header("Schedule")
+
+                Section {
+                    Stepper(value: $draft.accumulationWeeks, in: Mesocycle.accumulationWeekRange) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("\(draft.accumulationWeeks) training weeks")
+                                .font(Theme.body)
+                                .foregroundStyle(Theme.text)
+                            Text("then 1 deload week").font(Theme.caption).foregroundStyle(Theme.secondary)
+                        }
+                    }
+                    .builderRow()
+                    RIRSchedule(accumulationWeeks: draft.accumulationWeeks)
+                        .builderRow()
+                    footnote(
+                        "Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next block starts fresh."
+                    )
+                } header: {
+                    header("Length")
+                }
+
+                Section {
+                    Picker(
+                        "Starts on",
+                        selection: Binding(
+                            get: { draft.startWeekday }, set: { $0.map { draft.schedule(startingOn: $0) } })
+                    ) {
+                        if draft.startWeekday == nil { Text("Choose").tag(Weekday?.none) }
+                        ForEach(Weekday.allCases) { Text($0.name).tag(Weekday?.some($0)) }
+                    }
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.text)
+                    .tint(Theme.secondary)
+                    .a11y(.builderStartWeekday)
+                    .builderRow()
+                    footnote(
+                        "Each day gets a weekday that spreads rest through the week. Change any of them below."
+                    )
+                } header: {
+                    header("Schedule")
+                }
             }
 
             ForEach($draft.days) { $day in
@@ -245,15 +257,17 @@ struct MesoEditorView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .builderField()
                         .builderRow()
-                    Picker("Weekday", selection: $day.weekday) {
-                        Text("None").tag(Weekday?.none)
-                        ForEach(Weekday.allCases) { Text($0.name).tag(Weekday?.some($0)) }
+                    if editing == nil {
+                        Picker("Weekday", selection: $day.weekday) {
+                            Text("None").tag(Weekday?.none)
+                            ForEach(Weekday.allCases) { Text($0.name).tag(Weekday?.some($0)) }
+                        }
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.text)
+                        .tint(Theme.secondary)
+                        .a11y(.builderWeekday, (draft.days.firstIndex { $0.id == day.id } ?? 0) + 1)
+                        .builderRow()
                     }
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.text)
-                    .tint(Theme.secondary)
-                    .a11y(.builderWeekday, (draft.days.firstIndex { $0.id == day.id } ?? 0) + 1)
-                    .builderRow()
                     ForEach(day.slots) { slot in
                         Button {
                             picker = .swap(day: day.id, slot: slot)
@@ -334,7 +348,7 @@ struct MesoEditorView: View {
                 )
             }
 
-            if !draft.muscles.isEmpty {
+            if editing == nil, !draft.muscles.isEmpty {
                 Section {
                     ForEach(draft.muscles) { muscle in
                         MusclePriorityRow(muscle: muscle, priority: draft.priorities[muscle] ?? .normal) {
@@ -352,13 +366,15 @@ struct MesoEditorView: View {
         .scrollContentBackground(.hidden)
         .background(Theme.surface)
         .environment(\.defaultMinListRowHeight, 48)
-        .navigationTitle("Customize")
+        .navigationTitle(editing == nil ? "Customize" : "Edit Template")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItemGroup(placement: .primaryAction) {
-                Button("Save as Template", systemImage: "square.and.arrow.down") { templateName = draft.name }
-                    .disabled(!draft.isStartable)
-                    .a11y(.builderSaveTemplate)
+                if editing == nil {
+                    Button("Save as Template", systemImage: "square.and.arrow.down") { templateName = draft.name }
+                        .disabled(!draft.isStartable)
+                        .a11y(.builderSaveTemplate)
+                }
                 EditButton()
                 Menu("Options", systemImage: "ellipsis.circle") {
                     Button("Manage Days", systemImage: "list.number") { managingDays = true }
@@ -400,15 +416,23 @@ struct MesoEditorView: View {
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondary)
                 }
-                if let current = activeMesos.first {
-                    Text("End \(current.name) before starting a new mesocycle.")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondary)
+                if let editing {
+                    FilledActionButton(title: "Save Template", isEnabled: draft.isStartable) {
+                        store.updateTemplate(editing, from: draft)
+                        onStart()
+                    }
+                    .a11y(.builderUpdateTemplate)
+                } else {
+                    if let current = activeMesos.first {
+                        Text("End \(current.name) before starting a new mesocycle.")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondary)
+                    }
+                    FilledActionButton(
+                        title: "Start Mesocycle", isEnabled: draft.isStartable && activeMesos.isEmpty, action: start
+                    )
+                    .a11y(.builderStart)
                 }
-                FilledActionButton(
-                    title: "Start Mesocycle", isEnabled: draft.isStartable && activeMesos.isEmpty, action: start
-                )
-                .a11y(.builderStart)
             }
             .padding(.horizontal, Theme.gutter)
             .padding(.vertical, 10)
