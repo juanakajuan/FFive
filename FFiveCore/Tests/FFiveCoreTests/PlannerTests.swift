@@ -500,7 +500,7 @@ final class PlannerTests: XCTestCase {
             reopened.first?.status(at: SessionKey(week: 0, dayIndex: 1)), .skipped)
 
         let noted = Workout(name: "Noted day")
-        noted.setNote("  Felt strong  ")
+        noted.setNote("  Felt strong  ", pinned: false)
         writer.insert(noted)
         let bench = Exercise(name: "Bench Press", order: 0)
         noted.exercises.append(bench)
@@ -679,9 +679,9 @@ final class PlannerTests: XCTestCase {
         later.setNote("  \n ", in: context)
         expect("note: blank text stores nil", later.note, nil)
 
-        newer.setNote("  Left shoulder tight \n")
+        newer.setNote("  Left shoulder tight \n", pinned: false)
         expect("day note: trimmed on save", newer.note, "Left shoulder tight")
-        newer.setNote("   ")
+        newer.setNote("   ", pinned: false)
         expect("day note: blank stores nil", newer.note, nil)
     }
 }

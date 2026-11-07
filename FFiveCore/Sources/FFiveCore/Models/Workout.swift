@@ -36,8 +36,25 @@ public final class Workout {
         bodyweight = weight.flatMap { $0 > 0 ? $0 : nil }
     }
 
-    func setNote(_ text: String) {
-        note = text.noteText
+    /// The block day this session trains. A quick workout has none.
+    var day: MesoDay? {
+        guard let days = mesocycle?.sortedDays, let dayIndex, days.indices.contains(dayIndex) else { return nil }
+        return days[dayIndex]
+    }
+
+    /// The note pinned to this session's day, which shows in place of the session's own note.
+    public var pinnedNote: String? { day?.pinnedNote }
+
+    /// A pinned note lives on the day, so every later session of it shows the note. Unpinning hands the
+    /// text back to this session alone. A session with no day can't pin.
+    func setNote(_ text: String, pinned: Bool) {
+        if pinned, let day {
+            day.pinnedNote = text.noteText
+            note = nil
+        } else {
+            day?.pinnedNote = nil
+            note = text.noteText
+        }
     }
 
     public var sortedExercises: [Exercise] { exercises.sorted { $0.order < $1.order } }
@@ -148,6 +165,7 @@ public final class Workout {
         feedback.removeAll()
     }
 
+    /// History keeps the pinned note this session showed, since the pin may change later.
     /// Free-form sessions drop what was never done. Mesocycle sessions keep the full prescription,
     /// because next week's plan is built from it and an untouched set means "repeat the target".
     func finish(in context: ModelContext) {
@@ -160,6 +178,7 @@ public final class Workout {
                 }
             }
         }
+        note = note ?? pinnedNote
         endDate = .now
     }
 }
