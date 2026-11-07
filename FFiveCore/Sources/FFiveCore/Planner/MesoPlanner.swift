@@ -59,7 +59,8 @@ public struct MesoDraft {
     }
 }
 
-public enum ReorderScope {
+/// Whether a change to a block session stays in it or is handed on to later weeks of its day.
+public enum PlanScope {
     case thisSession
     case laterWeeks
 }
@@ -161,10 +162,11 @@ enum MesoPlanner {
                 }
             }
             return base.plannedExercises.map { exercise in
-                PlannedExercise(
-                    name: exercise.name, key: exercise.key, muscle: exercise.muscle,
+                let planned = exercise.planned
+                return PlannedExercise(
+                    name: planned.name, key: planned.key, muscle: planned.muscle,
                     targets: Progression.deloadTargets(
-                        firstWeek: firstWeekTargets(of: exercise.key, dayIndex: key.dayIndex, in: meso),
+                        firstWeek: firstWeekTargets(of: planned.key, dayIndex: key.dayIndex, in: meso),
                         lastAccumulationSetCount: exercise.sets.count))
             }
         case .accumulation(let rir):
@@ -213,20 +215,57 @@ enum MesoPlanner {
         }
         return exercises.indices.map { index in
             let exercise = exercises[index]
-            let sets = exercise.sortedSets
-            let loading = snapshot.loading(for: exercise.key, bodyweight: bodyweight)
-            return PlannedExercise(
-                name: exercise.name, key: exercise.key, muscle: exercise.muscle,
-                targets: Progression.nextTargets(
-                    previousTargets: sets.map(\.target),
-                    logged: sets.map(\.logged),
-                    previousRIR: baseRIR,
-                    targetRIR: rir,
-                    repRange: snapshot.repRange(for: exercise.key),
-                    increment: loading.increment(unit),
-                    offset: loading.offset ?? 0,
-                    setCount: counts[index]))
+            let planned = exercise.planned
+            let targets: [SetTarget]
+            if planned.key == exercise.key {
+                targets = nextTargets(
+                    after: exercise, at: baseRIR, rir: rir, setCount: counts[index], unit: unit, snapshot: snapshot,
+                    bodyweight: bodyweight)
+            } else if let (previous, previousRIR) = latestExercise(planned.key, before: base, in: meso) {
+                targets = nextTargets(
+                    after: previous, at: previousRIR, rir: rir, setCount: counts[index], unit: unit,
+                    snapshot: snapshot, bodyweight: bodyweight)
+            } else {
+                targets = freshTargets(
+                    for: planned.key, count: counts[index], rir: rir, unit: unit, snapshot: snapshot,
+                    bodyweight: bodyweight)
+            }
+            return PlannedExercise(name: planned.name, key: planned.key, muscle: planned.muscle, targets: targets)
         }
+    }
+
+    private static func nextTargets(
+        after exercise: Exercise, at previousRIR: Int, rir: Int, setCount: Int, unit: WeightUnit,
+        snapshot: PlanningSnapshot, bodyweight: Double?
+    ) -> [SetTarget] {
+        let sets = exercise.sortedSets
+        let loading = snapshot.loading(for: exercise.key, bodyweight: bodyweight)
+        return Progression.nextTargets(
+            previousTargets: sets.map(\.target),
+            logged: sets.map(\.logged),
+            previousRIR: previousRIR,
+            targetRIR: rir,
+            repRange: snapshot.repRange(for: exercise.key),
+            increment: loading.increment(unit),
+            offset: loading.offset ?? 0,
+            setCount: setCount)
+    }
+
+    /// The latest accumulation session of `base`'s day before it that did `key`, so a lift a session-only swap
+    /// set aside picks up where it left off.
+    private static func latestExercise(_ key: ExerciseID, before base: Workout, in meso: Mesocycle)
+        -> (Exercise, rir: Int)?
+    {
+        meso.workouts
+            .filter { $0.dayIndex == base.dayIndex && ($0.week ?? .max) < (base.week ?? 0) }
+            .sorted { ($0.week ?? 0) > ($1.week ?? 0) }
+            .lazy
+            .compactMap { workout in
+                guard let rir = workout.phase?.rir, let exercise = workout.exercises.first(where: { $0.key == key })
+                else { return nil }
+                return (exercise, rir)
+            }
+            .first
     }
 
     /// Sets of `muscle` in `week` across the other days, counting a day not yet built at its latest session's size.
@@ -327,8 +366,36 @@ enum MesoPlanner {
     }
 
     /// Swaps an untouched exercise for another, keeping its set count and re-deriving targets.
+    /// In a block, `.thisSession` keeps the old exercise for later weeks and `.laterWeeks` hands the new one on,
+    /// including to the same exercise in later same-day sessions that are built but not started.
     static func swap(
-        _ exercise: Exercise, to name: String, muscle: Muscle, unit: WeightUnit,
+        _ exercise: Exercise, to name: String, muscle: Muscle, scope: PlanScope, unit: WeightUnit,
+        snapshot: PlanningSnapshot, in context: ModelContext
+    ) {
+        let original = exercise.key
+        let meso = exercise.workout?.mesocycle
+        if meso != nil, scope == .thisSession, exercise.plannedName == nil {
+            exercise.plannedName = exercise.name
+            exercise.plannedMuscleRaw = exercise.muscle?.rawValue
+        }
+        replace(exercise, with: name, muscle: muscle, unit: unit, snapshot: snapshot, in: context)
+        if meso == nil || scope == .laterWeeks || exercise.planned.key == exercise.key {
+            exercise.plannedName = nil
+            exercise.plannedMuscleRaw = nil
+        }
+        guard let meso, scope == .laterWeeks, let key = exercise.workout?.key else { return }
+        for later in meso.workouts
+        where !later.isFinished && later.dayIndex == key.dayIndex && (later.week ?? 0) > key.week {
+            for match in later.exercises where match.key == original && !match.sets.contains(where: \.isDone) {
+                replace(match, with: name, muscle: muscle, unit: unit, snapshot: snapshot, in: context)
+                match.plannedName = nil
+                match.plannedMuscleRaw = nil
+            }
+        }
+    }
+
+    private static func replace(
+        _ exercise: Exercise, with name: String, muscle: Muscle, unit: WeightUnit,
         snapshot: PlanningSnapshot, in context: ModelContext
     ) {
         exercise.rename(name)
@@ -347,7 +414,7 @@ enum MesoPlanner {
     /// Puts `workout`'s exercises in the order of `exercises`. Exercises left out of the list follow the listed ones.
     /// In a block, `.thisSession` keeps the old order for later weeks and `.laterWeeks` hands the new one on,
     /// including to later same-day sessions that are built but not finished.
-    static func reorder(_ workout: Workout, to exercises: [Exercise], scope: ReorderScope) {
+    static func reorder(_ workout: Workout, to exercises: [Exercise], scope: PlanScope) {
         var seen = Set<ObjectIdentifier>()
         let listed = exercises.filter { workout.exercises.contains($0) && seen.insert(ObjectIdentifier($0)).inserted }
         let ordered = listed + workout.sortedExercises.filter { !seen.contains(ObjectIdentifier($0)) }

@@ -233,12 +233,12 @@ public final class Store {
         commit()
     }
 
-    public func swapExercise(_ exercise: Exercise, to name: String, muscle: Muscle) {
-        MesoPlanner.swap(exercise, to: name, muscle: muscle, unit: unit, snapshot: snapshot, in: context)
+    public func swapExercise(_ exercise: Exercise, to name: String, muscle: Muscle, scope: PlanScope) {
+        MesoPlanner.swap(exercise, to: name, muscle: muscle, scope: scope, unit: unit, snapshot: snapshot, in: context)
         commit()
     }
 
-    public func reorderExercises(of workout: Workout, to exercises: [Exercise], scope: ReorderScope) {
+    public func reorderExercises(of workout: Workout, to exercises: [Exercise], scope: PlanScope) {
         MesoPlanner.reorder(workout, to: exercises, scope: scope)
         commit()
     }

@@ -8,6 +8,9 @@ public final class Exercise {
     public var order: Int = 0
     /// Where this exercise sits in the plan built from this session. Nil means the same as `order`.
     var plannedOrder: Int?
+    /// The exercise later weeks are planned with, set by a session-only swap. Nil means this one.
+    var plannedName: String?
+    var plannedMuscleRaw: String?
     public internal(set) var workout: Workout?
     @Relationship(deleteRule: .cascade, originalName: "sets", inverse: \SetEntry.exercise)
     var storedSets: [SetEntry]?
@@ -27,6 +30,11 @@ public final class Exercise {
     }
 
     public var key: ExerciseID { exerciseKey.map(ExerciseID.init(rawValue:)) ?? ExerciseID(folding: name) }
+    /// The exercise this one hands on to later weeks: itself, or what a session-only swap replaced.
+    var planned: (name: String, key: ExerciseID, muscle: Muscle?) {
+        guard let plannedName else { return (name, key, muscle) }
+        return (plannedName, ExerciseID(folding: plannedName), plannedMuscleRaw.flatMap(Muscle.init(rawValue:)))
+    }
 
     func rename(_ name: String) {
         self.name = name

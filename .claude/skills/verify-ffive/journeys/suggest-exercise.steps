@@ -1,0 +1,26 @@
+# Suggest button in the exercise picker (demo, read-only): cycles fitting exercises, changes nothing until Add.
+launch -seedDemo
+scrollto #exercise.menu.2 timeout=20
+tap #exercise.menu.2
+tap #menu.swap
+wait nav "Swap Bench Press"
+absent #picker.suggestion-add
+shot picker
+tap #picker.suggest
+wait button "Add Machine Chest Press"
+shot suggest-1
+tap #picker.suggest
+wait button "Add Incline Dumbbell Press"
+shot suggest-2
+tap #picker.cancel
+absent nav "Swap Bench Press"
+scrollto #exercise.menu.2
+wait text "Bench Press"
+tap #exercise.menu.2
+tap #menu.swap
+tap #picker.suggest
+tap #picker.suggestion-add
+absent nav "Swap Bench Press"
+scrollto #exercise.menu.2
+wait text "Machine Chest Press"
+shot swapped
