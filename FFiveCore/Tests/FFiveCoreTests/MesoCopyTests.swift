@@ -85,6 +85,23 @@ final class MesoCopyTests: XCTestCase {
         XCTAssertEqual(draft.days[1].slots[0].startingTargets?.count, row.count - 1, "the skipped set is dropped")
     }
 
+    func testAnUntouchedCalibrateSetRepeatsTheSetBeforeIt() throws {
+        let (store, meso) = try startedStore()
+        let push = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
+        let bench = push.sortedExercises[0].sortedSets
+        XCTAssertGreaterThan(bench.count, 1)
+        XCTAssertNil(bench[1].targetWeight, "a first session calibrates")
+        bench[0].weight = 135
+        bench[0].reps = 9
+        store.log(bench[0], done: true)
+        store.finish(push)
+
+        let carried = meso.copyDraft(week: 0).days[0].slots
+        XCTAssertEqual(
+            carried[0].startingTargets, Array(repeating: SetTarget(weight: 135, reps: 9), count: bench.count))
+        XCTAssertNil(carried[1].startingTargets, "the fly was never logged and had no target")
+    }
+
     func testOldBlockStartsFresh() throws {
         let (store, meso) = try startedStore()
         finish(SessionKey(week: 0, dayIndex: 0), of: meso, in: store)

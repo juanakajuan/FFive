@@ -22,7 +22,8 @@ extension Mesocycle {
     /// A draft with this block's length, priorities, day names and weekdays, and the exercises `week` trained.
     /// A day whose session in that week was never built or was skipped takes the exercises its plan lists. When
     /// `carriesLoads(now:)` holds, each exercise starts from the sets logged on it that week: a logged set gives its
-    /// weight and reps, a set left untouched repeats its target, and skipped sets and myoreps are dropped.
+    /// weight and reps, a set left untouched repeats its target (or the set before it when it had none), and skipped
+    /// sets and myoreps are dropped.
     public func copyDraft(week: Int, now: Date = .now) -> MesoDraft {
         let carry = carriesLoads(now: now)
         var draft = MesoDraft(template: nil)
@@ -52,14 +53,19 @@ extension Mesocycle {
     }
 
     private static func startingTargets(from exercise: Exercise) -> [SetTarget]? {
-        let targets = exercise.sortedSets.compactMap { set -> SetTarget? in
-            guard set.type.countsTowardProgression else { return nil }
+        var targets: [SetTarget] = []
+        for set in exercise.sortedSets where set.type.countsTowardProgression {
             switch set.status {
-            case .done: return SetTarget(weight: set.weight, reps: set.reps)
-            case .pending: return set.target
-            case .skipped: return nil
+            case .done: targets.append(SetTarget(weight: set.weight, reps: set.reps))
+            case .pending:
+                if set.targetWeight != nil || set.targetReps != nil {
+                    targets.append(set.target)
+                } else if let previous = targets.last {
+                    targets.append(previous)
+                }
+            case .skipped: break
             }
         }
-        return targets.contains { $0.weight != nil || $0.reps != nil } ? targets : nil
+        return targets.isEmpty ? nil : targets
     }
 }
