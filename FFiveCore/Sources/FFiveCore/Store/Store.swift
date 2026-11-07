@@ -55,6 +55,11 @@ public final class Store {
         commit()
     }
 
+    public func deleteMesocycle(_ meso: Mesocycle) {
+        meso.delete(in: context)
+        commit()
+    }
+
     public func saveTemplate(from draft: MesoDraft, named name: String) {
         saveTemplate(CustomTemplate.layout(of: draft), named: name, fallback: draft.name)
     }
