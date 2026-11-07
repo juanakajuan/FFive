@@ -1,0 +1,35 @@
+# picker detail: a picker row's info button opens the exercise's cue, history and pinned note on top of the picker; back keeps the search (demo, read-only).
+launch -seedDemo
+tap #exercise.menu.2 timeout=20
+tap #menu.exercise-note
+wait nav "Exercise Note"
+type #note.text "Seat Level: 4"
+tap #note.save
+tap #exercise.pin.2
+wait button "Unpin note"
+tap #workout.menu
+tap #menu.add-exercise
+wait nav "Add Exercise"
+type #picker.search "Bench"
+wait #picker.row.bench-press
+wait #picker.detail.bench-press
+tap nav "Add Exercise"
+sleep 1
+shot 01-picker
+tap #picker.detail.bench-press
+wait nav "Bench Press"
+wait #exercise.last-performed
+wait any "Note: Seat Level: 4"
+wait text "History"
+shot 02-detail-over-picker
+tap button "Add Exercise"
+wait nav "Add Exercise"
+value #picker.search "Bench"
+wait #picker.row.bench-press
+absent #picker.row.squat
+shot 03-back-to-picker
+# The row's main button still picks.
+tap #picker.row.incline-bench-press
+absent nav "Add Exercise"
+scrollto text "Incline Bench Press"
+wait text "Incline Bench Press"
