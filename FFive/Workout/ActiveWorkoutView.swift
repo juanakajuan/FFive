@@ -536,8 +536,10 @@ struct ExerciseCard: View {
                         text: "Set your bodyweight in the workout menu to track strength on this lift.",
                         systemImage: "figure.stand")
                 }
-                if let phase, let set = sets.first(where: { $0.status == .pending }) ?? sets.first {
-                    Callout(text: targetText(set, phase))
+                if let phase, let set = sets.first(where: { $0.status == .pending }) ?? sets.first,
+                    set.targetWeight == nil
+                {
+                    Callout(text: calibrateText(phase))
                 }
                 if let tip = CoachingTip.applicable(to: exercise, dismissed: store.settings.dismissedTips) {
                     CoachingTipCallout(tip: tip, position: position, onLearnMore: onOpenArticle) {
@@ -651,17 +653,10 @@ struct ExerciseCard: View {
         .padding(.bottom, 4)
     }
 
-    private func targetText(_ set: SetEntry, _ phase: WeekPhase) -> String {
-        guard let weight = set.targetWeight else {
-            let range = exercise.repRange
-            let effort = phase.rir.map { "at \($0) RIR" } ?? "kept light"
-            return "Calibrate · \(range.lowerBound)–\(range.upperBound) reps \(effort)"
-        }
-        guard let reps = set.targetReps else {
-            return "Target \(exercise.weightText(weight, unit: store.settings.weightUnit))"
-        }
-        return weight == 0 && !exercise.isBodyweight
-            ? "Target \(reps) reps" : "Target \(exercise.weightText(weight)) × \(reps)"
+    private func calibrateText(_ phase: WeekPhase) -> String {
+        let range = exercise.repRange
+        let effort = phase.rir.map { "at \($0) RIR" } ?? "kept light"
+        return "Calibrate · \(range.lowerBound)–\(range.upperBound) reps \(effort)"
     }
 }
 
@@ -713,6 +708,15 @@ struct SetRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             fields
+            if let recommendation = focus.flatMap(recommendation(for:)) {
+                Text(recommendation)
+                    .font(Theme.detail)
+                    .foregroundStyle(Theme.secondary)
+                    .frame(maxWidth: .infinity)
+                    .padding(.horizontal, Theme.gutter)
+                    .padding(.bottom, 10)
+                    .a11y(.setRecommendation, number)
+            }
             if showingComparison, let comparison {
                 Callout(text: comparisonText(comparison), systemImage: "\(comparison.outcome.symbol).circle.fill")
                     .padding(.horizontal, Theme.gutter)
@@ -722,6 +726,24 @@ struct SetRow: View {
         }
         .onChange(of: comparison == nil) { _, gone in
             if gone { showingComparison = false }
+        }
+    }
+
+    private func recommendation(for field: Field) -> String? {
+        guard let exercise = set.exercise else { return nil }
+        switch field {
+        case .weight:
+            guard let weight = set.targetWeight, weight != 0 || isBodyweight else { return nil }
+            if let rir, let loads = exercise.targetLoads(for: set, rir: rir, unit: unit),
+                loads.lowerBound < loads.upperBound
+            {
+                let upper = exercise.weightText(loads.upperBound, unit: unit)
+                return "We recommend \(exercise.weightText(loads.lowerBound))–\(upper)"
+            }
+            return "We recommend \(exercise.weightText(weight, unit: unit))"
+        case .reps:
+            guard let reps = set.targetReps else { return nil }
+            return "We recommend \(reps) reps" + (rir.map { " or \($0) RIR" } ?? "")
         }
     }
 

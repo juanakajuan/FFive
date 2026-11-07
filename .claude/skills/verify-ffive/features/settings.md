@@ -30,6 +30,6 @@ Preconditions:
 
 ## Gotchas
 
-- A failed run can leave `weightUnit = kg`, which changes every later demo journey's targets (`Target 185 * 7` won't appear). Check `ffive-verify defaults` before trusting a target mismatch. `reset-data` also clears it.
+- A failed run can leave `weightUnit = kg`, which changes every later demo journey's targets (`We recommend 175*195 lb` won't appear). Check `ffive-verify defaults` before trusting a target mismatch. `reset-data` also clears it.
 - Switching units mid-block does not convert stored loads. That is a known open item in `docs/DECISIONS.md`, not a regression.
 - The `Version` row is static until the marketing or build number changes in the project.
