@@ -436,3 +436,12 @@ public final class Store {
         }
     }
 }
+
+extension Store {
+    /// Whether the lifter has logged a workout or built a mesocycle, which tells an update from a fresh install.
+    public var hasTrainingHistory: Bool {
+        let workouts = (try? context.fetchCount(FetchDescriptor<Workout>())) ?? 0
+        let mesos = (try? context.fetchCount(FetchDescriptor<Mesocycle>())) ?? 0
+        return workouts + mesos > 0
+    }
+}

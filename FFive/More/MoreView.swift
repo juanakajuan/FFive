@@ -3,13 +3,14 @@ import SwiftUI
 
 struct MoreView: View {
     private enum Destination: Hashable {
-        case progress, learn, settings
+        case progress, learn, settings, changelog
 
         var a11y: A11y {
             switch self {
             case .progress: .moreProgress
             case .learn: .moreLearn
             case .settings: .moreSettings
+            case .changelog: .moreChangelog
             }
         }
     }
@@ -36,6 +37,8 @@ struct MoreView: View {
                     }
                     section("App") {
                         row("Settings", systemImage: "gearshape", to: .settings)
+                        divider
+                        row("Changelog", systemImage: "list.bullet.rectangle", to: .changelog)
                     }
                     Rectangle().fill(Theme.hairline).frame(height: 1).padding(.top, 8)
                     Text("App version: \(version)")
@@ -53,6 +56,7 @@ struct MoreView: View {
                 case .progress: ProgressScreen()
                 case .learn: LearnView()
                 case .settings: SettingsView()
+                case .changelog: ChangelogScreen()
                 }
             }
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }

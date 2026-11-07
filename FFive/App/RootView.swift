@@ -65,6 +65,7 @@ struct RootView: View {
     @Environment(Store.self) private var store
     @State private var router = AppRouter()
     @State private var keyboardShown = false
+    @State private var whatsNew: [Changelog.DayGroup] = []
 
     var body: some View {
         // The system TabView draws a floating glass bar on recent iOS; the design calls for a flat,
@@ -95,12 +96,36 @@ struct RootView: View {
         .tint(Theme.text)
         .preferredColorScheme(store.settings.appearance.colorScheme)
         .sheet(item: $router.endedMeso) { MesoSummarySheet(meso: $0) }
+        .sheet(
+            isPresented: Binding(get: { !whatsNew.isEmpty }, set: { if !$0 { whatsNew = [] } }),
+            onDismiss: { store.settings.changelogSeenVersion = Changelog.runningVersion }
+        ) {
+            WhatsNewSheet(groups: whatsNew)
+        }
+        .task { showWhatsNewAfterUpdate() }
         .alert(
             "Your last change was not saved",
             isPresented: Binding(get: { store.failure != nil }, set: { if !$0 { store.dismissFailure() } })
         ) {
         } message: {
             Text(store.failure?.localizedDescription ?? "")
+        }
+    }
+}
+
+extension RootView {
+    /// Opens What's New on the first launch of a newer version. A fresh install only records the version.
+    fileprivate func showWhatsNewAfterUpdate() {
+        guard !DemoLaunch.isDemo else { return }
+        let current = Changelog.runningVersion
+        let settings = store.settings
+        guard settings.changelogSeenVersion != current else { return }
+        let unseen = Changelog.bundled.unseen(
+            lastSeen: settings.changelogSeenVersion, current: current, hasHistory: store.hasTrainingHistory)
+        if unseen.isEmpty {
+            settings.changelogSeenVersion = current
+        } else {
+            whatsNew = unseen
         }
     }
 }
