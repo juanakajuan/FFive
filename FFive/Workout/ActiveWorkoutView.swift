@@ -25,6 +25,7 @@ struct ActiveWorkoutView: View {
     @State private var feedbackRequired: FeedbackBlock?
     @State private var sorenessAsk: SorenessAsk?
     @State private var setsCompleted = 0
+    @FocusState private var focus: SetField?
 
     private struct NoteEdit: Identifiable {
         enum Target {
@@ -76,16 +77,6 @@ struct ActiveWorkoutView: View {
 
     var body: some View {
         sessionList(workout.sortedExercises)
-            .toolbar {
-                ToolbarItemGroup(placement: .keyboard) {
-                    Spacer()
-                    Button("Done") {
-                        UIApplication.shared.sendAction(
-                            #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
-                    }
-                    .a11y(.keyboardDone)
-                }
-            }
             .sensoryFeedback(.success, trigger: setsCompleted)
             .sheet(item: $picker) { request in
                 switch request {
@@ -212,10 +203,70 @@ struct ActiveWorkoutView: View {
         }
     }
 
+    /// Every set field in screen order: each set's weight, then its reps.
+    private var setFields: [SetField] {
+        workout.sortedExercises.flatMap(\.sortedSets).flatMap { set in
+            [SetField(set: set.persistentModelID, kind: .weight), SetField(set: set.persistentModelID, kind: .reps)]
+        }
+    }
+
+    /// The field `offset` steps from the focused one, or nil past either end.
+    private func focusTarget(by offset: Int) -> SetField? {
+        let fields = setFields
+        guard let focus, let index = fields.firstIndex(of: focus), fields.indices.contains(index + offset) else {
+            return nil
+        }
+        return fields[index + offset]
+    }
+
+    /// Focuses the next or previous field and scrolls its set near the top, clear of the keyboard.
+    private func moveFocus(by offset: Int, scrolling proxy: ScrollViewProxy) {
+        guard let target = focusTarget(by: offset) else { return }
+        focus = target
+        withAnimation(.snappy) { proxy.scrollTo(target.set, anchor: UnitPoint(x: 0.5, y: 0.25)) }
+    }
+
+    private func keyboardToolbar(_ proxy: ScrollViewProxy) -> some ToolbarContent {
+        ToolbarItemGroup(placement: .keyboard) {
+            Button {
+                moveFocus(by: -1, scrolling: proxy)
+            } label: {
+                Image(systemName: "chevron.up")
+            }
+            .disabled(focusTarget(by: -1) == nil)
+            .accessibilityLabel("Previous field")
+            .a11y(.keyboardPrevious)
+            Button {
+                moveFocus(by: 1, scrolling: proxy)
+            } label: {
+                Image(systemName: "chevron.down")
+            }
+            .disabled(focusTarget(by: 1) == nil)
+            .accessibilityLabel("Next field")
+            .a11y(.keyboardNext)
+            Spacer()
+            Button {
+                UIApplication.shared.sendAction(
+                    #selector(UIResponder.resignFirstResponder), to: nil, from: nil, for: nil)
+            } label: {
+                Image(systemName: "checkmark")
+            }
+            .accessibilityLabel("Done")
+            .a11y(.keyboardDone)
+        }
+    }
+
     /// The session's cards, with the feedback toast and the sheet that opens when a muscle finishes.
     private func sessionList(_ exercises: [Exercise]) -> some View {
         let pendingSoreness = store.pendingSoreness(in: workout)
-        return ScrollView {
+        return ScrollViewReader { proxy in
+            sessionScroll(exercises, pendingSoreness: pendingSoreness)
+                .toolbar { keyboardToolbar(proxy) }
+        }
+    }
+
+    private func sessionScroll(_ exercises: [Exercise], pendingSoreness: [Muscle: MuscleFeedbackRecord]) -> some View {
+        ScrollView {
             LazyVStack(spacing: 16) {
                 if let note = workout.note {
                     Callout(text: note, systemImage: "note.text", style: .note)
@@ -275,6 +326,7 @@ struct ActiveWorkoutView: View {
             position: index + 1,
             phase: workout.phase,
             onSetCompleted: setCompleted,
+            focus: $focus,
             isLocked: unrated != nil,
             onLogBlocked: logGate(for: exercise, unrated: unrated, soreness: muscle.flatMap { pendingSoreness[$0] }),
             feedbackRequiredFor: feedbackRequired.flatMap {
@@ -421,6 +473,7 @@ struct ExerciseCard: View {
     let position: Int
     let phase: WeekPhase?
     var onSetCompleted: () -> Void
+    var focus: FocusState<SetField?>.Binding
     /// Greyed out while another muscle's feedback is owed.
     var isLocked = false
     /// Called instead of logging an unlogged set, with that set.
@@ -502,10 +555,11 @@ struct ExerciseCard: View {
                 ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
                     if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
                     SetRow(
-                        set: set, number: index + 1, unit: unit, rir: phase?.rir,
+                        set: set, number: index + 1, unit: unit, rir: phase?.rir, focus: focus,
                         comparison: comparisons[ObjectIdentifier(set)], onCompleted: onSetCompleted,
                         onLogBlocked: onLogBlocked, onAdd: { store.addSet(to: exercise) }
                     ) { store.deleteSet(set, from: exercise) }
+                    .id(set.persistentModelID)
                 }
             }
         }
@@ -611,11 +665,19 @@ struct ExerciseCard: View {
     }
 }
 
+/// One set's weight or reps field. The workout screen owns focus so the keyboard can step across sets and exercises.
+struct SetField: Hashable {
+    enum Kind { case weight, reps }
+    let set: PersistentIdentifier
+    let kind: Kind
+}
+
 struct SetRow: View {
     @Bindable var set: SetEntry
     let number: Int
     let unit: WeightUnit
     let rir: Int?
+    var focus: FocusState<SetField?>.Binding
     /// Whether this logged set improved on, maintained or regressed from the same set last session.
     let comparison: SetComparison?
     var onCompleted: () -> Void
@@ -625,8 +687,6 @@ struct SetRow: View {
 
     @Environment(Store.self) private var store
 
-    private enum Field { case weight, reps }
-    @FocusState private var focus: Field?
     @State private var followers: [SetEntry] = []
     @State private var showingComparison = false
 
@@ -636,6 +696,9 @@ struct SetRow: View {
             get: { set.weight == 0 ? nil : set.weight },
             set: { store.setWeight($0 ?? 0, of: set, carryingTo: followers) })
     }
+
+    private var weightField: SetField { SetField(set: set.persistentModelID, kind: .weight) }
+    private var repsField: SetField { SetField(set: set.persistentModelID, kind: .reps) }
 
     private var isBodyweight: Bool { self.set.exercise?.isBodyweight ?? false }
 
@@ -706,13 +769,13 @@ struct SetRow: View {
                 prompt: Text(isBodyweight ? "BW" : unit.rawValue).foregroundStyle(Theme.secondary)
             )
             .keyboardType(isBodyweight ? .numbersAndPunctuation : .decimalPad)
-            .focused($focus, equals: .weight)
-            .onChange(of: focus) { _, new in
-                followers = new == .weight ? store.weightFollowers(of: set) : []
+            .focused(focus, equals: weightField)
+            .onChange(of: focus.wrappedValue == weightField) { _, isFocused in
+                followers = isFocused ? store.weightFollowers(of: set) : []
             }
             .themedField()
             .contentShape(Rectangle())
-            .onTapGesture { focus = .weight }
+            .onTapGesture { focus.wrappedValue = weightField }
             .accessibilityLabel("Set \(number) weight")
             .a11y(.setWeight, number)
             .frame(minWidth: SetColumns.field, maxWidth: .infinity)
@@ -724,10 +787,10 @@ struct SetRow: View {
                 prompt: Text(rir.map { "\($0) RIR" } ?? "reps").foregroundStyle(Theme.secondary)
             )
             .keyboardType(.numberPad)
-            .focused($focus, equals: .reps)
+            .focused(focus, equals: repsField)
             .themedField()
             .contentShape(Rectangle())
-            .onTapGesture { focus = .reps }
+            .onTapGesture { focus.wrappedValue = repsField }
             .accessibilityLabel("Set \(number) reps")
             .a11y(.setReps, number)
             .frame(minWidth: SetColumns.field, maxWidth: .infinity)
