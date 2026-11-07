@@ -9,12 +9,14 @@ struct ExercisesView: View {
     @State private var equipment: Equipment?
     @State private var showHidden = false
     @State private var equipmentOnly = true
+    @State private var creating = false
+    @State private var path = NavigationPath()
 
     var body: some View {
         let settings = store.settings
         let all = store.library(muscle: muscle, equipment: equipment, search: search, includeHidden: showHidden)
         let listings = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
-        NavigationStack {
+        NavigationStack(path: $path) {
             ScrollView {
                 LazyVStack(spacing: 0) {
                     if listings.isEmpty {
@@ -60,10 +62,26 @@ struct ExercisesView: View {
                 .background(Theme.surface)
             }
             .background(Theme.surface)
-            .screenHeader("Exercises")
+            .screenHeader("Exercises") {
+                HeaderAddButton(label: "New Exercise") { creating = true }
+                    .a11y(.exercisesNew)
+            }
             .navigationDestination(for: ExerciseListing.self) { ExerciseDetailView(listing: $0) }
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
+            .sheet(isPresented: $creating) {
+                CustomExerciseEditor(
+                    draft: CustomExerciseDraft(name: search, muscle: muscle ?? .chest, equipment: equipment ?? .machine)
+                ) { saved in
+                    showSaved(saved.name)
+                }
+            }
         }
+    }
+
+    private func showSaved(_ name: String) {
+        let match = store.library(muscle: nil, equipment: nil, search: name, includeHidden: true)
+            .first { $0.isCustom && $0.name == name }
+        if let match { path.append(match) }
     }
 
     private var filterLabel: String {
