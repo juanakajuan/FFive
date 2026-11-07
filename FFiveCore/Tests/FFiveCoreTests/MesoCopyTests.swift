@@ -51,7 +51,7 @@ final class MesoCopyTests: XCTestCase {
         let (store, meso) = try startedStore()
         finish(SessionKey(week: 0, dayIndex: 0), of: meso, in: store)
         let push = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0))
-        store.swapExercise(push.sortedExercises[1], to: "Pec Deck", muscle: .chest)
+        store.swapExercise(push.sortedExercises[1], to: "Pec Deck", muscle: .chest, scope: .thisSession)
         store.finish(push)
 
         XCTAssertEqual(meso.copyDraft(week: 0).days[0].slots.map(\.exercise), ["Bench Press", "Cable Fly"])
