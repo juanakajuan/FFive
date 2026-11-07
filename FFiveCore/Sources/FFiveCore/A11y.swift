@@ -80,6 +80,8 @@ public enum A11y: String, CaseIterable {
     case pickerRow = "picker.row"
     case pickerDetail = "picker.detail"
     case pickerCancel = "picker.cancel"
+    case pickerSuggest = "picker.suggest"
+    case pickerSuggestionAdd = "picker.suggestion-add"
     case exercisesSearch = "exercises.search"
     case exercisesRow = "exercises.row"
     case exercisesShowHidden = "exercises.show-hidden"
