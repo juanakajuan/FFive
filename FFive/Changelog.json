@@ -6,6 +6,92 @@
         {
           "date" : "2026-11-07",
           "kind" : "feature",
+          "text" : "Manage builder days — reorder, rename and delete"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Push the CloudKit schema in debug builds and gate TestFlight uploads on Production"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Guided builder from days per week and muscle priorities"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Pick a start weekday and get suggested training weekdays"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Start a mesocycle by copying a past one"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Fill builder days with muscle slots and autofill exercises"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Delete a mesocycle"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Show what changed after an update, and a full changelog in More"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "fix",
+          "text" : "Let the Mesocycles + button open the builder while a block runs"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Create custom exercises from the Exercises tab"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Suggest an exercise in the picker"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Choose whether a swap applies to later weeks"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Open an exercise's detail from the picker"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Label block days with a weekday"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Add or remove weeks while a mesocycle runs"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Show the last performed date in the exercise picker"
+        }
+      ],
+      "version" : "1.5"
+    },
+    {
+      "date" : "2026-11-07",
+      "entries" : [
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
           "text" : "Pin a workout note to every workout on that day"
         }
       ],
