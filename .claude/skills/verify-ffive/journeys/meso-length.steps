@@ -9,6 +9,7 @@ wait nav "Customize"
 replace #builder.name "Length Block"
 tap #builder.start
 wait text "WEEK 1 DAY 1" timeout=10
+wait text "Upper A*Length Block*3 RIR"
 tap #workout.schedule
 wait any "4 training weeks, then 1 deload week"
 count image "circle" "16"
@@ -17,18 +18,24 @@ tap button "~Increment"
 wait any "5 training weeks, then 1 deload week"
 store-expect Mesocycle accumulationWeeks 5
 count image "circle" "20"
+sleep 1
 shot 02-five-weeks
 tap button "~Decrement"
 tap button "~Decrement"
 wait any "3 training weeks, then 1 deload week"
 store-expect Mesocycle accumulationWeeks 3
 count image "circle" "12"
+sleep 1
 shot 03-three-weeks
 tap button "~Decrement"
 wait any "3 training weeks, then 1 deload week"
 tap #sheet.done
+# Week 1 now aims at 2 RIR, and its open session was rebuilt for it.
+wait text "Upper A*Length Block*2 RIR"
+wait text "~5–10 reps at 2 RIR"
+shot 04-rebuilt-session
 launch
 wait text "WEEK 1 DAY 1" timeout=20
 tap #workout.schedule
 wait any "3 training weeks, then 1 deload week"
-shot 04-after-relaunch
+shot 05-after-relaunch

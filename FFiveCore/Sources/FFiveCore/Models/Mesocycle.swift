@@ -88,29 +88,33 @@ public final class Mesocycle {
     }
 
     /// Adds (`delta` 1) or removes (`delta` -1) an accumulation week, which moves the deload and every week's RIR.
-    /// Logged sessions keep the RIR they were trained at. Unlogged sessions whose week changed are deleted, and so
-    /// are skips of a week that became or stopped being the deload. Returns the deleted sessions still in the block,
-    /// in plan order, for the caller to rebuild. A refused change returns nil and changes nothing.
-    func changeLength(by delta: Int, in context: ModelContext) -> [SessionKey]? {
+    /// Logged sessions keep the RIR they were trained at. Unlogged sessions of a week the block lost are deleted, and
+    /// so are skips of a week that became or stopped being the deload. Returns the unlogged sessions whose week
+    /// changed, in plan order, for the caller to rebuild. A refused change returns nil and changes nothing.
+    func changeLength(by delta: Int, in context: ModelContext) -> [Workout]? {
         guard delta == 1 ? canAddWeek : delta == -1 && canRemoveWeek else { return nil }
         let before = Dictionary(uniqueKeysWithValues: (0..<totalWeeks).map { ($0, phase(week: $0)) })
         for workout in workouts where workout.hasLog && workout.trainedRIR == nil {
             workout.trainedRIR = workout.week.flatMap { before[$0]?.rir }
         }
         accumulationWeeks += delta
-        func changed(_ week: Int) -> Bool { week >= totalWeeks || before[week] != phase(week: week) }
 
-        var rebuild: [SessionKey] = []
+        var rebuild: [Workout] = []
         for workout in workouts where !workout.hasLog {
-            guard let key = workout.key, changed(key.week) else { continue }
-            workouts.removeAll { $0 === workout }
-            context.delete(workout)
-            if key.week < totalWeeks { rebuild.append(key) }
+            guard let week = workout.week else { continue }
+            if week >= totalWeeks {
+                workouts.removeAll { $0 === workout }
+                context.delete(workout)
+            } else if before[week] != phase(week: week) {
+                rebuild.append(workout)
+            }
         }
         skippedSessions.removeAll {
             $0.week >= totalWeeks || (before[$0.week] == .deload) != (phase(week: $0.week) == .deload)
         }
-        return rebuild.sorted()
+        return rebuild.sorted {
+            ($0.key ?? SessionKey(week: 0, dayIndex: 0)) < ($1.key ?? SessionKey(week: 0, dayIndex: 0))
+        }
     }
 
     public func phase(week: Int) -> WeekPhase {

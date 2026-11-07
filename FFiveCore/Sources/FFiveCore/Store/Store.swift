@@ -140,9 +140,7 @@ public final class Store {
     /// already built for the weeks that changed. A change `Mesocycle.canAddWeek` or `canRemoveWeek` refuses does nothing.
     public func changeLength(of meso: Mesocycle, by delta: Int) {
         guard let rebuild = meso.changeLength(by: delta, in: context) else { return }
-        for key in rebuild {
-            _ = MesoPlanner.workout(for: meso, at: key, unit: unit, snapshot: snapshot, in: context)
-        }
+        for workout in rebuild { MesoPlanner.rebuild(workout, unit: unit, snapshot: snapshot, in: context) }
         commit()
     }
 

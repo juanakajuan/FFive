@@ -109,8 +109,8 @@ final class MesoLengthTests: XCTestCase {
 
         store.changeLength(of: meso, by: 1)
 
-        let rebuilt = try XCTUnwrap(meso.workout(at: week2), "the session is built again right away")
-        XCTAssertFalse(rebuilt === built, "the old prescription is replaced")
+        let rebuilt = try XCTUnwrap(meso.workout(at: week2))
+        XCTAssertTrue(rebuilt === built, "the session is rebuilt in place, so a screen showing it stays put")
         XCTAssertEqual(meso.workouts.filter { $0.key == week2 }.count, 1)
         XCTAssertEqual(rebuilt.phase?.rir, 3)
         let newReps = rebuilt.sortedExercises[0].sortedSets.map(\.targetReps)
