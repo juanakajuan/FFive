@@ -8,7 +8,7 @@ struct ReorderExercisesView: View {
     @Environment(\.dismiss) private var dismiss
 
     @State private var draft: [Exercise]
-    @State private var scope = ReorderScope.laterWeeks
+    @State private var scope = PlanScope.laterWeeks
 
     init(workout: Workout) {
         self.workout = workout
@@ -21,7 +21,7 @@ struct ReorderExercisesView: View {
                 if workout.mesocycle != nil {
                     Section {
                         SegmentedButtons(
-                            options: [ReorderScope.thisSession, .laterWeeks], selection: $scope
+                            options: [PlanScope.thisSession, .laterWeeks], selection: $scope
                         ) { $0 == .thisSession ? "This session" : "Later weeks too" }
                         Text(
                             scope == .thisSession
