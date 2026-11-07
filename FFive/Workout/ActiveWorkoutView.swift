@@ -708,7 +708,9 @@ struct SetRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             fields
-            if let recommendation = focus.flatMap(recommendation(for:)) {
+            if let field = focus.wrappedValue, field.set == set.persistentModelID,
+                let recommendation = recommendation(for: field.kind)
+            {
                 Text(recommendation)
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
@@ -729,7 +731,7 @@ struct SetRow: View {
         }
     }
 
-    private func recommendation(for field: Field) -> String? {
+    private func recommendation(for field: SetField.Kind) -> String? {
         guard let exercise = set.exercise else { return nil }
         switch field {
         case .weight:
@@ -908,69 +910,6 @@ extension SetComparison.Outcome {
         case .maintained: "maintained"
         case .regressed: "regressed from"
         }
-    }
-}
-
-struct ExerciseHistorySheet: View {
-    let name: String
-
-    @Environment(Store.self) private var store
-    @Environment(\.dismiss) private var dismiss
-
-    var body: some View {
-        let unit = store.settings.weightUnit
-        let last = store.lastFinishedExercise(ExerciseID(folding: name))
-        let sets = last?.sortedSets.filter(\.isDone) ?? []
-        NavigationStack {
-            ScrollView {
-                VStack(alignment: .leading, spacing: 0) {
-                    if let workout = last?.workout, !sets.isEmpty {
-                        Text("\(workout.name) • \(workout.startDate.formatted(.dateTime.weekday(.wide).month().day()))")
-                            .font(Theme.detail)
-                            .foregroundStyle(Theme.secondary)
-                            .padding(.horizontal, Theme.gutter)
-                            .padding(.bottom, 8)
-                        ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
-                            if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
-                            HStack {
-                                Text("Set \(index + 1)").foregroundStyle(Theme.secondary)
-                                if let tag = set.type.tag {
-                                    Text(tag).font(Theme.caption.weight(.medium)).foregroundStyle(Theme.secondary)
-                                }
-                                Spacer()
-                                Text("\(set.weightText(unit: unit)) × \(set.reps)")
-                                    .monospacedDigit()
-                                    .foregroundStyle(Theme.text)
-                            }
-                            .font(Theme.body)
-                            .padding(.horizontal, Theme.gutter)
-                            .frame(minHeight: 44)
-                            .accessibilityElement(children: .ignore)
-                            .accessibilityLabel(
-                                "Set \(index + 1)\(set.type.tag == nil ? "" : ", \(set.type.title)"), \(set.weightText(unit: unit)) × \(set.reps)"
-                            )
-                        }
-                    } else {
-                        Text("No finished session has this exercise yet.")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.secondary)
-                            .padding(Theme.gutter)
-                    }
-                }
-                .frame(maxWidth: .infinity, alignment: .leading)
-                .padding(.top, 8)
-            }
-            .background(Theme.surface)
-            .navigationTitle(name)
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Done") { dismiss() }
-                        .a11y(.sheetDone)
-                }
-            }
-        }
-        .presentationDetents([.medium, .large])
     }
 }
 
