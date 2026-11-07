@@ -62,6 +62,7 @@ public enum A11y: String, CaseIterable {
     case noteText = "note.text"
     case noteSave = "note.save"
     case noteCancel = "note.cancel"
+    case notePin = "note.pin"
     case feedbackOpen = "feedback.open"
     case feedbackSave = "feedback.save"
     case feedbackCancel = "feedback.cancel"
