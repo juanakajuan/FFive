@@ -25,6 +25,7 @@ final class TrainingExportTests: XCTestCase {
         store.updateFeedback(for: .chest, in: session) { $0.pump = .great }
         store.setNote("Shoulder felt fine", on: bench)
         store.pinNote(on: bench)
+        store.setNote("Warm up the shoulder", on: session, pinned: true)
         store.finish(session)
 
         let quick = store.startQuickWorkout()
@@ -43,7 +44,12 @@ final class TrainingExportTests: XCTestCase {
         XCTAssertEqual(export.weightUnit, "lb")
         let exportedMeso = try XCTUnwrap(export.mesocycles.first)
         XCTAssertEqual(
-            exportedMeso.days, [.init(name: "Push", slots: [.init(exercise: "Bench Press", muscle: "chest")])])
+            exportedMeso.days,
+            [
+                .init(
+                    name: "Push", slots: [.init(exercise: "Bench Press", muscle: "chest")],
+                    pinnedNote: "Warm up the shoulder")
+            ])
         let exportedSession = try XCTUnwrap(exportedMeso.workouts.first)
         XCTAssertEqual(exportedSession.week, 0)
         XCTAssertNotNil(exportedSession.endDate)

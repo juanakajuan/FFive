@@ -158,13 +158,50 @@ final class StoreTests: XCTestCase {
         let store = Store(inMemory: true)
         let workout = store.startQuickWorkout()
 
-        store.setNote("  Left shoulder tight \n", on: workout)
+        store.setNote("  Left shoulder tight \n", on: workout, pinned: false)
         XCTAssertEqual(workout.note, "Left shoulder tight", "the session header shows the trimmed note")
         XCTAssertFalse(store.context.hasChanges, "the note is saved")
 
-        store.setNote("   ", on: workout)
+        store.setNote("   ", on: workout, pinned: false)
         XCTAssertNil(workout.note, "a blank note removes the callout")
         XCTAssertNil(store.failure)
+    }
+
+    func testPinnedDayNoteShowsOnLaterSessionsOfThatDayUntilUnpinned() throws {
+        let (store, meso) = try startedStore()
+        let monday = store.buildSession(meso, at: day1)
+        store.setNote("  Left shoulder tight ", on: monday, pinned: true)
+        XCTAssertEqual(monday.pinnedNote, "Left shoulder tight", "the session that pinned it shows the pin")
+        XCTAssertNil(monday.note, "the note shows once, as the pin")
+        XCTAssertFalse(store.context.hasChanges, "the pin is saved")
+        store.logEntered(monday.sortedExercises[0].sortedSets[0])
+        store.finish(monday)
+        XCTAssertEqual(monday.note, "Left shoulder tight", "history keeps the note the session showed")
+
+        let tuesday = store.buildSession(meso, at: day2)
+        XCTAssertNil(tuesday.pinnedNote, "another day of the block shows nothing")
+
+        let nextMonday = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0))
+        XCTAssertEqual(nextMonday.pinnedNote, "Left shoulder tight", "a later session of that day shows the pin")
+
+        store.setNote("Seat 4", on: nextMonday, pinned: true)
+        XCTAssertEqual(nextMonday.pinnedNote, "Seat 4", "editing a pinned note edits the pin")
+        XCTAssertEqual(monday.note, "Left shoulder tight", "a finished session keeps its own copy")
+
+        store.setNote("Seat 4", on: nextMonday, pinned: false)
+        XCTAssertNil(nextMonday.pinnedNote, "unpinning stops it carrying forward")
+        XCTAssertEqual(nextMonday.note, "Seat 4", "the session that unpinned keeps the note")
+        XCTAssertNil(store.failure)
+    }
+
+    func testAQuickWorkoutCannotPinItsNote() {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+
+        store.setNote("Gym was busy", on: workout, pinned: true)
+
+        XCTAssertEqual(workout.note, "Gym was busy", "with no block day to pin to, the note stays on the session")
+        XCTAssertNil(workout.pinnedNote)
     }
 
     func testSetNoteOnExerciseStaysOnThatWorkout() throws {

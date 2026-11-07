@@ -332,8 +332,8 @@ public final class Store {
         commit()
     }
 
-    public func setNote(_ text: String, on workout: Workout) {
-        workout.setNote(text)
+    public func setNote(_ text: String, on workout: Workout, pinned: Bool) {
+        workout.setNote(text, pinned: pinned)
         commit()
     }
 

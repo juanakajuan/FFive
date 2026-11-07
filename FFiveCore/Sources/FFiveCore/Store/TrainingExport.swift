@@ -30,6 +30,7 @@ struct TrainingExport: Codable, Equatable {
     struct Day: Codable, Equatable {
         var name: String
         var slots: [Slot]
+        var pinnedNote: String?
     }
 
     struct Slot: Codable, Equatable {
@@ -138,7 +139,8 @@ extension TrainingExport.Meso {
             days: meso.sortedDays.map { day in
                 TrainingExport.Day(
                     name: day.name,
-                    slots: day.sortedSlots.map { TrainingExport.Slot(exercise: $0.exerciseName, muscle: $0.muscleRaw) })
+                    slots: day.sortedSlots.map { TrainingExport.Slot(exercise: $0.exerciseName, muscle: $0.muscleRaw) },
+                    pinnedNote: day.pinnedNote)
             },
             musclePriorities: meso.musclePriorityRaw,
             skippedSessions: meso.skippedSessions.sorted(),

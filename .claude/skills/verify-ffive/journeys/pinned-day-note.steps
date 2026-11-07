@@ -1,0 +1,117 @@
+# pinned-day-note: pin a workout note on Week 1 Day 1, see it skip Day 2 and return on Week 2 Day 1, then unpin. On-disk.
+# Before: ffive-verify reset-data (no active mesocycle).
+# After: ffive-verify store "select ZNAME, ZPINNEDNOTE from ZMESODAY" and "select ZNAME, ZWEEK, ZNOTE from ZWORKOUT"
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.full-body-3-days
+wait nav "Customize"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+tap #workout.menu
+wait #menu.workout-note
+tap #menu.workout-note
+wait nav "Workout Note"
+type #note.text "Warm up the left shoulder first"
+wait any "Pin to Full Body A"
+tap #note.pin
+wait button "Unpin from Full Body A"
+shot 01-editor-pinned
+tap #note.save
+wait any "Pinned workout note: Warm up the left shoulder first"
+store-expect MesoDay pinnedNote "Warm up the left shoulder first"
+shot 02-pinned-on-day1
+scrollto #exercise.menu.1
+tap #exercise.menu.1
+wait #menu.skip-remaining
+tap #menu.skip-remaining
+wait #feedback.save
+tap #chip.great
+tap #chip.pretty-good
+tap #chip.none
+tap #feedback.save
+absent #feedback.save
+scrollto #exercise.menu.2
+tap #exercise.menu.2
+wait #menu.skip-remaining
+tap #menu.skip-remaining
+wait #feedback.save
+tap #chip.great
+tap #chip.pretty-good
+tap #chip.none
+tap #feedback.save
+absent #feedback.save
+scrollto #exercise.menu.3
+tap #exercise.menu.3
+wait #menu.skip-remaining
+tap #menu.skip-remaining
+wait #feedback.save
+tap #chip.great
+tap #chip.pretty-good
+tap #chip.none
+tap #feedback.save
+absent #feedback.save
+scrollto #exercise.menu.4
+tap #exercise.menu.4
+wait #menu.skip-remaining
+tap #menu.skip-remaining
+wait #feedback.save
+tap #chip.great
+tap #chip.pretty-good
+tap #chip.none
+tap #feedback.save
+absent #feedback.save
+scrollto #exercise.menu.5
+tap #exercise.menu.5
+wait #menu.skip-remaining
+tap #menu.skip-remaining
+wait #feedback.save
+tap #chip.great
+tap #chip.pretty-good
+tap #chip.none
+tap #feedback.save
+absent #feedback.save
+scrollto #exercise.menu.6
+tap #exercise.menu.6
+wait #menu.skip-remaining
+tap #menu.skip-remaining
+wait #feedback.save
+tap #chip.great
+tap #chip.pretty-good
+tap #chip.none
+tap #feedback.save
+absent #feedback.save
+wait #workout.finish
+tap #workout.finish
+wait text "WEEK 1 DAY 2" timeout=10
+store-expect Workout note "Warm up the left shoulder first"
+absent any "~Pinned workout note"
+shot 03-day2-no-note
+tap #workout.menu
+tap #menu.skip-day
+wait text "WEEK 1 DAY 3"
+tap #workout.menu
+tap #menu.skip-day
+wait text "WEEK 2 DAY 1" timeout=10
+wait any "Pinned workout note: Warm up the left shoulder first"
+shot 04-pinned-on-week2-day1
+launch
+wait text "WEEK 2 DAY 1" timeout=20
+wait any "Pinned workout note: Warm up the left shoulder first"
+tap #workout.menu
+wait #menu.workout-note
+tap #menu.workout-note
+wait nav "Workout Note"
+wait button "Unpin from Full Body A"
+tap #note.pin
+wait button "Pin to Full Body A"
+shot 05-editor-unpinning
+tap #note.save
+wait any "Workout note: Warm up the left shoulder first"
+absent any "~Pinned workout note"
+store-expect MesoDay pinnedNote null
+shot 06-unpinned
+launch
+wait text "WEEK 2 DAY 1" timeout=20
+wait any "Workout note: Warm up the left shoulder first"

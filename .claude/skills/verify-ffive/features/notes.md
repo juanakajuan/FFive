@@ -12,6 +12,7 @@ A lifter attaches a note to an exercise in a workout. By default it stays with t
 - `note-exercise-delete` removes it, pinned or not, with `Exercise menu`, then `Delete Note`. Saving blank text also removes it.
 - `note-exercise-detail` shows a pinned note on the exercise's page in the Exercises tab.
 - `note-day` adds a day note with `Workout menu`, then `Add Note` (or `Edit Note`), through a `Workout Note` sheet. It shows as `Workout note: <text>` at the top of the session and in the summary card of the workout's detail page.
+- `note-day-pin` pins a day note to its block day. On a block day the `Workout Note` sheet has `#note.pin`, labeled `Pin to <day name>` or `Unpin from <day name>`; a quick workout's sheet has none. Saving while pinned stores the text on the `MesoDay` (`pinnedNote`) and shows `Pinned workout note: <text>` on that session and every later session of the same day, not on the block's other days. Finishing a session copies the pinned text into its own note, so history keeps it. Unpinning and saving leaves the note on that session alone.
 
 ## How to get to it (user POV)
 
@@ -29,6 +30,7 @@ Preconditions:
 
 - **Add an exercise note.** Steps: `tap #exercise.menu.1`, `wait #menu.exercise-note`, `tap #menu.exercise-note`, `wait nav "Exercise Note"`, `type #note.text "Seat Level: 4"`, `tap #note.save`, `wait any "Note: Seat Level: 4"`, `wait button "Pin note"`.
 - **Add a day note.** Steps: `tap #workout.menu`, `wait #menu.workout-note`, `tap #menu.workout-note`, `wait nav "Workout Note"`, `type #note.text "Gym was busy"`, `tap #note.save`, `wait any "Workout note: Gym was busy"`.
+- **Pin a day note.** Journey `journeys/pinned-day-note.steps`: pin on Week 1 Day 1, finish it, see Day 2 without it, skip Days 2 and 3, see it on Week 2 Day 1 after a relaunch, then unpin. `store-expect MesoDay pinnedNote "<text>"` and `store-expect MesoDay pinnedNote null` prove the writes.
 - **Notes in history.** Finish, then `store-expect Workout note "Gym was busy"`, `tap #tab.more`, `tap #more.progress`, `tap #segment.history`, `tap button "~Workout,"`, `wait any "Workout note: Gym was busy"`, `wait any "Note: Seat Level: 4"`.
 - **Unpinned stays put.** Start another quick workout, add the same exercise, then `absent any "~Note: Seat Level"`.
 - **Pin and carry.** Add a note, `tap #exercise.pin.1`, `wait button "Unpin note"`, `store-expect PinnedNote text "Seat Level: 5"`. Finish, relaunch, and the Exercises tab page (`type #exercises.search "Lateral Raise"`, `tap #exercises.row.lateral-raise`) shows `Note: <text>`. A new quick workout with the exercise shows the note and `Unpin note`.
