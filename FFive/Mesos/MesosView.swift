@@ -31,7 +31,6 @@ struct MesosView: View {
             .background(Theme.surface)
             .screenHeader("Mesocycles") {
                 HeaderAddButton(label: "New Mesocycle") { showingBuilder = true }
-                    .disabled(current != nil)
                     .a11y(.mesosNew)
             }
             .navigationDestination(for: Mesocycle.self) { MesoDetailView(meso: $0) }

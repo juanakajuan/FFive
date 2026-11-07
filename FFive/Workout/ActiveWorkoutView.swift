@@ -19,6 +19,8 @@ struct ActiveWorkoutView: View {
     @State private var confirmEnd = false
     @State private var renameDraft: String?
     @State private var relabelTo: WeekdayChoice?
+    @State private var pickedSwap: SwapChoice?
+    @State private var swapScopeFor: SwapChoice?
     @State private var bodyweightDraft: String?
     @State private var article: Learn.Article?
     @State private var noteEdit: NoteEdit?
@@ -67,6 +69,13 @@ struct ActiveWorkoutView: View {
         var id: Muscle { muscle }
     }
 
+    /// A swap picked in the exercise picker, held until the lifter says how far it reaches.
+    private struct SwapChoice {
+        let exercise: Exercise
+        let name: String
+        let muscle: Muscle
+    }
+
     private enum PickerRequest: Identifiable {
         case add
         case swap(Exercise)
@@ -82,15 +91,37 @@ struct ActiveWorkoutView: View {
     var body: some View {
         sessionList(workout.sortedExercises)
             .sensoryFeedback(.success, trigger: setsCompleted)
-            .sheet(item: $picker) { request in
+            .sheet(
+                item: $picker,
+                onDismiss: {
+                    swapScopeFor = pickedSwap
+                    pickedSwap = nil
+                }
+            ) { request in
                 switch request {
                 case .add:
                     ExercisePickerView { name, muscle in addExercise(name, muscle: muscle) }
                 case .swap(let exercise):
                     ExercisePickerView(title: "Swap \(exercise.name)", muscle: exercise.muscle) { name, muscle in
-                        store.swapExercise(exercise, to: name, muscle: muscle)
+                        pickedSwap = SwapChoice(exercise: exercise, name: name, muscle: muscle)
                     }
                 }
+            }
+            .confirmationDialog(
+                swapScopeFor.map { "Swap \($0.exercise.name) for \($0.name)?" } ?? "",
+                isPresented: Binding(get: { swapScopeFor != nil }, set: { if !$0 { swapScopeFor = nil } }),
+                titleVisibility: .visible, presenting: swapScopeFor
+            ) { choice in
+                Button("Later Weeks Too") {
+                    store.swapExercise(choice.exercise, to: choice.name, muscle: choice.muscle, scope: .laterWeeks)
+                }
+                .a11y(.dialogSwapLaterWeeks)
+                Button("This Session Only") {
+                    store.swapExercise(choice.exercise, to: choice.name, muscle: choice.muscle, scope: .thisSession)
+                }
+                .a11y(.dialogSwapSession)
+            } message: { _ in
+                Text("Later weeks of this day can keep the current exercise or plan the new one.")
             }
             .sheet(isPresented: $showingReorder) { ReorderExercisesView(workout: workout) }
             .sheet(isPresented: $showingSchedule) {

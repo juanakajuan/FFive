@@ -666,7 +666,7 @@ final class StoreTests: XCTestCase {
         let row = session.sortedExercises[0]
         let before = row.sets.count
 
-        store.swapExercise(row, to: "Bench Press", muscle: .chest)
+        store.swapExercise(row, to: "Bench Press", muscle: .chest, scope: .laterWeeks)
         XCTAssertEqual(row.name, "Bench Press")
         XCTAssertEqual(row.muscle, .chest)
         XCTAssertEqual(row.sets.count, before, "a swap keeps the set count")

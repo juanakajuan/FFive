@@ -1,0 +1,119 @@
+# swap-exercise: swap a block exercise for this session only, then for later weeks too, on disk.
+# Before: ffive-verify reset-data. After: ffive-verify store "select w.ZWEEK, w.ZDAYINDEX, e.ZNAME, e.ZPLANNEDNAME from ZEXERCISE e join ZWORKOUT w on e.ZWORKOUT = w.Z_PK where w.ZDAYINDEX = 0 order by w.ZWEEK, e.ZORDER"
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.full-body-2-days
+wait nav "Customize"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+wait text "Bench Press"
+shot 01-week1-before
+tap #exercise.menu.2
+tap #menu.swap
+type #picker.search "Incline Dumbbell"
+tap #picker.row.incline-dumbbell-press
+wait text "Swap Bench Press for Incline Dumbbell Press?"
+wait #dialog.swap-later-weeks
+shot 02-scope-dialog
+tap #dialog.swap-session
+absent #dialog.swap-session
+wait text "Incline Dumbbell Press"
+absent text "Bench Press"
+shot 03-week1-swapped
+store-expect Exercise plannedName "Bench Press"
+# Finish the day by skipping its sets, then skip Day 2 to reach next week's Day 1.
+scrollto #exercise.menu.1
+tap #exercise.menu.1
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+scrollto #exercise.menu.2
+tap #exercise.menu.2
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+scrollto #exercise.menu.3
+tap #exercise.menu.3
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+scrollto #exercise.menu.4
+tap #exercise.menu.4
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+scrollto #exercise.menu.5
+tap #exercise.menu.5
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+scrollto #exercise.menu.6
+tap #exercise.menu.6
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+wait #workout.finish
+tap #workout.finish
+wait text "WEEK 1 DAY 2" timeout=10
+tap #workout.menu
+tap #menu.skip-day
+wait text "WEEK 2 DAY 1" timeout=10
+# This session only: week 2 is planned with the original exercise.
+wait text "Bench Press"
+absent text "Incline Dumbbell Press"
+shot 04-week2-keeps-original
+tap #exercise.menu.2
+tap #menu.swap
+type #picker.search "Incline Dumbbell"
+tap #picker.row.incline-dumbbell-press
+wait #dialog.swap-later-weeks
+tap #dialog.swap-later-weeks
+absent #dialog.swap-later-weeks
+wait text "Incline Dumbbell Press"
+shot 05-week2-swapped
+scrollto #exercise.menu.1
+tap #exercise.menu.1
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+scrollto #exercise.menu.2
+tap #exercise.menu.2
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+scrollto #exercise.menu.3
+tap #exercise.menu.3
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+scrollto #exercise.menu.4
+tap #exercise.menu.4
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+scrollto #exercise.menu.5
+tap #exercise.menu.5
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+scrollto #exercise.menu.6
+tap #exercise.menu.6
+tap #menu.skip-remaining
+tap #feedback.cancel
+absent #feedback.cancel
+wait #workout.finish
+tap #workout.finish
+wait text "WEEK 2 DAY 2" timeout=10
+tap #workout.menu
+tap #menu.skip-day
+wait text "WEEK 3 DAY 1" timeout=10
+# Later weeks too: week 3 is planned with the new exercise.
+wait text "Incline Dumbbell Press"
+absent text "Bench Press"
+shot 06-week3-carries-swap
+launch
+wait text "WEEK 3 DAY 1" timeout=20
+wait text "Incline Dumbbell Press"
+shot 07-after-relaunch
