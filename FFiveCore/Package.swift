@@ -10,6 +10,7 @@ let package = Package(
     targets: [
         .target(name: "FFiveCore"),
         .executableTarget(name: "PerfProbe", dependencies: ["FFiveCore"]),
-        .testTarget(name: "FFiveCoreTests", dependencies: ["FFiveCore"]),
+        .executableTarget(name: "ChangelogGen", dependencies: ["FFiveCore"]),
+        .testTarget(name: "FFiveCoreTests", dependencies: ["FFiveCore", "ChangelogGen"]),
     ]
 )

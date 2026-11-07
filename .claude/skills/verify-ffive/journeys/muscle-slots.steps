@@ -1,0 +1,51 @@
+launch
+tap #tab.mesos timeout=20
+tap #mesos.plan
+scrollto #builder.blank
+tap #builder.blank
+wait nav "Customize"
+scrollto #builder.add-muscle
+tap #builder.add-muscle
+tap button "Chest"
+scrollto #builder.add-muscle
+tap #builder.add-muscle
+tap button "Chest"
+scrollto #builder.add-muscle
+tap #builder.add-muscle
+tap button "Back"
+count text "Choose an exercise" "3"
+wait text "Choose an exercise for every muscle, or autofill them from the menu."
+shot empty-slots
+tap #builder.start
+wait nav "Customize"
+tap text "Choose an exercise"
+wait nav "Choose Chest"
+tap #picker.row.bench-press
+absent nav "Choose Chest"
+wait text "Bench Press"
+count text "Choose an exercise" "2"
+tap #builder.menu
+shot menu
+tap #menu.autofill
+absent text "Choose an exercise"
+absent text "Choose an exercise for every muscle, or autofill them from the menu."
+shot autofilled
+tap #builder.menu
+tap #menu.clear-exercises
+count text "Choose an exercise" "3"
+absent text "Bench Press"
+shot cleared
+tap #builder.menu
+tap #menu.reset
+tap #dialog.reset
+absent text "Choose an exercise"
+wait text "Add at least one exercise, or remove this day."
+scrollto #builder.add-muscle
+tap #builder.add-muscle
+tap button "Quads"
+tap #builder.menu
+tap #menu.autofill
+absent text "Choose an exercise"
+tap #builder.start
+absent nav "Customize" timeout=10
+store-expect DaySlot muscleRaw quads
