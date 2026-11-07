@@ -5,7 +5,7 @@ import SwiftData
 public final class Mesocycle {
     public internal(set) var name: String = ""
     public internal(set) var startDate: Date = Date.now
-    public var accumulationWeeks: Int = 4
+    public internal(set) var accumulationWeeks: Int = 4
     public internal(set) var finishedDate: Date?
     @Relationship(deleteRule: .cascade, originalName: "days", inverse: \MesoDay.mesocycle)
     var storedDays: [MesoDay]?
@@ -78,6 +78,54 @@ public final class Mesocycle {
     }
 
     public var totalWeeks: Int { accumulationWeeks + 1 }
+
+    /// How many accumulation weeks a block can have, before and while it runs.
+    public static let accumulationWeekRange = 3...6
+
+    /// Adding a week turns the deload into an accumulation week, so the deload must not be logged.
+    public var canAddWeek: Bool {
+        isActive && accumulationWeeks < Self.accumulationWeekRange.upperBound && !isLogged(week: accumulationWeeks)
+    }
+
+    /// Removing a week drops the last accumulation week and moves the deload onto it, so neither may be logged.
+    public var canRemoveWeek: Bool {
+        isActive && accumulationWeeks > Self.accumulationWeekRange.lowerBound
+            && !isLogged(week: accumulationWeeks - 1) && !isLogged(week: accumulationWeeks)
+    }
+
+    private func isLogged(week: Int) -> Bool {
+        workouts.contains { $0.week == week && $0.hasLog }
+    }
+
+    /// Adds (`delta` 1) or removes (`delta` -1) an accumulation week, which moves the deload and every week's RIR.
+    /// Logged sessions keep the RIR they were trained at. Unlogged sessions of a week the block lost are deleted, and
+    /// so are skips of a week that became or stopped being the deload. Returns the unlogged sessions whose week
+    /// changed, in plan order, for the caller to rebuild. A refused change returns nil and changes nothing.
+    func changeLength(by delta: Int, in context: ModelContext) -> [Workout]? {
+        guard delta == 1 ? canAddWeek : delta == -1 && canRemoveWeek else { return nil }
+        let before = Dictionary(uniqueKeysWithValues: (0..<totalWeeks).map { ($0, phase(week: $0)) })
+        for workout in workouts where workout.hasLog && workout.trainedRIR == nil {
+            workout.trainedRIR = workout.week.flatMap { before[$0]?.rir }
+        }
+        accumulationWeeks += delta
+
+        var rebuild: [Workout] = []
+        for workout in workouts where !workout.hasLog {
+            guard let week = workout.week else { continue }
+            if week >= totalWeeks {
+                workouts.removeAll { $0 === workout }
+                context.delete(workout)
+            } else if before[week] != phase(week: week) {
+                rebuild.append(workout)
+            }
+        }
+        skippedSessions.removeAll {
+            $0.week >= totalWeeks || (before[$0.week] == .deload) != (phase(week: $0.week) == .deload)
+        }
+        return rebuild.sorted {
+            ($0.key ?? SessionKey(week: 0, dayIndex: 0)) < ($1.key ?? SessionKey(week: 0, dayIndex: 0))
+        }
+    }
 
     public func phase(week: Int) -> WeekPhase {
         Progression.phase(week: week, accumulationWeeks: accumulationWeeks)

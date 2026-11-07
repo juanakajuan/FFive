@@ -18,6 +18,9 @@ public final class Workout {
     public internal(set) var note: String?
     /// The lifter's body weight for this session, in their weight unit. Bodyweight lifts log load added to it.
     public internal(set) var bodyweight: Double?
+    /// The RIR a logged block session was trained at, kept when the block's length changes after it. Nil reads the
+    /// week's RIR from the block.
+    var trainedRIR: Int?
 
     public internal(set) var exercises: [Exercise] {
         get { storedExercises ?? [] }
@@ -87,6 +90,8 @@ public final class Workout {
         }
     }
     public var isFinished: Bool { endDate != nil }
+    /// A session with a logged set, or a finished one, keeps its sets when its block changes around it.
+    var hasLog: Bool { isFinished || completedSets > 0 }
 
     public var key: SessionKey? {
         guard let week, let dayIndex else { return nil }
@@ -95,6 +100,7 @@ public final class Workout {
 
     public var phase: WeekPhase? {
         guard let mesocycle, let week else { return nil }
+        if let trainedRIR { return .accumulation(rir: trainedRIR) }
         return mesocycle.phase(week: week)
     }
 

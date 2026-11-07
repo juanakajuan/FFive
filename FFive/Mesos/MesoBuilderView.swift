@@ -147,7 +147,7 @@ struct MesoEditorView: View {
             }
 
             Section {
-                Stepper(value: $draft.accumulationWeeks, in: 3...6) {
+                Stepper(value: $draft.accumulationWeeks, in: Mesocycle.accumulationWeekRange) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text("\(draft.accumulationWeeks) training weeks")
                             .font(Theme.body)

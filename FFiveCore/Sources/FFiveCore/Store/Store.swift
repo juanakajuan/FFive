@@ -146,6 +146,14 @@ public final class Store {
         commit()
     }
 
+    /// Adds an accumulation week before the deload, or removes the last one, and rebuilds the unlogged sessions
+    /// already built for the weeks that changed. A change `Mesocycle.canAddWeek` or `canRemoveWeek` refuses does nothing.
+    public func changeLength(of meso: Mesocycle, by delta: Int) {
+        guard let rebuild = meso.changeLength(by: delta, in: context) else { return }
+        for workout in rebuild { MesoPlanner.rebuild(workout, unit: unit, snapshot: snapshot, in: context) }
+        commit()
+    }
+
     @discardableResult
     public func buildSession(_ meso: Mesocycle, at key: SessionKey) -> Workout {
         let workout = MesoPlanner.workout(for: meso, at: key, unit: unit, snapshot: snapshot, in: context)
@@ -273,6 +281,12 @@ public final class Store {
     public func exerciseHistory(_ key: ExerciseID) -> [ExerciseHistoryGroup] {
         observeCommits()
         return ExerciseHistoryGroup.groups(of: key, in: context)
+    }
+
+    /// The date each exercise was last done in a finished workout. Exercises never done are missing.
+    public func lastPerformed() -> [ExerciseID: Date] {
+        observeCommits()
+        return ExerciseHistoryGroup.lastPerformed(in: context)
     }
 
     public func weekStats(now: Date = .now) -> WeekStats {

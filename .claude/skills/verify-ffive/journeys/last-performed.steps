@@ -1,0 +1,16 @@
+# Last performed date in the picker and on the exercise detail page (demo, read-only).
+launch -seedDemo
+tap #workout.menu timeout=20
+tap #menu.add-exercise
+type #picker.search "Bench"
+wait #picker.row.bench-press
+exists text "~Last performed"
+count text "~Last performed" "1"
+shot picker
+tap #picker.cancel
+tap #tab.exercises
+type #exercises.search "Bench Press"
+tap #exercises.row.bench-press
+wait nav "Bench Press"
+wait #exercise.last-performed
+shot detail

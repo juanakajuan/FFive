@@ -54,5 +54,9 @@ final class ExerciseHistoryTests: XCTestCase {
         XCTAssertEqual(
             groups.map(\.sessions.count), [1, 1, 2], "open sessions and ones with no logged set are left out")
         XCTAssertEqual(groups[2].sessions.compactMap(\.workout?.week), [1, 0], "newest first inside a meso")
+        XCTAssertEqual(
+            store.lastPerformed()[ExerciseID(folding: "Bench Press")], t0 + 14 * day,
+            "the newest finished session with a logged set, not the open or empty ones")
+        XCTAssertNil(store.lastPerformed()[ExerciseID(folding: "Squat")], "an exercise never done has no date")
     }
 }

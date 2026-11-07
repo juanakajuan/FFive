@@ -19,6 +19,7 @@ struct ExercisePickerView: View {
         let settings = store.settings
         let all = store.library(muscle: muscle, equipment: nil, search: search)
         let entries = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
+        let lastPerformed = store.lastPerformed()
         NavigationStack {
             VStack(spacing: 0) {
                 SearchBox(prompt: "Search or create exercise", text: $search)
@@ -55,7 +56,7 @@ struct ExercisePickerView: View {
                         if !rows.isEmpty {
                             Section {
                                 ForEach(rows) { entry in
-                                    row(entry).themedRow()
+                                    row(entry, lastPerformed: lastPerformed[entry.id]).themedRow()
                                 }
                             } header: {
                                 Text(group.displayName)
@@ -99,7 +100,7 @@ struct ExercisePickerView: View {
         }
     }
 
-    private func row(_ entry: ExerciseListing) -> some View {
+    private func row(_ entry: ExerciseListing, lastPerformed: Date?) -> some View {
         Button {
             pick(entry.name, entry.muscle)
         } label: {
@@ -114,6 +115,11 @@ struct ExercisePickerView: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondary)
                     }
+                    if let lastPerformed {
+                        Text("Last performed \(lastPerformed.formatted(.lastPerformed))")
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondary)
+                    }
                 }
                 Spacer(minLength: 0)
                 Image(systemName: "plus")
@@ -124,7 +130,10 @@ struct ExercisePickerView: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(entry.name), \(entry.equipment)")
-        .accessibilityValue(entry.muscle.displayName)
+        .accessibilityValue(
+            [entry.muscle.displayName, lastPerformed.map { "last performed \($0.formatted(.lastPerformed))" }]
+                .compactMap(\.self).joined(separator: ", ")
+        )
         .a11y(.pickerRow, key: entry.name)
     }
 
@@ -151,4 +160,9 @@ struct ExercisePickerView: View {
         onPick(name, muscle)
         dismiss()
     }
+}
+
+extension FormatStyle where Self == Date.FormatStyle {
+    /// The day an exercise was last done, such as "Mar 3, 2026".
+    static var lastPerformed: Date.FormatStyle { .dateTime.month(.abbreviated).day().year() }
 }

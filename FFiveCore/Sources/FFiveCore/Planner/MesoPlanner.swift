@@ -112,12 +112,25 @@ enum MesoPlanner {
         workout.dayIndex = key.dayIndex
         workout.bodyweight = snapshot.bodyweight
         meso.workouts.append(workout)
+        fill(workout, with: planned, in: context)
+        return workout
+    }
+
+    /// Replaces a built session's exercises with what the plan prescribes now, keeping the session itself so a
+    /// screen showing it stays put.
+    static func rebuild(_ workout: Workout, unit: WeightUnit, snapshot: PlanningSnapshot, in context: ModelContext) {
+        guard let meso = workout.mesocycle, let key = workout.key else { return }
+        let planned = plan(meso, at: key, unit: unit, snapshot: snapshot)
+        for exercise in workout.exercises { workout.remove(exercise, in: context) }
+        fill(workout, with: planned, in: context)
+    }
+
+    private static func fill(_ workout: Workout, with planned: [PlannedExercise], in context: ModelContext) {
         for (order, exercise) in planned.enumerated() {
             let model = Exercise(name: exercise.name, order: order, muscle: exercise.muscle)
             workout.exercises.append(model)
             replaceSets(of: model, with: exercise.targets, in: context)
         }
-        return workout
     }
 
     /// What the session at `key` would prescribe if it were built now. Reads only; never inserts.
