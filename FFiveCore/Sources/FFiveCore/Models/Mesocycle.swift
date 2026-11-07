@@ -34,6 +34,7 @@ public final class Mesocycle {
 
     var sortedDays: [MesoDay] { days.sorted { $0.order < $1.order } }
     public var dayNames: [String] { sortedDays.map(\.name) }
+    public var weekdays: [Weekday?] { sortedDays.map(\.weekday) }
     public var isActive: Bool { finishedDate == nil }
 
     /// Later weeks are built from the day's name, so renaming it also relabels the sessions already built.
@@ -43,6 +44,15 @@ public final class Mesocycle {
         days[dayIndex].name = name
         for workout in workouts where workout.dayIndex == dayIndex { workout.name = name }
     }
+
+    /// Later weeks are built with the day's weekday, so relabeling it also relabels the sessions already built.
+    func relabelDay(_ dayIndex: Int, as weekday: Weekday?) {
+        let days = sortedDays
+        guard days.indices.contains(dayIndex) else { return }
+        days[dayIndex].weekday = weekday
+        for workout in workouts where workout.dayIndex == dayIndex { workout.weekday = weekday }
+    }
+
     public func priority(of muscle: Muscle) -> MusclePriority {
         musclePriorityRaw[muscle.rawValue].flatMap(MusclePriority.init(rawValue:)) ?? .normal
     }

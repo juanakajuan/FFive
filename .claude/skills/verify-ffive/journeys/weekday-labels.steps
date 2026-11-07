@@ -1,0 +1,45 @@
+# weekday-labels: label block days with a weekday in the builder, then relabel one from the workout menu,
+# first for this session only and then for every week.
+# Before: ffive-verify reset-data.
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+scrollto #builder.weekday.1
+tap #builder.weekday.1
+tap button "Monday"
+wait any "~Monday"
+shot 01-builder
+tap #builder.start
+wait text "WEEK 1 MONDAY" timeout=10
+store-expect MesoDay weekdayRaw monday
+store-expect Workout weekdayRaw monday
+shot 02-header
+tap #workout.menu
+tap #menu.relabel
+sleep 1
+shot 03-relabel-menu
+tap button "Thursday"
+wait #dialog.weekday-session
+shot 04-scope-dialog
+tap #dialog.weekday-session
+wait text "WEEK 1 THURSDAY"
+store-expect Workout weekdayRaw thursday
+tap #workout.schedule
+wait any "Day 1, Monday, Upper A"
+shot 05-schedule-session-only
+tap #sheet.done
+tap #workout.menu
+tap #menu.relabel
+sleep 1
+tap button "Friday"
+tap #dialog.weekday-every-week
+wait text "WEEK 1 FRIDAY"
+store-expect MesoDay weekdayRaw friday
+tap #workout.schedule
+wait any "Day 1, Friday, Upper A"
+shot 06-schedule-every-week
+launch
+wait text "WEEK 1 FRIDAY" timeout=20

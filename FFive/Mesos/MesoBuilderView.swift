@@ -171,6 +171,15 @@ struct MesoEditorView: View {
                         .font(.system(size: 16, weight: .semibold))
                         .builderField()
                         .builderRow()
+                    Picker("Weekday", selection: $day.weekday) {
+                        Text("None").tag(Weekday?.none)
+                        ForEach(Weekday.allCases) { Text($0.name).tag(Weekday?.some($0)) }
+                    }
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.text)
+                    .tint(Theme.secondary)
+                    .a11y(.builderWeekday, (draft.days.firstIndex { $0.id == day.id } ?? 0) + 1)
+                    .builderRow()
                     ForEach(day.slots) { slot in
                         Button {
                             picker = .swap(day: day.id, slot: slot)

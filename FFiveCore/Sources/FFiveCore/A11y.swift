@@ -28,6 +28,9 @@ public enum A11y: String, CaseIterable {
     case menuQuickWorkout = "menu.quick-workout"
     case menuWorkoutNote = "menu.workout-note"
     case menuRename = "menu.rename"
+    case menuRelabel = "menu.relabel"
+    case dialogWeekdaySession = "dialog.weekday-session"
+    case dialogWeekdayEveryWeek = "dialog.weekday-every-week"
     case menuBodyweight = "menu.bodyweight"
     case menuDiscard = "menu.discard"
     case menuReset = "menu.reset"
@@ -90,6 +93,7 @@ public enum A11y: String, CaseIterable {
     case builderTemplate = "builder.template"
     case builderBlank = "builder.blank"
     case builderName = "builder.name"
+    case builderWeekday = "builder.weekday"
     case builderStart = "builder.start"
     case builderCancel = "builder.cancel"
     case builderSaveTemplate = "builder.save-template"
@@ -130,7 +134,7 @@ public enum A11y: String, CaseIterable {
         .exerciseHistory, .exerciseHistorySession,
         .exercisePin,
         .tipLearnMore, .tipDismiss,
-        .mesoNoteDelete,
+        .mesoNoteDelete, .builderWeekday,
     ]
     static let keyed: Set<A11y> = [
         .pickerRow, .exercisesRow, .builderTemplate, .builderCustomTemplate, .templatesCustom, .templatesMenu,
