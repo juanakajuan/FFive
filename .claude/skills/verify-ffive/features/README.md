@@ -59,6 +59,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Exercise history](./exercise-history.md): the history button on an exercise card lists every finished session of it, grouped by meso, and opens each one (demo).
 - [Last performed](./last-performed.md): exercise picker rows and the exercise detail page show the date of the newest finished session (demo).
 - [Suggest an exercise](./suggest-exercise.md): the picker's Suggest button cycles fitting exercises for the muscle, done-before first, and changes nothing until Add (demo).
+- [Exercise detail from the picker](./picker-detail.md): a picker row's info button opens that exercise's detail on top of the picker; back keeps the search (demo).
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
 - [Coaching tips](./coaching-tips.md): a starting-load tip on a calibration set and a rest tip after a log, each linking to its Learn article and staying closed once dismissed (on disk plus UserDefaults).
 - [Settings](./settings.md): weight unit, auto-match weights, iCloud sync status, and app version, pushed from More (demo plus UserDefaults).
