@@ -7,7 +7,9 @@ struct MesoDetailView: View {
 
     @Environment(Store.self) private var store
     @Environment(AppRouter.self) private var router
+    @Environment(\.dismiss) private var dismiss
     @State private var confirmEnd = false
+    @State private var confirmDelete = false
     @State private var trainAfterAll: SessionKey?
     @State private var templateName: String?
     @State private var renameDraft: String?
@@ -50,6 +52,8 @@ struct MesoDetailView: View {
                     .a11y(.menuSummary)
                     Button("Rename", systemImage: "pencil") { renameDraft = meso.name }
                         .a11y(.menuRename)
+                    Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
+                        .a11y(.menuDeleteMesocycle)
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -74,6 +78,15 @@ struct MesoDetailView: View {
                 .a11y(.dialogEndMesocycle)
         } message: {
             Text("Logged sessions stay in Progress. You can plan a new block right after.")
+        }
+        .confirmationDialog("Delete this mesocycle?", isPresented: $confirmDelete, titleVisibility: .visible) {
+            Button("Delete Mesocycle", role: .destructive) {
+                dismiss()
+                router.delete(meso, store: store)
+            }
+            .a11y(.dialogDeleteMesocycle)
+        } message: {
+            Text(deleteMessage(meso))
         }
         .alert(
             "Save as Template",

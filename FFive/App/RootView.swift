@@ -59,6 +59,13 @@ final class AppRouter {
         store.endMesocycle(meso)
         endedMeso = meso
     }
+
+    @MainActor
+    func delete(_ meso: Mesocycle, store: Store) {
+        if focus?.meso == meso.persistentModelID { focus = nil }
+        if endedMeso === meso { endedMeso = nil }
+        store.deleteMesocycle(meso)
+    }
 }
 
 struct RootView: View {
