@@ -62,6 +62,25 @@ public final class Settings {
 
     @ObservationIgnored private let defaults: UserDefaults
 
+    private static let keys = [
+        weightUnitKey, autoMatchWeightsKey, hiddenExercisesKey, equipmentKey, appearanceKey, dismissedTipsKey,
+        changelogSeenKey,
+    ]
+
+    /// Clears every stored setting, so each one reads back as a fresh install's.
+    func reset() {
+        for key in Self.keys { defaults.removeObject(forKey: key) }
+        let fresh = Settings(defaults: defaults)
+        weightUnit = fresh.weightUnit
+        autoMatchWeights = fresh.autoMatchWeights
+        hiddenExercises = fresh.hiddenExercises
+        equipment = fresh.equipment
+        appearance = fresh.appearance
+        dismissedTips = fresh.dismissedTips
+        changelogSeenVersion = fresh.changelogSeenVersion
+        for key in Self.keys { defaults.removeObject(forKey: key) }
+    }
+
     public init(defaults: UserDefaults = .standard) {
         self.defaults = defaults
         weightUnit = defaults.string(forKey: Self.weightUnitKey).flatMap(WeightUnit.init(rawValue:)) ?? .lb

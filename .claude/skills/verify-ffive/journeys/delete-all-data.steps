@@ -1,0 +1,57 @@
+# delete-all-data (on disk): fill the store and settings, wipe it all from Settings > Data, and land on a fresh install.
+# Before: ffive-verify reset-data. After: ffive-verify store (every table 0 rows) and ffive-verify defaults (no weightUnit).
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+tap #builder.save-template
+wait alert "Save as Template"
+replace field "Template name" "My Template"
+sleep 1
+tap button "Save"
+absent alert "Save as Template"
+replace #builder.name "Verify Block"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+replace #set.weight.1 "135"
+replace #set.reps.1 "9"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+store-expect Mesocycle name "Verify Block"
+store-expect CustomTemplate name "My Template"
+store-expect SetEntry weight 135
+tap #tab.more
+tap #more.settings
+wait nav "Settings"
+tap #settings.unit.kg
+selected #settings.unit.kg
+defaults-expect weightUnit kg
+scrollto #settings.delete-all
+shot 01-settings-data
+tap #settings.delete-all
+wait #dialog.delete-all-data
+shot 02-confirm
+tap #dialog.delete-all-data
+absent #dialog.delete-all-data
+scrollto #settings.unit.lb
+selected #settings.unit.lb
+shot 03-settings-reset
+scrollto #settings.export
+tap #settings.export
+wait any "~FFive Export" timeout=20
+shot 04-export-sheet
+launch
+wait #workout.plan timeout=20
+wait text "~All Time"
+shot 05-empty-workout
+tap #tab.mesos
+wait #mesos.plan
+shot 06-empty-mesos
+tap #tab.templates
+wait text "Custom templates"
+absent #templates.custom.my-template
+wait #templates.template.upper-lower-4-days
+shot 07-templates

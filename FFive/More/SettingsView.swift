@@ -4,6 +4,8 @@ import SwiftUI
 struct SettingsView: View {
     @Environment(Store.self) private var store
     @Environment(SyncMonitor.self) private var sync
+    @Environment(AppRouter.self) private var router
+    @State private var confirmDeleteAll = false
 
     private var version: String {
         let info = Bundle.main.infoDictionary
@@ -108,9 +110,26 @@ struct SettingsView: View {
                     }
                     .buttonStyle(.plain)
                     .a11y(.settingsExport)
+                    divider
+                    Button {
+                        confirmDeleteAll = true
+                    } label: {
+                        HStack {
+                            Text("Delete All Data").font(Theme.body).foregroundStyle(Theme.danger)
+                            Spacer()
+                            Image(systemName: "trash")
+                                .font(.system(size: 15, weight: .semibold))
+                                .foregroundStyle(Theme.danger)
+                        }
+                        .padding(.horizontal, 12)
+                        .frame(minHeight: 44)
+                        .contentShape(Rectangle())
+                    }
+                    .buttonStyle(.plain)
+                    .a11y(.settingsDeleteAll)
                 }
                 Text(
-                    "Saves every mesocycle, workout, set, feedback entry, custom exercise, template and pinned note to a JSON file."
+                    "Export saves every mesocycle, workout, set, feedback entry, custom exercise, template and pinned note to a JSON file. Delete All Data removes them from this iPhone and iCloud, and resets these settings."
                 )
                 .font(Theme.detail)
                 .foregroundStyle(Theme.secondary)
@@ -132,6 +151,14 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .sensoryFeedback(.selection, trigger: store.settings.weightUnit)
         .sensoryFeedback(.selection, trigger: store.settings.appearance)
+        .confirmationDialog("Delete all data?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
+            Button("Delete All Data", role: .destructive) { router.deleteAllData(store: store) }
+                .a11y(.dialogDeleteAllData)
+        } message: {
+            Text(
+                "Every mesocycle, workout, custom exercise, template and note is removed from this iPhone and from iCloud, and settings are reset. This can't be undone, so export your training data first if you want a copy."
+            )
+        }
     }
 
     private var syncRow: some View {
@@ -281,4 +308,5 @@ private struct TrainingExportFile: Transferable {
     NavigationStack { SettingsView() }
         .preferredColorScheme(.dark)
         .environment(Store(inMemory: true))
+        .environment(AppRouter())
 }
