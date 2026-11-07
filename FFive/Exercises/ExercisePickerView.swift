@@ -35,14 +35,26 @@ struct ExercisePickerView: View {
                     EquipmentScopeToggle(isOn: $equipmentOnly)
                         .padding(.bottom, 4)
                 }
-                Toggle("Only exercises I\u{2019}ve performed", isOn: $performedOnly)
-                    .font(Theme.detail)
-                    .foregroundStyle(Theme.secondary)
-                    .tint(Theme.accent)
+                Button {
+                    performedOnly.toggle()
+                } label: {
+                    HStack {
+                        Text("Only exercises I\u{2019}ve performed")
+                            .font(Theme.detail)
+                            .foregroundStyle(Theme.secondary)
+                        Spacer()
+                        Image(systemName: performedOnly ? "checkmark.circle.fill" : "circle")
+                            .font(.system(size: 20))
+                            .foregroundStyle(performedOnly ? Theme.infoText : Theme.secondary)
+                    }
                     .padding(.horizontal, Theme.gutter)
                     .frame(minHeight: 44)
-                    .padding(.bottom, 4)
-                    .a11y(.pickerPerformedOnly)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(performedOnly ? .isSelected : [])
+                .padding(.bottom, 4)
+                .a11y(.pickerPerformedOnly)
                 if let suggested {
                     suggestionCard(suggested, lastPerformed: lastPerformed[suggested.id])
                 }
