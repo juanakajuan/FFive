@@ -131,6 +131,8 @@ struct TemplatesView: View {
             .a11y(.templatesCustom, key: saved.name)
 
             Menu {
+                Button("Copy", systemImage: "doc.on.doc") { builder = .editTemplate(store.copyTemplate(template)) }
+                    .a11y(.menuCopyTemplate)
                 Button("Rename", systemImage: "pencil") {
                     renameDraft = saved.name
                     renaming = saved

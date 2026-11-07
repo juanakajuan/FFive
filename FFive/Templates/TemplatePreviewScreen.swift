@@ -43,18 +43,26 @@ struct TemplatePreviewScreen: View {
         .navigationBarTitleDisplayMode(.inline)
         .toolbar(.visible, for: .navigationBar)
         .toolbar {
-            if let saved {
+            if let template {
                 ToolbarItem(placement: .primaryAction) {
                     Menu("Template Options", systemImage: "ellipsis.circle") {
-                        Button("Edit", systemImage: "square.and.pencil") { builder = .editTemplate(saved) }
-                            .a11y(.menuEditTemplate)
-                        Button("Rename", systemImage: "pencil") {
-                            renameDraft = saved.name
-                            renaming = saved
+                        if let saved {
+                            Button("Edit", systemImage: "square.and.pencil") { builder = .editTemplate(saved) }
+                                .a11y(.menuEditTemplate)
                         }
-                        .a11y(.menuRenameTemplate)
-                        Button("Delete", systemImage: "trash", role: .destructive) { deleting = saved }
-                            .a11y(.menuDeleteTemplate)
+                        Button("Copy", systemImage: "doc.on.doc") {
+                            builder = .editTemplate(store.copyTemplate(template))
+                        }
+                        .a11y(.menuCopyTemplate)
+                        if let saved {
+                            Button("Rename", systemImage: "pencil") {
+                                renameDraft = saved.name
+                                renaming = saved
+                            }
+                            .a11y(.menuRenameTemplate)
+                            Button("Delete", systemImage: "trash", role: .destructive) { deleting = saved }
+                                .a11y(.menuDeleteTemplate)
+                        }
                     }
                     .a11y(.templatePreviewMenu)
                 }

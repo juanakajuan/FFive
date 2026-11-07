@@ -62,6 +62,12 @@ extension CustomTemplate {
         }
     }
 
+    static func layout(of template: ProgramTemplate) -> [Layout.Day] {
+        template.days.map { day in
+            Layout.Day(name: day.name, slots: day.slots.map { Layout.Slot(exercise: $0.exercise, muscle: $0.muscle) })
+        }
+    }
+
     static func layout(of meso: Mesocycle) -> [Layout.Day] {
         meso.sortedDays.map { day in
             Layout.Day(

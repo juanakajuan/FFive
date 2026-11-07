@@ -74,6 +74,17 @@ public final class Store {
         commit()
     }
 
+    /// Saves a custom template with the same days as `template`, named "<name> copy", or "<name> copy 2" and up
+    /// when that name is taken.
+    @discardableResult
+    public func copyTemplate(_ template: ProgramTemplate) -> CustomTemplate {
+        let copy = CustomTemplate(
+            name: uniqueTemplateName("\(template.name) copy"), days: CustomTemplate.layout(of: template))
+        context.insert(copy)
+        commit()
+        return copy
+    }
+
     /// Replaces the template's days with the draft's. An edit that leaves no exercise keeps the old days.
     public func updateTemplate(_ template: CustomTemplate, from draft: MesoDraft) {
         let days = CustomTemplate.layout(of: draft)
