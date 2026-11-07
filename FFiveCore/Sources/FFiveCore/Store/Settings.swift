@@ -11,6 +11,7 @@ public final class Settings {
     private static let appearanceKey = "appearance"
     private static let dismissedTipsKey = "dismissedTips"
     private static let changelogSeenKey = "changelogSeenVersion"
+    private static let reviewRequestedKey = "reviewRequested"
 
     /// Dark until the lifter picks otherwise, since every earlier build was dark only.
     public var appearance: Appearance {
@@ -49,6 +50,11 @@ public final class Settings {
         didSet { defaults.set(changelogSeenVersion, forKey: Self.changelogSeenKey) }
     }
 
+    /// Whether the app has asked for an App Store review. It asks at most once.
+    public internal(set) var reviewRequested: Bool {
+        didSet { defaults.set(reviewRequested, forKey: Self.reviewRequestedKey) }
+    }
+
     public var filtersEquipment: Bool { equipment != Set(Equipment.allCases) }
 
     /// Refuses to remove the last item so the exercise lists never go empty.
@@ -74,5 +80,6 @@ public final class Settings {
         dismissedTips = Set(
             (defaults.stringArray(forKey: Self.dismissedTipsKey) ?? []).compactMap(CoachingTip.init(rawValue:)))
         changelogSeenVersion = defaults.string(forKey: Self.changelogSeenKey)
+        reviewRequested = defaults.bool(forKey: Self.reviewRequestedKey)
     }
 }

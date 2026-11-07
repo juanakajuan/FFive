@@ -8,7 +8,7 @@ This directory is the maintained source for verifying FFive's user-facing behavi
 - `ffive-verify launch` printed `READY`, and `ffive-verify doctor` prints `HEALTHY` with an install stamp that matches the source.
 - **Demo baseline** (read-only journeys): every drive starts with `launch -seedDemo`. The block "Full Body, 3 Days" is at Week 2 of 5. Week 1 is finished, Week 2 · Day 1 is in progress with Squat logged, and Week 2 · Day 3 is skipped. The Workout tab opens on `WEEK 2 DAY 1`. "Morning Workout" and "Evening Workout" are free-form history.
 - **On-disk baseline** (write journeys): `ffive-verify reset-data`, then a bare `launch`. The Workout tab shows `Plan a Mesocycle` and `Quick Workout`.
-- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, coaching-tips, reorder-exercises, swap-exercise, reset-and-rename-day, muscle-priorities, end-mesocycle, delete-mesocycle, rename-mesocycle, meso-notes, meso-length, weekday-labels, start-weekday, copy-mesocycle, and manage-days each start from their own `reset-data`.
+- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, coaching-tips, reorder-exercises, swap-exercise, reset-and-rename-day, muscle-priorities, end-mesocycle, delete-mesocycle, rename-mesocycle, meso-notes, meso-length, weekday-labels, start-weekday, copy-mesocycle, manage-days, and rate-ffive each start from their own `reset-data`.
 - Never drive a simulator that `ffive-verify launch` did not create in this checkout.
 
 ## Driving conventions
@@ -68,6 +68,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 - [Exercise detail from the picker](./picker-detail.md): a picker row's info button opens that exercise's detail on top of the picker; back keeps the search (demo).
 - [Progress](./progress.md): volume against landmarks, the strength trend, and history, pushed from More (demo).
 - [Coaching tips](./coaching-tips.md): a starting-load tip on a calibration set and a rest tip after a log, each linking to its Learn article and staying closed once dismissed (on disk plus UserDefaults).
+- [Rate FFive](./rate-ffive.md): More's Rate FFive row, and the one-time review prompt after the first finished block (on disk plus UserDefaults).
 - [Settings](./settings.md): weight unit, auto-match weights, iCloud sync status, and app version, pushed from More (demo plus UserDefaults).
 
 Not mapped yet: the Templates tab's search and filter, the Exercises tab, a block's detail page on the Mesos tab (beyond its schedule grid and priorities), Learn, swapping or removing exercises, renaming a quick workout, and discarding a workout.

@@ -457,4 +457,15 @@ extension Store {
         let mesos = (try? context.fetchCount(FetchDescriptor<Mesocycle>())) ?? 0
         return workouts + mesos > 0
     }
+
+    /// True once, the first time it is asked after a block has finished. The caller then asks for a review.
+    public func takeReviewPrompt() -> Bool {
+        let finished =
+            (try? context.fetchCount(FetchDescriptor<Mesocycle>(predicate: #Predicate { $0.finishedDate != nil }))) ?? 0
+        guard ReviewPrompt.shouldAsk(finishedBlocks: finished, alreadyAsked: settings.reviewRequested) else {
+            return false
+        }
+        settings.reviewRequested = true
+        return true
+    }
 }

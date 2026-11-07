@@ -1,5 +1,6 @@
 import FFiveCore
 import Observation
+import StoreKit
 import SwiftData
 import SwiftUI
 
@@ -73,6 +74,7 @@ struct RootView: View {
     @State private var router = AppRouter()
     @State private var keyboardShown = false
     @State private var whatsNew: [Changelog.DayGroup] = []
+    @Environment(\.requestReview) private var requestReview
 
     var body: some View {
         // The system TabView draws a floating glass bar on recent iOS; the design calls for a flat,
@@ -102,7 +104,7 @@ struct RootView: View {
         .environment(router)
         .tint(Theme.text)
         .preferredColorScheme(store.settings.appearance.colorScheme)
-        .sheet(item: $router.endedMeso) { MesoSummarySheet(meso: $0) }
+        .sheet(item: $router.endedMeso, onDismiss: askForReviewAfterFirstBlock) { MesoSummarySheet(meso: $0) }
         .sheet(
             isPresented: Binding(get: { !whatsNew.isEmpty }, set: { if !$0 { whatsNew = [] } }),
             onDismiss: { store.settings.changelogSeenVersion = Changelog.runningVersion }
@@ -121,6 +123,12 @@ struct RootView: View {
 }
 
 extension RootView {
+    /// Asks once, after the summary of the lifter's first finished block closes.
+    fileprivate func askForReviewAfterFirstBlock() {
+        guard !DemoLaunch.isDemo, store.takeReviewPrompt() else { return }
+        requestReview()
+    }
+
     /// Opens What's New on the first launch of a newer version. A fresh install only records the version.
     fileprivate func showWhatsNewAfterUpdate() {
         guard !DemoLaunch.isDemo else { return }

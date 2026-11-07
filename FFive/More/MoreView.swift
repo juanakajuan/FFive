@@ -16,6 +16,8 @@ struct MoreView: View {
     }
 
     /// Demo launches into Progress land here; ProgressScreen then opens its own strength route.
+    @Environment(\.openURL) private var openURL
+
     @State private var path = NavigationPath(
         DemoLaunch.take(.progress) || DemoLaunch.isPending(.strength) ? [Destination.progress] : [])
 
@@ -39,6 +41,15 @@ struct MoreView: View {
                         row("Settings", systemImage: "gearshape", to: .settings)
                         divider
                         row("Changelog", systemImage: "list.bullet.rectangle", to: .changelog)
+                        divider
+                        Button {
+                            openURL(AppStoreListing.writeReviewURL)
+                        } label: {
+                            rowLabel("Rate FFive", systemImage: "star", trailing: "arrow.up.right")
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel("Rate FFive")
+                        .a11y(.moreRate)
                     }
                     Rectangle().fill(Theme.hairline).frame(height: 1).padding(.top, 8)
                     Text("App version: \(version)")
@@ -78,25 +89,29 @@ struct MoreView: View {
 
     private func row(_ title: String, systemImage: String, to destination: Destination) -> some View {
         NavigationLink(value: destination) {
-            HStack(spacing: 14) {
-                Image(systemName: systemImage)
-                    .font(.system(size: 20))
-                    .frame(width: 24)
-                    .accessibilityHidden(true)
-                Text(title).font(Theme.body)
-                Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.secondary)
-            }
-            .foregroundStyle(Theme.text)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
+            rowLabel(title, systemImage: systemImage, trailing: "chevron.right")
         }
         .buttonStyle(.plain)
         .accessibilityLabel(title)
         .a11y(destination.a11y)
+    }
+
+    private func rowLabel(_ title: String, systemImage: String, trailing: String) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: systemImage)
+                .font(.system(size: 20))
+                .frame(width: 24)
+                .accessibilityHidden(true)
+            Text(title).font(Theme.body)
+            Spacer()
+            Image(systemName: trailing)
+                .font(.system(size: 14))
+                .foregroundStyle(Theme.secondary)
+        }
+        .foregroundStyle(Theme.text)
+        .padding(.horizontal, 12)
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 }
 

@@ -1,0 +1,53 @@
+# rate-ffive (on disk): the More row, then the one-time review prompt after the first finished block, then no second prompt.
+# Before: ffive-verify reset-data. A fresh install opens What's New first.
+launch
+tap button "Done" timeout=20
+wait #workout.plan timeout=20
+tap #tab.more
+wait #more.rate
+shot 01-more-rate-row
+tap #tab.workout
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.full-body-3-days
+wait nav "Customize"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+replace #set.weight.1 "135"
+replace #set.reps.1 "9"
+tap #keyboard.done
+tap #set.log.1
+tap #workout.menu
+tap #menu.end-mesocycle
+tap #dialog.end-mesocycle
+wait nav "~Summary" timeout=10
+tap #sheet.done
+wait button "Not Now" timeout=20
+shot 02-review-prompt-after-first-block
+defaults-expect reviewRequested 1
+# The review dialog runs out of process and ignores XCUITest taps; a relaunch clears it.
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.full-body-3-days
+wait nav "Customize"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+replace #set.weight.1 "135"
+replace #set.reps.1 "9"
+tap #keyboard.done
+tap #set.log.1
+tap #workout.menu
+tap #menu.end-mesocycle
+tap #dialog.end-mesocycle
+wait nav "~Summary" timeout=10
+tap #sheet.done
+sleep 10
+count button "Not Now" "0"
+wait #workout.plan
+shot 03-no-prompt-after-second-block
+tap #tab.more
+tap #more.rate
+sleep 4
+shot 04-rate-tapped
