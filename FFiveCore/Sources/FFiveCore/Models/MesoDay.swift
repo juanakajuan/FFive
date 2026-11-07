@@ -9,6 +9,8 @@ public final class MesoDay {
     public internal(set) var mesocycle: Mesocycle?
     @Relationship(deleteRule: .cascade, originalName: "slots", inverse: \DaySlot.day)
     var storedSlots: [DaySlot]?
+    /// A workout note pinned to this day, shown on each of its sessions until it is unpinned.
+    public internal(set) var pinnedNote: String?
 
     public var slots: [DaySlot] {
         get { storedSlots ?? [] }

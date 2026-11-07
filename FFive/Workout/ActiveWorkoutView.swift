@@ -41,6 +41,8 @@ struct ActiveWorkoutView: View {
 
         let target: Target
         let draft: String
+        /// Whether the note is pinned to its block day, or nil when it can't be pinned.
+        var pinned: Bool?
 
         var id: String {
             switch target {
@@ -162,8 +164,8 @@ struct ActiveWorkoutView: View {
                 Text("Bodyweight lifts log the load you add to it. Leave it empty to clear.")
             }
             .sheet(item: $noteEdit) { edit in
-                NoteEditor(title: edit.target.title, draft: edit.draft) {
-                    saveNote($0, to: edit.target)
+                NoteEditor(title: edit.target.title, draft: edit.draft, pinned: edit.pinned, dayName: workout.name) {
+                    saveNote($0, pinned: $1, to: edit.target)
                 }
             }
             .sheet(item: $notesFor) { MesoNotesScreen(meso: $0) }
@@ -281,7 +283,11 @@ struct ActiveWorkoutView: View {
     private func sessionScroll(_ exercises: [Exercise], pendingSoreness: [Muscle: MuscleFeedbackRecord]) -> some View {
         ScrollView {
             LazyVStack(spacing: 16) {
-                if let note = workout.note {
+                if let pinned = workout.pinnedNote {
+                    Callout(text: pinned, systemImage: "pin.fill", style: .pinned)
+                        .padding(.horizontal, Theme.gutter)
+                        .accessibilityLabel("Pinned workout note: \(pinned)")
+                } else if let note = workout.note {
                     Callout(text: note, systemImage: "note.text", style: .note)
                         .padding(.horizontal, Theme.gutter)
                         .accessibilityLabel("Workout note: \(note)")
@@ -363,9 +369,9 @@ struct ActiveWorkoutView: View {
         }
     }
 
-    private func saveNote(_ text: String, to target: NoteEdit.Target) {
+    private func saveNote(_ text: String, pinned: Bool, to target: NoteEdit.Target) {
         switch target {
-        case .day: store.setNote(text, on: workout)
+        case .day: store.setNote(text, on: workout, pinned: pinned)
         case .exercise(let exercise): store.setNote(text, on: exercise)
         }
     }
@@ -427,8 +433,11 @@ struct ActiveWorkoutView: View {
             }
             .a11y(.menuQuickWorkout)
         }
-        Button(workout.note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
-            noteEdit = NoteEdit(target: .day, draft: workout.note ?? "")
+        let dayNote = workout.pinnedNote ?? workout.note
+        Button(dayNote == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
+            noteEdit = NoteEdit(
+                target: .day, draft: dayNote ?? "",
+                pinned: workout.mesocycle == nil ? nil : workout.pinnedNote != nil)
         }
         .a11y(.menuWorkoutNote)
         if let activeMeso {
@@ -1137,16 +1146,24 @@ struct FeedbackSheet: View {
 /// Notes edit in a sheet, not an alert, because an alert's text field kept the old text after it was cleared and retyped.
 private struct NoteEditor: View {
     let title: String
-    let onSave: (String) -> Void
+    /// Names the block day a pinned note follows. Nil hides the pin option.
+    let dayName: String?
+    let onSave: (String, Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @State private var draft: String
+    @State private var pinned: Bool
     @FocusState private var focused: Bool
 
-    init(title: String, draft: String, onSave: @escaping (String) -> Void) {
+    init(
+        title: String, draft: String, pinned: Bool? = nil, dayName: String? = nil,
+        onSave: @escaping (String, Bool) -> Void
+    ) {
         self.title = title
+        self.dayName = pinned == nil ? nil : dayName
         self.onSave = onSave
         _draft = State(initialValue: draft)
+        _pinned = State(initialValue: pinned ?? false)
     }
 
     var body: some View {
@@ -1161,6 +1178,29 @@ private struct NoteEditor: View {
                     .a11y(.noteText)
                     .padding(12)
                     .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                if let dayName {
+                    VStack(alignment: .leading, spacing: 4) {
+                        Button {
+                            pinned.toggle()
+                        } label: {
+                            HStack(spacing: 12) {
+                                ActionIcon(systemName: pinned ? "pin.fill" : "pin")
+                                Text("Pin to \(dayName)")
+                                    .font(Theme.body)
+                                    .foregroundStyle(Theme.text)
+                                Spacer(minLength: 0)
+                            }
+                            .contentShape(Rectangle())
+                        }
+                        .buttonStyle(.plain)
+                        .accessibilityLabel(pinned ? "Unpin from \(dayName)" : "Pin to \(dayName)")
+                        .a11y(.notePin)
+                        Text("Shows on every later \(dayName) session in this block until you unpin it.")
+                            .font(Theme.detail)
+                            .foregroundStyle(Theme.secondary)
+                    }
+                    .padding(.top, 8)
+                }
                 Spacer()
             }
             .padding(Theme.gutter)
@@ -1174,7 +1214,7 @@ private struct NoteEditor: View {
                 }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        onSave(draft)
+                        onSave(draft, pinned)
                         dismiss()
                     }
                     .a11y(.noteSave)
