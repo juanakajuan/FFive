@@ -209,9 +209,15 @@ final class PlannerTests: XCTestCase {
                 snapshot: PlanningSnapshot(context: context), in: context)
         }
 
-        func reorder(_ workout: Workout, to names: [String], _ scope: ReorderScope) {
+        func reorder(_ workout: Workout, to names: [String], _ scope: PlanScope) {
             MesoPlanner.reorder(
                 workout, to: names.map { name in workout.exercises.first { $0.name == name }! }, scope: scope)
+        }
+
+        func swap(_ workout: Workout, _ from: String, to name: String, _ scope: PlanScope) {
+            MesoPlanner.swap(
+                workout.exercises.first { $0.name == from }!, to: name, muscle: .chest, scope: scope, unit: .lb,
+                snapshot: PlanningSnapshot(context: context), in: context)
         }
 
         func finish(_ workout: Workout) {
@@ -228,6 +234,66 @@ final class PlannerTests: XCTestCase {
     private let reordered = ["Calf Raise", "Bench Press", "Lat Pulldown"]
 
     private func names(_ workout: Workout) -> [String] { workout.sortedExercises.map(\.name) }
+
+    private let swapped = ["Incline Dumbbell Press", "Lat Pulldown", "Calf Raise"]
+
+    func testSwapThisSessionOnly() {
+        let block = Block()
+        let week0 = block.session(0)
+        block.swap(week0, "Bench Press", to: "Incline Dumbbell Press", .thisSession)
+        expect("swap: this session shows the new exercise", names(week0), swapped)
+        block.finish(week0)
+        let week1 = block.session(1)
+        expect("swap: week 2 keeps the original exercise", names(week1), original)
+        block.finish(week1)
+        expect("swap: week 3 keeps the original exercise", names(block.session(2)), original)
+    }
+
+    func testSwapThisSessionResumesTheOriginalsProgression() {
+        let block = Block()
+        let week0 = block.session(0)
+        block.finish(week0)
+        let lastBench = week0.exercises.first { $0.name == "Bench Press" }!.sortedSets.map(\.weight).max()!
+        let week1 = block.session(1)
+        block.swap(week1, "Bench Press", to: "Incline Dumbbell Press", .thisSession)
+        block.finish(week1)
+        let bench = block.session(2).exercises.first { $0.name == "Bench Press" }!
+        expect(
+            "swap: week 3 progresses the original from its week 1 load",
+            bench.sortedSets.allSatisfy { ($0.targetWeight ?? 0) >= lastBench && $0.targetReps != nil }, true)
+    }
+
+    func testSwapThisSessionTwiceKeepsLaterWeeksOriginal() {
+        let block = Block()
+        let week0 = block.session(0)
+        block.swap(week0, "Bench Press", to: "Incline Dumbbell Press", .thisSession)
+        block.swap(week0, "Incline Dumbbell Press", to: "Cable Fly", .thisSession)
+        block.finish(week0)
+        expect("swap: a second session-only swap still leaves later weeks alone", names(block.session(1)), original)
+    }
+
+    func testSwapLaterWeeksCarriesForward() {
+        let block = Block()
+        let week0 = block.session(0)
+        block.swap(week0, "Bench Press", to: "Incline Dumbbell Press", .thisSession)
+        block.swap(week0, "Incline Dumbbell Press", to: "Incline Dumbbell Press", .laterWeeks)
+        block.finish(week0)
+        let week1 = block.session(1)
+        expect("swap: week 2 is planned with the new exercise", names(week1), swapped)
+        block.finish(week1)
+        expect("swap: week 3 is planned with the new exercise", names(block.session(2)), swapped)
+    }
+
+    func testSwapScopeAndBuiltLaterWeeks() {
+        for (scope, expected) in [(PlanScope.laterWeeks, swapped), (.thisSession, original)] {
+            let block = Block()
+            block.finish(block.session(0))
+            let week1 = block.session(1)
+            let week2 = block.session(2)
+            block.swap(week1, "Bench Press", to: "Incline Dumbbell Press", scope)
+            expect("swap \(scope): a built, unstarted later week", names(week2), expected)
+        }
+    }
 
     func testReorderQuickWorkout() {
         let context = ModelContext(AppStore.makeContainer(inMemory: true))
@@ -305,7 +371,7 @@ final class PlannerTests: XCTestCase {
     }
 
     func testReorderDoesNotChangeProgression() {
-        func run(reorder scope: ReorderScope?) -> [String: [SetTarget]] {
+        func run(reorder scope: PlanScope?) -> [String: [SetTarget]] {
             let block = Block()
             let week0 = block.session(0)
             if let scope { block.reorder(week0, to: reordered, scope) }

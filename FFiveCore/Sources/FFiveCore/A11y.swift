@@ -38,6 +38,8 @@ public enum A11y: String, CaseIterable {
     case menuView = "menu.view"
     case menuSummary = "menu.summary"
     case menuSwap = "menu.swap"
+    case dialogSwapSession = "dialog.swap-session"
+    case dialogSwapLaterWeeks = "dialog.swap-later-weeks"
     case menuAddSet = "menu.add-set"
     case menuExerciseNote = "menu.exercise-note"
     case menuDeleteNote = "menu.delete-note"
