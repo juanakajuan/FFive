@@ -6,7 +6,7 @@ public struct LoggedSet: Equatable {
 }
 
 /// A target for one set. A nil weight means "calibrate": the lifter picks a load that lands at the target RIR.
-public struct SetTarget: Equatable {
+public struct SetTarget: Hashable, Codable {
     public var weight: Double?
     public var reps: Int?
 

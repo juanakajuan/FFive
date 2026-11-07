@@ -6,12 +6,14 @@ struct MesoBuilderView: View {
     enum Route: Hashable {
         case template(ProgramTemplate)
         case blank
+        case copy(Mesocycle)
     }
 
     var startAt: Route?
 
     @Environment(\.dismiss) private var dismiss
     @Query(CustomTemplate.all) private var customTemplates: [CustomTemplate]
+    @Query(sort: \Mesocycle.startDate, order: .reverse) private var mesos: [Mesocycle]
     @State private var path: [Route] = []
 
     var body: some View {
@@ -43,6 +45,22 @@ struct MesoBuilderView: View {
     private var templateList: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
+                if !mesos.isEmpty {
+                    SectionHeading(text: "Copy a mesocycle")
+                        .padding(.horizontal, Theme.gutter)
+                        .padding(.top, 16)
+                        .padding(.bottom, 10)
+                    TemplateGroup {
+                        ForEach(mesos) { meso in
+                            NavigationLink(value: Route.copy(meso)) { CopySourceRow(meso: meso) }
+                                .buttonStyle(.plain)
+                                .a11y(.builderCopySource, key: meso.name)
+                            if meso.id != mesos.last?.id {
+                                Rectangle().fill(Theme.hairline).frame(height: 1)
+                            }
+                        }
+                    }
+                }
                 if !customTemplates.isEmpty {
                     SectionHeading(text: "Your templates")
                         .padding(.horizontal, Theme.gutter)
@@ -102,13 +120,13 @@ struct MesoBuilderView: View {
         .navigationBarTitleDisplayMode(.inline)
     }
 
+    @ViewBuilder
     private func editor(_ route: Route) -> some View {
-        let template: ProgramTemplate? =
-            switch route {
-            case .template(let template): template
-            case .blank: nil
-            }
-        return MesoEditorView(draft: MesoDraft(template: template)) { dismiss() }
+        switch route {
+        case .template(let template): MesoEditorView(draft: MesoDraft(template: template)) { dismiss() }
+        case .blank: MesoEditorView(draft: MesoDraft(template: nil)) { dismiss() }
+        case .copy(let source): MesoCopyView(source: source) { dismiss() }
+        }
     }
 }
 

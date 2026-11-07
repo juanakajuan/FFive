@@ -8,7 +8,7 @@ This directory is the maintained source for verifying FFive's user-facing behavi
 - `ffive-verify launch` printed `READY`, and `ffive-verify doctor` prints `HEALTHY` with an install stamp that matches the source.
 - **Demo baseline** (read-only journeys): every drive starts with `launch -seedDemo`. The block "Full Body, 3 Days" is at Week 2 of 5. Week 1 is finished, Week 2 · Day 1 is in progress with Squat logged, and Week 2 · Day 3 is skipped. The Workout tab opens on `WEEK 2 DAY 1`. "Morning Workout" and "Evening Workout" are free-form history.
 - **On-disk baseline** (write journeys): `ffive-verify reset-data`, then a bare `launch`. The Workout tab shows `Plan a Mesocycle` and `Quick Workout`.
-- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, coaching-tips, reorder-exercises, swap-exercise, reset-and-rename-day, muscle-priorities, end-mesocycle, rename-mesocycle, meso-notes, meso-length, and weekday-labels each start from their own `reset-data`.
+- The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, coaching-tips, reorder-exercises, swap-exercise, reset-and-rename-day, muscle-priorities, end-mesocycle, rename-mesocycle, meso-notes, meso-length, weekday-labels, and copy-mesocycle each start from their own `reset-data`.
 - Never drive a simulator that `ffive-verify launch` did not create in this checkout.
 
 ## Driving conventions
@@ -41,6 +41,7 @@ Each feature file starts with an H1 title and one paragraph describing the user-
 ## Features
 
 - [Plan a mesocycle](./plan-mesocycle.md): pick a template, customize name and length, start the block, and see it on the Mesos tab (on disk).
+- [Copy a mesocycle](./copy-mesocycle.md): plan a block as a copy of a past one, pick a source week, review its days, and start with its logged loads (on disk).
 - [Custom templates](./custom-templates.md): save a builder draft or a block as a template, find it on the Templates tab and in the builder, rename and delete it (on disk).
 - [Muscle priorities](./muscle-priorities.md): mark muscles Emphasize, Normal, or Maintain in the builder or on the block's detail page; maintained muscles start at MV (on disk).
 - [Train a planned session](./train-session.md): the block's session shows on the Workout tab; log or skip sets against targets, give feedback and soreness, and finish (on disk and demo).
