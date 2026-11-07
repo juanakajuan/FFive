@@ -265,6 +265,12 @@ public final class Store {
         return ExerciseHistoryGroup.groups(of: key, in: context)
     }
 
+    /// The date each exercise was last done in a finished workout. Exercises never done are missing.
+    public func lastPerformed() -> [ExerciseID: Date] {
+        observeCommits()
+        return ExerciseHistoryGroup.lastPerformed(in: context)
+    }
+
     public func weekStats(now: Date = .now) -> WeekStats {
         observeCommits()
         let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: now)?.start ?? now

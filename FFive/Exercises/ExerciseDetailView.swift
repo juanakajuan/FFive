@@ -54,6 +54,12 @@ struct ExerciseDetailView: View {
                     }
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
+                    if let last = history.first?.workout.startDate {
+                        Text("Last performed \(last.formatted(.lastPerformed))")
+                            .font(Theme.detail)
+                            .foregroundStyle(Theme.secondary)
+                            .a11y(.exerciseLastPerformed)
+                    }
                     if let cue = current.info.cue {
                         Callout(text: cue, systemImage: "lightbulb")
                             .padding(.top, 4)

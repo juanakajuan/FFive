@@ -50,6 +50,7 @@ public enum A11y: String, CaseIterable {
     case exerciseMenu = "exercise.menu"
     case exerciseCue = "exercise.cue"
     case exerciseHistory = "exercise.history"
+    case exerciseLastPerformed = "exercise.last-performed"
     case exercisePin = "exercise.pin"
     case tipLearnMore = "tip.learn-more"
     case tipDismiss = "tip.dismiss"

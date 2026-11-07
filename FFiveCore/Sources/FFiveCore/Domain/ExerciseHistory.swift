@@ -30,3 +30,18 @@ public struct ExerciseHistoryGroup: Identifiable {
         return groups
     }
 }
+
+extension ExerciseHistoryGroup {
+    /// The start date of each exercise's newest finished session with a logged set.
+    static func lastPerformed(in context: ModelContext) -> [ExerciseID: Date] {
+        var finished = FetchDescriptor<Workout>(predicate: #Predicate { $0.endDate != nil })
+        finished.relationshipKeyPathsForPrefetching = [\.storedExercises]
+        var dates: [ExerciseID: Date] = [:]
+        for workout in (try? context.fetch(finished)) ?? [] {
+            for exercise in workout.exercises where exercise.sets.contains(where: \.isDone) {
+                dates[exercise.key] = max(dates[exercise.key] ?? .distantPast, workout.startDate)
+            }
+        }
+        return dates
+    }
+}
