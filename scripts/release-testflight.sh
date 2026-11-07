@@ -11,6 +11,9 @@
 # --local. The version commit also rewrites FFive/Changelog.json from the git history
 # (scripts/changelog.sh), so the build's What's New lists every feat, fix and perf commit since the last release. The build number is a UTC timestamp on every run.
 #
+# An upload first runs scripts/cloudkit-schema.sh, which stops it when CloudKit Production lacks a
+# field this build syncs. Pass --skip-cloudkit-check to upload anyway.
+#
 # Auth: set ASC_KEY_ID and ASC_ISSUER_ID to use an App Store Connect API key
 # (ASC_KEY_PATH defaults to ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8).
 # Without them, xcodebuild uses the Apple ID signed in to Xcode > Settings > Accounts.
@@ -19,14 +22,16 @@ set -eu
 root="$(cd "$(dirname "$0")/.." && pwd)"
 project="$root/FFive.xcodeproj/project.pbxproj"
 team="$(sed -n 's/.*DEVELOPMENT_TEAM = \(.*\);/\1/p' "$project" | head -1)"
-usage="usage: $0 --version X.Y[.Z] | --bump patch|minor|major | --local"
+usage="usage: $0 --version X.Y[.Z] | --bump patch|minor|major | --local [--skip-cloudkit-check]"
 
 destination=upload
 new_version=""
 bump=""
+cloudkit_check=yes
 while [ $# -gt 0 ]; do
     case "$1" in
         --local) destination=export ;;
+        --skip-cloudkit-check) cloudkit_check=no ;;
         --version)
             [ $# -ge 2 ] || { echo "$usage" >&2; exit 2; }
             new_version="$2"
@@ -68,6 +73,10 @@ fi
 if [ -n "$new_version" ] && ! echo "$new_version" | grep -Eq '^[0-9]+(\.[0-9]+){0,2}$'; then
     echo "error: --version must look like 1.1 or 1.1.2, got '$new_version'" >&2
     exit 2
+fi
+
+if [ "$destination" = upload ] && [ "$cloudkit_check" = yes ]; then
+    "$root/scripts/cloudkit-schema.sh" production
 fi
 
 if [ -n "$(git -C "$root" status --porcelain)" ]; then
