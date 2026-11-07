@@ -42,6 +42,8 @@ public struct MesoDraft {
     public var days: [Day]
     /// A muscle missing here is trained at normal priority.
     public var priorities: [Muscle: MusclePriority] = [:]
+    /// The weekday the block's first day falls on, once chosen. It only seeds the days' weekday labels.
+    public private(set) var startWeekday: Weekday?
 
     public init(template: ProgramTemplate?) {
         name = template?.name ?? "My Mesocycle"
@@ -49,6 +51,14 @@ public struct MesoDraft {
             template?.days.map { day in
                 Day(name: day.name, slots: day.slots.map { Slot(exercise: $0.exercise, muscle: $0.muscle) })
             } ?? [Day(name: "Day 1", slots: [])]
+    }
+
+    /// Starts the block on `start` and labels every day with a suggested weekday that spreads rest through the week.
+    public mutating func schedule(startingOn start: Weekday) {
+        startWeekday = start
+        for (index, weekday) in Weekday.suggested(days: days.count, startingOn: start).enumerated() {
+            days[index].weekday = weekday
+        }
     }
 
     public var isStartable: Bool { days.contains { !$0.slots.isEmpty } && !hasEmptySlot }

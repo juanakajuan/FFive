@@ -1,0 +1,56 @@
+# Feature: weekday-labels / start-weekday. Before: ffive-verify reset-data.
+# Picks a start weekday, checks the suggested spread (4 days from Monday: Mon, Tue, Thu, Fri; from Wednesday: Wed, Thu, Sat, Sun), changes day 3, starts the block and checks the grid.
+launch
+tap button "Done" timeout=20
+tap #tab.mesos timeout=20
+tap #mesos.new
+tap #builder.template.upper-lower-4-days
+wait nav "Customize"
+wait #builder.start-weekday
+tap #builder.start-weekday
+tap button "Monday"
+shot start-weekday-monday
+scrollto #builder.weekday.1
+assert #builder.weekday.1
+exists button "Weekday, Monday"
+scrollto #builder.weekday.2
+assert #builder.weekday.2
+exists button "Weekday, Tuesday"
+scrollto #builder.weekday.3
+assert #builder.weekday.3
+exists button "Weekday, Thursday"
+scrollto #builder.weekday.4
+assert #builder.weekday.4
+exists button "Weekday, Friday"
+launch
+tap #tab.mesos timeout=20
+tap #mesos.new
+tap #builder.template.upper-lower-4-days
+wait #builder.start-weekday
+tap #builder.start-weekday
+tap button "Wednesday"
+scrollto #builder.weekday.1
+assert #builder.weekday.1
+exists button "Weekday, Wednesday"
+scrollto #builder.weekday.2
+assert #builder.weekday.2
+exists button "Weekday, Thursday"
+scrollto #builder.weekday.4
+assert #builder.weekday.4
+exists button "Weekday, Sunday"
+scrollto #builder.weekday.3
+assert #builder.weekday.3
+exists button "Weekday, Saturday"
+tap #builder.weekday.3
+tap button "Friday"
+assert #builder.weekday.3
+exists button "Weekday, Friday"
+shot start-weekday-edited
+tap #builder.start
+store-expect MesoDay weekdayRaw wednesday timeout=10
+store-expect MesoDay weekdayRaw friday
+store-expect MesoDay weekdayRaw sunday
+tap #tab.mesos
+tap #mesos.row.upper-lower-4-days
+wait any "Day 3, Friday, Upper B"
+shot start-weekday-schedule
