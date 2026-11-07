@@ -77,7 +77,7 @@ struct MesoCopyView: View {
             ForEach(Array(day.slots.enumerated()), id: \.offset) { _, slot in
                 Rectangle().fill(Theme.hairline).frame(height: 1)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(slot.exercise).font(Theme.body).foregroundStyle(Theme.text)
+                    Text(slot.exercise ?? "Choose an exercise").font(Theme.body).foregroundStyle(Theme.text)
                     HStack(spacing: 8) {
                         MuscleDotLabel(muscle: slot.muscle)
                         if let targets = slot.startingTargets {

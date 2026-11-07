@@ -191,6 +191,17 @@ public final class Mesocycle {
         }
         finishedDate = .now
     }
+
+    /// The sessions with a logged set, which go with the block when it is deleted.
+    public var loggedWorkoutCount: Int { workouts.filter(\.hasLog).count }
+
+    /// Deletes the block with every session built for it, so its logged sets leave History and Progress.
+    func delete(in context: ModelContext) {
+        let built = workouts
+        workouts = []
+        built.forEach(context.delete)
+        context.delete(self)
+    }
 }
 
 extension Mesocycle {

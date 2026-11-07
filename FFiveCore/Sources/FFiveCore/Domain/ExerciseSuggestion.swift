@@ -11,8 +11,16 @@ extension ExerciseListing {
         equipment: Set<Equipment>,
         lastPerformed: [ExerciseID: Date]
     ) -> ExerciseListing? {
-        let candidates =
-            listings
+        let candidates = ranked(listings, muscle: muscle, equipment: equipment, lastPerformed: lastPerformed)
+        guard let index = candidates.firstIndex(where: { $0.id == current }) else { return candidates.first }
+        return candidates[(index + 1) % candidates.count]
+    }
+
+    /// Every listing that trains `muscle` and fits `equipment`, in suggestion order.
+    static func ranked(
+        _ listings: [ExerciseListing], muscle: Muscle, equipment: Set<Equipment>, lastPerformed: [ExerciseID: Date]
+    ) -> [ExerciseListing] {
+        listings
             .filter { $0.muscle == muscle && !$0.isHidden && $0.fits(equipment) }
             .sorted { a, b in
                 switch (lastPerformed[a.id], lastPerformed[b.id]) {
@@ -22,7 +30,5 @@ extension ExerciseListing {
                 default: a.name.localizedCaseInsensitiveCompare(b.name) == .orderedAscending
                 }
             }
-        guard let index = candidates.firstIndex(where: { $0.id == current }) else { return candidates.first }
-        return candidates[(index + 1) % candidates.count]
     }
 }

@@ -1,0 +1,82 @@
+# delete-mesocycle (on disk): delete a finished block from its Mesos row menu and the active block from its detail page; their workouts leave History and Progress.
+# Before: ffive-verify reset-data (no mesocycle).
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.full-body-3-days
+wait nav "Customize"
+replace #builder.name "Old Block"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+replace #set.weight.1 "135"
+replace #set.reps.1 "9"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+tap #workout.menu
+tap #menu.end-mesocycle
+tap #dialog.end-mesocycle
+wait text "Sets per Muscle" timeout=10
+tap #sheet.done
+wait #workout.plan timeout=10
+tap #workout.plan
+wait nav "New Mesocycle"
+tap #builder.template.full-body-3-days
+wait nav "Customize"
+replace #builder.name "Live Block"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+replace #set.weight.1 "145"
+replace #set.reps.1 "8"
+tap #keyboard.done
+tap #set.log.1
+selected #set.log.1
+tap #tab.more
+tap #more.progress
+tap #segment.history
+count #history.row.full-body-a "1"
+shot 01-history-before
+tap #segment.strength
+wait text "Estimated 1RM"
+shot 02-strength-before
+tap #tab.mesos
+wait #mesos.row.old-block
+shot 03-mesos-before
+tap #mesos.menu.old-block
+shot 04-row-menu
+tap #menu.delete-mesocycle
+wait text "Delete this mesocycle?"
+wait text "~Its 1 logged workout leaves History and Progress."
+shot 05-row-confirm
+tap #dialog.delete-mesocycle
+absent #mesos.row.old-block
+wait #mesos.row.live-block
+shot 06-mesos-after-row-delete
+tap #tab.more
+tap #more.progress
+tap #segment.history
+count #history.row.full-body-a "0"
+shot 07-history-after-row-delete
+tap #tab.mesos
+tap #mesos.row.live-block
+wait nav "Live Block"
+tap #meso.menu
+tap #menu.delete-mesocycle
+wait text "~Its 1 logged workout leaves History and Progress."
+shot 08-detail-confirm
+tap #dialog.delete-mesocycle
+wait #mesos.plan timeout=10
+shot 09-mesos-empty
+tap #tab.workout
+wait #workout.plan timeout=10
+tap #tab.more
+tap #more.progress
+tap #segment.history
+shot 10-history-empty
+tap #segment.strength
+shot 11-strength-empty
+launch
+wait #workout.plan timeout=20
+tap #tab.mesos
+wait #mesos.plan
