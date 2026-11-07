@@ -10,6 +10,7 @@ public final class Settings {
     private static let equipmentKey = "equipment"
     private static let appearanceKey = "appearance"
     private static let dismissedTipsKey = "dismissedTips"
+    private static let changelogSeenKey = "changelogSeenVersion"
 
     /// Dark until the lifter picks otherwise, since every earlier build was dark only.
     public var appearance: Appearance {
@@ -43,6 +44,11 @@ public final class Settings {
 
     public func dismiss(_ tip: CoachingTip) { dismissedTips.insert(tip) }
 
+    /// The version whose What's New the lifter last saw. Nil until this build first runs.
+    public var changelogSeenVersion: String? {
+        didSet { defaults.set(changelogSeenVersion, forKey: Self.changelogSeenKey) }
+    }
+
     public var filtersEquipment: Bool { equipment != Set(Equipment.allCases) }
 
     /// Refuses to remove the last item so the exercise lists never go empty.
@@ -67,5 +73,6 @@ public final class Settings {
         equipment = stored.isEmpty ? Set(Equipment.allCases) : stored
         dismissedTips = Set(
             (defaults.stringArray(forKey: Self.dismissedTipsKey) ?? []).compactMap(CoachingTip.init(rawValue:)))
+        changelogSeenVersion = defaults.string(forKey: Self.changelogSeenKey)
     }
 }

@@ -1,0 +1,239 @@
+{
+  "releases" : [
+    {
+      "date" : "2026-11-07",
+      "entries" : [
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Pin a workout note to every workout on that day"
+        }
+      ],
+      "version" : "1.4"
+    },
+    {
+      "date" : "2026-11-07",
+      "entries" : [
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Keep notes on a mesocycle"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "List every past session of an exercise from the workout"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Show the recommended weight range and reps or RIR under a focused set"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Step between set fields with up and down arrows above the keyboard"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Mark each logged set improved, maintained or regressed from last session"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Explain each answer on the feedback and soreness questions"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Show coaching tips in the workout when they apply"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Close the keyboard when tapping outside a text field"
+        }
+      ],
+      "version" : "1.3"
+    },
+    {
+      "date" : "2026-11-06",
+      "entries" : [
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Muscle feedback in a modal with Cancel and Save, and lock the next muscle until it is answered"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Sync training data through iCloud and show sync status in Settings"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "fix",
+          "text" : "Log a set only once it has values, and log sets in order"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Export training data to JSON from Settings"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "fix",
+          "text" : "Let the Templates + open the builder while a mesocycle is active"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "System, Dark or Light appearance setting"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "fix",
+          "text" : "Close the gap between the reps and log columns"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Edit, delete and hide exercises, with equipment, rep range and cue for custom ones"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Preferred equipment filter"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Add assisted, loadable and bodyweight-only equipment with an equipment filter"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "fix",
+          "text" : "Save typed reps as they change so a killed app keeps them"
+        }
+      ],
+      "version" : "1.2"
+    },
+    {
+      "date" : "2026-11-06",
+      "entries" : [
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Save custom templates"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Add 12 templates for 2-6 day schedules and an emphasis filter"
+        },
+        {
+          "date" : "2026-11-06",
+          "kind" : "feature",
+          "text" : "Meso summary screen and rename a meso"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Auto-match weight changes to later sets"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Set muscle priorities for a mesocycle"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Log bodyweight plus added load"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Reset a block workout and rename its day"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Report joint pain from the exercise menu"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Skip individual sets of an exercise"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Reorder exercises during a workout"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Mark sets as regular, myorep, or myorep match"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Darken the app's background palette"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Pin search and filters on Templates and Exercises while the list scrolls"
+        }
+      ],
+      "version" : "1.1"
+    },
+    {
+      "date" : "2026-11-05",
+      "entries" : [
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Replace the dumbbell app icon with an F5 keycap"
+        },
+        {
+          "date" : "2026-11-05",
+          "kind" : "feature",
+          "text" : "Hang muscle tags off cards with per-muscle icons, float a blue Finish button"
+        },
+        {
+          "date" : "2026-11-04",
+          "kind" : "feature",
+          "text" : "Add workout notes with pinning"
+        },
+        {
+          "date" : "2026-11-04",
+          "kind" : "feature",
+          "text" : "Use gruvbox bright for muscle group colors"
+        },
+        {
+          "date" : "2026-11-04",
+          "kind" : "fix",
+          "text" : "Fill the empty exercise history sheet edge to edge"
+        },
+        {
+          "date" : "2026-11-03",
+          "kind" : "feature",
+          "text" : "Flat pinned header with a set progress line"
+        },
+        {
+          "date" : "2026-11-03",
+          "kind" : "feature",
+          "text" : "Redesign FFive with a dark, card-based layout and five tabs"
+        },
+        {
+          "date" : "2026-11-02",
+          "kind" : "feature",
+          "text" : "Replace gear dropdown with a Settings page"
+        }
+      ],
+      "version" : "1.0.1"
+    }
+  ]
+}

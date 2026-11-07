@@ -8,7 +8,8 @@
 #   scripts/release-testflight.sh --local   archive and export an .ipa to build/release, no upload
 #
 # Every upload carries a new release number: --version or --bump is required unless
-# --local. The build number is a UTC timestamp on every run.
+# --local. The version commit also rewrites FFive/Changelog.json from the git history
+# (scripts/changelog.sh), so the build's What's New lists every feat, fix and perf commit since the last release. The build number is a UTC timestamp on every run.
 #
 # Auth: set ASC_KEY_ID and ASC_ISSUER_ID to use an App Store Connect API key
 # (ASC_KEY_PATH defaults to ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8).
@@ -80,8 +81,9 @@ if [ -n "$new_version" ]; then
         echo "error: version is already $new_version; every upload needs a new release number" >&2
         exit 2
     fi
-    git -C "$root" commit -q -m "chore: bump version to $new_version" -- "$project"
-    echo "==> committed version $new_version"
+    "$root/scripts/changelog.sh" --next "$new_version"
+    git -C "$root" commit -q -m "chore: bump version to $new_version" -- "$project" "$root/FFive/Changelog.json"
+    echo "==> committed version $new_version and its changelog"
 fi
 
 auth=""
