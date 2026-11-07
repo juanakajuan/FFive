@@ -108,6 +108,45 @@ struct MesoScheduleGrid: View {
     }
 }
 
+/// Lengthens or shortens a running block one training week at a time. The deload and every week's RIR move with it.
+struct MesoLengthCard: View {
+    let meso: Mesocycle
+
+    @Environment(Store.self) private var store
+
+    var body: some View {
+        let weeks = meso.accumulationWeeks
+        let range = Mesocycle.accumulationWeekRange
+        VStack(alignment: .leading, spacing: 12) {
+            Stepper(
+                onIncrement: meso.canAddWeek ? { withAnimation { store.changeLength(of: meso, by: 1) } } : nil,
+                onDecrement: meso.canRemoveWeek ? { withAnimation { store.changeLength(of: meso, by: -1) } } : nil
+            ) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(weeks) training weeks").font(Theme.cardTitle).foregroundStyle(Theme.text)
+                    Text("then 1 deload week").font(Theme.caption).foregroundStyle(Theme.secondary)
+                }
+            }
+            .a11y(.scheduleLength)
+            RIRSchedule(accumulationWeeks: weeks)
+            Text(footnote(weeks: weeks, range: range))
+                .font(Theme.caption)
+                .foregroundStyle(Theme.secondary)
+        }
+        .scheduleCard()
+    }
+
+    private func footnote(weeks: Int, range: ClosedRange<Int>) -> String {
+        if weeks > range.lowerBound, !meso.canRemoveWeek {
+            return "A week can't be removed once its last training week or the deload has logged sets."
+        }
+        if weeks < range.upperBound, !meso.canAddWeek {
+            return "A week can't be added once the deload has logged sets."
+        }
+        return "Sessions not yet logged are rebuilt for their new RIR. Logged sessions keep theirs."
+    }
+}
+
 struct WeekVolumeCard: View {
     let meso: Mesocycle
     let week: Int

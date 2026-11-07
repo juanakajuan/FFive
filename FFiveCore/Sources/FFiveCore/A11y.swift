@@ -13,6 +13,7 @@ public enum A11y: String, CaseIterable {
     case workoutQuick = "workout.quick"
     case workoutEnd = "workout.end"
     case workoutSchedule = "workout.schedule"
+    case scheduleLength = "schedule.length"
     case workoutMenu = "workout.menu"
     case workoutFinish = "workout.finish"
     case keyboardDone = "keyboard.done"
