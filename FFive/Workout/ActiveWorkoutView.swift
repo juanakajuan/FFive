@@ -708,7 +708,9 @@ struct SetRow: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 0) {
             fields
-            if let recommendation = focus.flatMap(recommendation(for:)) {
+            if let field = focus.wrappedValue, field.set == set.persistentModelID,
+                let recommendation = recommendation(for: field.kind)
+            {
                 Text(recommendation)
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
@@ -729,7 +731,7 @@ struct SetRow: View {
         }
     }
 
-    private func recommendation(for field: Field) -> String? {
+    private func recommendation(for field: SetField.Kind) -> String? {
         guard let exercise = set.exercise else { return nil }
         switch field {
         case .weight:
