@@ -256,13 +256,30 @@ public enum TemplateEmphasis: String, CaseIterable, Identifiable {
     }
 }
 
+/// Who a built-in template is tuned for. A custom template stays `.standard`.
+public enum TemplateVariant: String, CaseIterable, Identifiable {
+    case standard
+    /// More lower-body and glute volume, less upper-body volume.
+    case women
+    public var id: String { rawValue }
+
+    public var displayName: String {
+        switch self {
+        case .standard: "Standard"
+        case .women: "Women's"
+        }
+    }
+}
+
 public struct ProgramTemplate: Identifiable, Hashable {
     public let name: String
     /// Nil for a custom template.
     public let emphasis: TemplateEmphasis?
     public let summary: String
     public let days: [TemplateDay]
+    public var variant: TemplateVariant = .standard
     public var id: String { name }
+    public var isBuiltIn: Bool { emphasis != nil }
 
     /// How many exercises the template gives each muscle across a week, most first, ties in catalog order.
     public var weeklyExercises: [(muscle: Muscle, count: Int)] {

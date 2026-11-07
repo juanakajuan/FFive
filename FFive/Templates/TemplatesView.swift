@@ -6,9 +6,7 @@ struct TemplatesView: View {
     @Environment(Store.self) private var store
     @Query(CustomTemplate.all) private var customTemplates: [CustomTemplate]
 
-    @State private var search = ""
-    @State private var daysPerWeek: Int?
-    @State private var emphasis: TemplateEmphasis?
+    @State private var filter = TemplateFilter()
     @State private var builder: MesoBuilderView.Route?
     @State private var renaming: CustomTemplate?
     @State private var renameDraft = ""
@@ -19,53 +17,44 @@ struct TemplatesView: View {
         ExerciseCatalog.templates.contains { $0.emphasis == emphasis }
     }
 
-    private var filterLabel: String {
-        let active = [daysPerWeek.map { "\($0)/week" }, emphasis?.displayName].compactMap { $0 }
-        return active.isEmpty ? "Filters" : active.joined(separator: " · ")
-    }
-
-    /// A custom template has no emphasis, so it drops out while an emphasis filter is on.
-    private func matches(_ template: ProgramTemplate) -> Bool {
-        let query = search.trimmingCharacters(in: .whitespaces)
-        return (daysPerWeek == nil || template.days.count == daysPerWeek)
-            && (emphasis == nil || template.emphasis == emphasis)
-            && (query.isEmpty || template.name.localizedCaseInsensitiveContains(query))
-    }
-
     var body: some View {
-        let builtIn = ExerciseCatalog.templates.filter(matches)
-        let custom = customTemplates.filter { matches($0.template) }
+        let builtIn = ExerciseCatalog.templates.filter(filter.matches)
+        let custom = customTemplates.filter { filter.matches($0.template) }
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    heading("Custom templates")
-                    if customTemplates.isEmpty {
-                        emptyNote("Save a mesocycle or a builder draft as a template and it shows up here.")
-                    } else if custom.isEmpty {
-                        emptyNote("No custom templates match.")
-                    } else {
-                        TemplateGroup {
-                            ForEach(custom) { saved in
-                                customRow(saved)
-                                if saved.id != custom.last?.id {
-                                    Rectangle().fill(Theme.hairline).frame(height: 1)
+                    if filter.shows(.custom) {
+                        heading("Custom templates")
+                        if customTemplates.isEmpty {
+                            emptyNote("Save a mesocycle or a builder draft as a template and it shows up here.")
+                        } else if custom.isEmpty {
+                            emptyNote("No custom templates match.")
+                        } else {
+                            TemplateGroup {
+                                ForEach(custom) { saved in
+                                    customRow(saved)
+                                    if saved.id != custom.last?.id {
+                                        Rectangle().fill(Theme.hairline).frame(height: 1)
+                                    }
                                 }
                             }
                         }
                     }
-                    heading("FFive templates")
-                    if builtIn.isEmpty {
-                        emptyNote("No templates match.")
-                    } else {
-                        TemplateGroup {
-                            ForEach(builtIn) { template in
-                                NavigationLink(value: TemplatePreviewScreen.Subject.builtIn(template)) {
-                                    TemplateListRow(template: template)
-                                }
-                                .buttonStyle(.plain)
-                                .a11y(.templatesTemplate, key: template.name)
-                                if template.id != builtIn.last?.id {
-                                    Rectangle().fill(Theme.hairline).frame(height: 1)
+                    if filter.shows(.builtIn) {
+                        heading("FFive templates")
+                        if builtIn.isEmpty {
+                            emptyNote("No templates match.")
+                        } else {
+                            TemplateGroup {
+                                ForEach(builtIn) { template in
+                                    NavigationLink(value: TemplatePreviewScreen.Subject.builtIn(template)) {
+                                        TemplateListRow(template: template)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .a11y(.templatesTemplate, key: template.name)
+                                    if template.id != builtIn.last?.id {
+                                        Rectangle().fill(Theme.hairline).frame(height: 1)
+                                    }
                                 }
                             }
                         }
@@ -75,17 +64,25 @@ struct TemplatesView: View {
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 VStack(spacing: 0) {
-                    SearchBox(text: $search)
+                    SearchBox(text: $filter.search)
                         .padding(.horizontal, Theme.gutter)
                         .padding(.bottom, 12)
-                    FilterBar(label: filterLabel) {
-                        Picker("Days per week", selection: $daysPerWeek) {
+                    FilterBar(label: filter.label) {
+                        Picker("Days per week", selection: $filter.daysPerWeek) {
                             Text("All").tag(Int?.none)
                             ForEach(Self.dayCounts, id: \.self) { Text("\($0)/week").tag(Int?.some($0)) }
                         }
-                        Picker("Emphasis", selection: $emphasis) {
+                        Picker("Emphasis", selection: $filter.emphasis) {
                             Text("All").tag(TemplateEmphasis?.none)
                             ForEach(Self.emphases) { Text($0.displayName).tag(TemplateEmphasis?.some($0)) }
+                        }
+                        Picker("Source", selection: $filter.source) {
+                            Text("All").tag(TemplateSource?.none)
+                            ForEach(TemplateSource.allCases) { Text($0.displayName).tag(TemplateSource?.some($0)) }
+                        }
+                        Picker("Variant", selection: $filter.variant) {
+                            Text("All").tag(TemplateVariant?.none)
+                            ForEach(TemplateVariant.allCases) { Text($0.displayName).tag(TemplateVariant?.some($0)) }
                         }
                     }
                 }
@@ -199,6 +196,12 @@ struct TemplateListRow: View {
                     Text(template.emphasis?.displayName.uppercased() ?? "CUSTOM")
                         .font(.system(size: 11.5, design: .monospaced))
                         .lineLimit(1)
+                    if template.variant == .women {
+                        Text("· WOMEN'S")
+                            .font(.system(size: 11.5, weight: .semibold, design: .monospaced))
+                            .foregroundStyle(Theme.infoText)
+                            .lineLimit(1)
+                    }
                 }
                 .foregroundStyle(Theme.secondary)
                 Text(template.name)
