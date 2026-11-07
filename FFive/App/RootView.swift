@@ -66,6 +66,13 @@ final class AppRouter {
         if endedMeso === meso { endedMeso = nil }
         store.deleteMesocycle(meso)
     }
+
+    @MainActor
+    func deleteAllData(store: Store) {
+        focus = nil
+        endedMeso = nil
+        store.deleteAllData()
+    }
 }
 
 struct RootView: View {

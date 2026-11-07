@@ -157,6 +157,8 @@ public enum A11y: String, CaseIterable {
     case settingsAutoMatch = "settings.auto-match"
     case settingsEquipment = "settings.equipment"
     case settingsExport = "settings.export"
+    case settingsDeleteAll = "settings.delete-all"
+    case dialogDeleteAllData = "dialog.delete-all-data"
     case settingsAppearance = "settings.appearance"
     case settingsSync = "settings.sync"
     case equipmentFilter = "equipment-filter"
