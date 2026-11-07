@@ -261,4 +261,12 @@ public struct ProgramTemplate: Identifiable, Hashable {
     public let summary: String
     public let days: [TemplateDay]
     public var id: String { name }
+
+    /// How many exercises the template gives each muscle across a week, most first, ties in catalog order.
+    public var weeklyExercises: [(muscle: Muscle, count: Int)] {
+        let counts = Dictionary(days.flatMap(\.slots).map { ($0.muscle, 1) }, uniquingKeysWith: +)
+        return Muscle.allCases.compactMap { muscle in counts[muscle].map { (muscle, $0) } }
+            .enumerated().sorted { ($0.element.count, -$0.offset) > ($1.element.count, -$1.offset) }
+            .map(\.element)
+    }
 }

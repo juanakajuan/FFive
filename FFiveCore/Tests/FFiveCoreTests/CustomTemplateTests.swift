@@ -89,4 +89,37 @@ final class CustomTemplateTests: XCTestCase {
         store.saveTemplate(from: MesoDraft(template: nil), named: "Empty")
         XCTAssertTrue(try templates(store).isEmpty)
     }
+
+    func testUpdateReplacesTheDaysAndKeepsTheName() throws {
+        let store = Store(inMemory: true)
+        store.saveTemplate(from: MesoDraft(template: ExerciseCatalog.templates[0]), named: "Mine")
+        let saved = try XCTUnwrap(store.context.fetch(CustomTemplate.all).first)
+        var draft = MesoDraft(template: saved.template)
+        draft.days = [.init(name: "Arms", slots: [.init(exercise: "Barbell Curl", muscle: .biceps)])]
+
+        store.updateTemplate(saved, from: draft)
+
+        XCTAssertEqual(saved.template.name, "Mine")
+        XCTAssertEqual(saved.template.days.map(\.name), ["Arms"])
+        XCTAssertEqual(saved.template.days[0].slots, [TemplateSlot(muscle: .biceps, exercise: "Barbell Curl")])
+
+        draft.days = [.init(name: "Empty", slots: [])]
+        store.updateTemplate(saved, from: draft)
+        XCTAssertEqual(saved.template.days.map(\.name), ["Arms"], "an edit with no exercise keeps the old days")
+    }
+
+    func testWeeklyExercisesCountsEachMuscleMostFirst() {
+        let template = ProgramTemplate(
+            name: "T", emphasis: nil, summary: "",
+            days: [
+                TemplateDay(
+                    name: "A", exerciseNames: [],
+                    slots: [.init(muscle: .biceps, exercise: "x"), .init(muscle: .chest, exercise: "y")]),
+                TemplateDay(name: "B", exerciseNames: [], slots: [.init(muscle: .biceps, exercise: "z")]),
+                TemplateDay(name: "C", exerciseNames: [], slots: [.init(muscle: .back, exercise: "w")]),
+            ])
+
+        XCTAssertEqual(template.weeklyExercises.map(\.muscle), [.biceps, .chest, .back])
+        XCTAssertEqual(template.weeklyExercises.map(\.count), [2, 1, 1])
+    }
 }
