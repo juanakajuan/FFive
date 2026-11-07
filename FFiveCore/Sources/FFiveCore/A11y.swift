@@ -104,6 +104,7 @@ public enum A11y: String, CaseIterable {
     case builderBlank = "builder.blank"
     case builderName = "builder.name"
     case builderWeekday = "builder.weekday"
+    case builderStartWeekday = "builder.start-weekday"
     case builderStart = "builder.start"
     case builderCancel = "builder.cancel"
     case builderSaveTemplate = "builder.save-template"
