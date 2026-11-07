@@ -9,6 +9,8 @@ public enum A11y: String, CaseIterable {
     case moreProgress = "more.progress"
     case moreLearn = "more.learn"
     case moreSettings = "more.settings"
+    case moreChangelog = "more.changelog"
+    case changelogList = "changelog.list"
     case workoutPlan = "workout.plan"
     case workoutQuick = "workout.quick"
     case workoutEnd = "workout.end"
