@@ -191,6 +191,26 @@ struct MesoEditorView: View {
                 header("Length")
             }
 
+            Section {
+                Picker(
+                    "Starts on",
+                    selection: Binding(get: { draft.startWeekday }, set: { $0.map { draft.schedule(startingOn: $0) } })
+                ) {
+                    if draft.startWeekday == nil { Text("Choose").tag(Weekday?.none) }
+                    ForEach(Weekday.allCases) { Text($0.name).tag(Weekday?.some($0)) }
+                }
+                .font(Theme.body)
+                .foregroundStyle(Theme.text)
+                .tint(Theme.secondary)
+                .a11y(.builderStartWeekday)
+                .builderRow()
+                footnote(
+                    "Each day gets a weekday that spreads rest through the week. Change any of them below."
+                )
+            } header: {
+                header("Schedule")
+            }
+
             ForEach($draft.days) { $day in
                 Section {
                     TextField("Day name", text: $day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary))
