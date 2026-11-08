@@ -33,23 +33,17 @@ tap #menu.skip-remaining
 scrollto #exercise.menu.3
 tap #exercise.menu.3
 tap #menu.skip-remaining
-wait #feedback.save
-tap #feedback.cancel
 scrollto #exercise.menu.4
 tap #exercise.menu.4
 tap #menu.skip-remaining
-wait #feedback.save
-tap #feedback.cancel
 scrollto #exercise.menu.5
 tap #exercise.menu.5
 tap #menu.skip-remaining
-wait #feedback.save
-tap #feedback.cancel
 scrollto #exercise.menu.6
 tap #exercise.menu.6
 tap #menu.skip-remaining
-wait #feedback.save
-tap #feedback.cancel
+# Back, side delts, biceps and triceps logged nothing, so none of them asks for feedback (#135).
+absent #feedback.save
 wait #workout.finish
 shot 03-finish-shown
 launch

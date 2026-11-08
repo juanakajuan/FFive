@@ -1,0 +1,24 @@
+# skipped-muscle-feedback: a muscle whose sets were all skipped gets no feedback prompt; one with a logged set does.
+# Before: ffive-verify reset-data, then journeys/plan-mesocycle.steps (Upper A: Bench Press is the only chest lift).
+launch
+wait text "WEEK 1 DAY 1" timeout=20
+shot 01-before-skip
+tap #exercise.menu.1
+tap #menu.skip-remaining
+value #set.log.1 "Skipped"
+# The sheet opened 1.2 s after a muscle finished. Wait past that and prove it stays shut.
+sleep 3
+absent #feedback.save
+absent #feedback.open.chest
+shot 02-chest-skipped-no-prompt
+# Control: unskip set 1 and log it. Chest now has a logged set and nothing pending, so its prompt opens.
+tap #set.menu.1
+tap #menu.skip-set
+value #set.log.1 ""
+replace #set.weight.1 "135"
+replace #set.reps.1 "8"
+tap #keyboard.done
+tap #set.log.1
+store-expect SetEntry isDone 1
+wait #feedback.save timeout=5
+shot 03-chest-logged-prompts
