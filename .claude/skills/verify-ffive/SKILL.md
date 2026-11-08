@@ -96,7 +96,7 @@ Optional `timeout=<seconds>` changes the default 5 s wait for either target form
 | --- | --- |
 | `launch [args...]` | Terminates and relaunches the app with those launch arguments (`-seedDemo`, `-demoRoute session`). `drive` adds `-disableAnimations`. |
 | `terminate` | Terminates the app. |
-| `tap <target>`, `longpress <target>` | Acts on the first on-screen match. Long press is 1.2 s, which opens context menus. A tap on an alert button while the alert's field holds the keyboard only drops the keyboard, so `tap` taps the button again where the alert settled. |
+| `tap <target>`, `longpress <target>` | Acts on the first on-screen match. Long press is 1.2 s, which opens context menus. |
 | `drag <target> to <target>` | Presses the first target for 0.8 s, then drags it onto the second. Use it on a list row's reorder handle in edit mode. |
 | `type <target> "<text>"` | Taps the field and types. |
 | `replace <target> "<text>"` | Focuses the field with a tap as near its trailing edge as takes focus, deletes its contents, and types. |
@@ -214,6 +214,6 @@ $V sweep --dry-run    # print what sweep would delete, park, or adopt
 - A control's own label is not hittable: the text inside a `Stepper` or `Button` hit-tests to the control. `wait` the control by its full label, as in `wait any "5 training weeks, then 1 deload week"`, not `wait text "5 training weeks"`.
 - Feedback and soreness chips carry the Selected trait. Feedback is answered in a sheet opened from `#feedback.open.<muscle>`; its card shows `image "checkmark.circle.fill"` after `#feedback.save`. Save has no enabled check, so prove it is disabled by tapping it and `wait #feedback.save` (the sheet stays). Soreness is asked in a sheet on the muscle's first log tap; a saved answer closes it (`absent #soreness.save`) and logs the tapped set.
 - A `~substring` label takes the first match in tree order. `~Lateral Raise` hits "Behind-the-Back Cable Lateral Raise", so tap picker rows by id, as in `#picker.row.lateral-raise`.
-- In an alert, the first tap on a button while the alert's field holds the keyboard only ends editing: the keyboard drops, the alert slides down, and the button doesn't fire. `tap` retaps it once it settles. Still assert `absent alert "<title>"` after, to prove the save.
+- After tapping an alert's button, assert `absent alert "<title>"` to prove it fired. One tap saves even while the alert's field holds the keyboard.
 - The decimal pad has no return key. Tap `#keyboard.done` before tapping elements the keyboard covers.
 - `#workout.finish` is absent until every set of every exercise is logged or skipped. To finish early, skip the rest (`#exercise.menu.<n>`, `#menu.skip-remaining`), delete the unlogged sets (`#set.menu.<n>`, `#menu.delete-set`), or remove exercises (`#exercise.menu.<n>`, `#menu.remove-exercise`), as a lifter would.

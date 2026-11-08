@@ -32,10 +32,14 @@ private struct KeyboardDismissInstaller: UIViewRepresentable {
             window?.endEditing(true)
         }
 
+        /// Skips touches on a text input, and on any alert: an alert owns its text field and buttons, and hiding the
+        /// keyboard mid-tap recenters the alert so the touch ends off the button it began on.
         func gestureRecognizer(_ gestureRecognizer: UIGestureRecognizer, shouldReceive touch: UITouch) -> Bool {
             var view = touch.view
             while let current = view {
-                if current is UITextField || current is UITextView { return false }
+                if current is UITextField || current is UITextView || current.next is UIAlertController {
+                    return false
+                }
                 view = current.superview
             }
             return true
