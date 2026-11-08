@@ -22,6 +22,9 @@ tap #set.menu.2
 tap #menu.skip-set
 tap #exercise.menu.1
 tap #menu.skip-remaining
+# Chest is finished, so its feedback sheet opens on its own. Cancel leaves it unanswered.
+wait #feedback.save
+tap #feedback.cancel
 shot 02-card-skipped
 absent #workout.finish
 scrollto #exercise.menu.2
@@ -30,15 +33,23 @@ tap #menu.skip-remaining
 scrollto #exercise.menu.3
 tap #exercise.menu.3
 tap #menu.skip-remaining
+wait #feedback.save
+tap #feedback.cancel
 scrollto #exercise.menu.4
 tap #exercise.menu.4
 tap #menu.skip-remaining
+wait #feedback.save
+tap #feedback.cancel
 scrollto #exercise.menu.5
 tap #exercise.menu.5
 tap #menu.skip-remaining
+wait #feedback.save
+tap #feedback.cancel
 scrollto #exercise.menu.6
 tap #exercise.menu.6
 tap #menu.skip-remaining
+wait #feedback.save
+tap #feedback.cancel
 wait #workout.finish
 shot 03-finish-shown
 launch

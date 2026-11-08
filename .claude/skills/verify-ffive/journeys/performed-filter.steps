@@ -1,7 +1,6 @@
 # performed-filter: the Exercises tab and the picker filter to exercises with a logged set in a finished workout. On disk.
 # Before: ffive-verify reset-data.
 launch
-tap button "Done" timeout=15
 tap #tab.exercises timeout=20
 wait #exercises.row.ab-wheel
 tap button "Filters"

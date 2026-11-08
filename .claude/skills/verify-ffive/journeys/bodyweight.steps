@@ -48,6 +48,7 @@ tap #tab.more
 tap #more.progress
 tap #segment.strength
 wait #strength.row.pull-up
+wait any "Pull-Up*260 lb*"
 shot 04-progress
 tree 04-progress
 tap #segment.history

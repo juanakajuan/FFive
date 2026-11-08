@@ -25,7 +25,10 @@ tap button "Save"
 absent alert "Rename Template"
 wait #templates.custom.ul-hypertrophy
 store-expect CustomTemplate name "UL Hypertrophy"
+# A Templates row opens the read-only preview; Plan Mesocycle opens the builder.
 tap #templates.custom.ul-hypertrophy
+wait nav "UL Hypertrophy"
+tap #template-preview.plan
 wait nav "Customize"
 value #builder.name "UL Hypertrophy"
 tap #builder.cancel

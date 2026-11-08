@@ -96,7 +96,7 @@ Optional `timeout=<seconds>` changes the default 5 s wait for either target form
 | --- | --- |
 | `launch [args...]` | Terminates and relaunches the app with those launch arguments (`-seedDemo`, `-demoRoute session`). `drive` adds `-disableAnimations`. |
 | `terminate` | Terminates the app. |
-| `tap <target>`, `longpress <target>` | Acts on the first on-screen match. Long press is 1.2 s, which opens context menus. |
+| `tap <target>`, `longpress <target>` | Acts on the first on-screen match. Long press is 1.2 s, which opens context menus. A tap on an alert button while the alert's field holds the keyboard only drops the keyboard, so `tap` taps the button again where the alert settled. |
 | `drag <target> to <target>` | Presses the first target for 0.8 s, then drags it onto the second. Use it on a list row's reorder handle in edit mode. |
 | `type <target> "<text>"` | Taps the field and types. |
 | `replace <target> "<text>"` | Focuses the field with a tap as near its trailing edge as takes focus, deletes its contents, and types. |
@@ -106,6 +106,7 @@ Optional `timeout=<seconds>` changes the default 5 s wait for either target form
 | `value <target> "<v>"` | Fails unless the on-screen element's value equals `v`. |
 | `selected <target>` / `unselected <target>` | Waits for the element on screen, then checks the accessibility selected trait. |
 | `count <target> "<n>"` | Fails unless exactly n elements match. |
+| `key return` | Presses the keyboard's return key and waits for the keyboard to go. Use it after `type #picker.search` when the row you want sits under the keyboard: a short result list can't scroll it clear, so `scrollto` fails. |
 | `scrollto <target>` | Drags the list a third of a screen at a time, with no fling, until the element sits in the middle half of the screen or the list stops moving (36 drags at most). Drags down if the element is above that band. |
 | `store-expect <Model> <field> <value> [timeout=<s>]` | Polls the on-disk store until some `<Model>` row has `<field>` equal to `<value>`. |
 | `defaults-expect <key> <value> [timeout=<s>]` | Polls the app's UserDefaults plist until `<key>` reads `<value>`, for 30 s by default. |
@@ -144,7 +145,7 @@ Find ids in `A11y.swift`, and dump a tree (`tree x`) to see what is on screen. I
 - Schedule grid cells have no ids. Their identifiers are SF Symbol names: `checkmark.circle.fill` (finished), `circle.lefthalf.filled` (built, open), `play.circle.fill` (next, not built yet, rare because the tab builds the day it shows), `forward.circle` (skipped), `circle` (upcoming). Finished cells are always buttons that open the read-only workout. Skipped, open, and upcoming cells are buttons only in the current week of an unfinished block. A cell's long-press `Skip Day` is `#menu.skip-day`.
 - Segmented controls: `#segment.<slug>`, as in `#segment.volume`, `#segment.history`, `#segment.w1`, `#segment.dl`. Feedback and soreness chips: `#chip.<slug>`, as in `#chip.pretty-good` and `#chip.healed-just-in-time`. Chips carry Selected when chosen.
 - Progress rows: `#strength.row.<slug>` and `#history.row.<slug>`. A quick workout's name depends on the clock, so its history row is tapped by label, `button "~Workout,"`.
-- Settings: `#settings.unit.lb`, `#settings.unit.kg`, `#settings.equipment.<raw value>` (one row per equipment type), the Auto-Match Weights switch `#settings.auto-match`, which sits below the fold, so `scrollto` it first, and the iCloud sync status row `#settings.sync`, whose label starts with its state (`Off` under `-seedDemo`, `Sign In to iCloud` on a simulator with no Apple ID). With any equipment type off, the Exercises tab and the picker show `#equipment-filter`, a button reading `Show All` or `My Equipment`.
+- Settings: `#settings.unit.lb`, `#settings.unit.kg`, `#settings.appearance.<system|dark|light>`, `#settings.equipment.<raw value>` (one row per equipment type), the Auto-Match Weights switch `#settings.auto-match`, which sits below the fold, so `scrollto` it first, and the iCloud sync status row `#settings.sync`, whose label starts with its state (`Off` under `-seedDemo`, `Sign In to iCloud` on a simulator with no Apple ID). With any equipment type off, the Exercises tab and the picker show `#equipment-filter`, a button reading `Show All` or `My Equipment`.
 
 Gotchas:
 
@@ -213,6 +214,6 @@ $V sweep --dry-run    # print what sweep would delete, park, or adopt
 - A control's own label is not hittable: the text inside a `Stepper` or `Button` hit-tests to the control. `wait` the control by its full label, as in `wait any "5 training weeks, then 1 deload week"`, not `wait text "5 training weeks"`.
 - Feedback and soreness chips carry the Selected trait. Feedback is answered in a sheet opened from `#feedback.open.<muscle>`; its card shows `image "checkmark.circle.fill"` after `#feedback.save`. Save has no enabled check, so prove it is disabled by tapping it and `wait #feedback.save` (the sheet stays). Soreness is asked in a sheet on the muscle's first log tap; a saved answer closes it (`absent #soreness.save`) and logs the tapped set.
 - A `~substring` label takes the first match in tree order. `~Lateral Raise` hits "Behind-the-Back Cable Lateral Raise", so tap picker rows by id, as in `#picker.row.lateral-raise`.
-- In an alert, a `tap button "Save"` right after `replace` can land while the keyboard settles and leave the alert open with the new text. Put `sleep 1` between them and assert `absent alert "<title>"` after.
+- In an alert, the first tap on a button while the alert's field holds the keyboard only ends editing: the keyboard drops, the alert slides down, and the button doesn't fire. `tap` retaps it once it settles. Still assert `absent alert "<title>"` after, to prove the save.
 - The decimal pad has no return key. Tap `#keyboard.done` before tapping elements the keyboard covers.
 - `#workout.finish` is absent until every set of every exercise is logged or skipped. To finish early, skip the rest (`#exercise.menu.<n>`, `#menu.skip-remaining`), delete the unlogged sets (`#set.menu.<n>`, `#menu.delete-set`), or remove exercises (`#exercise.menu.<n>`, `#menu.remove-exercise`), as a lifter would.

@@ -90,7 +90,7 @@ final class DriverTests: XCTestCase {
         case "terminate":
             app.terminate()
         case "tap":
-            try onScreen(args, timeout).tap()
+            tapSettled(try onScreen(args, timeout))
         case "longpress":
             try onScreen(args, timeout).press(forDuration: 1.2)
         case "drag":
@@ -132,6 +132,11 @@ final class DriverTests: XCTestCase {
             guard String(actual) == expected else { throw StepError("count is \(actual), expected \(expected)") }
         case "scrollto":
             try scrollToMiddle(try resolve(args), args)
+        case "key":
+            guard args == ["return"] else { throw StepError("expected `key return`, got \(args)") }
+            guard app.keyboards.firstMatch.exists else { throw StepError("key return: no keyboard on screen") }
+            app.typeText(XCUIKeyboardKey.return.rawValue)
+            try poll(timeout) { app.keyboards.firstMatch.exists ? "keyboard still up after return" : nil }
         case "swipe":
             switch args.first {
             case "up": app.swipeUp()
@@ -163,6 +168,19 @@ final class DriverTests: XCTestCase {
         default:
             throw StepError("unknown step `\(verb)`")
         }
+    }
+
+    /// A tap on an alert button while the alert's field holds the keyboard only ends editing: the keyboard drops
+    /// and the alert slides down, and the button never fires. When that happens, tap the button where it settled.
+    private func tapSettled(_ target: XCUIElement) {
+        let alertWithKeyboard = app.alerts.firstMatch.exists && app.keyboards.firstMatch.exists
+        let before = target.frame
+        target.tap()
+        guard alertWithKeyboard else { return }
+        _ = app.keyboards.firstMatch.waitForNonExistence(timeout: 5)
+        Thread.sleep(forTimeInterval: 0.5)
+        guard target.exists, target.isHittable, target.frame != before else { return }
+        target.tap()
     }
 
     /// Taps the field as near its trailing edge as still focuses it, so the cursor lands after the old text and

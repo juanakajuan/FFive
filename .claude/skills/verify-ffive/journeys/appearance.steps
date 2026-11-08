@@ -1,0 +1,14 @@
+# settings-appearance: pick Light, then Dark, in Settings. Demo; the choice lives in UserDefaults, so it ends on Dark (the default).
+launch -seedDemo
+tap #tab.more timeout=20
+tap #more.settings
+wait nav "Settings"
+selected #settings.appearance.dark
+tap #settings.appearance.light
+selected #settings.appearance.light
+unselected #settings.appearance.dark
+shot light
+defaults-expect appearance light
+tap #settings.appearance.dark
+selected #settings.appearance.dark
+defaults-expect appearance dark

@@ -9,6 +9,7 @@ tap #workout.menu
 tap #menu.add-exercise
 wait nav "Add Exercise"
 type #picker.search "Lateral"
+key return
 tap #picker.row.lateral-raise
 wait text "Lateral Raise"
 replace #set.weight.1 "25"

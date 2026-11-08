@@ -21,6 +21,10 @@ tap #menu.swap
 tap #picker.suggest
 tap #picker.suggestion-add
 absent nav "Swap Bench Press"
+# The pick asks how far the swap reaches.
+wait #dialog.swap-session
+tap #dialog.swap-session
+absent #dialog.swap-session
 scrollto #exercise.menu.2
 wait text "Machine Chest Press"
 shot swapped

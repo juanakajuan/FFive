@@ -9,6 +9,7 @@ tap #workout.menu
 tap #menu.add-exercise
 wait nav "Add Exercise"
 type #picker.search "Lateral"
+key return
 tap #picker.row.lateral-raise
 wait text "Lateral Raise"
 replace #set.weight.1 "20"
@@ -24,6 +25,9 @@ tap #set.menu.3
 tap #menu.add-set
 wait #set.weight.4
 value #set.weight.4 "20"
+# Sets log in order, so set 1 is skipped before set 2 can be logged.
+tap #set.menu.1
+tap #menu.skip-set
 tap #set.log.2
 selected #set.log.2
 shot 01-before-edit

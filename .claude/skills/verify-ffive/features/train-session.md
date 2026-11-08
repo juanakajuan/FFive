@@ -4,7 +4,7 @@ The Workout tab shows the block's next session inline. The lifter sees per-set t
 
 ## Sub-features
 
-- `session-open` shows the next open session of the block, headed `WEEK n DAY m` (`DELOAD DAY m` in the deload) with the subtitle `<day> · <block> · <n> RIR` (`· Deload` in the deload). A day picked from the schedule grid shows instead.
+- `session-open` shows the next open session of the block, headed `WEEK n DAY m` (`DELOAD DAY m` in the deload, the weekday in place of `DAY m` on a labeled day) with the subtitle `<day> · <block> · <n> RIR` (`· Deload` in the deload). A day picked from the schedule grid shows instead.
 - `session-targets` prefills each set with its target from last week's logs. Focusing a set's weight or reps field shows `We recommend <low>–<high> <unit>` or `We recommend <r> reps or <n> RIR` under the row (`#set.recommendation.N`). While a set has no target weight (week 1), the callout under the exercise name reads `Calibrate · <range> reps at <n> RIR`.
 - `session-log` edits `Set n weight` and `Set n reps` and ticks `Log set n`, which carries the Selected trait while logged.
 - `session-feedback` shows the "How did <muscle> feel today?" card (`#feedback.open.<muscle>`) under the muscle's last card once that card has no pending set (logged or skipped). The card opens a sheet with Pump, Workload, and Joint pain chips; the sheet also opens on its own when that last set is logged. `#feedback.save` is disabled until all three are answered and writes them; `#feedback.cancel` drops the draft. Tapping a selected chip clears it. While a finished muscle has no saved feedback, logging a set on another muscle shows `#feedback.required` ("Rate <muscle> first") and opens that muscle's sheet instead. Journey: `journeys/train-session-seeded.steps`.
@@ -18,7 +18,7 @@ The Workout tab shows the block's next session inline. The lifter sees per-set t
 
 ## How to get to it (user POV)
 
-- Workout tab: the block's next open session shows as soon as the tab opens.
+- Workout tab: the block's next open session shows as soon as the tab opens, unless a quick workout is open, which shows first.
 - Workout tab, `Schedule` button: in the sheet's grid, tap a current-week `play.circle.fill`, `circle.lefthalf.filled`, or `circle` cell to show that day on the Workout tab.
 - Mesos tab, the block's row: the detail page has the same grid. A current-week cell switches to the Workout tab on that day.
 - Either grid: tap a finished `checkmark.circle.fill` cell to review it read-only (WorkoutDetail).
@@ -32,7 +32,7 @@ Preconditions:
 
 - **Open (on disk).** Relaunch onto the Workout tab. Steps: `launch`, `wait text "WEEK 1 DAY 1" timeout=20`, `wait text "Bench Press"`, `wait text "~Calibrate"`.
 - **Log a set.** Enter 135 × 9 in set 1 and log it. Steps: `replace #set.weight.1 "135"`, `replace #set.reps.1 "9"`, `value #set.weight.1 "135"`, `value #set.reps.1 "9"`, `tap #keyboard.done`, `tap #set.log.1`, `selected #set.log.1`.
-- **Finish gate.** After set 1 is logged, `absent #workout.finish`. The journey then stops early the way a lifter would. It taps `#set.menu.2`, then `#menu.delete-set`, for Bench's unlogged sets, and `#exercise.menu.2`, then `#menu.remove-exercise`, for each other exercise. Card ids follow card position, so the second card is `#exercise.menu.2` after every removal. Finish stays absent until the last unlogged set is gone.
+- **Finish gate.** After set 1 is logged, `absent #workout.finish`. The journey then stops early the way a lifter would. It taps `#set.menu.2`, then `#menu.delete-set`, for Bench's unlogged sets, and `#exercise.menu.2`, then `#menu.remove-exercise`, for each other exercise. Card ids follow card position, so the second card is `#exercise.menu.2` after every removal. Finish stays absent until the last unlogged set is gone. Deleting Bench's last unlogged set finishes chest, which opens its feedback sheet on its own: `wait #feedback.save`, `tap #feedback.cancel` before the removals.
 - **Finish.** Steps: `wait #workout.finish`, `tap #workout.finish`, `wait text "WEEK 1 DAY 2" timeout=10`, `store-expect SetEntry weight 135`, `store-expect SetEntry reps 9`. In the `Schedule` sheet, the W1 D1 cell becomes `checkmark.circle.fill`.
 - **Proof (on disk).** The journey's `store-expect` steps check the logged weight and reps. For the full row, run `ffive-verify store "select w.ZWEEK, w.ZDAYINDEX, w.ZENDDATE is not null as finished, s.ZWEIGHT, s.ZREPS, s.ZISDONE from ZWORKOUT w join ZEXERCISE e on e.ZWORKOUT = w.Z_PK join ZSETENTRY s on s.ZEXERCISE = e.Z_PK where w.ZMESOCYCLE is not null and s.ZISDONE = 1"`. It returns `0 | 0 | 1 | 135.0 | 9 | 1`.
 - **Skip sets (on disk).** After plan-mesocycle, `journeys/skip-sets.steps` logs set 1, skips set 2 (`#set.menu.2`, `#menu.skip-set`, `value #set.log.2 "Skipped"`, `store-expect SetEntry isSkipped 1`), undoes and redoes the skip, then taps `#exercise.menu.<n>`, `#menu.skip-remaining` for all six cards. `Finish Workout` stays absent until the last card is skipped, and set 2 still reads `Skipped` after a relaunch. For the rows, run `ffive-verify store "select ZISDONE, ZISSKIPPED, count(*) from ZSETENTRY group by 1,2"`.

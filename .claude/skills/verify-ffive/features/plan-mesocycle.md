@@ -5,20 +5,21 @@ A lifter with no active block plans one from a program template. They rename it,
 ## Sub-features
 
 - `plan-open` opens the builder from the empty Workout tab.
-- `plan-template` picks one of the four templates (Full Body 3 days, Upper/Lower 4, Upper/Lower + Arms & Delts 5, Push/Pull/Legs 6) and lands on Customize with its days and exercises.
+- `plan-template` picks a row under `Start from a template` (built-in templates for every emphasis at 2 to 6 days, plus barbell-only and dumbbell-only ones) and lands on Customize with its days and exercises.
 - `plan-customize` renames the block and changes its length with the stepper, which updates the RIR countdown.
 - `plan-start` starts the block, closes the builder, and shows Week 1 · Day 1 on the Workout tab.
 - `plan-mesos` lists the block on the Mesos tab as `<total> WEEKS - <days> DAYS/WEEK` with a `Current` badge.
 - `plan-persist` keeps the block after a relaunch.
 - `plan-scratch` builds a block from scratch (`Build from scratch`). Not yet driven.
+- `plan-guided` builds the days from days per week and muscle priorities (`Plan it for me`, `#builder.guided`). See `guided-plan.md`.
 
 ## How to get to it (user POV)
 
 - Workout tab with no active block: choose `Plan a Mesocycle`.
 - Mesos tab: `Plan a Mesocycle` in the empty state (only when no block has ever existed), or the `New Mesocycle` "+" in the header.
-- Templates tab: tap a template row to open the builder straight on Customize, or the `New Mesocycle` "+" for a blank one.
-- The builder sheet: choose a template row, or `Build from scratch`.
-- While a block is active, the Mesos tab's "+" is disabled. The Templates tab's "+" still opens a blank builder, and that builder, like one opened from a Templates row, shows "End <name> before starting a new mesocycle." with `Start Mesocycle` disabled. The lifter must end the block first (`End Mesocycle` in the `Workout menu`, the Mesos row's `<name> menu`, or the block's detail page).
+- Templates tab: tap a template row to open its preview, then `Plan Mesocycle` (`#template-preview.plan`) opens the builder on Customize. The `New Mesocycle` "+" opens a blank one.
+- The builder sheet: `Copy a mesocycle` (once any block exists), `Your templates` (once one is saved), `Plan it for me`, a template row, or `Build from scratch`.
+- While a block is active, both "+" buttons and the Templates preview still open the builder, but it shows "End <name> before starting a new mesocycle." with `Start Mesocycle` disabled. The lifter must end the block first (`End Mesocycle` in the `Workout menu`, the Mesos row's `<name> menu`, or the block's detail page).
 
 ## Driving it with ffive-verify
 
