@@ -419,6 +419,36 @@ final class StoreTests: XCTestCase {
         XCTAssertTrue(sets[1].isDone, "a skipped set does not hold up the next one")
     }
 
+    func testFeedbackIsDueOnlyForAMuscleTrainedThisSession() throws {
+        var draft = MesoDraft(template: nil)
+        draft.days = [
+            .init(
+                name: "A",
+                slots: [
+                    .init(exercise: "Bench Press", muscle: .chest),
+                    .init(exercise: "Barbell Row", muscle: .back),
+                    .init(exercise: "Cable Row", muscle: .back),
+                ])
+        ]
+        let store = Store(inMemory: true)
+        try store.startMesocycle(draft)
+        let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
+        let workout = store.buildSession(meso, at: day1)
+        let bench = try XCTUnwrap(workout.exercises(for: .chest).first)
+        let rows = workout.exercises(for: .back)
+
+        store.skipRemainingSets(of: bench)
+        XCTAssertEqual(workout.feedbackMuscles, [], "chest was skipped, not trained, so it has nothing to rate")
+
+        let first = try XCTUnwrap(rows[0].sortedSets.first)
+        first.weight = 100
+        first.reps = 10
+        store.log(first, done: true)
+        store.skipRemainingSets(of: rows[0])
+        store.skipRemainingSets(of: rows[1])
+        XCTAssertEqual(workout.feedbackMuscles, [.back], "back logged a set before its last exercise was skipped")
+    }
+
     func testLogSetRestartsUntouchedClock() throws {
         let (store, meso) = try startedStore()
         let workout = store.buildSession(meso, at: day1)

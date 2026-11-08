@@ -234,18 +234,9 @@ struct ActiveWorkoutView: View {
     }
 
     /// A muscle that finished before this exercise's muscle and still has no feedback. Its sets wait for that answer.
-    private func unratedMuscle(before exercise: Exercise, in exercises: [Exercise]) -> Muscle? {
-        feedbackMuscles(in: exercises).first {
+    private func unratedMuscle(before exercise: Exercise) -> Muscle? {
+        workout.feedbackMuscles.first {
             $0 != exercise.muscle && workout.feedbackRecord(for: $0)?.value.isRated != true
-        }
-    }
-
-    /// Muscles whose last exercise has no pending set, so their feedback is due. Only block sessions collect it.
-    private func feedbackMuscles(in exercises: [Exercise]) -> [Muscle] {
-        guard workout.mesocycle != nil else { return [] }
-        var seen = Set<Muscle>()
-        return exercises.compactMap(\.muscle).filter { seen.insert($0).inserted }.filter { muscle in
-            exercises.last { $0.muscle == muscle }?.isLogged == true
         }
     }
 
@@ -326,6 +317,9 @@ struct ActiveWorkoutView: View {
                 ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
                     exerciseRow(exercise, at: index, in: exercises, pendingSoreness: pendingSoreness)
                 }
+                if exercises.isEmpty {
+                    emptySession
+                }
             }
             .padding(.vertical, 16)
         }
@@ -350,7 +344,7 @@ struct ActiveWorkoutView: View {
             feedbackRequired = nil
             feedbackFor = block.muscle
         }
-        .onChange(of: feedbackMuscles(in: exercises)) { old, new in
+        .onChange(of: workout.feedbackMuscles) { old, new in
             feedbackFor = new.first { !old.contains($0) && workout.feedbackRecord(for: $0)?.value.isRated != true }
         }
     }
@@ -370,7 +364,7 @@ struct ActiveWorkoutView: View {
         pendingSoreness: [Muscle: MuscleFeedbackRecord]
     ) -> some View {
         let muscle = exercise.muscle
-        let unrated = unratedMuscle(before: exercise, in: exercises)
+        let unrated = unratedMuscle(before: exercise)
         ExerciseCard(
             exercise: exercise,
             position: index + 1,
@@ -390,14 +384,46 @@ struct ActiveWorkoutView: View {
             onOpenArticle: { article = $0 }
         )
 
-        if let muscle, workout.mesocycle != nil,
-            exercises.lastIndex(where: { $0.muscle == muscle }) == index,
-            exercise.isLogged
+        if let muscle, workout.feedbackMuscles.contains(muscle),
+            exercises.lastIndex(where: { $0.muscle == muscle }) == index
         {
             FeedbackCard(
                 muscle: muscle, feedback: workout.feedbackRecord(for: muscle)?.value ?? MuscleFeedback()
             ) { feedbackFor = muscle }
         }
+    }
+
+    /// Shown in place of the cards while the session has no exercises: a new quick workout, or a block
+    /// day whose every exercise was removed. It offers the next step and the way out.
+    private var emptySession: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            Label("No exercises yet", systemImage: "dumbbell")
+                .font(Theme.cardTitle)
+                .foregroundStyle(Theme.text)
+            Text(
+                workout.mesocycle == nil
+                    ? "Add an exercise to start logging sets, or discard this workout."
+                    : "Every exercise was removed from this day. Add one to train it, or skip the day."
+            )
+            .font(Theme.detail)
+            .foregroundStyle(Theme.secondary)
+            Button("Add Exercise", systemImage: "plus") { picker = .add }
+                .buttonStyle(.wideFilled)
+                .a11y(.workoutAddExercise)
+                .padding(.top, 4)
+            if let meso = workout.mesocycle, let key = workout.key, meso.canSkip(key) {
+                Button("Skip Day", systemImage: "forward") { skip(key, of: meso) }
+                    .buttonStyle(.wideOutlined)
+                    .a11y(.workoutSkipDay)
+            } else {
+                Button("Discard Workout", systemImage: "trash") { confirmDiscard = true }
+                    .buttonStyle(.wideOutlined)
+                    .a11y(.workoutDiscard)
+            }
+        }
+        .padding(.horizontal, Theme.gutter)
+        .padding(.bottom, 8)
+        .surfaceCard()
     }
 
     private func saveNote(_ text: String, pinned: Bool, to target: NoteEdit.Target) {

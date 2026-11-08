@@ -129,6 +129,17 @@ public final class Workout {
         exercises(for: muscle).contains { $0.sets.contains(where: \.isDone) }
     }
 
+    /// Muscles whose last exercise has no pending set and that logged a set this session, in session order, so
+    /// their feedback is due. A muscle whose sets were all skipped wasn't trained and has nothing to rate. Only block
+    /// sessions collect feedback.
+    public var feedbackMuscles: [Muscle] {
+        guard mesocycle != nil else { return [] }
+        let exercises = sortedExercises
+        return trainedMuscles.filter { muscle in
+            exercises.last { $0.muscle == muscle }?.isLogged == true && trained(muscle)
+        }
+    }
+
     public func feedbackRecord(for muscle: Muscle) -> MuscleFeedbackRecord? {
         feedback.first { $0.muscleRaw == muscle.rawValue }
     }

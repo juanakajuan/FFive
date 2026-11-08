@@ -1,0 +1,48 @@
+# empty-workout: a workout with no exercises shows an empty state with a way forward, on-disk.
+# Before: ffive-verify reset-data (no active mesocycle).
+# After: ffive-verify store "select ZNAME, cast(ZSKIPPEDSESSIONS as text) from ZMESOCYCLE" lists {"week":0,"dayIndex":0}.
+launch
+wait #workout.quick timeout=20
+tap #workout.quick
+wait text "QUICK WORKOUT"
+wait #workout.add-exercise
+wait #workout.discard
+absent #workout.skip-day
+shot 01-empty-quick
+tap #workout.add-exercise
+wait nav "Add Exercise"
+type #picker.search "Lateral"
+key return
+tap #picker.row.lateral-raise
+wait text "Lateral Raise"
+absent #workout.add-exercise
+shot 02-exercise-added
+tap #exercise.menu.1
+tap #menu.remove-exercise
+wait #workout.discard
+tap #workout.discard
+tap #dialog.discard
+wait #workout.plan timeout=10
+tap #workout.plan
+wait nav "New Mesocycle"
+scrollto #builder.template.time-saver-upper-lower-4-days
+tap #builder.template.time-saver-upper-lower-4-days
+wait nav "Customize"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+tap #exercise.menu.1
+tap #menu.remove-exercise
+tap #exercise.menu.1
+tap #menu.remove-exercise
+tap #exercise.menu.1
+tap #menu.remove-exercise
+tap #exercise.menu.1
+tap #menu.remove-exercise
+wait #workout.add-exercise
+wait #workout.skip-day
+absent #workout.discard
+shot 03-empty-block-day
+tap #workout.skip-day
+wait text "WEEK 1 DAY 2"
+absent #workout.add-exercise
+shot 04-skipped

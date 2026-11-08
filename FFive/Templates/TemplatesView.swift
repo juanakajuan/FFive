@@ -83,10 +83,12 @@ struct TemplatesView: View {
                             Text("All").tag(Int?.none)
                             ForEach(Self.dayCounts, id: \.self) { Text("\($0)/week").tag(Int?.some($0)) }
                         }
+                        .pickerStyle(.menu)
                         Picker("Emphasis", selection: $emphasis) {
                             Text("All").tag(TemplateEmphasis?.none)
                             ForEach(Self.emphases) { Text($0.displayName).tag(TemplateEmphasis?.some($0)) }
                         }
+                        .pickerStyle(.menu)
                     }
                 }
                 .background(Theme.surface)
