@@ -7,11 +7,13 @@ wait text "QUICK WORKOUT"
 tap #workout.menu
 tap #menu.add-exercise
 type #picker.search "Lateral"
+key return
 tap #picker.row.lateral-raise
 wait text "Lateral Raise"
 tap #workout.menu
 tap #menu.add-exercise
 type #picker.search "Bench Press"
+key return
 tap #picker.row.bench-press
 wait text "Bench Press"
 shot 01-before

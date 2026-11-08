@@ -1,16 +1,19 @@
 # Last performed date in the picker and on the exercise detail page (demo, read-only).
+# Squat is logged in the open Week 2 Day 1, which does not count, so its date is Week 1 Day 1's.
 launch -seedDemo
 tap #workout.menu timeout=20
 tap #menu.add-exercise
-type #picker.search "Bench"
-wait #picker.row.bench-press
+type #picker.search "Squat"
+key return
+wait #picker.row.squat
 exists text "~Last performed"
 count text "~Last performed" "1"
 shot picker
 tap #picker.cancel
 tap #tab.exercises
-type #exercises.search "Bench Press"
-tap #exercises.row.bench-press
-wait nav "Bench Press"
+type #exercises.search "Squat"
+key return
+tap #exercises.row.squat
+wait nav "Squat"
 wait #exercise.last-performed
 shot detail

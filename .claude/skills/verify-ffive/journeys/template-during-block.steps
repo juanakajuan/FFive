@@ -16,10 +16,15 @@ wait nav "Customize"
 value #builder.name "My Mesocycle"
 wait text "End Active Block before starting a new mesocycle."
 shot 02-blank-builder-start-blocked
+replace #builder.name "Made Mid Block"
+key return
+# The day's Add Exercise sits behind the bottom bar until scrolled.
+scrollto button "Add Exercise"
 tap button "Add Exercise"
+type #picker.search "Bench Press"
+key return
 tap #picker.row.bench-press
 wait nav "Customize"
-replace #builder.name "Made Mid Block"
 shot 03-draft-with-exercise
 tap #builder.save-template
 wait alert "Save as Template"

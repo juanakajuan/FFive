@@ -1,7 +1,6 @@
 # Feature: weekday-labels / start-weekday. Before: ffive-verify reset-data.
 # Picks a start weekday, checks the suggested spread (4 days from Monday: Mon, Tue, Thu, Fri; from Wednesday: Wed, Thu, Sat, Sun), changes day 3, starts the block and checks the grid.
 launch
-tap button "Done" timeout=20
 tap #tab.mesos timeout=20
 tap #mesos.new
 tap #builder.template.upper-lower-4-days

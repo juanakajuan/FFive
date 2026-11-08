@@ -12,7 +12,7 @@ A lifter marks each muscle the block trains as Emphasize, Normal, or Maintain, i
 
 ## How to get to it (user POV)
 
-- Builder: `Plan a Mesocycle` or `New`, pick a template, scroll past the days to `Muscle Priorities`, and tap a muscle's priority menu.
+- Builder: `Plan a Mesocycle` or the Mesos tab's `New Mesocycle` "+", pick a template, scroll past the days to `Muscle Priorities`, and tap a muscle's priority menu. The Guided Plan screen (`#builder.guided`) has the same menus; see `guided-plan.md`.
 - Mesos tab: tap the block's row, scroll to the `Muscle Priorities` card, and tap a muscle's priority menu.
 
 ## Driving it with ffive-verify

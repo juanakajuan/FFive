@@ -19,7 +19,10 @@ shot 02-guided
 tap #builder.guided-build
 wait nav "Customize"
 replace #builder.name "Guided Block"
+key return
+scrollto field "Day name"
 value field "Day name" "Full Body A"
+scrollto text "Choose an exercise"
 wait text "Choose an exercise"
 shot 03-editor-slots
 tap #builder.menu
