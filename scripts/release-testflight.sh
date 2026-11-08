@@ -2,14 +2,16 @@
 # Archives FFive from the committed HEAD and uploads it to TestFlight.
 #
 #   scripts/release-testflight.sh --version 1.1
-#                                           commit MARKETING_VERSION = 1.1 first, then archive and upload
+#                                           set MARKETING_VERSION = 1.1, archive and upload, then commit it
 #   scripts/release-testflight.sh --bump patch|minor|major
-#                                           bump MARKETING_VERSION (1.0 -> 1.0.1, 1.1 or 2.0), commit, upload
+#                                           bump MARKETING_VERSION (1.0 -> 1.0.1, 1.1 or 2.0), upload, then commit
 #   scripts/release-testflight.sh --local   archive and export an .ipa to build/release, no upload
 #
 # Every upload carries a new release number: --version or --bump is required unless
-# --local. The version commit also rewrites FFive/Changelog.json from the git history
-# (scripts/changelog.sh), so the build's What's New lists every feat, fix and perf commit since the last release. The build number is a UTC timestamp on every run.
+# --local. The version change also rewrites FFive/Changelog.json from the git history
+# (scripts/changelog.sh), so the build's What's New lists every feat, fix and perf commit since the last release.
+# Both files are committed only once the upload (or --local export) succeeds; a failed run
+# restores them, so rerun the same command. The build number is a UTC timestamp on every run.
 #
 # An upload first runs scripts/cloudkit-schema.sh, which stops it when CloudKit Production lacks a
 # field this build syncs. Pass --skip-cloudkit-check to upload anyway.
@@ -84,15 +86,21 @@ if [ -n "$(git -C "$root" status --porcelain)" ]; then
     exit 1
 fi
 
+changelog="$root/FFive/Changelog.json"
+commit="$(git -C "$root" rev-parse --short HEAD)"
 if [ -n "$new_version" ]; then
+    # The version change stays uncommitted until the build ships. A failed run puts both
+    # files back, so the same --bump or --version can simply be rerun.
+    restore() { git -C "$root" checkout -q -- "$project" "$changelog"; }
+    trap restore EXIT
+    trap 'exit 130' INT TERM
     sed -i '' "s/MARKETING_VERSION = .*;/MARKETING_VERSION = $new_version;/" "$project"
     if [ -z "$(git -C "$root" status --porcelain)" ]; then
         echo "error: version is already $new_version; every upload needs a new release number" >&2
         exit 2
     fi
     "$root/scripts/changelog.sh" --next "$new_version"
-    git -C "$root" commit -q -m "chore: bump version to $new_version" -- "$project" "$root/FFive/Changelog.json"
-    echo "==> committed version $new_version and its changelog"
+    commit="$commit + version $new_version"
 fi
 
 auth=""
@@ -105,7 +113,6 @@ fi
 
 # UTC timestamp: always increasing, and a retry after a failed upload gets a fresh number.
 build="$(date -u +%Y%m%d%H%M)"
-commit="$(git -C "$root" rev-parse --short HEAD)"
 out="$root/build/release"
 archive="$out/FFive-$build.xcarchive"
 mkdir -p "$out"
@@ -150,6 +157,12 @@ xcodebuild -exportArchive \
     || { tail -40 "$out/export-$build.log" >&2; echo "error: export failed; full log at $out/export-$build.log" >&2; exit 1; }
 
 version="$(/usr/libexec/PlistBuddy -c 'Print :ApplicationProperties:CFBundleShortVersionString' "$archive/Info.plist")"
+if [ -n "$new_version" ]; then
+    git -C "$root" commit -q -m "chore: bump version to $new_version" -- "$project" "$changelog"
+    trap - EXIT INT TERM
+    commit="$(git -C "$root" rev-parse --short HEAD)"
+    echo "==> committed version $new_version and its changelog as $commit"
+fi
 if [ "$destination" = upload ]; then
     echo "==> uploaded FFive $version ($build) from $commit; it appears in TestFlight once App Store Connect finishes processing"
 else
