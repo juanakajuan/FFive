@@ -154,6 +154,15 @@ Gotchas:
 
 To watch a drive live, open the simulator panel (iOS Simulator `attach` with the simulator's UDID) or `open -a Simulator`. Do not tap while a drive runs.
 
+## Run every journey
+
+```bash
+$V journeys                          # all of journeys/*.steps, about 25 minutes
+$V journeys skip-day settings        # only these
+```
+
+`journeys` drives each step file in the state its `Before:` header names. A journey that launches on disk gets a fresh `reset-data`, a `-seedDemo` one runs as is, and one whose header names another journey (`Before: train-session.steps ran`) runs after that journey on the same store. When that parent was not the last journey to pass, `journeys` replays the parent's chain first, as setup. It prints `PASS <name>` or `FAIL <name>: <first failing step>` per journey, then `JOURNEYS PASS <n>/<n>` or `JOURNEYS FAIL <k>/<n>: <names>`, and exits non-zero on any failure. `scripts/check` does not drive the app, so run `journeys` after a UI change and before a release to catch journeys the UI has outgrown. A new journey that needs another one's state names it in its `Before:` header.
+
 ## Reading state
 
 - `$V store` lists the store's entity tables with row counts: `ZWORKOUT`, `ZEXERCISE`, `ZSETENTRY`, `ZMESOCYCLE`, `ZMESODAY`, `ZDAYSLOT`, `ZMUSCLEFEEDBACKRECORD`, `ZPINNEDNOTE`, `ZCUSTOMTEMPLATE`.

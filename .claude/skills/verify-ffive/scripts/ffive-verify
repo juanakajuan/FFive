@@ -247,6 +247,46 @@ cmd_reset_data() {
     echo "reinstalled $bundle_id with an empty store and default settings"
 }
 
+journey_parent() {
+    # The journey named in the file's `Before:` header, as in "Before: plan-mesocycle.steps ran", or nothing.
+    sed -n 's/^#.*Before:\(.*\)/\1/p' "$1" | sed 's/After:.*//' | grep -oE '[a-z0-9-]+\.steps' | head -1 | sed 's/\.steps$//' || true
+}
+
+cmd_journeys() {
+    # Runs every journey (or the named ones) in the state its `Before:` header names: on a fresh reset-data when
+    # it launches on disk, as is when it launches -seedDemo, and after its parent journey on the same store. A
+    # journey whose parent was not the last to pass gets the parent's chain replayed first, as setup.
+    local dir="$skill/journeys" order=() failed=() passed=0 last="" j f
+    if [[ $# -eq 0 ]]; then
+        for f in "$dir"/*.steps; do order+=("$(basename "$f" .steps)"); done
+    else
+        for j in "$@"; do [[ -f "$dir/$j.steps" ]] || die "no journey $j ($dir/$j.steps)"; order+=("$j"); done
+    fi
+    for j in "${order[@]}"; do
+        local chain=("$j") parent="$j" out step ok=1
+        while parent="$(journey_parent "$dir/$parent.steps")"; [[ -n "$parent" ]]; do
+            [[ "$parent" == "$last" ]] && break
+            chain=("$parent" "${chain[@]}")
+        done
+        if [[ "$parent" != "$last" || -z "$last" ]]; then
+            if ! grep -m1 '^launch' "$dir/${chain[0]}.steps" | grep -q -- '-seedDemo'; then "$0" reset-data >/dev/null; fi
+        fi
+        last=""
+        for step in "${chain[@]}"; do
+            if out="$("$0" drive "$dir/$step.steps" --name "$step" 2>&1)"; then
+                last="$step"
+            else
+                [[ "$step" == "$j" ]] && echo "FAIL $j: $(grep -m1 '^FAIL' <<<"$out")" || echo "FAIL $j: setup journey $step failed: $(grep -m1 '^FAIL' <<<"$out")"
+                echo "     $(tail -1 <<<"$out")"
+                ok=0; break
+            fi
+        done
+        if [[ $ok == 1 ]]; then echo "PASS $j"; passed=$((passed + 1)); else failed+=("$j"); fi
+    done
+    if [[ ${#failed[@]} -eq 0 ]]; then echo "JOURNEYS PASS $passed/${#order[@]}"
+    else echo "JOURNEYS FAIL ${#failed[@]}/${#order[@]}: ${failed[*]}"; return 1; fi
+}
+
 cmd_cleanup() {
     local purge=0; [[ "${1:-}" == "--purge" ]] && purge=1
     if [[ -f "$state" ]]; then
@@ -372,5 +412,6 @@ case "${1:-}" in
     cleanup) shift; cmd_cleanup "$@" ;;
     park) shift; cmd_park "$@" ;;
     sweep) shift; cmd_sweep "$@" ;;
-    *) echo "usage: $0 {launch|doctor|drive <steps|-> [--name n] [--timeout s]|store [sql]|defaults|shot [name]|reset-data|cleanup [--purge]|park [--idle]|sweep [--dry-run]}" >&2; exit 2 ;;
+    journeys) shift; cmd_journeys "$@" ;;
+    *) echo "usage: $0 {launch|doctor|drive <steps|-> [--name n] [--timeout s]|store [sql]|defaults|shot [name]|reset-data|cleanup [--purge]|park [--idle]|sweep [--dry-run]|journeys [name...]}" >&2; exit 2 ;;
 esac
