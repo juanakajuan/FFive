@@ -9,6 +9,7 @@ This directory is the maintained source for verifying FFive's user-facing behavi
 - **Demo baseline** (read-only journeys): every drive starts with `launch -seedDemo`. The block "Full Body, 3 Days" is at Week 2 of 5. Week 1 is finished, Week 2 · Day 1 is in progress with Squat logged, and Week 2 · Day 3 is skipped. The Workout tab opens on `WEEK 2 DAY 1`. "Morning Workout" and "Evening Workout" are free-form history.
 - **On-disk baseline** (write journeys): `ffive-verify reset-data`, then a bare `launch`. The Workout tab shows `Plan a Mesocycle` and `Quick Workout`.
 - The on-disk journeys form one chain on a single store: `reset-data` → quick-workout → plan-mesocycle → train-session → skip-day → unskip-day → skip-mesos-detail. Each one's `Before:` header names the state it needs. notes, set-type, bodyweight, coaching-tips, reorder-exercises, swap-exercise, reset-and-rename-day, muscle-priorities, end-mesocycle, delete-mesocycle, rename-mesocycle, meso-notes, meso-length, weekday-labels, start-weekday, copy-mesocycle, manage-days, muscle-slots, guided-plan, custom-templates, template-preview, copy-template, template-during-block, performed-filter, and the settings journeys that write (equipment-filter, auto-match-weights, icloud-sync, delete-all-data) each start from their own `reset-data`.
+- `ffive-verify journeys` runs every journey in the state its `Before:` header names, replaying a parent chain where one is needed.
 - Never drive a simulator that `ffive-verify launch` did not create in this checkout.
 
 ## Driving conventions
