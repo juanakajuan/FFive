@@ -929,6 +929,7 @@ struct SetRow: View {
                     onLogBlocked(set)
                     return
                 }
+                guard set.canToggleLog else { return }
                 store.log(set, done: !set.isDone)
                 if set.isDone { onCompleted() }
             } label: {
@@ -937,7 +938,8 @@ struct SetRow: View {
                     .contentShape(Rectangle())
             }
             .buttonStyle(.plain)
-            .disabled(!set.canToggleLog)
+            // A logged set that can't be unlogged stays enabled, so it keeps the same green as the last one.
+            .disabled(!set.isDone && !set.canToggleLog)
             .padding(.leading, 16)
             .accessibilityLabel("Log set \(number)")
             .a11y(.setLog, number)
