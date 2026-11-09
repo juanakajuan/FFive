@@ -6,6 +6,7 @@ tap #workout.plan
 wait nav "New Mesocycle"
 tap #builder.template.upper-lower-4-days
 wait nav "Customize"
+tap #builder.menu
 tap #builder.save-template
 wait alert "Save as Template"
 replace field "Template name" "My Template"

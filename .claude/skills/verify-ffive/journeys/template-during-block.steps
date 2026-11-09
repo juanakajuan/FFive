@@ -26,6 +26,7 @@ key return
 tap #picker.row.bench-press
 wait nav "Customize"
 shot 03-draft-with-exercise
+tap #builder.menu
 tap #builder.save-template
 wait alert "Save as Template"
 replace field "Template name" "Made Mid Block"

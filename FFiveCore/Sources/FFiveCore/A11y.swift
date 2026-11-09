@@ -124,6 +124,8 @@ public enum A11y: String, CaseIterable {
     case builderCopyWeek = "builder.copy-week"
     case builderCopyUse = "builder.copy-use"
     case builderMenu = "builder.menu"
+    case builderDoneEditing = "builder.done-editing"
+    case menuEditExercises = "menu.edit-exercises"
     case builderAddMuscle = "builder.add-muscle"
     case menuAutofill = "menu.autofill"
     case menuClearExercises = "menu.clear-exercises"
