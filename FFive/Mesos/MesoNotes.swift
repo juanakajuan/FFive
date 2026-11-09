@@ -90,6 +90,8 @@ struct MesoNotesScreen: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
+        .interactiveDismissDisabled(!draft.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
         .onAppear { focused = meso.notes.isEmpty }
     }
 

@@ -1,7 +1,7 @@
 import Foundation
 import SwiftData
 
-public struct MesoDraft {
+public struct MesoDraft: Equatable {
     /// A muscle trained on a day, with the exercise for it once one is chosen.
     public struct Slot: Identifiable, Hashable {
         public let id = UUID()

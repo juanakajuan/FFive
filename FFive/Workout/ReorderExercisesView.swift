@@ -31,7 +31,7 @@ struct ReorderExercisesView: View {
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondary)
                     }
-                    .listRowBackground(Theme.surface)
+                    .listRowBackground(Theme.page)
                     .listRowSeparator(.hidden)
                 }
                 Section {
@@ -42,7 +42,7 @@ struct ReorderExercisesView: View {
                                 .foregroundStyle(Theme.text)
                             if let muscle = exercise.muscle { MuscleDotLabel(muscle: muscle) }
                         }
-                        .listRowBackground(Theme.surface)
+                        .listRowBackground(Theme.page)
                         .listRowSeparatorTint(Theme.hairline)
                     }
                     .onMove { draft.move(fromOffsets: $0, toOffset: $1) }
@@ -50,7 +50,7 @@ struct ReorderExercisesView: View {
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(Theme.surface)
+            .background(Theme.page)
             .environment(\.editMode, .constant(.active))
             .navigationTitle("Reorder Exercises")
             .navigationBarTitleDisplayMode(.inline)
@@ -69,5 +69,6 @@ struct ReorderExercisesView: View {
             }
         }
         .presentationDetents([.medium, .large])
+        .interactiveDismissDisabled(draft != workout.sortedExercises)
     }
 }

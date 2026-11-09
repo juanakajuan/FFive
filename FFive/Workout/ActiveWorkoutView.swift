@@ -1067,7 +1067,7 @@ struct SorenessSheet: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
         .interactiveDismissDisabled(draft != nil)
     }
 }
@@ -1208,6 +1208,7 @@ private struct NoteEditor: View {
     let onSave: (String, Bool) -> Void
 
     @Environment(\.dismiss) private var dismiss
+    private let original: (text: String, pinned: Bool)
     @State private var draft: String
     @State private var pinned: Bool
     @FocusState private var focused: Bool
@@ -1219,6 +1220,7 @@ private struct NoteEditor: View {
         self.title = title
         self.dayName = pinned == nil ? nil : dayName
         self.onSave = onSave
+        original = (draft, pinned ?? false)
         _draft = State(initialValue: draft)
         _pinned = State(initialValue: pinned ?? false)
     }
@@ -1278,7 +1280,8 @@ private struct NoteEditor: View {
                 }
             }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.medium, .large])
+        .interactiveDismissDisabled(draft != original.text || pinned != original.pinned)
         .onAppear { focused = true }
     }
 }
