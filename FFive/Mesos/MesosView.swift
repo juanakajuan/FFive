@@ -88,6 +88,7 @@ struct MesosView: View {
                             .foregroundStyle(Theme.text, Theme.success)
                             .accessibilityLabel("Finished")
                     }
+                    RowChevron()
                 }
                 .contentShape(Rectangle())
             }

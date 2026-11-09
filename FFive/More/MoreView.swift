@@ -85,9 +85,7 @@ struct MoreView: View {
                     .accessibilityHidden(true)
                 Text(title).font(Theme.body)
                 Spacer()
-                Image(systemName: "chevron.right")
-                    .font(.system(size: 14))
-                    .foregroundStyle(Theme.secondary)
+                RowChevron()
             }
             .foregroundStyle(Theme.text)
             .padding(.horizontal, 12)

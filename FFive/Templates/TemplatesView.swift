@@ -185,8 +185,19 @@ struct TemplateGroup<Content: View>: View {
 
 struct TemplateListRow: View {
     let template: ProgramTemplate
+    /// False where the row is a header rather than a link.
+    var opensScreen = true
 
     var body: some View {
+        HStack(spacing: 8) {
+            details
+            if opensScreen { RowChevron() }
+        }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+    }
+
+    private var details: some View {
         HStack(alignment: .bottom, spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 4) {
@@ -215,8 +226,6 @@ struct TemplateListRow: View {
                 // The pill shares the card's raised fill, so lift it to stay visible.
                 .brightness(0.07)
         }
-        .padding(.vertical, 12)
-        .contentShape(Rectangle())
     }
 }
 

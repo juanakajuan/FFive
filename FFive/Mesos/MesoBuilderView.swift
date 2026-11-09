@@ -97,8 +97,7 @@ struct MesoBuilderView: View {
                                     .foregroundStyle(Theme.secondary)
                             }
                             Spacer()
-                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .medium)).foregroundStyle(
-                                Theme.secondary)
+                            RowChevron()
                         }
                         .foregroundStyle(Theme.text)
                         .padding(.vertical, 14)
@@ -125,8 +124,7 @@ struct MesoBuilderView: View {
                             Image(systemName: "square.and.pencil").font(.system(size: 18))
                             Text("Build from scratch").font(.system(size: 16, weight: .semibold))
                             Spacer()
-                            Image(systemName: "chevron.right").font(.system(size: 13, weight: .medium)).foregroundStyle(
-                                Theme.secondary)
+                            RowChevron()
                         }
                         .foregroundStyle(Theme.text)
                         .padding(.vertical, 14)

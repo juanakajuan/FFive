@@ -98,7 +98,7 @@ struct TemplatePreviewScreen: View {
         let dayIndex = min(selectedDay, template.days.count - 1)
         return ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                TemplateListRow(template: template)
+                TemplateListRow(template: template, opensScreen: false)
                     .padding(.horizontal, Theme.gutter)
                 if template.emphasis != nil {
                     Text(template.summary)

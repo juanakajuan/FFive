@@ -111,6 +111,15 @@ struct CopySourceRow: View {
     let meso: Mesocycle
 
     var body: some View {
+        HStack(spacing: 8) {
+            details
+            RowChevron()
+        }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
+    }
+
+    private var details: some View {
         HStack(alignment: .bottom, spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(status)
@@ -125,8 +134,6 @@ struct CopySourceRow: View {
             Spacer(minLength: 8)
             CountPill(text: "\(meso.days.count)/week").brightness(0.07)
         }
-        .padding(.vertical, 12)
-        .contentShape(Rectangle())
     }
 
     private var status: String {
