@@ -12,6 +12,7 @@ shot builtin-focus
 tap #template-preview.plan
 wait nav "Customize"
 value #builder.name "Upper/Lower, 4 Days"
+tap #builder.menu
 tap #builder.save-template
 wait alert "Save as Template"
 replace field "Template name" "My Split"

@@ -182,6 +182,7 @@ struct MesoEditorView: View {
     @State private var templateName: String?
     @State private var confirmReset = false
     @State private var managingDays = false
+    @State private var editMode: EditMode = .inactive
 
     private enum PickerRequest: Identifiable {
         case add(day: UUID)
@@ -368,27 +369,44 @@ struct MesoEditorView: View {
         .environment(\.defaultMinListRowHeight, 48)
         .navigationTitle(editing == nil ? "Customize" : "Edit Template")
         .navigationBarTitleDisplayMode(.inline)
+        .environment(\.editMode, $editMode)
         .toolbar {
-            ToolbarItemGroup(placement: .primaryAction) {
-                if editing == nil {
-                    Button("Save as Template", systemImage: "square.and.arrow.down") { templateName = draft.name }
-                        .disabled(!draft.isStartable)
-                        .a11y(.builderSaveTemplate)
-                }
-                EditButton()
-                Menu("Options", systemImage: "ellipsis.circle") {
-                    Button("Manage Days", systemImage: "list.number") { managingDays = true }
-                        .a11y(.menuManageDays)
-                    Button("Autofill Exercises", systemImage: "wand.and.stars", action: autofill)
-                        .disabled(!draft.hasEmptySlot)
-                        .a11y(.menuAutofill)
-                    Button("Clear Exercises", systemImage: "eraser") { draft.clearExercises() }
-                        .disabled(!draft.days.contains { $0.slots.contains { $0.exercise != nil } })
-                        .a11y(.menuClearExercises)
-                    Button("Reset", systemImage: "arrow.counterclockwise", role: .destructive) { confirmReset = true }
+            ToolbarItem(placement: .topBarTrailing) {
+                if editMode.isEditing {
+                    Button("Done") { withAnimation { editMode = .inactive } }
+                        .fontWeight(.semibold)
+                        .a11y(.builderDoneEditing)
+                } else {
+                    Menu {
+                        if editing == nil {
+                            Button("Save as Template", systemImage: "square.and.arrow.down") {
+                                templateName = draft.name
+                            }
+                            .disabled(!draft.isStartable)
+                            .a11y(.builderSaveTemplate)
+                        }
+                        Button("Edit Exercises", systemImage: "arrow.up.arrow.down") {
+                            withAnimation { editMode = .active }
+                        }
+                        .a11y(.menuEditExercises)
+                        Button("Manage Days", systemImage: "list.number") { managingDays = true }
+                            .a11y(.menuManageDays)
+                        Button("Autofill Exercises", systemImage: "wand.and.stars", action: autofill)
+                            .disabled(!draft.hasEmptySlot)
+                            .a11y(.menuAutofill)
+                        Button("Clear Exercises", systemImage: "eraser") { draft.clearExercises() }
+                            .disabled(!draft.days.contains { $0.slots.contains { $0.exercise != nil } })
+                            .a11y(.menuClearExercises)
+                        Button("Reset", systemImage: "arrow.counterclockwise", role: .destructive) {
+                            confirmReset = true
+                        }
                         .a11y(.menuReset)
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                    }
+                    .accessibilityLabel("Options")
+                    .a11y(.builderMenu)
                 }
-                .a11y(.builderMenu)
             }
         }
         .confirmationDialog("Reset this mesocycle?", isPresented: $confirmReset, titleVisibility: .visible) {
@@ -463,10 +481,8 @@ struct MesoEditorView: View {
     }
 
     private func header(_ text: String) -> some View {
-        Text(text)
-            .font(Theme.columnHeader)
-            .textCase(.uppercase)
-            .foregroundStyle(Theme.secondary)
+        SectionHeading(text: text)
+            .textCase(nil)
     }
 
     private func footnote(_ text: String) -> some View {
