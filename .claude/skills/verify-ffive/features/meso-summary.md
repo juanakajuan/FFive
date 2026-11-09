@@ -13,4 +13,4 @@ A lifter reviews how a block went and renames it. The summary shows done sets pe
 
 - Demo: `ffive-verify drive .claude/skills/verify-ffive/journeys/meso-summary.steps --name meso-summary`. It opens the summary from the detail page, renames the block, ends it, and checks the sheet.
 - On disk: `ffive-verify reset-data`, then `ffive-verify drive .claude/skills/verify-ffive/journeys/rename-mesocycle.steps --name rename-mesocycle`. It plans "Verify Block", renames it, checks `store-expect Mesocycle name "Spring Block"`, relaunches, ends it from the Mesos row, and opens the summary from the row menu.
-- The summary cards have no ids. Assert them by text: `text "Sets per Muscle"`, `text "Estimated 1RM"`, `text "Feedback"`, and `text "No finished sessions in this block yet."` for an untrained block.
+- The summary cards have no ids. Assert them by text: `text "Sets per Muscle"`, `text "Estimated 1RM"`, `text "Feedback"`, and `text "No sessions yet"` for an untrained mesocycle.

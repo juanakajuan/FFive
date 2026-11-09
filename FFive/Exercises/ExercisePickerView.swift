@@ -104,15 +104,15 @@ struct ExercisePickerView: View {
             .background(Theme.surface)
             .overlay {
                 if entries.isEmpty && query.isEmpty && performedOnly {
-                    ContentUnavailableView(
+                    EmptyState(
                         "No exercises performed yet",
                         systemImage: "clock.arrow.circlepath",
-                        description: Text("Exercises show here once you log a set of them in a finished workout."))
+                        message: "Exercises show here once you log a set of them in a finished workout.")
                 } else if entries.isEmpty && query.isEmpty {
-                    ContentUnavailableView(
+                    EmptyState(
                         "Search to add an exercise",
                         systemImage: "magnifyingglass",
-                        description: Text("Type a name to create your own exercise."))
+                        message: "Type a name to create your own exercise.")
                 }
             }
             .navigationTitle(title)

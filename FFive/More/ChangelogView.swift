@@ -51,12 +51,6 @@ private struct ChangelogList: View {
 
     var body: some View {
         List {
-            if groups.isEmpty {
-                Text("No changes recorded yet.")
-                    .font(Theme.detail)
-                    .foregroundStyle(Theme.secondary)
-                    .themedRow()
-            }
             ForEach(groups) { group in
                 if showsHeaders {
                     DayHeading(group: group)
@@ -68,6 +62,13 @@ private struct ChangelogList: View {
             }
         }
         .themedList()
+        .overlay {
+            if groups.isEmpty {
+                EmptyState(
+                    "No changes yet", systemImage: "list.bullet.rectangle",
+                    message: "Changes to the app show up here after an update.")
+            }
+        }
         .a11y(.changelogList)
     }
 }

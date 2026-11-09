@@ -14,12 +14,6 @@ struct ExerciseHistorySheet: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: 0) {
-                    if groups.isEmpty {
-                        Text("No finished session has this exercise yet.")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.secondary)
-                            .padding(Theme.gutter)
-                    }
                     ForEach(Array(groups.enumerated()), id: \.element.id) { groupIndex, group in
                         SectionHeading(text: group.mesocycle?.name ?? "Quick Workouts")
                             .padding(.horizontal, Theme.gutter)
@@ -36,6 +30,13 @@ struct ExerciseHistorySheet: View {
                     }
                 }
                 .padding(.bottom, 16)
+            }
+            .overlay {
+                if groups.isEmpty {
+                    EmptyState(
+                        "No sessions yet", systemImage: "clock.arrow.circlepath",
+                        message: "Finished sessions with this exercise show up here.")
+                }
             }
             .background(Theme.surface)
             .navigationTitle(name)

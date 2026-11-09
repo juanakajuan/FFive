@@ -22,20 +22,21 @@ struct ExercisesView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 LazyVStack(spacing: 0) {
-                    if listings.isEmpty {
-                        Text(
-                            all.isEmpty
-                                ? "No exercises match." : "Only exercises for equipment you don\u{2019}t have match."
-                        )
-                        .font(Theme.detail)
-                        .foregroundStyle(Theme.secondary)
-                        .padding(Theme.gutter * 2)
-                    }
                     ForEach(listings) { listing in
                         NavigationLink(value: listing) { row(listing) }
                             .buttonStyle(.plain)
                             .a11y(.exercisesRow, key: listing.name)
                     }
+                }
+            }
+            .overlay {
+                if listings.isEmpty {
+                    EmptyState(
+                        "No matching exercises", systemImage: "magnifyingglass",
+                        message: all.isEmpty
+                            ? "Try another name or clear a filter."
+                            : "Only exercises for equipment you don\u{2019}t have match. Tap Show All to see every exercise."
+                    )
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {

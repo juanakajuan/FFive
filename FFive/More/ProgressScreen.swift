@@ -62,7 +62,7 @@ struct ProgressScreen: View {
     }
 
     private func empty(_ title: String, systemImage: String, description: String) -> some View {
-        ContentUnavailableView(title, systemImage: systemImage, description: Text(description))
+        EmptyState(title, systemImage: systemImage, message: description)
             .themedRow()
             .listRowSeparator(.hidden)
     }
@@ -108,7 +108,7 @@ struct ProgressScreen: View {
             )
         } else {
             empty(
-                "No mesocycle yet", systemImage: "chart.bar.xaxis",
+                "No mesocycles yet", systemImage: "chart.bar.xaxis",
                 description: "Plan a mesocycle on the Workout tab to see weekly sets against each muscle's landmarks.")
         }
     }

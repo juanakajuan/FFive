@@ -29,7 +29,7 @@ tap #mesos.menu.spring-block
 tap #menu.end-mesocycle
 tap #dialog.end-mesocycle
 wait nav "Spring Block Summary" timeout=10
-wait text "No finished sessions in this mesocycle yet."
+wait text "No sessions yet"
 shot 02-summary-from-list-end
 store-expect Mesocycle finishedDate not-null
 tap #sheet.done

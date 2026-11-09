@@ -302,3 +302,38 @@ struct EquipmentScopeToggle: View {
         .frame(minHeight: 44)
     }
 }
+
+/// The app's one empty state: an icon over a title, a message, and the screen's next steps.
+struct EmptyState<Actions: View>: View {
+    let title: String
+    let systemImage: String
+    let message: String
+    let actions: Actions
+
+    init(
+        _ title: String, systemImage: String, message: String, @ViewBuilder actions: () -> Actions
+    ) {
+        self.title = title
+        self.systemImage = systemImage
+        self.message = message
+        self.actions = actions()
+    }
+
+    var body: some View {
+        ContentUnavailableView {
+            Label(title, systemImage: systemImage)
+        } description: {
+            Text(message)
+        } actions: {
+            // ContentUnavailableView offers its actions their ideal width, which shrinks wide buttons to their text.
+            VStack(spacing: 12) { actions }
+                .containerRelativeFrame(.horizontal) { width, _ in min(width - Theme.gutter * 4, 320) }
+        }
+    }
+}
+
+extension EmptyState where Actions == EmptyView {
+    init(_ title: String, systemImage: String, message: String) {
+        self.init(title, systemImage: systemImage, message: message) { EmptyView() }
+    }
+}

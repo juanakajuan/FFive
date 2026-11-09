@@ -396,21 +396,15 @@ struct ActiveWorkoutView: View {
     /// Shown in place of the cards while the session has no exercises: a new quick workout, or a block
     /// day whose every exercise was removed. It offers the next step and the way out.
     private var emptySession: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Label("No exercises yet", systemImage: "dumbbell")
-                .font(Theme.cardTitle)
-                .foregroundStyle(Theme.text)
-            Text(
-                workout.mesocycle == nil
-                    ? "Add an exercise to start logging sets, or discard this workout."
-                    : "Every exercise was removed from this day. Add one to train it, or skip the day."
-            )
-            .font(Theme.detail)
-            .foregroundStyle(Theme.secondary)
+        EmptyState(
+            "No exercises yet", systemImage: "dumbbell",
+            message: workout.mesocycle == nil
+                ? "Add an exercise to start logging sets, or discard this workout."
+                : "Every exercise was removed from this day. Add one to train it, or skip the day."
+        ) {
             Button("Add Exercise", systemImage: "plus") { picker = .add }
                 .buttonStyle(.wideFilled)
                 .a11y(.workoutAddExercise)
-                .padding(.top, 4)
             if let meso = workout.mesocycle, let key = workout.key, meso.canSkip(key) {
                 Button("Skip Day", systemImage: "forward") { skip(key, of: meso) }
                     .buttonStyle(.wideOutlined)
@@ -421,9 +415,6 @@ struct ActiveWorkoutView: View {
                     .a11y(.workoutDiscard)
             }
         }
-        .padding(.horizontal, Theme.gutter)
-        .padding(.bottom, 8)
-        .surfaceCard()
     }
 
     private func saveNote(_ text: String, pinned: Bool, to target: NoteEdit.Target) {
