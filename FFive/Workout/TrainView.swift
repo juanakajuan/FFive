@@ -199,6 +199,7 @@ struct ScheduleSheet: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
     }
 
     private func open(_ key: SessionKey) {

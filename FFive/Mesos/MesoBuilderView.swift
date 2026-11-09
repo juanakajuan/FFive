@@ -439,6 +439,7 @@ struct MesoEditorView: View {
             .background(Theme.surface)
             .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
         }
+        .interactiveDismissDisabled(draft != original)
         .sheet(isPresented: $managingDays) { ManageDaysView(draft: $draft) }
         .sheet(item: $picker) { request in
             switch request {
@@ -514,7 +515,7 @@ struct ManageDaysView: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondary)
                     }
-                    .builderRow()
+                    .builderRow(background: Theme.page)
                     .deleteDisabled(draft.days.count == 1)
                 }
                 .onMove { draft.moveDays(fromOffsets: $0, toOffset: $1) }
@@ -522,12 +523,12 @@ struct ManageDaysView: View {
                 Text("Drag a day to change the order the block trains it in. Its weekday moves with it.")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
-                    .listRowBackground(Theme.surface)
+                    .listRowBackground(Theme.page)
                     .listRowSeparator(.hidden)
             }
             .listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(Theme.surface)
+            .background(Theme.page)
             .environment(\.editMode, .constant(.active))
             .navigationTitle("Manage Days")
             .navigationBarTitleDisplayMode(.inline)
@@ -538,6 +539,7 @@ struct ManageDaysView: View {
                 }
             }
         }
+        .presentationDetents([.medium, .large])
     }
 
     private func details(_ day: MesoDraft.Day, index: Int) -> String {
@@ -595,8 +597,8 @@ struct FilledActionButton: View {
 }
 
 extension View {
-    fileprivate func builderRow() -> some View {
-        listRowBackground(Theme.surface)
+    fileprivate func builderRow(background: Color = Theme.surface) -> some View {
+        listRowBackground(background)
             .listRowSeparatorTint(Theme.hairline)
             .listRowInsets(EdgeInsets(top: 8, leading: Theme.gutter, bottom: 8, trailing: Theme.gutter))
     }

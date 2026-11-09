@@ -8,6 +8,7 @@ struct CustomExerciseEditor: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
+    private let original: CustomExerciseDraft
     @State private var draft: CustomExerciseDraft
     @State private var cue: String
     @State private var minReps: Int
@@ -20,10 +21,20 @@ struct CustomExerciseEditor: View {
     ) {
         self.editing = editing
         self.onSaved = onSaved
+        var original = draft
+        original.cue = draft.cue ?? ""
+        self.original = original
         _draft = State(initialValue: draft)
         _cue = State(initialValue: draft.cue ?? "")
         _minReps = State(initialValue: draft.repRange.lowerBound)
         _maxReps = State(initialValue: draft.repRange.upperBound)
+    }
+
+    private var edited: CustomExerciseDraft {
+        var result = draft
+        result.cue = cue
+        result.repRange = minReps...maxReps
+        return result
     }
 
     private var canSave: Bool { !draft.name.trimmingCharacters(in: .whitespaces).isEmpty }
@@ -98,6 +109,7 @@ struct CustomExerciseEditor: View {
             }
         }
         .presentationDetents([.large])
+        .interactiveDismissDisabled(edited != original)
     }
 
     private func header(_ text: String) -> some View {
@@ -108,10 +120,8 @@ struct CustomExerciseEditor: View {
     }
 
     private func save() {
-        var result = draft
+        var result = edited
         result.name = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
-        result.cue = cue
-        result.repRange = minReps...maxReps
         do {
             try store.saveCustomExercise(result, editing: editing)
         } catch {
