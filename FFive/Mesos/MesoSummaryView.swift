@@ -11,7 +11,7 @@ struct MesoSummaryView: View {
         ScrollView {
             VStack(spacing: Theme.gutter) {
                 if summary.sets.isEmpty {
-                    Text("No finished sessions in this block yet.")
+                    Text("No finished sessions in this mesocycle yet.")
                         .font(Theme.detail)
                         .foregroundStyle(Theme.secondary)
                         .scheduleCard()

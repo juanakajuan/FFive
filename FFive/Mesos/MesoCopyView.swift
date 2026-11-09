@@ -55,7 +55,7 @@ struct MesoCopyView: View {
 
     private var loadsNote: String {
         guard let last = source.lastAccumulationDate else {
-            return "Nothing was logged in this block, so week 1 plans its loads fresh."
+            return "Nothing was logged in this mesocycle, so week 1 plans its loads fresh."
         }
         let when = last.formatted(date: .abbreviated, time: .omitted)
         return source.carriesLoads()

@@ -8,12 +8,12 @@ A lifter ends the active block early or once it is complete. Ending finishes eve
 - `end-history` keeps the in-progress session's logged sets as a finished workout in Progress, History.
 - `end-summary` opens the block's summary as a sheet over every end entry point. `Done` (`#sheet.done`) closes it.
 - `end-mesos` marks the Mesos row `Finished`. The `New Mesocycle` "+" is never disabled; while a block runs the builder opens but keeps `Start Mesocycle` disabled, so ending re-enables Start.
-- `end-other-entries` ends the block from the Mesos row's `<name> menu`, the block's detail page (its `End Mesocycle` button has no id, so tap it by label and the dialog by `#dialog.end-mesocycle`), or the "Block complete" screen. `meso-summary.steps` and `rename-mesocycle.steps` drive the Mesos row and the detail page. The "Block complete" screen is not yet driven.
+- `end-other-entries` ends the block from the Mesos row's `<name> menu`, the block's detail page (its `End Mesocycle` button has no id, so tap it by label and the dialog by `#dialog.end-mesocycle`), or the "Mesocycle complete" screen. `meso-summary.steps` and `rename-mesocycle.steps` drive the Mesos row and the detail page. The "Mesocycle complete" screen is not yet driven.
 
 ## How to get to it (user POV)
 
 - Workout tab while a block is active, in a block day or a quick workout: `Workout menu`, then `End Mesocycle`, then confirm.
-- Workout tab once every session is done or skipped: the "Block complete" screen's `End Mesocycle` (`#workout.end`).
+- Workout tab once every session is done or skipped: the "Mesocycle complete" screen's `End Mesocycle` (`#workout.end`).
 - Mesos tab: the block row's `<name> menu`, then `End Mesocycle`, or the same button on the block's detail page.
 
 ## Driving it with ffive-verify

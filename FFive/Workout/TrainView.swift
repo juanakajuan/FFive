@@ -83,7 +83,7 @@ struct TrainView: View {
                         .font(.system(size: 22, weight: .bold))
                         .foregroundStyle(Theme.text)
                     Text(
-                        "Plan a block of 3 to 6 hard weeks and a deload. Every week, your sets, loads, and reps adjust to how the last sessions felt."
+                        "Plan a mesocycle of 3 to 6 hard weeks and a deload. Every week, your sets, loads, and reps adjust to how the last sessions felt."
                     )
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
@@ -135,7 +135,7 @@ struct TrainView: View {
             .padding(.vertical, 16)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
-            WorkoutHeader(title: Text("Block complete"), subtitle: Text(meso.name), progress: 1) {
+            WorkoutHeader(title: Text("Mesocycle complete"), subtitle: Text(meso.name), progress: 1) {
                 Button {
                     showingSchedule = true
                 } label: {
@@ -150,7 +150,7 @@ struct TrainView: View {
             Button("End Mesocycle", role: .destructive) { WorkoutTabActions.end(meso, router: router, store: store) }
                 .a11y(.dialogEndMesocycle)
         } message: {
-            Text("Logged sessions stay in Progress. You can plan a new block right after.")
+            Text("Logged sessions stay in Progress. You can plan a new mesocycle right after.")
         }
     }
 }

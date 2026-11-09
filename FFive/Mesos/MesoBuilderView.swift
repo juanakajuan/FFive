@@ -223,7 +223,7 @@ struct MesoEditorView: View {
                     RIRSchedule(accumulationWeeks: draft.accumulationWeeks)
                         .builderRow()
                     footnote(
-                        "Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next block starts fresh."
+                        "Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next mesocycle starts fresh."
                     )
                 } header: {
                     header("Length")
@@ -519,7 +519,7 @@ struct ManageDaysView: View {
                 }
                 .onMove { draft.moveDays(fromOffsets: $0, toOffset: $1) }
                 .onDelete { draft.days.remove(atOffsets: $0) }
-                Text("Drag a day to change the order the block trains it in. Its weekday moves with it.")
+                Text("Drag a day to change the order the mesocycle trains it in. Its weekday moves with it.")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
                     .listRowBackground(Theme.surface)

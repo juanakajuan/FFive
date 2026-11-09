@@ -77,7 +77,7 @@ struct MesoDetailView: View {
             Button("End Mesocycle", role: .destructive) { router.end(meso, store: store) }
                 .a11y(.dialogEndMesocycle)
         } message: {
-            Text("Logged sessions stay in Progress. You can plan a new block right after.")
+            Text("Logged sessions stay in Progress. You can plan a new mesocycle right after.")
         }
         .confirmationDialog("Delete this mesocycle?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete Mesocycle", role: .destructive) {
@@ -98,7 +98,7 @@ struct MesoDetailView: View {
             }
             Button("Cancel", role: .cancel) {}
         } message: {
-            Text("Saves this block's days and exercises so you can start a new one from them.")
+            Text("Saves this mesocycle's days and exercises so you can start a new one from them.")
         }
     }
 

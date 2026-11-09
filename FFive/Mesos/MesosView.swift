@@ -45,7 +45,7 @@ struct MesosView: View {
                 Button("End Mesocycle", role: .destructive) { router.end(meso, store: store) }
                     .a11y(.dialogEndMesocycle)
             } message: { _ in
-                Text("Logged sessions stay in Progress. You can plan a new block right after.")
+                Text("Logged sessions stay in Progress. You can plan a new mesocycle right after.")
             }
             .confirmationDialog(
                 "Delete this mesocycle?",
@@ -127,10 +127,12 @@ struct MesosView: View {
             Text("No mesocycles yet")
                 .font(Theme.cardTitle)
                 .foregroundStyle(Theme.text)
-            Text("Plan a block of 3 to 6 hard weeks and a deload. Every week adjusts to how the last sessions felt.")
-                .font(Theme.detail)
-                .foregroundStyle(Theme.secondary)
-                .multilineTextAlignment(.center)
+            Text(
+                "Plan a mesocycle of 3 to 6 hard weeks and a deload. Every week adjusts to how the last sessions felt."
+            )
+            .font(Theme.detail)
+            .foregroundStyle(Theme.secondary)
+            .multilineTextAlignment(.center)
             FilledActionButton(title: "Plan a Mesocycle") { showingBuilder = true }
                 .a11y(.mesosPlan)
         }

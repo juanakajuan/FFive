@@ -249,7 +249,7 @@ extension Learn {
                 ),
                 .bullets([
                     "**MV, maintenance volume.** About enough sets to keep the muscle you have. Useful in a busy stretch or while dieting.",
-                    "**MEV, minimum effective volume.** The fewest weekly sets that still produce growth. Each block starts near here.",
+                    "**MEV, minimum effective volume.** The fewest weekly sets that still produce growth. Each mesocycle starts near here.",
                     "**MAV, maximum adaptive volume.** The range where most people grow best. It is a band, not a single number.",
                     "**MRV, maximum recoverable volume.** The most sets you can do and still recover. Past it, performance drops and growth stalls.",
                 ]),
@@ -260,7 +260,7 @@ extension Learn {
                 ),
                 .heading("Why they are only a start"),
                 .paragraph(
-                    "These numbers are averages for intermediate lifters. Your own landmarks depend on genetics, training history, sleep, food, and stress, and they shift over time. You do not need to guess them. The app starts each block near MEV, adds sets when your feedback says you recovered, and holds or cuts sets when you did not. A muscle's weekly total never goes above the MRV shown here."
+                    "These numbers are averages for intermediate lifters. Your own landmarks depend on genetics, training history, sleep, food, and stress, and they shift over time. You do not need to guess them. The app starts each mesocycle near MEV, adds sets when your feedback says you recovered, and holds or cuts sets when you did not. A muscle's weekly total never goes above the MRV shown here."
                 ),
                 .caveat(
                     "These landmark values are coaching estimates, not measurements from a study. Research supports the general shape, in which more sets give more growth with shrinking returns. It does not give exact numbers for each muscle."
@@ -272,27 +272,27 @@ extension Learn {
         Article(
             id: "mesocycle", category: .system,
             title: "Mesocycles", symbol: "calendar",
-            summary: "Why training runs in blocks that get harder each week and then back off.",
+            summary: "Why training runs in mesocycles that get harder each week and then back off.",
             takeaways: [
                 "A mesocycle, or block, is 3 to 6 weeks of building work followed by one easy deload week.",
                 "Sets start near MEV and rise with your feedback. Reps in reserve fall each week, so the last week ends at failure.",
-                "The deload clears fatigue, and the next block starts near MEV again.",
+                "The deload clears fatigue, and the next mesocycle starts near MEV again.",
             ],
             blocks: [
-                .heading("The shape of a block"),
+                .heading("The shape of a mesocycle"),
                 .paragraph(
-                    "The app plans training in mesocycles, also called blocks. A block has 3 to 6 accumulation weeks and then one deload week. During accumulation two things rise together. Each muscle gets more sets as your feedback allows, and each set ends closer to failure."
+                    "The app plans training in mesocycles. A mesocycle has 3 to 6 accumulation weeks and then one deload week. During accumulation two things rise together. Each muscle gets more sets as your feedback allows, and each set ends closer to failure."
                 ),
                 .paragraph(
                     "This layout follows the way RP builds hypertrophy programs. Starting easy leaves room to add work. Ending hard pushes training as far as you can recover from. Fatigue builds along the way, so the hard part stays short."
                 ),
                 .heading("The RIR countdown"),
                 .paragraph(
-                    "Every accumulation week has a target for reps in reserve (RIR), the number of reps you could still do when you end a set. The target counts down to 0 in the final week. Pick a block length to see the plan."
+                    "Every accumulation week has a target for reps in reserve (RIR), the number of reps you could still do when you end a set. The target counts down to 0 in the final week. Pick a mesocycle length to see the plan."
                 ),
                 .rirCountdown,
                 .paragraph(
-                    "The rule takes the number of accumulation weeks left after the current one and caps it at 3. A 4-week block runs 3, 2, 1, 0. A 3-week block starts at 2. A 6-week block holds 3 RIR for three weeks, because the app never sets a target more than 3 reps from failure."
+                    "The rule takes the number of accumulation weeks left after the current one and caps it at 3. A 4-week mesocycle runs 3, 2, 1, 0. A 3-week mesocycle starts at 2. A 6-week mesocycle holds 3 RIR for three weeks, because the app never sets a target more than 3 reps from failure."
                 ),
                 .heading("How sets climb"),
                 .paragraph(
@@ -303,10 +303,10 @@ extension Learn {
                 ),
                 .heading("Then a deload"),
                 .paragraph(
-                    "Early weeks feel easy on purpose. The last week should feel like real work. The deload week that follows cuts sets in half so fatigue can clear (see Deloads). Then a new block starts near MEV again. If you got stronger, the same RIR targets land on heavier weights or more reps than before."
+                    "Early weeks feel easy on purpose. The last week should feel like real work. The deload week that follows cuts sets in half so fatigue can clear (see Deloads). Then a new mesocycle starts near MEV again. If you got stronger, the same RIR targets land on heavier weights or more reps than before."
                 ),
                 .caveat(
-                    "The block length and the countdown come from coaching practice, mostly RP's. Studies show that growth tends to improve as sets end closer to failure (Robinson et al., 2024). No study has tested this exact weekly countdown against other plans."
+                    "The mesocycle length and the countdown come from coaching practice, mostly RP's. Studies show that growth tends to improve as sets end closer to failure (Robinson et al., 2024). No study has tested this exact weekly countdown against other plans."
                 ),
             ],
             evidence: [.israetel2021, .robinson2024]
@@ -361,7 +361,7 @@ extension Learn {
             summary: "How hard each set should be, and how to judge it.",
             takeaways: [
                 "RIR is how many more good reps you could have done when you ended the set.",
-                "Working sets stay between 3 RIR and 0 RIR. The app asks for 0 only in the last week of a block.",
+                "Working sets stay between 3 RIR and 0 RIR. The app asks for 0 only in the last week of a mesocycle.",
                 "Most people have about one more rep left than they think. Guesses are more accurate close to failure, with heavier weights, and in later sets.",
             ],
             blocks: [
@@ -377,7 +377,7 @@ extension Learn {
                     "Growth does not require failure on every set. Refalo and colleagues (2023) found no clear extra growth from going all the way to failure compared with stopping a little short. Robinson and colleagues (2024) found that growth tends to improve as sets end closer to failure, while strength gains look similar across a wide range of RIR."
                 ),
                 .paragraph(
-                    "The app follows both findings. Every working set lands between 3 and 0 RIR, so every set is hard. A target of 0 appears only in the last week of a block, when a deload is a week away."
+                    "The app follows both findings. Every working set lands between 3 and 0 RIR, so every set is hard. A target of 0 appears only in the last week of a mesocycle, when a deload is a week away."
                 ),
                 .rirCountdown,
                 .heading("Judging it better"),
@@ -391,7 +391,7 @@ extension Learn {
                 ]),
                 .heading("Your first week"),
                 .paragraph(
-                    "In the first week of a block the app has no history for an exercise, so it shows **Calibrate** instead of a weight. Pick a load you expect to lift for the bottom of the rep range at the target RIR. Do the set, stop when you reach that RIR, and log the reps you got. If you guessed wrong, the next set or next week corrects it, because targets start from what you log."
+                    "In the first week of a mesocycle the app has no history for an exercise, so it shows **Calibrate** instead of a weight. Pick a load you expect to lift for the bottom of the rep range at the target RIR. Do the set, stop when you reach that RIR, and log the reps you got. If you guessed wrong, the next set or next week corrects it, because targets start from what you log."
                 ),
             ],
             evidence: [.zourdos2016, .helms2016, .refalo2023, .robinson2024, .halperin2022]
@@ -404,7 +404,7 @@ extension Learn {
             takeaways: [
                 "A good exercise trains the target muscle hard without much extra fatigue. RP calls this the stimulus-to-fatigue ratio (SFR).",
                 "Stable machines and cables, a strong stretch, and pain-free joints usually mean a better ratio.",
-                "Keep the same exercises for a whole block so your progress is easy to read.",
+                "Keep the same exercises for a whole mesocycle so your progress is easy to read.",
             ],
             blocks: [
                 .heading("Stimulus and fatigue"),
@@ -428,7 +428,7 @@ extension Learn {
                 ),
                 .heading("Choosing your lifts"),
                 .paragraph(
-                    "Each exercise in the app shows a one-line cue about technique or SFR. When you set up a block, prefer exercises you feel in the target muscle and can do without joint pain. Keep them for the whole block, so that gains in reps and weight reflect real progress and not a new movement. Between blocks, swap any lift whose feedback kept showing joint pain or a weak pump."
+                    "Each exercise in the app shows a one-line cue about technique or SFR. When you set up a mesocycle, prefer exercises you feel in the target muscle and can do without joint pain. Keep them for the whole mesocycle, so that gains in reps and weight reflect real progress and not a new movement. Between mesocycles, swap any lift whose feedback kept showing joint pain or a weak pump."
                 ),
                 .caveat(
                     "SFR is a coaching idea from RP, not something a study can measure directly. Research backs parts of it, such as the benefit of training muscles at long lengths (Maeo et al., 2021). The rest comes from coaching experience."
@@ -466,7 +466,7 @@ extension Learn {
                 ),
                 .heading("Mixing it up"),
                 .paragraph(
-                    "A week with some heavier work and some lighter work builds strength and size together. Within one exercise, keep the same range for the whole block so that progress is easy to see."
+                    "A week with some heavier work and some lighter work builds strength and size together. Within one exercise, keep the same range for the whole mesocycle so that progress is easy to see."
                 ),
             ],
             evidence: [.schoenfeld2021, .schoenfeld2017Load, .halperin2022]
@@ -582,16 +582,16 @@ extension Learn {
         Article(
             id: "deload", category: .recovery,
             title: "Deloads", symbol: "bed.double",
-            summary: "Why every block ends with an easy week, and what changes during it.",
+            summary: "Why every mesocycle ends with an easy week, and what changes during it.",
             takeaways: [
-                "A deload is a planned easy week that lets fatigue clear before the next block.",
+                "A deload is a planned easy week that lets fatigue clear before the next mesocycle.",
                 "The app halves your sets, rounded up, and goes back to week 1 weights and reps.",
                 "Research on deloads is thin. In one trial a full week off did not slow muscle growth, though strength gains were a bit smaller.",
             ],
             blocks: [
                 .heading("Why back off"),
                 .paragraph(
-                    "By the end of a block you are doing more sets than you started with, and every set ends at or near failure. Fatigue has built up. Weights feel heavier than they should, joints ache more, and motivation dips. Another hard week would usually make these worse."
+                    "By the end of a mesocycle you are doing more sets than you started with, and every set ends at or near failure. Fatigue has built up. Weights feel heavier than they should, joints ache more, and motivation dips. Another hard week would usually make these worse."
                 ),
                 .paragraph(
                     "A deload lowers training stress for a short time. A 2023 consensus study of strength and physique coaches (Bell et al.) defined it as a planned period of lower training stress that reduces fatigue, helps recovery, and prepares you for the training that follows."
@@ -608,7 +608,7 @@ extension Learn {
                     "Deloads are common in practice and rarely studied. Coleman and colleagues (2024) had trained lifters either stop lifting for one week in the middle of a 9-week program or keep training. Muscle growth was the same in both groups. The group that kept training gained a bit more strength."
                 ),
                 .paragraph(
-                    "That study removed training completely, which differs from the app's lighter week, so it does not settle the question. The app uses a deload because it lets each block start fresh near MEV, the way RP programs are built. It is a reasonable default, not a proven requirement."
+                    "That study removed training completely, which differs from the app's lighter week, so it does not settle the question. The app uses a deload because it lets each mesocycle start fresh near MEV, the way RP programs are built. It is a reasonable default, not a proven requirement."
                 ),
             ],
             evidence: [.bell2023, .coleman2024, .israetel2021]
@@ -634,11 +634,11 @@ extension Learn {
                 ),
                 .heading("Frequency and recovery"),
                 .paragraph(
-                    "The soreness question checks whether a muscle recovers between sessions. If it keeps healing early, it can take more sets, and the app adds them. If it is still sore every time you train it, the app cuts sets. If that keeps happening across blocks, a program that trains the muscle less often may suit you better."
+                    "The soreness question checks whether a muscle recovers between sessions. If it keeps healing early, it can take more sets, and the app adds them. If it is still sore every time you train it, the app cuts sets. If that keeps happening across mesocycles, a program that trains the muscle less often may suit you better."
                 ),
                 .heading("Picking a schedule"),
                 .bullets([
-                    "Choose a number of training days you can keep for a whole block. A missed session loses all of its sets, so a smaller plan you keep does more than a bigger plan you skip.",
+                    "Choose a number of training days you can keep for a whole mesocycle. A missed session loses all of its sets, so a smaller plan you keep does more than a bigger plan you skip.",
                     "Two or three sessions per muscle each week fits most schedules and most volume levels.",
                     "As a muscle's weekly sets climb toward its MRV, more sessions keep each one shorter.",
                 ]),

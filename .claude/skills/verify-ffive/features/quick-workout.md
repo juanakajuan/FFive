@@ -17,7 +17,7 @@ A lifter logs a free-form session outside any block. They add exercises from the
 
 - Workout tab with no active block: the `Quick Workout` button on the plan card.
 - Workout tab with an active block: `Workout menu`, then `Quick Workout`. It reads `Resume Quick Workout` while one is open.
-- Workout tab with a finished block ("Block complete"): the `Quick Workout` button under `End Mesocycle`.
+- Workout tab with a finished block ("Mesocycle complete"): the `Quick Workout` button under `End Mesocycle`.
 
 ## Driving it with ffive-verify
 
