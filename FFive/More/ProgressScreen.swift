@@ -100,7 +100,6 @@ struct ProgressScreen: View {
                     selection: Binding(get: { week }, set: { selectedWeek = $0 }),
                     label: { $0 == meso.accumulationWeeks ? "DL" : "W\($0 + 1)" })
                 VolumeChart(volumes: volumes)
-                VolumeLegend(includesMaximum: true)
             }
             .themedRow(vertical: 4)
             .listRowSeparator(.hidden)
@@ -184,71 +183,6 @@ struct ProgressScreen: View {
         .onDelete { offsets in
             for index in offsets { store.delete(history[index]) }
         }
-    }
-}
-
-struct VolumeChart: View {
-    let volumes: [MuscleVolume]
-
-    var body: some View {
-        Chart {
-            ForEach(volumes) { volume in
-                let name = volume.muscle.displayName
-                let landmarks = volume.muscle.landmarks
-                RuleMark(
-                    xStart: .value("Productive from", landmarks.mav.lowerBound),
-                    xEnd: .value("Productive to", landmarks.mav.upperBound),
-                    y: .value("Muscle", name)
-                )
-                .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
-                .foregroundStyle(Theme.success)
-                .offset(y: 10)
-                BarMark(
-                    xStart: .value("Start", 0), xEnd: .value("Planned", volume.planned),
-                    y: .value("Muscle", name), height: .fixed(12)
-                )
-                .foregroundStyle(Theme.infoFill)
-                .cornerRadius(2)
-                .annotation(position: .top, alignment: .leading, spacing: 4) {
-                    HStack(spacing: 6) {
-                        Text(name).foregroundStyle(Theme.text)
-                        Text("\(volume.done)/\(volume.planned)").foregroundStyle(Theme.secondary).monospacedDigit()
-                    }
-                    .font(Theme.caption)
-                    .fixedSize()
-                }
-                BarMark(
-                    xStart: .value("Start", 0), xEnd: .value("Done", volume.done),
-                    y: .value("Muscle", name), height: .fixed(12)
-                )
-                .foregroundStyle(Theme.infoText)
-                .cornerRadius(2)
-                RectangleMark(
-                    x: .value("Minimum effective", landmarks.mev), y: .value("Muscle", name),
-                    width: 2, height: .fixed(14)
-                )
-                .foregroundStyle(Theme.text.opacity(0.7))
-                RectangleMark(
-                    x: .value("Maximum recoverable", landmarks.mrv), y: .value("Muscle", name),
-                    width: 2, height: .fixed(14)
-                )
-                .foregroundStyle(Theme.danger)
-            }
-        }
-        .chartXAxis {
-            AxisMarks(values: .stride(by: 5)) {
-                AxisGridLine().foregroundStyle(Theme.hairline)
-                AxisValueLabel().foregroundStyle(Theme.secondary)
-            }
-        }
-        .chartYAxis(.hidden)
-        .chartXAxisLabel {
-            Text("Sets in the week").font(Theme.caption).foregroundStyle(Theme.secondary)
-        }
-        .frame(height: CGFloat(volumes.count) * 44 + 40)
-        .accessibilityElement(children: .ignore)
-        .accessibilityLabel(
-            volumes.map { "\($0.muscle.displayName) \($0.done) of \($0.planned) sets" }.joined(separator: ", "))
     }
 }
 

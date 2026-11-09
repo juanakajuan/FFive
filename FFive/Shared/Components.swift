@@ -192,12 +192,46 @@ struct ChipPicker<Option: Hashable>: View {
     }
 }
 
-struct VolumeBar: View {
+struct VolumeChart: View {
+    let volumes: [MuscleVolume]
+
+    var body: some View {
+        let scale = Double(volumes.map { max($0.muscle.landmarks.mrv, $0.planned, $0.done) }.max() ?? 1)
+        VStack(alignment: .leading, spacing: 12) {
+            ForEach(volumes) { VolumeRow(volume: $0, scale: scale) }
+            HStack(spacing: 12) {
+                swatch(Theme.infoText, "Done")
+                swatch(Theme.infoFill, "Planned")
+                swatch(Theme.success, "Productive")
+                tick(Theme.text.opacity(0.7), "Minimum")
+                tick(Theme.danger, "Maximum")
+            }
+            .font(.system(size: 11))
+            .foregroundStyle(Theme.secondary)
+        }
+    }
+
+    private func tick(_ color: Color, _ text: String) -> some View {
+        HStack(spacing: 4) {
+            Rectangle().fill(color).frame(width: 2, height: 10)
+            Text(text)
+        }
+    }
+
+    private func swatch(_ color: Color, _ text: String) -> some View {
+        HStack(spacing: 4) {
+            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 10, height: 10)
+            Text(text)
+        }
+    }
+}
+
+private struct VolumeRow: View {
     let volume: MuscleVolume
+    let scale: Double
 
     var body: some View {
         let landmarks = volume.muscle.landmarks
-        let scale = Double(max(landmarks.mrv, volume.planned, volume.done))
         HStack(spacing: 10) {
             Text(volume.muscle.displayName)
                 .font(Theme.detail)
@@ -210,8 +244,10 @@ struct VolumeBar: View {
                         RoundedRectangle(cornerRadius: 2).fill(Theme.raised)
                         RoundedRectangle(cornerRadius: 2).fill(Theme.infoFill).frame(width: x(volume.planned))
                         RoundedRectangle(cornerRadius: 2).fill(Theme.infoText).frame(width: x(volume.done))
-                        Rectangle().fill(Theme.text.opacity(0.7)).frame(width: 2, height: 14).offset(
-                            x: x(landmarks.mev) - 1)
+                        Rectangle().fill(Theme.text.opacity(0.7)).frame(width: 2, height: 14)
+                            .offset(x: x(landmarks.mev) - 1)
+                        Rectangle().fill(Theme.danger).frame(width: 2, height: 14)
+                            .offset(x: x(landmarks.mrv) - 1)
                     }
                     .frame(height: 10)
                     Capsule()
@@ -230,36 +266,6 @@ struct VolumeBar: View {
         .accessibilityLabel(
             "\(volume.muscle.displayName), \(volume.done) of \(volume.planned) sets done, minimum effective \(landmarks.mev), maximum recoverable \(landmarks.mrv)"
         )
-    }
-}
-
-struct VolumeLegend: View {
-    var includesMaximum = false
-
-    var body: some View {
-        HStack(spacing: 12) {
-            item(Theme.infoText, "Done")
-            item(Theme.infoFill, "Planned")
-            item(Theme.success, "Productive")
-            tick(Theme.text.opacity(0.7), "Minimum")
-            if includesMaximum { tick(Theme.danger, "Maximum") }
-        }
-        .font(.system(size: 11))
-        .foregroundStyle(Theme.secondary)
-    }
-
-    private func tick(_ color: Color, _ text: String) -> some View {
-        HStack(spacing: 4) {
-            Rectangle().fill(color).frame(width: 2, height: 10)
-            Text(text)
-        }
-    }
-
-    private func item(_ color: Color, _ text: String) -> some View {
-        HStack(spacing: 4) {
-            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 10, height: 10)
-            Text(text)
-        }
     }
 }
 
