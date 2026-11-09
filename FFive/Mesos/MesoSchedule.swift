@@ -164,9 +164,8 @@ struct WeekVolumeCard: View {
                 Spacer()
                 Text("done / planned").font(Theme.caption).foregroundStyle(Theme.secondary)
             }
-            ForEach(volumes) { VolumeBar(volume: $0) }
-            VolumeLegend()
-            Text("Each bar ends at the most weekly sets that muscle can usually recover from.")
+            VolumeChart(volumes: volumes)
+            Text("The red tick is the most weekly sets that muscle can usually recover from.")
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondary)
         }
