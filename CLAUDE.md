@@ -13,6 +13,7 @@ Never change files or commit in the main checkout. It stays on `main` and only p
 
 - Start each change in its own worktree off `origin/main`: `git fetch origin && git worktree add -b <branch> .claude/worktrees/<name> origin/main`. Name the branch `fix/<issue>-<slug>` or `feat/<issue>-<slug>`.
 - Edit, run `scripts/check`, commit and push from the worktree, then open the PR.
+- Every change ends in an open PR. Once `scripts/check` passes, push the branch and run `gh pr create` without asking. This rule is standing approval to push a non-`main` branch and open a PR. It does not cover pushing to `main`, force-pushing, or merging.
 - `scripts/git-hooks/pre-commit` refuses commits on `main`. Enable it once per clone with `git config core.hooksPath scripts/git-hooks`.
 
 ## Layout
@@ -35,6 +36,7 @@ Each rule is enforced by the check named beside it. A rule with no check is a ju
 | Each lint rule still catches its real past mistake | `scripts/lint.sh --self-test` |
 | Every PR and every push to main runs the gate in CI | `.github/workflows/check.yml` |
 | No commit lands on `main` locally; changes happen in a worktree | `scripts/git-hooks/pre-commit` |
+| Every change ends in an open PR, opened without asking | none, judgment |
 | A PR or issue whose change shows on screen carries screenshots or a recording | none, judgment |
 
 ## Pull requests and issues
