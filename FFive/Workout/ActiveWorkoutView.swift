@@ -403,15 +403,15 @@ struct ActiveWorkoutView: View {
                 : "Every exercise was removed from this day. Add one to train it, or skip the day."
         ) {
             Button("Add Exercise", systemImage: "plus") { picker = .add }
-                .buttonStyle(.wideFilled)
+                .buttonStyle(.primary)
                 .a11y(.workoutAddExercise)
             if let meso = workout.mesocycle, let key = workout.key, meso.canSkip(key) {
                 Button("Skip Day", systemImage: "forward") { skip(key, of: meso) }
-                    .buttonStyle(.wideOutlined)
+                    .buttonStyle(.secondary)
                     .a11y(.workoutSkipDay)
             } else {
                 Button("Discard Workout", systemImage: "trash") { confirmDiscard = true }
-                    .buttonStyle(.wideOutlined)
+                    .buttonStyle(.secondary)
                     .a11y(.workoutDiscard)
             }
         }

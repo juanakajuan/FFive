@@ -51,12 +51,8 @@ struct MesoGuidedView: View {
                 MesoEditorView(draft: MesoDraft(daysPerWeek: daysPerWeek, priorities: priorities), onStart: onStart)
             } label: {
                 Text("Build Plan")
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Theme.page)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .background(Theme.text, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             }
-            .buttonStyle(.plain)
+            .buttonStyle(.primary)
             .a11y(.builderGuidedBuild)
             .padding(.horizontal, Theme.gutter)
             .padding(.vertical, 10)

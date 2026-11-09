@@ -130,7 +130,7 @@ struct MesosView: View {
                 "Plan a mesocycle of 3 to 6 hard weeks and a deload. Every week adjusts to how the last sessions felt."
         ) {
             Button("Plan a Mesocycle") { showingBuilder = true }
-                .buttonStyle(.wideFilled)
+                .buttonStyle(.primary)
                 .a11y(.mesosPlan)
         }
     }
