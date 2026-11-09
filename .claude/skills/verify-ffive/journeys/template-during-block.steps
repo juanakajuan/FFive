@@ -11,7 +11,8 @@ store-expect Mesocycle name "Active Block"
 tap #tab.templates
 wait text "Templates"
 shot 01-templates-with-active-block
-tap #mesos.new
+wait button "New Template"
+tap #templates.new
 wait nav "Customize"
 value #builder.name "My Mesocycle"
 wait text "End Active Block before starting a new mesocycle."
