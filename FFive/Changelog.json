@@ -1,6 +1,67 @@
 {
   "releases" : [
     {
+      "date" : "2026-11-08",
+      "entries" : [
+        {
+          "date" : "2026-11-08",
+          "kind" : "fix",
+          "text" : "Compare CloudKit schema fields in the C locale so the TestFlight gate stops failing on Mesocycle"
+        },
+        {
+          "date" : "2026-11-08",
+          "kind" : "fix",
+          "text" : "Give an empty workout an empty state with Add Exercise and a way out"
+        },
+        {
+          "date" : "2026-11-08",
+          "kind" : "fix",
+          "text" : "Ask for feedback only on a muscle that logged a set"
+        },
+        {
+          "date" : "2026-11-08",
+          "kind" : "fix",
+          "text" : "Save a text alert on the first tap while the keyboard is up"
+        },
+        {
+          "date" : "2026-11-08",
+          "kind" : "fix",
+          "text" : "Label the Templates filter lists as Days per week and Emphasis submenus"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "fix",
+          "text" : "Commit the TestFlight version bump only after the upload succeeds"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Delete all data from Settings"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Copy a template into a custom one and open it for editing"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Built-in templates for every emphasis at 2-6 days, plus barbell- and dumbbell-only"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Preview a template before planning from it"
+        },
+        {
+          "date" : "2026-11-07",
+          "kind" : "feature",
+          "text" : "Filter exercises to ones you've performed"
+        }
+      ],
+      "version" : "1.6"
+    },
+    {
       "date" : "2026-11-07",
       "entries" : [
         {
