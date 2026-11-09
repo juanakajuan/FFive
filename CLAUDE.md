@@ -7,6 +7,14 @@
 - `scripts/lint.sh` holds the lint rules. Its baseline, `scripts/lint-baseline.txt`, lists the hits that already exist. A new hit fails, and so does a baseline line whose hit is gone. Fix a hit and delete its line. Add a line only with the operator's approval.
 - Use the `verify-ffive` skill to prove a change on the simulator. `scripts/check` does not drive the app.
 
+## Branches and worktrees
+
+Never change files or commit in the main checkout. It stays on `main` and only pulls.
+
+- Start each change in its own worktree off `origin/main`: `git fetch origin && git worktree add -b <branch> .claude/worktrees/<name> origin/main`. Name the branch `fix/<issue>-<slug>` or `feat/<issue>-<slug>`.
+- Edit, run `scripts/check`, commit and push from the worktree, then open the PR.
+- `scripts/git-hooks/pre-commit` refuses commits on `main`. Enable it once per clone with `git config core.hooksPath scripts/git-hooks`.
+
 ## Layout
 
 - `FFiveCore/` is a local Swift package with the engine, catalog, `@Model` types and planner. Domain rules and model behavior live there, and the app sees only what is `public`. Add `public` only to a symbol a view uses.
@@ -26,6 +34,7 @@ Each rule is enforced by the check named beside it. A rule with no check is a ju
 | Swift files match `.swift-format` and pass its lint rules | `scripts/format.sh --lint` |
 | Each lint rule still catches its real past mistake | `scripts/lint.sh --self-test` |
 | Every PR and every push to main runs the gate in CI | `.github/workflows/check.yml` |
+| No commit lands on `main` locally; changes happen in a worktree | `scripts/git-hooks/pre-commit` |
 | A PR or issue whose change shows on screen carries screenshots or a recording | none, judgment |
 
 ## Pull requests and issues

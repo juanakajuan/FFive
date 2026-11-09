@@ -1,0 +1,9 @@
+#!/bin/sh
+# Refuse commits on main. Work happens on a branch in its own worktree.
+# Enable once per clone: git config core.hooksPath scripts/git-hooks
+branch=$(git symbolic-ref --short -q HEAD)
+if [ "$branch" = "main" ]; then
+    echo "pre-commit: refusing to commit on main." >&2
+    echo "Make a worktree: git worktree add -b <branch> .claude/worktrees/<name> origin/main" >&2
+    exit 1
+fi
