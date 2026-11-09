@@ -9,7 +9,7 @@ enum AppTab: CaseIterable, Hashable {
     var title: String {
         switch self {
         case .workout: "Workout"
-        case .mesos: "Mesos"
+        case .mesos: "Mesocycles"
         case .templates: "Templates"
         case .exercises: "Exercises"
         case .more: "More"

@@ -378,7 +378,7 @@ extension Learn {
         private var summary: String {
             let countdown = (0..<weeks).map { String(Learn.rir(week: $0, accumulationWeeks: weeks)) }
             return
-                "A \(weeks)-week block runs \(countdown.joined(separator: ", ")) RIR, then a deload week at half the sets."
+                "A \(weeks)-week mesocycle runs \(countdown.joined(separator: ", ")) RIR, then a deload week at half the sets."
         }
     }
 

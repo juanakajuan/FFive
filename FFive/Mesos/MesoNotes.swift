@@ -19,7 +19,7 @@ struct MesoNotesCard: View {
                 }
             }
             if meso.notes.isEmpty {
-                Text("No notes on this block yet.")
+                Text("No notes on this mesocycle yet.")
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
             } else {

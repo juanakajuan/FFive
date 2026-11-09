@@ -153,7 +153,7 @@ struct ActiveWorkoutView: View {
                     .a11y(.dialogEndMesocycle)
                 }
             } message: {
-                Text("Logged sessions stay in Progress. You can plan a new block right after.")
+                Text("Logged sessions stay in Progress. You can plan a new mesocycle right after.")
             }
             .alert(
                 workout.mesocycle == nil ? "Rename Workout" : "Rename Day",
@@ -1252,7 +1252,7 @@ private struct NoteEditor: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel(pinned ? "Unpin from \(dayName)" : "Pin to \(dayName)")
                         .a11y(.notePin)
-                        Text("Shows on every later \(dayName) session in this block until you unpin it.")
+                        Text("Shows on every later \(dayName) session in this mesocycle until you unpin it.")
                             .font(Theme.detail)
                             .foregroundStyle(Theme.secondary)
                     }

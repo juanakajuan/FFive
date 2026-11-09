@@ -48,7 +48,7 @@ struct MusclePrioritiesCard: View {
                     store.setPriority($0, of: muscle, in: meso)
                 }
             }
-            Text(MusclePriority.explanation + " A change applies from the next session the block builds.")
+            Text(MusclePriority.explanation + " A change applies from the next session the mesocycle builds.")
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondary)
         }
