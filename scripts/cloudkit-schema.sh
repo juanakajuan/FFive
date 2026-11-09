@@ -10,6 +10,8 @@
 #
 # Auth: a CloudKit management token saved with `xcrun cktool save-token --type management`.
 set -eu
+# comm needs both lists in one collation; schema-fields.txt is sorted bytewise.
+export LC_ALL=C
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
 environment="${1:-production}"
