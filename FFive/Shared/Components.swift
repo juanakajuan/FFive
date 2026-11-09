@@ -44,14 +44,6 @@ struct StatsRow: View {
     }
 }
 
-struct MuscleChip: View {
-    let muscle: Muscle
-
-    var body: some View {
-        MuscleTag(muscle: muscle)
-    }
-}
-
 struct PhaseBadge: View {
     let phase: WeekPhase
 
