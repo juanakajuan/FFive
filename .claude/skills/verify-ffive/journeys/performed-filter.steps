@@ -5,7 +5,7 @@ tap #tab.exercises timeout=20
 wait #exercises.row.ab-wheel
 tap button "Filters"
 tap #exercises.performed-only
-wait text "No exercises match."
+wait text "No matching exercises"
 shot exercises-empty
 tap #tab.workout
 tap #workout.quick timeout=10
@@ -30,7 +30,7 @@ selected #set.log.1
 tap #tab.exercises
 tap button "Filters"
 tap #exercises.performed-only
-wait text "No exercises match."
+wait text "No matching exercises"
 tap #tab.workout
 tap #workout.finish timeout=10
 store-expect Workout endDate not-null

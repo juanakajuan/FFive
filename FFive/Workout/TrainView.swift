@@ -78,31 +78,19 @@ struct TrainView: View {
     private var noMesoView: some View {
         ScrollView {
             VStack(spacing: 16) {
-                VStack(alignment: .leading, spacing: 12) {
-                    Text("Train in mesocycles")
-                        .font(.system(size: 22, weight: .bold))
-                        .foregroundStyle(Theme.text)
-                    Text(
-                        "Plan a mesocycle of 3 to 6 hard weeks and a deload. Every week, your sets, loads, and reps adjust to how the last sessions felt."
-                    )
-                    .font(Theme.detail)
-                    .foregroundStyle(Theme.secondary)
+                EmptyState(
+                    "No active mesocycle", systemImage: "calendar",
+                    message: "Plan a mesocycle of 3 to 6 hard weeks and a deload, or log a quick workout with no plan."
+                ) {
                     Button("Plan a Mesocycle") { showingBuilder = true }
                         .buttonStyle(.wideFilled)
                         .a11y(.workoutPlan)
-                        .padding(.top, 4)
                     Button("Quick Workout") {
                         WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store)
                     }
                     .buttonStyle(.wideOutlined)
                     .a11y(.workoutQuick)
-                    Text("Log a free-form session with no plan.")
-                        .font(Theme.caption)
-                        .foregroundStyle(Theme.secondary)
                 }
-                .padding(.horizontal, Theme.gutter)
-                .padding(.bottom, 8)
-                .surfaceCard()
 
                 StatsRow(stats: store.weekStats())
                     .padding(.horizontal, Theme.gutter)

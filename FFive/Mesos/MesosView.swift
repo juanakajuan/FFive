@@ -123,20 +123,15 @@ struct MesosView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            Text("No mesocycles yet")
-                .font(Theme.cardTitle)
-                .foregroundStyle(Theme.text)
-            Text(
+        EmptyState(
+            "No mesocycles yet", systemImage: "calendar",
+            message:
                 "Plan a mesocycle of 3 to 6 hard weeks and a deload. Every week adjusts to how the last sessions felt."
-            )
-            .font(Theme.detail)
-            .foregroundStyle(Theme.secondary)
-            .multilineTextAlignment(.center)
-            FilledActionButton(title: "Plan a Mesocycle") { showingBuilder = true }
+        ) {
+            Button("Plan a Mesocycle") { showingBuilder = true }
+                .buttonStyle(.wideFilled)
                 .a11y(.mesosPlan)
         }
-        .padding(Theme.gutter * 2)
     }
 }
 
