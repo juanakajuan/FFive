@@ -127,6 +127,7 @@ public enum A11y: String, CaseIterable {
     case builderAddMuscle = "builder.add-muscle"
     case menuAutofill = "menu.autofill"
     case menuClearExercises = "menu.clear-exercises"
+    case templatesNew = "templates.new"
     case templatesCustom = "templates.custom"
     case templatesMenu = "templates.menu"
     case menuRenameTemplate = "menu.rename-template"

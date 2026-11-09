@@ -95,8 +95,8 @@ struct TemplatesView: View {
             }
             .background(Theme.surface)
             .screenHeader("Templates") {
-                HeaderAddButton(label: "New Mesocycle") { builder = .blank }
-                    .a11y(.mesosNew)
+                HeaderAddButton(label: "New Template") { builder = .blank }
+                    .a11y(.templatesNew)
             }
             .navigationDestination(for: TemplatePreviewScreen.Subject.self) { TemplatePreviewScreen(subject: $0) }
             .sheet(item: $builder) { MesoBuilderView(startAt: $0) }
