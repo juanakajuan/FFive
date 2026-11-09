@@ -1089,9 +1089,13 @@ struct FeedbackCard: View {
                         .multilineTextAlignment(.leading)
                 }
                 Spacer()
-                Image(systemName: feedback.isRated ? "checkmark.circle.fill" : "chevron.right")
-                    .font(.system(size: feedback.isRated ? 22 : 15, weight: .semibold))
-                    .foregroundStyle(feedback.isRated ? Theme.success : Theme.secondary)
+                if feedback.isRated {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 22, weight: .semibold))
+                        .foregroundStyle(Theme.success)
+                } else {
+                    RowChevron()
+                }
             }
             .contentShape(Rectangle())
         }

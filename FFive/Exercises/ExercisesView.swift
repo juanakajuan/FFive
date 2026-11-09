@@ -117,9 +117,7 @@ struct ExercisesView: View {
                 .foregroundStyle(Theme.secondary)
             }
             Spacer(minLength: 8)
-            Image(systemName: "chevron.right")
-                .font(.system(size: 15, weight: .medium))
-                .foregroundStyle(Theme.text)
+            RowChevron()
         }
         .padding(.horizontal, Theme.gutter)
         .frame(minHeight: 73)

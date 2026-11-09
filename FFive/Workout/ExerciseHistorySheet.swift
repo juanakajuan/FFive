@@ -93,9 +93,7 @@ private struct SessionRow: View {
                     .font(Theme.detail)
                 }
             }
-            Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(Theme.secondary)
+            RowChevron()
                 .padding(.top, 4)
         }
         .padding(.horizontal, Theme.gutter)

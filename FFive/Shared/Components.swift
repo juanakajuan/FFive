@@ -329,3 +329,13 @@ extension EmptyState where Actions == EmptyView {
         self.init(title, systemImage: systemImage, message: message) { EmptyView() }
     }
 }
+
+/// The trailing chevron on every row that opens a screen.
+struct RowChevron: View {
+    var body: some View {
+        Image(systemName: "chevron.right")
+            .font(.system(size: 13, weight: .medium))
+            .foregroundStyle(Theme.secondary)
+            .accessibilityHidden(true)
+    }
+}

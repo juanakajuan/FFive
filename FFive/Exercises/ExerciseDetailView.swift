@@ -154,9 +154,7 @@ struct ExerciseDetailView: View {
             Text("\(session.best.weightText(unit: store.settings.weightUnit)) × \(session.best.reps)")
                 .font(Theme.body.monospacedDigit())
                 .foregroundStyle(Theme.text)
-            Image(systemName: "chevron.right")
-                .font(.system(size: 13, weight: .medium))
-                .foregroundStyle(Theme.secondary)
+            RowChevron()
         }
         .padding(.horizontal, Theme.gutter)
         .frame(minHeight: 60)
