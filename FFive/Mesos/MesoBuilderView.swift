@@ -203,7 +203,7 @@ struct MesoEditorView: View {
                         "Mesocycle name", text: $draft.name,
                         prompt: Text("Mesocycle name").foregroundStyle(Theme.secondary)
                     )
-                    .builderField()
+                    .formField()
                     .builderRow()
                     .a11y(.builderName)
                 } header: {
@@ -255,7 +255,7 @@ struct MesoEditorView: View {
                 Section {
                     TextField("Day name", text: $day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary))
                         .font(.system(size: 16, weight: .semibold))
-                        .builderField()
+                        .formField()
                         .builderRow()
                     if editing == nil {
                         Picker("Weekday", selection: $day.weekday) {
@@ -509,7 +509,7 @@ struct ManageDaysView: View {
                         TextField(
                             "Day name", text: $day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary)
                         )
-                        .builderField()
+                        .formField()
                         .a11y(.manageDaysName, index)
                         Text(details(day, index: index))
                             .font(Theme.caption)
@@ -601,14 +601,5 @@ extension View {
         listRowBackground(background)
             .listRowSeparatorTint(Theme.hairline)
             .listRowInsets(EdgeInsets(top: 8, leading: Theme.gutter, bottom: 8, trailing: Theme.gutter))
-    }
-
-    fileprivate func builderField() -> some View {
-        font(Theme.body)
-            .foregroundStyle(Theme.text)
-            .padding(.horizontal, 12)
-            .frame(minHeight: 40)
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: 2))
-            .overlay(RoundedRectangle(cornerRadius: 2).stroke(Theme.hairline, lineWidth: 1))
     }
 }

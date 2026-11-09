@@ -41,57 +41,59 @@ struct CustomExerciseEditor: View {
 
     var body: some View {
         NavigationStack {
-            Form {
-                Section {
+            ScrollView {
+                VStack(alignment: .leading, spacing: 12) {
+                    SectionHeading(text: "Name")
                     TextField("Name", text: $draft.name, prompt: Text("Name").foregroundStyle(Theme.secondary))
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.text)
+                        .formField()
                         .onChange(of: draft.name) { nameTaken = false }
                         .a11y(.editorName)
                     if nameTaken {
                         Text("Another exercise already has this name. It may be hidden.")
-                            .font(Theme.caption)
+                            .font(Theme.detail)
                             .foregroundStyle(Theme.danger)
                     }
-                } header: {
-                    header("Name")
-                }
-                Section {
-                    Picker("Muscle", selection: $draft.muscle) {
-                        ForEach(Muscle.allCases) { Text($0.displayName).tag($0) }
+
+                    SectionHeading(text: "Trains")
+                        .padding(.top, 20)
+                    OutlinedGroup {
+                        pickerRow("Muscle") {
+                            Picker("Muscle", selection: $draft.muscle) {
+                                ForEach(Muscle.allCases) { Text($0.displayName).tag($0) }
+                            }
+                            .a11y(.editorMuscle)
+                        }
+                        divider
+                        pickerRow("Equipment") {
+                            Picker("Equipment", selection: $draft.equipment) {
+                                ForEach(Equipment.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                            }
+                            .a11y(.editorEquipment)
+                        }
                     }
-                    .a11y(.editorMuscle)
-                    Picker("Equipment", selection: $draft.equipment) {
-                        ForEach(Equipment.allCases, id: \.self) { Text($0.displayName).tag($0) }
+                    footnote("Muscle drives volume. Equipment sets how load steps up and whether body weight counts.")
+
+                    SectionHeading(text: "Rep range")
+                        .padding(.top, 20)
+                    OutlinedGroup {
+                        Stepper("Min \(minReps) reps", value: $minReps, in: 1...maxReps)
+                            .groupRow()
+                        divider
+                        Stepper("Max \(maxReps) reps", value: $maxReps, in: minReps...50)
+                            .groupRow()
                     }
-                    .a11y(.editorEquipment)
-                } header: {
-                    header("Trains")
-                } footer: {
-                    Text("Muscle drives volume. Equipment sets how load steps up and whether body weight counts.")
-                        .font(Theme.caption)
-                }
-                Section {
-                    Stepper("Min \(minReps) reps", value: $minReps, in: 1...maxReps)
-                    Stepper("Max \(maxReps) reps", value: $maxReps, in: minReps...50)
-                } header: {
-                    header("Rep range")
-                }
-                Section {
+
+                    SectionHeading(text: "Cue")
+                        .padding(.top, 20)
                     TextField(
                         "Cue", text: $cue, prompt: Text("Optional").foregroundStyle(Theme.secondary), axis: .vertical
                     )
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.text)
                     .lineLimit(1...4)
+                    .formField()
                     .a11y(.editorCue)
-                } header: {
-                    header("Cue")
                 }
+                .padding(Theme.gutter)
             }
-            .font(Theme.body)
-            .foregroundStyle(Theme.text)
-            .scrollContentBackground(.hidden)
             .scrollDismissesKeyboard(.interactively)
             .background(Theme.page)
             .navigationTitle(editing == nil ? "New Exercise" : "Edit Exercise")
@@ -112,11 +114,26 @@ struct CustomExerciseEditor: View {
         .interactiveDismissDisabled(edited != original)
     }
 
-    private func header(_ text: String) -> some View {
+    private var divider: some View {
+        Rectangle().fill(Theme.hairline).frame(height: 1).padding(.leading, 12)
+    }
+
+    private func pickerRow(_ title: String, @ViewBuilder picker: () -> some View) -> some View {
+        HStack {
+            Text(title)
+            Spacer()
+            picker()
+                .labelsHidden()
+                .tint(Theme.secondary)
+        }
+        .groupRow()
+    }
+
+    private func footnote(_ text: String) -> some View {
         Text(text)
-            .font(Theme.tag)
-            .textCase(.uppercase)
+            .font(Theme.detail)
             .foregroundStyle(Theme.secondary)
+            .fixedSize(horizontal: false, vertical: true)
     }
 
     private func save() {
@@ -130,5 +147,15 @@ struct CustomExerciseEditor: View {
         }
         dismiss()
         onSaved(result)
+    }
+}
+
+extension View {
+    /// One row in an `OutlinedGroup`, as on Settings.
+    fileprivate func groupRow() -> some View {
+        font(Theme.body)
+            .foregroundStyle(Theme.text)
+            .padding(.horizontal, 12)
+            .frame(minHeight: 44)
     }
 }
