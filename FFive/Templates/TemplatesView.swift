@@ -190,15 +190,6 @@ struct TemplateListRow: View {
 
     var body: some View {
         HStack(spacing: 8) {
-            details
-            if opensScreen { RowChevron() }
-        }
-        .padding(.vertical, 12)
-        .contentShape(Rectangle())
-    }
-
-    private var details: some View {
-        HStack(alignment: .bottom, spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
                 HStack(spacing: 4) {
                     if template.emphasis != nil {
@@ -225,7 +216,10 @@ struct TemplateListRow: View {
             CountPill(text: "\(template.days.count)/week")
                 // The pill shares the card's raised fill, so lift it to stay visible.
                 .brightness(0.07)
+            if opensScreen { RowChevron() }
         }
+        .padding(.vertical, 12)
+        .contentShape(Rectangle())
     }
 }
 
