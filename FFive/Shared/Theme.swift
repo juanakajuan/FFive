@@ -166,6 +166,17 @@ extension View {
         }
     }
     func themedField(height: CGFloat = 32) -> some View { modifier(ThemedField(height: height)) }
+
+    /// A leading-aligned text field in a form: a name, a cue.
+    func formField() -> some View {
+        font(Theme.body)
+            .foregroundStyle(Theme.text)
+            .padding(.horizontal, 12)
+            .padding(.vertical, 8)
+            .frame(minHeight: 40)
+            .background(Theme.field, in: RoundedRectangle(cornerRadius: 2))
+            .overlay(RoundedRectangle(cornerRadius: 2).stroke(Theme.hairline, lineWidth: 1))
+    }
 }
 
 struct LogCheckbox: View {
