@@ -1,6 +1,6 @@
 # Manage builder days
 
-In the builder's Customize screen, the `Options` menu (`#builder.menu`) holds `Manage Days` (`#menu.manage-days`). It opens a sheet listing every day in edit mode: drag a row's handle to reorder, edit its name field to rename, or tap its red minus then `Delete` to delete (the last remaining day can't be deleted). `Done` (`#manage-days.done`) closes it. The order in the sheet is the order the started block trains the days: `MesoDay.order` follows it, so Day 1 of the schedule is the top row. A day's weekday label moves with it.
+In the builder's Customize screen, the `Options` menu (`#builder.menu`) holds `Manage Days` (`#menu.manage-days`). It opens a sheet listing every day in edit mode: drag a row's handle to reorder, edit its name field to rename, or tap its red minus then `Delete` to delete (the last remaining day can't be deleted). `Done` (`#manage-days.done`) closes it. The sheet opens at half height; `tap button "Sheet Grabber"` expands it before you drive the rows. The order in the sheet is the order the started block trains the days: `MesoDay.order` follows it, so Day 1 of the schedule is the top row. A day's weekday label moves with it.
 
 ## Driving it with ffive-verify
 
