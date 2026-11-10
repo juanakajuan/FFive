@@ -313,14 +313,17 @@ struct FilterBar<MenuContent: View>: View {
     }
 }
 
-struct OutlinedGroup<Content: View>: View {
+/// The one grouped box for settings-style menus. It owns the 12 pt inner inset, so rows add no horizontal
+/// padding; callers own the outer gutter. Tab-root browse lists use edge-to-edge rows instead.
+struct GroupedCard<Content: View>: View {
     let content: Content
 
     init(@ViewBuilder content: () -> Content) { self.content = content() }
 
     var body: some View {
-        VStack(spacing: 0) { content }
-            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.hairline, lineWidth: 1))
+        VStack(alignment: .leading, spacing: 0) { content }
+            .padding(.horizontal, 12)
+            .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
     }
 }
 

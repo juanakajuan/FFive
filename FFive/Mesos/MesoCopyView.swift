@@ -60,7 +60,7 @@ struct MesoCopyView: View {
     }
 
     private func dayCard(_ day: MesoDraft.Day, number: Int) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
+        GroupedCard {
             HStack(alignment: .firstTextBaseline) {
                 Text(day.name).font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.text)
                 Spacer()
@@ -85,8 +85,6 @@ struct MesoCopyView: View {
                 .padding(.vertical, 10)
             }
         }
-        .padding(.horizontal, 12)
-        .background(Theme.raised, in: RoundedRectangle(cornerRadius: 8))
         .padding(.horizontal, Theme.gutter)
         .padding(.top, 16)
     }
