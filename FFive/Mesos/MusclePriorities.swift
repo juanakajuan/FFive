@@ -52,9 +52,7 @@ struct MusclePrioritiesCard: View {
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondary)
         }
-        .padding(Theme.gutter)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+        .surfaceCard()
     }
 }
 

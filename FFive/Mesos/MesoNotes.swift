@@ -26,9 +26,7 @@ struct MesoNotesCard: View {
                 ForEach(meso.notes.reversed()) { MesoNoteText(note: $0) }
             }
         }
-        .padding(Theme.gutter)
-        .frame(maxWidth: .infinity, alignment: .leading)
-        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+        .surfaceCard()
     }
 }
 
@@ -74,8 +72,7 @@ struct MesoNotesScreen: View {
                             .accessibilityLabel("Delete note")
                             .a11y(.mesoNoteDelete, index + 1)
                         }
-                        .padding(Theme.gutter)
-                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                        .surfaceCard()
                     }
                 }
                 .padding(Theme.gutter)
