@@ -138,7 +138,7 @@ public enum Progression {
         weight * (1 + Double(reps + rir) / 30)
     }
 
-    public static func startingReps(in repRange: ClosedRange<Int>) -> Int {
+    static func startingReps(in repRange: ClosedRange<Int>) -> Int {
         let middle = (repRange.lowerBound + repRange.upperBound) / 2
         return (repRange.lowerBound + middle) / 2
     }
@@ -153,12 +153,12 @@ public enum Progression {
     }
 
     /// Reps that leave `rir` in reserve at `load`, from an estimated 1RM. Inverse of `estimatedOneRepMax`.
-    public static func reps(atLoad load: Double, rir: Int, oneRepMax: Double) -> Int {
+    static func reps(atLoad load: Double, rir: Int, oneRepMax: Double) -> Int {
         guard load > 0 else { return 0 }
         return Int((30 * (oneRepMax / load - 1)).rounded(.down)) - rir
     }
 
-    public static func roundDown(_ weight: Double, to increment: Double) -> Double {
+    static func roundDown(_ weight: Double, to increment: Double) -> Double {
         guard increment > 0 else { return weight }
         return (weight / increment + 1e-9).rounded(.down) * increment
     }
