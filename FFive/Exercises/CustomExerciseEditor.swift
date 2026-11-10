@@ -6,7 +6,6 @@ struct CustomExerciseEditor: View {
     let editing: CustomExercise?
     let onSaved: (ExerciseListing) -> Void
 
-    @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
     private let original: CustomExerciseDraft
     @State private var draft: CustomExerciseDraft
@@ -25,7 +24,10 @@ struct CustomExerciseEditor: View {
     private var canSave: Bool { !draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     var body: some View {
-        NavigationStack {
+        DraftSheet(
+            editing == nil ? "New Exercise" : "Edit Exercise", isDirty: draft != original, canSave: canSave,
+            detents: [.large], cancelID: .editorCancel, saveID: .editorSave, save: save
+        ) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     SectionHeading(text: "Name")
@@ -81,22 +83,7 @@ struct CustomExerciseEditor: View {
             }
             .scrollDismissesKeyboard(.interactively)
             .background(Theme.page)
-            .navigationTitle(editing == nil ? "New Exercise" : "Edit Exercise")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .a11y(.editorCancel)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save)
-                        .disabled(!canSave)
-                        .a11y(.editorSave)
-                }
-            }
         }
-        .presentationDetents([.large])
-        .interactiveDismissDisabled(draft != original)
     }
 
     private func pickerRow(_ title: String, @ViewBuilder picker: () -> some View) -> some View {
@@ -110,13 +97,12 @@ struct CustomExerciseEditor: View {
         .groupRow()
     }
 
-    private func save() {
+    private func save() throws {
         do {
-            let saved = try store.saveCustomExercise(draft, editing: editing)
-            dismiss()
-            onSaved(saved)
+            onSaved(try store.saveCustomExercise(draft, editing: editing))
         } catch {
             nameTaken = true
+            throw error
         }
     }
 }

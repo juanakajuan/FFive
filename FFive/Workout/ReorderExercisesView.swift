@@ -5,7 +5,6 @@ struct ReorderExercisesView: View {
     let workout: Workout
 
     @Environment(Store.self) private var store
-    @Environment(\.dismiss) private var dismiss
 
     @State private var draft: [Exercise]
     @State private var scope = PlanScope.laterWeeks
@@ -16,7 +15,12 @@ struct ReorderExercisesView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        DraftSheet(
+            "Reorder Exercises", isDirty: draft != workout.sortedExercises,
+            cancelID: .reorderCancel, saveID: .reorderSave
+        ) {
+            store.reorderExercises(of: workout, to: draft, scope: scope)
+        } content: {
             List {
                 if workout.mesocycle != nil {
                     Section {
@@ -49,23 +53,6 @@ struct ReorderExercisesView: View {
             }
             .themedList(background: Theme.page)
             .environment(\.editMode, .constant(.active))
-            .navigationTitle("Reorder Exercises")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .a11y(.reorderCancel)
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        store.reorderExercises(of: workout, to: draft, scope: scope)
-                        dismiss()
-                    }
-                    .a11y(.reorderSave)
-                }
-            }
         }
-        .presentationDetents([.medium, .large])
-        .interactiveDismissDisabled(draft != workout.sortedExercises)
     }
 }
