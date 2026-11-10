@@ -659,7 +659,7 @@ struct ExerciseCard: View {
                 }
             }
         }
-        .surfaceCard(tag: exercise.muscle)
+        .surfaceCard(.rows, tag: exercise.muscle)
         .opacity(isLocked ? 0.4 : 1)
         .overlay {
             if let feedbackRequiredFor {
@@ -1101,8 +1101,6 @@ struct FeedbackCard: View {
         }
         .buttonStyle(.plain)
         .a11y(.feedbackOpen, key: muscle.rawValue)
-        .padding(.horizontal, Theme.gutter)
-        .padding(.bottom, 8)
         .surfaceCard(tag: muscle)
     }
 

@@ -52,7 +52,7 @@ struct MesoScheduleGrid: View {
             .font(Theme.caption)
             .foregroundStyle(Theme.secondary)
         }
-        .scheduleCard()
+        .surfaceCard()
     }
 
     @ViewBuilder
@@ -136,7 +136,7 @@ struct MesoLengthCard: View {
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondary)
         }
-        .scheduleCard()
+        .surfaceCard()
     }
 
     private func footnote(weeks: Int, range: ClosedRange<Int>) -> String {
@@ -169,7 +169,7 @@ struct WeekVolumeCard: View {
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondary)
         }
-        .scheduleCard()
+        .surfaceCard()
     }
 }
 
@@ -189,13 +189,5 @@ extension View {
             }
             .a11y(.dialogTrainDay)
         }
-    }
-}
-
-extension View {
-    func scheduleCard() -> some View {
-        padding(Theme.gutter)
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
     }
 }

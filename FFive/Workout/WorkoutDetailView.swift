@@ -44,7 +44,7 @@ struct WorkoutDetailView: View {
                             .accessibilityElement(children: .combine)
                         }
                     }
-                    .surfaceCard()
+                    .surfaceCard(.rows)
                 }
             }
             .padding(.bottom, 16)
@@ -80,8 +80,6 @@ struct WorkoutDetailView: View {
                     .accessibilityLabel("Workout note: \(note)")
             }
         }
-        .padding(.horizontal, Theme.gutter)
-        .padding(.bottom, 8)
         .surfaceCard()
     }
 }
@@ -142,6 +140,6 @@ private struct LoggedExerciseCard: View {
                 )
             }
         }
-        .surfaceCard()
+        .surfaceCard(.rows)
     }
 }

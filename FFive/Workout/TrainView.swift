@@ -117,8 +117,6 @@ struct TrainView: View {
                 .buttonStyle(.secondary)
                 .a11y(.workoutQuick)
             }
-            .padding(.horizontal, Theme.gutter)
-            .padding(.bottom, 8)
             .surfaceCard()
             .padding(.vertical, 16)
         }
