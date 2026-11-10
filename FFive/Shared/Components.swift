@@ -262,11 +262,12 @@ private struct VolumeRow: View {
 }
 
 extension View {
-    /// A sheet passes `Theme.page` to both `themedList` and `themedRow`.
+    /// Every `themedRow` inside paints itself with `background`, so a sheet names `Theme.page` once.
     func themedList(background: Color = Theme.surface) -> some View {
         listStyle(.plain)
             .scrollContentBackground(.hidden)
             .background(background)
+            .environment(\.listSurface, background)
     }
 
     /// One edge-to-edge row in a tab-root browse list (Mesos, Templates, Exercises): gutter inset, hairline below.
@@ -276,9 +277,21 @@ extension View {
             .overlay(alignment: .bottom) { Hairline() }
     }
 
-    func themedRow(vertical: CGFloat = 12, background: Color = Theme.surface) -> some View {
-        alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
-            .listRowBackground(background)
+    func themedRow(vertical: CGFloat = 12) -> some View { modifier(ThemedRow(vertical: vertical)) }
+}
+
+extension EnvironmentValues {
+    @Entry fileprivate var listSurface = Theme.surface
+}
+
+private struct ThemedRow: ViewModifier {
+    @Environment(\.listSurface) private var surface
+    let vertical: CGFloat
+
+    func body(content: Content) -> some View {
+        content
+            .alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
+            .listRowBackground(surface)
             .listRowSeparatorTint(Theme.hairline)
             .listRowInsets(EdgeInsets(top: vertical, leading: Theme.gutter, bottom: vertical, trailing: Theme.gutter))
     }

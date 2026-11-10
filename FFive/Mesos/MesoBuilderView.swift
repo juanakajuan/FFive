@@ -483,7 +483,7 @@ struct MesoEditorView: View {
         Text(text)
             .font(Theme.caption)
             .foregroundStyle(Theme.secondary)
-            .listRowBackground(Theme.surface)
+            .themedRow()
             .listRowSeparator(.hidden)
     }
 
@@ -525,7 +525,7 @@ struct ManageDaysView: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondary)
                     }
-                    .themedRow(vertical: 8, background: Theme.page)
+                    .themedRow(vertical: 8)
                     .deleteDisabled(draft.days.count == 1)
                 }
                 .onMove { draft.moveDays(fromOffsets: $0, toOffset: $1) }
@@ -533,7 +533,7 @@ struct ManageDaysView: View {
                 Text("Drag a day to change the order the mesocycle trains it in. Its weekday moves with it.")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
-                    .listRowBackground(Theme.page)
+                    .themedRow(vertical: 8)
                     .listRowSeparator(.hidden)
             }
             .themedList(background: Theme.page)
