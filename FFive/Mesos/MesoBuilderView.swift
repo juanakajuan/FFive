@@ -195,7 +195,7 @@ struct MesoEditorView: View {
                         prompt: Text("Mesocycle name").foregroundStyle(Theme.secondary)
                     )
                     .formField()
-                    .builderRow()
+                    .themedRow(vertical: 8)
                     .a11y(.builderName)
                 } header: {
                     SectionHeading(text: "Name")
@@ -211,9 +211,9 @@ struct MesoEditorView: View {
                             Text("then 1 deload week").font(Theme.caption).foregroundStyle(Theme.secondary)
                         }
                     }
-                    .builderRow()
+                    .themedRow(vertical: 8)
                     RIRSchedule(accumulationWeeks: draft.accumulationWeeks)
-                        .builderRow()
+                        .themedRow(vertical: 8)
                     footnote(
                         "Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next mesocycle starts fresh."
                     )
@@ -235,7 +235,7 @@ struct MesoEditorView: View {
                     .foregroundStyle(Theme.text)
                     .tint(Theme.secondary)
                     .a11y(.builderStartWeekday)
-                    .builderRow()
+                    .themedRow(vertical: 8)
                     footnote(
                         "Each day gets a weekday that spreads rest through the week. Change any of them below."
                     )
@@ -250,7 +250,7 @@ struct MesoEditorView: View {
                     TextField("Day name", text: $day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary))
                         .font(.system(size: 16, weight: .semibold))
                         .formField()
-                        .builderRow()
+                        .themedRow(vertical: 8)
                     if editing == nil {
                         Picker("Weekday", selection: $day.weekday) {
                             Text("None").tag(Weekday?.none)
@@ -260,7 +260,7 @@ struct MesoEditorView: View {
                         .foregroundStyle(Theme.text)
                         .tint(Theme.secondary)
                         .a11y(.builderWeekday, (draft.days.firstIndex { $0.id == day.id } ?? 0) + 1)
-                        .builderRow()
+                        .themedRow(vertical: 8)
                     }
                     ForEach(day.slots) { slot in
                         Button {
@@ -281,7 +281,7 @@ struct MesoEditorView: View {
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .builderRow()
+                        .themedRow(vertical: 8)
                     }
                     .onDelete { offsets in update(day.id) { $0.slots.remove(atOffsets: offsets) } }
                     .onMove { from, to in update(day.id) { $0.slots.move(fromOffsets: from, toOffset: to) } }
@@ -292,7 +292,7 @@ struct MesoEditorView: View {
                             .font(Theme.body)
                             .foregroundStyle(Theme.infoText)
                     }
-                    .builderRow()
+                    .themedRow(vertical: 8)
                     Picker(
                         selection: Binding<Muscle?>(
                             get: { nil },
@@ -309,7 +309,7 @@ struct MesoEditorView: View {
                     }
                     .tint(Theme.secondary)
                     .a11y(.builderAddMuscle)
-                    .builderRow()
+                    .themedRow(vertical: 8)
                     if day.slots.isEmpty {
                         footnote("Add at least one exercise, or remove this day.")
                     }
@@ -337,7 +337,7 @@ struct MesoEditorView: View {
                         .font(Theme.body)
                         .foregroundStyle(Theme.infoText)
                 }
-                .builderRow()
+                .themedRow(vertical: 8)
                 footnote(
                     "Tap an exercise to swap it for another that trains the same muscle. Add a muscle to choose its exercise later."
                 )
@@ -349,7 +349,7 @@ struct MesoEditorView: View {
                         MusclePriorityRow(muscle: muscle, priority: draft.priorities[muscle] ?? .normal) {
                             draft.priorities[muscle] = $0
                         }
-                        .builderRow()
+                        .themedRow(vertical: 8)
                     }
                     footnote(MusclePriority.explanation)
                 } header: {
@@ -358,9 +358,7 @@ struct MesoEditorView: View {
                 }
             }
         }
-        .listStyle(.plain)
-        .scrollContentBackground(.hidden)
-        .background(Theme.surface)
+        .themedList()
         .environment(\.defaultMinListRowHeight, 48)
         .navigationTitle(editing == nil ? "Customize" : "Edit Template")
         .navigationBarTitleDisplayMode(.inline)
@@ -523,7 +521,7 @@ struct ManageDaysView: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondary)
                     }
-                    .builderRow(background: Theme.page)
+                    .themedRow(vertical: 8, background: Theme.page)
                     .deleteDisabled(draft.days.count == 1)
                 }
                 .onMove { draft.moveDays(fromOffsets: $0, toOffset: $1) }
@@ -534,9 +532,7 @@ struct ManageDaysView: View {
                     .listRowBackground(Theme.page)
                     .listRowSeparator(.hidden)
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(Theme.page)
+            .themedList(background: Theme.page)
             .environment(\.editMode, .constant(.active))
             .navigationTitle("Manage Days")
             .navigationBarTitleDisplayMode(.inline)
@@ -582,13 +578,5 @@ struct RIRSchedule: View {
             (0..<accumulationWeeks).map {
                 "week \($0 + 1), \(Progression.phase(week: $0, accumulationWeeks: accumulationWeeks).rir ?? 0) RIR"
             }.joined(separator: ", ") + ", then deload")
-    }
-}
-
-extension View {
-    fileprivate func builderRow(background: Color = Theme.surface) -> some View {
-        listRowBackground(background)
-            .listRowSeparatorTint(Theme.hairline)
-            .listRowInsets(EdgeInsets(top: 8, leading: Theme.gutter, bottom: 8, trailing: Theme.gutter))
     }
 }

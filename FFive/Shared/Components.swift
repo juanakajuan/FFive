@@ -262,15 +262,16 @@ private struct VolumeRow: View {
 }
 
 extension View {
-    func themedList() -> some View {
+    /// A sheet passes `Theme.page` to both `themedList` and `themedRow`.
+    func themedList(background: Color = Theme.surface) -> some View {
         listStyle(.plain)
             .scrollContentBackground(.hidden)
-            .background(Theme.surface)
+            .background(background)
     }
 
-    func themedRow(vertical: CGFloat = 12) -> some View {
+    func themedRow(vertical: CGFloat = 12, background: Color = Theme.surface) -> some View {
         alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
-            .listRowBackground(Theme.surface)
+            .listRowBackground(background)
             .listRowSeparatorTint(Theme.hairline)
             .listRowInsets(EdgeInsets(top: vertical, leading: Theme.gutter, bottom: vertical, trailing: Theme.gutter))
     }
