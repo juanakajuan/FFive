@@ -31,7 +31,7 @@ struct ReorderExercisesView: View {
                         .font(Theme.caption)
                         .foregroundStyle(Theme.secondary)
                     }
-                    .listRowBackground(Theme.page)
+                    .themedRow()
                     .listRowSeparator(.hidden)
                 }
                 Section {
@@ -42,7 +42,7 @@ struct ReorderExercisesView: View {
                                 .foregroundStyle(Theme.text)
                             if let muscle = exercise.muscle { MuscleDotLabel(muscle: muscle) }
                         }
-                        .themedRow(background: Theme.page)
+                        .themedRow()
                     }
                     .onMove { draft.move(fromOffsets: $0, toOffset: $1) }
                 }
