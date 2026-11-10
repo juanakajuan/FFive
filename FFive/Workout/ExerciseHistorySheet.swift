@@ -68,7 +68,7 @@ private struct SessionRow: View {
         let setTexts = sets.map { set in
             "\(set.weightText(unit: unit)) × \(set.reps)" + (set.type.tag.map { " \($0)" } ?? "")
         }
-        let date = workout.startDate.formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day().year())
+        let date = workout.startDate.formatted(.sessionDay)
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline) {

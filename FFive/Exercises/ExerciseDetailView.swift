@@ -139,11 +139,9 @@ struct ExerciseDetailView: View {
     private func historyRow(_ session: Session) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(
-                    session.workout.startDate, format: .dateTime.weekday(.abbreviated).month(.abbreviated).day().year()
-                )
-                .font(Theme.body)
-                .foregroundStyle(Theme.text)
+                Text(session.workout.startDate, format: .sessionDay)
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.text)
                 Text(session.workout.name)
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
@@ -154,9 +152,7 @@ struct ExerciseDetailView: View {
                 .foregroundStyle(Theme.text)
             RowChevron()
         }
-        .padding(.horizontal, Theme.gutter)
         .frame(minHeight: 60)
-        .contentShape(Rectangle())
-        .overlay(alignment: .bottom) { Hairline() }
+        .browseRow()
     }
 }
