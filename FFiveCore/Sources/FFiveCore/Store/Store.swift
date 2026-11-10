@@ -370,10 +370,6 @@ public final class Store {
         workout.pendingSoreness
     }
 
-    public func pinnedNote(on exercise: Exercise) -> String? {
-        pinnedNote(named: exercise.name)
-    }
-
     public func pinnedNote(named name: String) -> String? {
         observeCommits()
         return PinnedNote.find(named: name, in: context)?.text

@@ -587,7 +587,7 @@ struct ExerciseCard: View {
     var body: some View {
         let unit = store.settings.weightUnit
         let sets = exercise.sortedSets
-        let pinned = store.pinnedNote(on: exercise)
+        let pinned = store.pinnedNote(named: exercise.name)
         let note = pinned ?? exercise.note
         VStack(alignment: .leading, spacing: 0) {
             HStack(alignment: .top, spacing: 12) {
