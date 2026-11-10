@@ -94,4 +94,23 @@ final class ExerciseHistoryTests: XCTestCase {
             store.library(muscle: .quads, equipment: nil, search: "", performedOnly: true).map(\.name), [],
             "it combines with the other filters")
     }
+
+    func testRenamingACustomExerciseMovesItsLastPerformedDate() throws {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Sled Drag", muscle: .quads, to: workout)
+        logAll(workout, store, at: Date(timeIntervalSince1970: 1_700_000_000))
+        let old = ExerciseID(folding: "Sled Drag")
+        XCTAssertEqual(store.lastPerformed()[old], workout.startDate)
+
+        let custom = try XCTUnwrap(store.customExercise(old))
+        var draft = CustomExerciseDraft(custom)
+        draft.name = "Sled Pull"
+        try store.saveCustomExercise(draft, editing: custom)
+
+        XCTAssertNil(store.lastPerformed()[old], "the old name is gone")
+        XCTAssertEqual(store.lastPerformed()[ExerciseID(folding: "Sled Pull")], workout.startDate)
+        XCTAssertEqual(
+            store.library(muscle: nil, equipment: nil, search: "", performedOnly: true).map(\.name), ["Sled Pull"])
+    }
 }
