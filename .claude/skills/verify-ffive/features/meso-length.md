@@ -20,7 +20,7 @@ Preconditions:
 
 - On disk: `ffive-verify reset-data`, then `journeys/meso-length.steps`, which plans "Length Block" from Upper/Lower, 4 Days.
 
-- **Add a week.** Steps: `tap #workout.schedule`, `tap button "~Increment"`, `wait any "5 training weeks, then 1 deload week"`, `store-expect Mesocycle accumulationWeeks 5`, `count image "circle" "20"` (the future-week cells of 4 days over 5 weeks).
+- **Add a week.** Steps: `tap #workout.schedule`, `tap button "Sheet Grabber"`, `tap button "~Increment"`, `wait any "5 training weeks, then 1 deload week"`, `store-expect Mesocycle accumulationWeeks 5`, `count image "circle" "20"` (the future-week cells of 4 days over 5 weeks).
 - **Remove weeks.** Steps: `tap button "~Decrement"` twice, `wait any "3 training weeks, then 1 deload week"`, `store-expect Mesocycle accumulationWeeks 3`.
 - **Floor.** A third `Decrement` changes nothing: the label still reads 3 training weeks.
 - **Persist.** Steps: `launch`, `tap #workout.schedule`, `wait any "3 training weeks, then 1 deload week"`.

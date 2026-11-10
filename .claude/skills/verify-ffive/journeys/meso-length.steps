@@ -11,6 +11,7 @@ tap #builder.start
 wait text "WEEK 1 DAY 1" timeout=10
 wait text "Upper A*Length Block*3 RIR"
 tap #workout.schedule
+tap button "Sheet Grabber"
 wait any "4 training weeks, then 1 deload week"
 count image "circle" "16"
 shot 01-four-weeks

@@ -149,6 +149,7 @@ Find ids in `A11y.swift`, and dump a tree (`tree x`) to see what is on screen. I
 
 Gotchas:
 
+- Sheets with a medium detent (Manage Days, the schedule, notes, soreness, block notes) open at half height, and rows below it fail `wait` and `tap`. `tap button "Sheet Grabber"` expands the sheet to full height, as a lifter dragging it up would.
 - `~Workout` matches the Workout tab button before any history row. Use `~Workout,` or the full workout name.
 - XCUITest reports an element under the Workout tab's pinned header or above the tab bar as hittable, but a tap there hits the header or bar. `scrollto` drags until its target sits in the middle half of the screen (or the list stops moving), so `scrollto` the element before tapping it.
 

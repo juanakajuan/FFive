@@ -12,6 +12,7 @@ wait any "Weekday, Friday"
 tap #builder.menu
 tap #menu.manage-days
 wait nav "Manage Days"
+tap button "Sheet Grabber"
 value #manage-days.name.4 "Lower B"
 shot 01-before
 drag button "Reorder Day 4*" to button "Reorder Day 1*"
