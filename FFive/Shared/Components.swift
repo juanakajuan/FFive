@@ -273,7 +273,7 @@ extension View {
     func browseRow() -> some View {
         padding(.horizontal, Theme.gutter)
             .contentShape(Rectangle())
-            .overlay(alignment: .bottom) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+            .overlay(alignment: .bottom) { Hairline() }
     }
 
     func themedRow(vertical: CGFloat = 12, background: Color = Theme.surface) -> some View {

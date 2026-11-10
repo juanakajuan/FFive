@@ -45,7 +45,7 @@ struct MesoCopyView: View {
             .padding(.horizontal, Theme.gutter)
             .padding(.vertical, 10)
             .background(Theme.surface)
-            .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+            .overlay(alignment: .top) { Hairline() }
         }
     }
 
@@ -71,7 +71,7 @@ struct MesoCopyView: View {
             }
             .padding(.vertical, 12)
             ForEach(Array(day.slots.enumerated()), id: \.offset) { _, slot in
-                Rectangle().fill(Theme.hairline).frame(height: 1)
+                Hairline()
                 VStack(alignment: .leading, spacing: 3) {
                     Text(slot.exercise ?? "Choose an exercise").font(Theme.body).foregroundStyle(Theme.text)
                     HStack(spacing: 8) {

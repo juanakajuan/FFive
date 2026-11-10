@@ -290,7 +290,7 @@ struct ExerciseTrendView: View {
             .padding(.bottom, 8)
             .accessibilityHidden(true)
             ForEach(series.points.reversed()) { point in
-                Rectangle().fill(Theme.hairline).frame(height: 1)
+                Hairline()
                 HStack {
                     Text(point.date, format: .dateTime.month(.abbreviated).day())
                         .foregroundStyle(Theme.secondary)
