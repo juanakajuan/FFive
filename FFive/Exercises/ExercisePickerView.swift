@@ -21,7 +21,9 @@ struct ExercisePickerView: View {
     var body: some View {
         let settings = store.settings
         let all = store.library(muscle: muscle, equipment: nil, search: search, performedOnly: performedOnly)
-        let entries = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
+        let entries = all.filter { !equipmentOnly || $0.fits(settings.equipment) }
+        let groups = Dictionary(grouping: entries, by: \.muscle)
+        let queryID = ExerciseID(folding: query)
         let lastPerformed = store.lastPerformed()
         NavigationStack {
             VStack(spacing: 0) {
@@ -66,7 +68,7 @@ struct ExercisePickerView: View {
                             .themedRow(vertical: 8)
                             .listRowSeparator(.hidden)
                     }
-                    if !query.isEmpty && !all.contains(where: { $0.id == ExerciseID(folding: query) }) {
+                    if !query.isEmpty && !all.contains(where: { $0.id == queryID }) {
                         createRow
                             .themedRow()
                         Text(
@@ -77,9 +79,8 @@ struct ExercisePickerView: View {
                         .themedRow(vertical: 8)
                         .listRowSeparator(.hidden)
                     }
-                    ForEach(muscle.map { [$0] } ?? Muscle.allCases) { group in
-                        let rows = entries.filter { $0.muscle == group }
-                        if !rows.isEmpty {
+                    ForEach(Muscle.allCases) { group in
+                        if let rows = groups[group] {
                             Section {
                                 ForEach(rows) { entry in
                                     row(entry, lastPerformed: lastPerformed[entry.id]).themedRow()
@@ -103,16 +104,18 @@ struct ExercisePickerView: View {
             }
             .background(Theme.surface)
             .overlay {
-                if entries.isEmpty && query.isEmpty && performedOnly {
-                    EmptyState(
-                        "No exercises performed yet",
-                        systemImage: "clock.arrow.circlepath",
-                        message: "Exercises show here once you log a set of them in a finished workout.")
-                } else if entries.isEmpty && query.isEmpty {
-                    EmptyState(
-                        "Search to add an exercise",
-                        systemImage: "magnifyingglass",
-                        message: "Type a name to create your own exercise.")
+                if entries.isEmpty && query.isEmpty {
+                    if performedOnly {
+                        EmptyState(
+                            "No exercises performed yet",
+                            systemImage: "clock.arrow.circlepath",
+                            message: "Exercises show here once you log a set of them in a finished workout.")
+                    } else {
+                        EmptyState(
+                            "Search to add an exercise",
+                            systemImage: "magnifyingglass",
+                            message: "Type a name to create your own exercise.")
+                    }
                 }
             }
             .navigationTitle(title)
@@ -267,4 +270,7 @@ struct ExercisePickerView: View {
 extension FormatStyle where Self == Date.FormatStyle {
     /// The day an exercise was last done, such as "Mar 3, 2026".
     static var lastPerformed: Date.FormatStyle { .dateTime.month(.abbreviated).day().year() }
+
+    /// The day of a session in an exercise's history, such as "Tue, Mar 3, 2026".
+    static var sessionDay: Date.FormatStyle { .dateTime.weekday(.abbreviated).month(.abbreviated).day().year() }
 }

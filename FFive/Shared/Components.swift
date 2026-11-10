@@ -275,7 +275,8 @@ extension View {
             .environment(\.listSurface, background)
     }
 
-    /// One edge-to-edge row in a tab-root browse list (Mesos, Templates, Exercises): gutter inset, hairline below.
+    /// One edge-to-edge row in a browse list (Mesos, Templates, Exercises, exercise history): gutter inset, hairline
+    /// below.
     func browseRow() -> some View {
         padding(.horizontal, Theme.gutter)
             .contentShape(Rectangle())

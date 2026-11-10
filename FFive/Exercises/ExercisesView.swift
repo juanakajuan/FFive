@@ -18,7 +18,7 @@ struct ExercisesView: View {
         let all = store.library(
             muscle: muscle, equipment: equipment, search: search, includeHidden: showHidden,
             performedOnly: performedOnly)
-        let listings = all.filter { !equipmentOnly || !settings.filtersEquipment || $0.fits(settings.equipment) }
+        let listings = all.filter { !equipmentOnly || $0.fits(settings.equipment) }
         NavigationStack(path: $path) {
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -85,9 +85,7 @@ struct ExercisesView: View {
     }
 
     private func showSaved(_ name: String) {
-        let match = store.library(muscle: nil, equipment: nil, search: name, includeHidden: true)
-            .first { $0.isCustom && $0.name == name }
-        if let match { path.append(match) }
+        if let match = store.listing(ExerciseID(folding: name)) { path.append(match) }
     }
 
     private var filterLabel: String {

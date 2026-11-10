@@ -3,8 +3,8 @@ import SwiftUI
 
 /// Creates a custom exercise, or with `editing` changes one. Calls `onSaved` with what was saved.
 struct CustomExerciseEditor: View {
-    var editing: CustomExercise?
-    var onSaved: (CustomExerciseDraft) -> Void = { _ in }
+    let editing: CustomExercise?
+    let onSaved: (CustomExerciseDraft) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
@@ -17,7 +17,7 @@ struct CustomExerciseEditor: View {
 
     init(
         draft: CustomExerciseDraft, editing: CustomExercise? = nil,
-        onSaved: @escaping (CustomExerciseDraft) -> Void = { _ in }
+        onSaved: @escaping (CustomExerciseDraft) -> Void
     ) {
         self.editing = editing
         self.onSaved = onSaved
