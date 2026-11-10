@@ -109,7 +109,7 @@ struct ActiveWorkoutView: View {
             }
             .confirmationDialog(
                 swapScopeFor.map { "Swap \($0.exercise.name) for \($0.name)?" } ?? "",
-                isPresented: Binding(get: { swapScopeFor != nil }, set: { if !$0 { swapScopeFor = nil } }),
+                isPresented: $swapScopeFor.isPresent(),
                 titleVisibility: .visible, presenting: swapScopeFor
             ) { choice in
                 Button("Later Weeks Too") {
@@ -157,7 +157,7 @@ struct ActiveWorkoutView: View {
             }
             .alert(
                 workout.mesocycle == nil ? "Rename Workout" : "Rename Day",
-                isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
+                isPresented: $renameDraft.isPresent()
             ) {
                 TextField(
                     workout.mesocycle == nil ? "Workout name" : "Day name",
@@ -169,7 +169,7 @@ struct ActiveWorkoutView: View {
             }
             .confirmationDialog(
                 relabelTo.map { $0.weekday.map { "Label this day \($0.name)?" } ?? "Clear this day's weekday?" } ?? "",
-                isPresented: Binding(get: { relabelTo != nil }, set: { if !$0 { relabelTo = nil } }),
+                isPresented: $relabelTo.isPresent(),
                 titleVisibility: .visible, presenting: relabelTo
             ) { choice in
                 Button("Every Week") { store.relabel(workout, as: choice.weekday, scope: .everyWeek) }
@@ -179,7 +179,7 @@ struct ActiveWorkoutView: View {
             }
             .alert(
                 "Bodyweight",
-                isPresented: Binding(get: { bodyweightDraft != nil }, set: { if !$0 { bodyweightDraft = nil } })
+                isPresented: $bodyweightDraft.isPresent()
             ) {
                 TextField(
                     "Bodyweight (\(store.settings.weightUnit.rawValue))",
@@ -231,13 +231,6 @@ struct ActiveWorkoutView: View {
         }
         guard let muscle = exercise.muscle, let soreness else { return nil }
         return { set in sorenessAsk = SorenessAsk(muscle: muscle, record: soreness, set: set) }
-    }
-
-    /// A muscle that finished before this exercise's muscle and still has no feedback. Its sets wait for that answer.
-    private func unratedMuscle(before exercise: Exercise) -> Muscle? {
-        workout.feedbackMuscles.first {
-            $0 != exercise.muscle && workout.feedbackRecord(for: $0)?.value.isRated != true
-        }
     }
 
     /// Every set field in screen order: each set's weight, then its reps.
@@ -296,13 +289,16 @@ struct ActiveWorkoutView: View {
     /// The session's cards, with the feedback toast and the sheet that opens when a muscle finishes.
     private func sessionList(_ exercises: [Exercise]) -> some View {
         let pendingSoreness = store.pendingSoreness(in: workout)
+        let unrated = workout.unratedFeedbackMuscles
         return ScrollViewReader { proxy in
-            sessionScroll(exercises, pendingSoreness: pendingSoreness)
+            sessionScroll(exercises, pendingSoreness: pendingSoreness, unrated: unrated)
                 .toolbar { keyboardToolbar(proxy) }
         }
     }
 
-    private func sessionScroll(_ exercises: [Exercise], pendingSoreness: [Muscle: MuscleFeedbackRecord]) -> some View {
+    private func sessionScroll(
+        _ exercises: [Exercise], pendingSoreness: [Muscle: MuscleFeedbackRecord], unrated: [Muscle]
+    ) -> some View {
         ScrollView {
             LazyVStack(spacing: 16) {
                 if let pinned = workout.pinnedNote {
@@ -315,7 +311,8 @@ struct ActiveWorkoutView: View {
                         .accessibilityLabel("Workout note: \(note)")
                 }
                 ForEach(Array(exercises.enumerated()), id: \.element.id) { index, exercise in
-                    exerciseRow(exercise, at: index, in: exercises, pendingSoreness: pendingSoreness)
+                    exerciseRow(
+                        exercise, at: index, in: exercises, pendingSoreness: pendingSoreness, unrated: unrated)
                 }
                 if exercises.isEmpty {
                     emptySession
@@ -345,7 +342,7 @@ struct ActiveWorkoutView: View {
             feedbackFor = block.muscle
         }
         .onChange(of: workout.feedbackMuscles) { old, new in
-            feedbackFor = new.first { !old.contains($0) && workout.feedbackRecord(for: $0)?.value.isRated != true }
+            feedbackFor = workout.unratedFeedbackMuscles.first { !old.contains($0) }
         }
     }
 
@@ -361,18 +358,19 @@ struct ActiveWorkoutView: View {
     @ViewBuilder
     private func exerciseRow(
         _ exercise: Exercise, at index: Int, in exercises: [Exercise],
-        pendingSoreness: [Muscle: MuscleFeedbackRecord]
+        pendingSoreness: [Muscle: MuscleFeedbackRecord], unrated: [Muscle]
     ) -> some View {
         let muscle = exercise.muscle
-        let unrated = unratedMuscle(before: exercise)
+        // A muscle that finished before this one and still owes feedback. This exercise's sets wait for that answer.
+        let blockedBy = unrated.first { $0 != muscle }
         ExerciseCard(
             exercise: exercise,
             position: index + 1,
             phase: workout.phase,
             onSetCompleted: setCompleted,
             focus: $focus,
-            isLocked: unrated != nil,
-            onLogBlocked: logGate(for: exercise, unrated: unrated, soreness: muscle.flatMap { pendingSoreness[$0] }),
+            isLocked: blockedBy != nil,
+            onLogBlocked: logGate(for: exercise, unrated: blockedBy, soreness: muscle.flatMap { pendingSoreness[$0] }),
             feedbackRequiredFor: feedbackRequired.flatMap {
                 $0.exercise == exercise.persistentModelID ? $0.muscle : nil
             },
@@ -1007,10 +1005,6 @@ extension SetComparison.Outcome {
         case .regressed: "regressed from"
         }
     }
-}
-
-extension MuscleFeedback {
-    var isRated: Bool { pump != nil && workload != nil && jointPain != nil }
 }
 
 /// The muscle's end-of-session feedback in the list: a summary that opens `FeedbackSheet`.

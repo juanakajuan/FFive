@@ -39,7 +39,7 @@ struct MesosView: View {
             .sheet(isPresented: $showingBuilder) { MesoBuilderView() }
             .confirmationDialog(
                 "End this mesocycle?",
-                isPresented: Binding(get: { ending != nil }, set: { if !$0 { ending = nil } }),
+                isPresented: $ending.isPresent(),
                 titleVisibility: .visible, presenting: ending
             ) { meso in
                 Button("End Mesocycle", role: .destructive) { router.end(meso, store: store) }
@@ -49,7 +49,7 @@ struct MesosView: View {
             }
             .confirmationDialog(
                 "Delete this mesocycle?",
-                isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                isPresented: $deleting.isPresent(),
                 titleVisibility: .visible, presenting: deleting
             ) { meso in
                 Button("Delete Mesocycle", role: .destructive) { router.delete(meso, store: store) }

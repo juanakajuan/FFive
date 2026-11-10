@@ -449,6 +449,38 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(workout.feedbackMuscles, [.back], "back logged a set before its last exercise was skipped")
     }
 
+    func testAMuscleOwesFeedbackUntilPumpWorkloadAndJointPainAreIn() throws {
+        var draft = MesoDraft(template: nil)
+        draft.days = [
+            .init(
+                name: "A",
+                slots: [
+                    .init(exercise: "Bench Press", muscle: .chest),
+                    .init(exercise: "Barbell Row", muscle: .back),
+                ])
+        ]
+        let store = Store(inMemory: true)
+        try store.startMesocycle(draft)
+        let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
+        let workout = store.buildSession(meso, at: day1)
+        for exercise in workout.sortedExercises {
+            store.logEntered(try XCTUnwrap(exercise.sortedSets.first))
+            store.skipRemainingSets(of: exercise)
+        }
+        XCTAssertEqual(workout.unratedFeedbackMuscles, [.chest, .back], "both finished muscles owe feedback, in order")
+
+        store.updateFeedback(for: .chest, in: workout) {
+            $0.pump = .great
+            $0.workload = .easy
+        }
+        XCTAssertEqual(
+            workout.unratedFeedbackMuscles, [.chest, .back],
+            "a muscle missing its joint pain answer still owes feedback")
+
+        store.updateFeedback(for: .chest, in: workout) { $0.jointPain = JointPain.none }
+        XCTAssertEqual(workout.unratedFeedbackMuscles, [.back], "a fully rated muscle no longer owes feedback")
+    }
+
     func testLogSetRestartsUntouchedClock() throws {
         let (store, meso) = try startedStore()
         let workout = store.buildSession(meso, at: day1)

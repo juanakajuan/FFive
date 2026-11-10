@@ -140,6 +140,12 @@ public final class Workout {
         }
     }
 
+    /// The muscles in `feedbackMuscles` still owing their end-of-muscle answers, in session order. Until a muscle is
+    /// rated, the sets of every other muscle wait for it.
+    public var unratedFeedbackMuscles: [Muscle] {
+        feedbackMuscles.filter { feedbackRecord(for: $0)?.value.isRated != true }
+    }
+
     public func feedbackRecord(for muscle: Muscle) -> MuscleFeedbackRecord? {
         feedback.first { $0.muscleRaw == muscle.rawValue }
     }
