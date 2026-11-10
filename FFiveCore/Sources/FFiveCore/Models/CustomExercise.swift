@@ -37,9 +37,9 @@ public final class CustomExercise {
         exerciseKey = ExerciseID(folding: draft.name).rawValue
         muscleRaw = draft.muscle.rawValue
         equipmentRaw = draft.equipment.rawValue
-        minReps = draft.repRange.lowerBound
-        maxReps = draft.repRange.upperBound
-        cue = draft.cue
+        minReps = draft.minReps
+        maxReps = draft.maxReps
+        cue = draft.cue.noteText
     }
 }
 
@@ -63,28 +63,32 @@ extension CustomExercise {
     }
 }
 
-/// What the editor collects. `Store.saveCustomExercise` normalizes it before it reaches the record.
+/// What the editor collects, in the shapes its fields bind to. `Store.saveCustomExercise` normalizes it before it
+/// reaches the record.
 public struct CustomExerciseDraft: Equatable {
     public var name: String
     public var muscle: Muscle
     public var equipment: Equipment
-    public var repRange: ClosedRange<Int>
-    public var cue: String?
+    public var minReps: Int
+    public var maxReps: Int
+    public var cue: String
 
     public init(
         name: String = "", muscle: Muscle = .chest, equipment: Equipment = .machine,
-        repRange: ClosedRange<Int> = 8...12, cue: String? = nil
+        minReps: Int = 8, maxReps: Int = 12, cue: String = ""
     ) {
         self.name = name
         self.muscle = muscle
         self.equipment = equipment
-        self.repRange = repRange
+        self.minReps = minReps
+        self.maxReps = maxReps
         self.cue = cue
     }
 
     public init(_ exercise: CustomExercise) {
+        let reps = exercise.repRange
         self.init(
             name: exercise.name, muscle: exercise.muscle, equipment: exercise.equipment,
-            repRange: exercise.repRange, cue: exercise.cue)
+            minReps: reps.lowerBound, maxReps: reps.upperBound, cue: exercise.cue ?? "")
     }
 }

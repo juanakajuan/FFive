@@ -69,11 +69,10 @@ extension Store {
         guard ExerciseCatalog.info(key) == nil, existing == nil || existing === editing else {
             throw StoreError.nameTaken
         }
-        let lower = max(1, draft.repRange.lowerBound)
         var clean = draft
         clean.name = name
-        clean.cue = draft.cue?.noteText
-        clean.repRange = lower...max(lower, draft.repRange.upperBound)
+        clean.minReps = max(1, draft.minReps)
+        clean.maxReps = max(clean.minReps, draft.maxReps)
         if let editing {
             cascade(from: editing, to: clean)
             editing.apply(clean)
