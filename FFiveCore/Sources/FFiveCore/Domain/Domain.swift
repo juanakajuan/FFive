@@ -223,6 +223,9 @@ public struct MuscleFeedback: Equatable, Codable {
         self.workload = workload
         self.jointPain = jointPain
     }
+
+    /// Whether the end-of-muscle answers are all in. Soreness comes later, at the muscle's next session.
+    public var isRated: Bool { pump != nil && workload != nil && jointPain != nil }
 }
 
 public struct TemplateSlot: Hashable {
