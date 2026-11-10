@@ -42,15 +42,12 @@ struct ReorderExercisesView: View {
                                 .foregroundStyle(Theme.text)
                             if let muscle = exercise.muscle { MuscleDotLabel(muscle: muscle) }
                         }
-                        .listRowBackground(Theme.page)
-                        .listRowSeparatorTint(Theme.hairline)
+                        .themedRow(background: Theme.page)
                     }
                     .onMove { draft.move(fromOffsets: $0, toOffset: $1) }
                 }
             }
-            .listStyle(.plain)
-            .scrollContentBackground(.hidden)
-            .background(Theme.page)
+            .themedList(background: Theme.page)
             .environment(\.editMode, .constant(.active))
             .navigationTitle("Reorder Exercises")
             .navigationBarTitleDisplayMode(.inline)
