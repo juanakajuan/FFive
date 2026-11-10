@@ -9,6 +9,7 @@ struct PerfProbe {
     static let scaleSize = 468
     static let sizes = [0, budgetSize, scaleSize]
     static let budgetMillis = 20.0
+    static let pickerBudgetMillis = 1.0
     static let budgetScaleFactor = 3.0
     static let coldScaleFactor = 4.0
     static let rounds = 15
@@ -46,6 +47,25 @@ struct PerfProbe {
         print(
             "perf-probe: main-thread CPU time over \(rounds) rounds interleaving the sizes, each a commit, one first render and \(warmPerRound) renders per size; gates use the min"
         )
+
+        var pickerColds: [Int: [Double]] = [:]
+        var pickerWarms: [Int: [Double]] = [:]
+        var pickerListed: [Int: Int] = [:]
+        for _ in 0..<rounds {
+            for size in sizes {
+                let (store, _) = stores[size]!
+                store.commit()
+                pickerColds[size, default: []].append(time { pickerListed[size] = pickerRender(store) })
+                for _ in 0..<warmPerRound {
+                    pickerWarms[size, default: []].append(time { pickerListed[size] = pickerRender(store) })
+                }
+            }
+        }
+        for size in sizes {
+            print(
+                "perf-probe: exercise picker median \(format(median(pickerWarms[size]!))) ms (min \(format(pickerWarms[size]!.min()!))) at \(size) finished workouts, \(format(median(pickerColds[size]!))) ms (min \(format(pickerColds[size]!.min()!))) on the first render after a commit"
+            )
+        }
 
         let (store, meso) = stores[budgetSize]!
         var strength: [Double] = []
@@ -91,7 +111,24 @@ struct PerfProbe {
             cold[scaleSize]! <= coldScaleFactor * cold[budgetSize]!,
             "first render after a commit min \(format(cold[scaleSize]!)) ms at \(scaleSize) exceeds \(format(coldScaleFactor)) x the \(format(cold[budgetSize]!)) ms at \(budgetSize)"
         )
+        let pickerWarm = pickerWarms.mapValues { $0.min()! }
+        gate(
+            pickerListed[scaleSize] == lifts.count,
+            "exercise picker listed \(pickerListed[scaleSize]!) performed exercises at \(scaleSize), not the \(lifts.count) seeded, so the probe timed the wrong work"
+        )
+        gate(
+            pickerWarm[scaleSize]! <= pickerBudgetMillis,
+            "exercise picker min \(format(pickerWarm[scaleSize]!)) ms at \(scaleSize) exceeds \(format(pickerBudgetMillis)) ms, so a keystroke scans the workout history"
+        )
         if failed { exit(1) }
+    }
+
+    /// What one body pass of the exercise picker asks the store for, with "Only exercises I've performed" on.
+    /// Returns how many exercises it listed.
+    @MainActor
+    private static func pickerRender(_ store: Store) -> Int {
+        _ = store.lastPerformed()
+        return store.library(muscle: nil, equipment: nil, search: "", performedOnly: true).count
     }
 
     @MainActor

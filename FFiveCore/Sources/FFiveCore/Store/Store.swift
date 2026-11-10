@@ -44,6 +44,8 @@ public final class Store {
         return built
     }
 
+    @ObservationIgnored private var cachedLastPerformed: [ExerciseID: Date]?
+
     public func startMesocycle(_ draft: MesoDraft) throws {
         guard try context.fetchCount(Mesocycle.active) == 0 else { throw StoreError.anotherMesocycleIsActive }
         MesoPlanner.start(draft, in: context)
@@ -310,7 +312,10 @@ public final class Store {
     /// The date each exercise was last done in a finished workout. Exercises never done are missing.
     public func lastPerformed() -> [ExerciseID: Date] {
         observeCommits()
-        return ExerciseHistoryGroup.lastPerformed(in: context)
+        if let cachedLastPerformed { return cachedLastPerformed }
+        let built = ExerciseHistoryGroup.lastPerformed(in: context)
+        cachedLastPerformed = built
+        return built
     }
 
     public func weekStats(now: Date = .now) -> WeekStats {
@@ -444,6 +449,7 @@ public final class Store {
 
     func commit() {
         cachedSnapshot = nil
+        cachedLastPerformed = nil
         do {
             try context.save()
             revision += 1

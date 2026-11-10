@@ -16,7 +16,7 @@ extension Store {
     ) -> [ExerciseListing] {
         observeCommits()
         let hidden = settings.hiddenExercises
-        let performed = performedOnly ? Set(ExerciseHistoryGroup.lastPerformed(in: context).keys) : []
+        let performed = performedOnly ? lastPerformed() : [:]
         var listings = ExerciseCatalog.all.map {
             ExerciseListing(
                 id: $0.id, name: $0.name, muscle: $0.muscle, info: $0, isCustom: false, isHidden: hidden.contains($0.id)
@@ -27,7 +27,7 @@ extension Store {
         return
             listings
             .filter { includeHidden || !$0.isHidden }
-            .filter { !performedOnly || performed.contains($0.id) }
+            .filter { !performedOnly || performed[$0.id] != nil }
             .filter { muscle == nil || $0.muscle == muscle }
             .filter { equipment == nil || $0.info.equipment == equipment }
             .filter { query.isEmpty || $0.name.localizedCaseInsensitiveContains(query) }
