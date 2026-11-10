@@ -40,7 +40,7 @@ struct MesosView: View {
             .endMesocycleDialog($ending) { router.end($0, store: store) }
             .confirmationDialog(
                 "Delete this mesocycle?",
-                isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                isPresented: $deleting.isPresent(),
                 titleVisibility: .visible, presenting: deleting
             ) { meso in
                 Button("Delete Mesocycle", role: .destructive) { router.delete(meso, store: store) }

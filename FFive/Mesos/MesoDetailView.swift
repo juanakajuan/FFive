@@ -58,7 +58,7 @@ struct MesoDetailView: View {
         }
         .alert(
             "Rename Mesocycle",
-            isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
+            isPresented: $renameDraft.isPresent()
         ) {
             TextField("Mesocycle name", text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
             Button("Save") {
@@ -80,7 +80,7 @@ struct MesoDetailView: View {
         }
         .alert(
             "Save as Template",
-            isPresented: Binding(get: { templateName != nil }, set: { if !$0 { templateName = nil } })
+            isPresented: $templateName.isPresent()
         ) {
             TextField("Template name", text: Binding(get: { templateName ?? "" }, set: { templateName = $0 }))
             Button("Save") {

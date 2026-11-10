@@ -109,7 +109,7 @@ struct ActiveWorkoutView: View {
             }
             .confirmationDialog(
                 swapScopeFor.map { "Swap \($0.exercise.name) for \($0.name)?" } ?? "",
-                isPresented: Binding(get: { swapScopeFor != nil }, set: { if !$0 { swapScopeFor = nil } }),
+                isPresented: $swapScopeFor.isPresent(),
                 titleVisibility: .visible, presenting: swapScopeFor
             ) { choice in
                 Button("Later Weeks Too") {
@@ -148,7 +148,7 @@ struct ActiveWorkoutView: View {
             .endMesocycleDialog($ending) { WorkoutTabActions.end($0, router: router, store: store) }
             .alert(
                 workout.mesocycle == nil ? "Rename Workout" : "Rename Day",
-                isPresented: Binding(get: { renameDraft != nil }, set: { if !$0 { renameDraft = nil } })
+                isPresented: $renameDraft.isPresent()
             ) {
                 TextField(
                     workout.mesocycle == nil ? "Workout name" : "Day name",
@@ -160,7 +160,7 @@ struct ActiveWorkoutView: View {
             }
             .confirmationDialog(
                 relabelTo.map { $0.weekday.map { "Label this day \($0.name)?" } ?? "Clear this day's weekday?" } ?? "",
-                isPresented: Binding(get: { relabelTo != nil }, set: { if !$0 { relabelTo = nil } }),
+                isPresented: $relabelTo.isPresent(),
                 titleVisibility: .visible, presenting: relabelTo
             ) { choice in
                 Button("Every Week") { store.relabel(workout, as: choice.weekday, scope: .everyWeek) }
@@ -170,7 +170,7 @@ struct ActiveWorkoutView: View {
             }
             .alert(
                 "Bodyweight",
-                isPresented: Binding(get: { bodyweightDraft != nil }, set: { if !$0 { bodyweightDraft = nil } })
+                isPresented: $bodyweightDraft.isPresent()
             ) {
                 TextField(
                     "Bodyweight (\(store.settings.weightUnit.rawValue))",

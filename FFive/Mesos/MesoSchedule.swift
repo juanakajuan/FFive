@@ -180,7 +180,7 @@ extension View {
     ) -> some View {
         confirmationDialog(
             "Train this day after all?",
-            isPresented: Binding(get: { key.wrappedValue != nil }, set: { if !$0 { key.wrappedValue = nil } }),
+            isPresented: key.isPresent(),
             titleVisibility: .visible, presenting: key.wrappedValue
         ) { key in
             Button("Train Day \(key.dayIndex + 1)") {
@@ -194,7 +194,7 @@ extension View {
     func endMesocycleDialog(_ meso: Binding<Mesocycle?>, onEnd: @escaping (Mesocycle) -> Void) -> some View {
         confirmationDialog(
             "End this mesocycle?",
-            isPresented: Binding(get: { meso.wrappedValue != nil }, set: { if !$0 { meso.wrappedValue = nil } }),
+            isPresented: meso.isPresent(),
             titleVisibility: .visible, presenting: meso.wrappedValue
         ) { meso in
             Button("End Mesocycle", role: .destructive) { onEnd(meso) }
