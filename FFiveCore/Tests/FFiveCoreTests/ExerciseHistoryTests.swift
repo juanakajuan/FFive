@@ -113,4 +113,24 @@ final class ExerciseHistoryTests: XCTestCase {
         XCTAssertEqual(
             store.library(muscle: nil, equipment: nil, search: "", performedOnly: true).map(\.name), ["Sled Pull"])
     }
+
+    func testBestSetIsTheStrongestSetElseTheHeaviest() throws {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
+        let bench = try XCTUnwrap(workout.exercises.first)
+        while bench.sets.count < 2 { store.addSet(to: bench) }
+        let sets = bench.sortedSets
+        let (heavy, strong) = (sets[0], sets[1])
+        for (set, weight, reps) in [(heavy, 100.0, 3), (strong, 90.0, 10)] {
+            set.weight = weight
+            set.reps = reps
+            store.log(set, done: true)
+        }
+
+        XCTAssertIdentical(bench.bestSet, strong, "90 × 10 estimates a higher 1RM than 100 × 3")
+
+        for set in [heavy, strong] { store.setType(.myorep, of: set) }
+        XCTAssertIdentical(bench.bestSet, heavy, "with no strength estimate, the heaviest done set stands in")
+    }
 }
