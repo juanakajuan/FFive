@@ -180,7 +180,7 @@ extension View {
     ) -> some View {
         confirmationDialog(
             "Train this day after all?",
-            isPresented: Binding(get: { key.wrappedValue != nil }, set: { if !$0 { key.wrappedValue = nil } }),
+            isPresented: key.isPresent(),
             titleVisibility: .visible, presenting: key.wrappedValue
         ) { key in
             Button("Train Day \(key.dayIndex + 1)") {
