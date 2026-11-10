@@ -20,9 +20,11 @@ final class CustomExerciseTests: XCTestCase {
 
     func draft(
         _ name: String = "Zercher Squat", muscle: Muscle = .quads, equipment: Equipment = .dumbbell,
-        reps: ClosedRange<Int> = 5...8, cue: String? = nil
+        reps: ClosedRange<Int> = 5...8, cue: String = ""
     ) -> CustomExerciseDraft {
-        CustomExerciseDraft(name: name, muscle: muscle, equipment: equipment, repRange: reps, cue: cue)
+        CustomExerciseDraft(
+            name: name, muscle: muscle, equipment: equipment, minReps: reps.lowerBound, maxReps: reps.upperBound,
+            cue: cue)
     }
 
     @discardableResult
@@ -151,6 +153,19 @@ final class CustomExerciseTests: XCTestCase {
         let store = try makeStore()
         try store.saveCustomExercise(draft(reps: -2...0))
         XCTAssertEqual(store.customExercise(zercher)?.repRange, 1...1)
+
+        var inverted = draft("Inverted")
+        inverted.minReps = 9
+        inverted.maxReps = 3
+        try store.saveCustomExercise(inverted)
+        XCTAssertEqual(store.customExercise(ExerciseID(folding: "Inverted"))?.repRange, 9...9)
+    }
+
+    func testBlankCueIsSavedAsNoCue() throws {
+        let store = try makeStore()
+        try store.saveCustomExercise(draft(cue: "  \n"))
+        XCTAssertNil(try XCTUnwrap(store.customExercise(zercher)).cue)
+        XCTAssertNil(try XCTUnwrap(store.library(muscle: .quads, equipment: nil, search: "zercher").first).info.cue)
     }
 
     func testDeleteWithoutReferencesRemovesIt() throws {

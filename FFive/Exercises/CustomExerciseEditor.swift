@@ -10,9 +10,6 @@ struct CustomExerciseEditor: View {
     @Environment(Store.self) private var store
     private let original: CustomExerciseDraft
     @State private var draft: CustomExerciseDraft
-    @State private var cue: String
-    @State private var minReps: Int
-    @State private var maxReps: Int
     @State private var nameTaken = false
 
     init(
@@ -21,20 +18,8 @@ struct CustomExerciseEditor: View {
     ) {
         self.editing = editing
         self.onSaved = onSaved
-        var original = draft
-        original.cue = draft.cue ?? ""
-        self.original = original
+        original = draft
         _draft = State(initialValue: draft)
-        _cue = State(initialValue: draft.cue ?? "")
-        _minReps = State(initialValue: draft.repRange.lowerBound)
-        _maxReps = State(initialValue: draft.repRange.upperBound)
-    }
-
-    private var edited: CustomExerciseDraft {
-        var result = draft
-        result.cue = cue
-        result.repRange = minReps...maxReps
-        return result
     }
 
     private var canSave: Bool { !draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
@@ -75,16 +60,17 @@ struct CustomExerciseEditor: View {
 
                     SectionHeading(text: "Rep range")
                     GroupedCard {
-                        Stepper("Min \(minReps) reps", value: $minReps, in: 1...maxReps)
+                        Stepper("Min \(draft.minReps) reps", value: $draft.minReps, in: 1...draft.maxReps)
                             .groupRow()
                         Hairline()
-                        Stepper("Max \(maxReps) reps", value: $maxReps, in: minReps...50)
+                        Stepper("Max \(draft.maxReps) reps", value: $draft.maxReps, in: draft.minReps...50)
                             .groupRow()
                     }
 
                     SectionHeading(text: "Cue")
                     TextField(
-                        "Cue", text: $cue, prompt: Text("Optional").foregroundStyle(Theme.secondary), axis: .vertical
+                        "Cue", text: $draft.cue, prompt: Text("Optional").foregroundStyle(Theme.secondary),
+                        axis: .vertical
                     )
                     .lineLimit(1...4)
                     .formField()
@@ -109,7 +95,7 @@ struct CustomExerciseEditor: View {
             }
         }
         .presentationDetents([.large])
-        .interactiveDismissDisabled(edited != original)
+        .interactiveDismissDisabled(draft != original)
     }
 
     private func pickerRow(_ title: String, @ViewBuilder picker: () -> some View) -> some View {
@@ -133,7 +119,7 @@ struct CustomExerciseEditor: View {
 
     private func save() {
         do {
-            let saved = try store.saveCustomExercise(edited, editing: editing)
+            let saved = try store.saveCustomExercise(draft, editing: editing)
             dismiss()
             onSaved(saved)
         } catch {
