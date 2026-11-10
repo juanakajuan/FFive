@@ -10,6 +10,7 @@ struct PerfProbe {
     static let sizes = [0, budgetSize, scaleSize]
     static let budgetMillis = 20.0
     static let pickerBudgetMillis = 1.0
+    static let cardBudgetMillis = 0.5
     static let budgetScaleFactor = 3.0
     static let coldScaleFactor = 4.0
     static let rounds = 15
@@ -67,6 +68,26 @@ struct PerfProbe {
             )
         }
 
+        var cardColds: [Int: [Double]] = [:]
+        var cardWarms: [Int: [Double]] = [:]
+        var cardCompared: [Int: Int] = [:]
+        for _ in 0..<rounds {
+            for size in sizes {
+                let (store, meso) = stores[size]!
+                let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
+                store.commit()
+                cardColds[size, default: []].append(time { cardCompared[size] = cardsRender(store, session) })
+                for _ in 0..<warmPerRound {
+                    cardWarms[size, default: []].append(time { cardCompared[size] = cardsRender(store, session) })
+                }
+            }
+        }
+        for size in sizes {
+            print(
+                "perf-probe: exercise cards median \(format(median(cardWarms[size]!))) ms (min \(format(cardWarms[size]!.min()!))) at \(size) finished workouts, \(format(median(cardColds[size]!))) ms (min \(format(cardColds[size]!.min()!))) on the first render after a commit"
+            )
+        }
+
         let (store, meso) = stores[budgetSize]!
         var strength: [Double] = []
         for _ in 0..<rounds {
@@ -120,6 +141,15 @@ struct PerfProbe {
             pickerWarm[scaleSize]! <= pickerBudgetMillis,
             "exercise picker min \(format(pickerWarm[scaleSize]!)) ms at \(scaleSize) exceeds \(format(pickerBudgetMillis)) ms, so a keystroke scans the workout history"
         )
+        let cardWarm = cardWarms.mapValues { $0.min()! }
+        gate(
+            cardCompared[scaleSize] == lifts.count,
+            "exercise cards found \(cardCompared[scaleSize]!) last finished exercises at \(scaleSize), not the \(lifts.count) seeded, so the probe timed the wrong work"
+        )
+        gate(
+            cardWarm[scaleSize]! <= cardBudgetMillis,
+            "exercise cards min \(format(cardWarm[scaleSize]!)) ms at \(scaleSize) exceeds \(format(cardBudgetMillis)) ms, so a keystroke in a set field fetches the workout history"
+        )
         if failed { exit(1) }
     }
 
@@ -129,6 +159,17 @@ struct PerfProbe {
     private static func pickerRender(_ store: Store) -> Int {
         _ = store.lastPerformed()
         return store.library(muscle: nil, equipment: nil, search: "", performedOnly: true).count
+    }
+
+    /// What one body pass of every exercise card in a session asks the store for.
+    /// Returns how many cards found a last finished exercise.
+    @MainActor
+    private static func cardsRender(_ store: Store, _ session: Workout) -> Int {
+        session.sortedExercises.filter { exercise in
+            let previous = store.lastFinishedExercise(exercise.key)
+            _ = exercise.comparisons(with: previous)
+            return previous != nil
+        }.count
     }
 
     @MainActor

@@ -70,4 +70,18 @@ final class SetComparisonTests: XCTestCase {
         let today = try session(store, [(100, 8, .regular)])
         XCTAssertTrue(today.comparisons(with: store.lastFinishedExercise(today.key)).isEmpty)
     }
+
+    func testFinishingAWorkoutMakesItTheLastSessionAfterAnEarlierRead() throws {
+        let store = Store(inMemory: true)
+        try finished(store, [(100, 8, .regular)])
+        let today = try session(store, [(105, 8, .regular)])
+        let first = try XCTUnwrap(store.lastFinishedExercise(today.key))
+        XCTAssertNotEqual(first.workout, today.workout)
+
+        store.finish(try XCTUnwrap(today.workout))
+
+        XCTAssertEqual(
+            store.lastFinishedExercise(today.key)?.workout, today.workout,
+            "a finished workout replaces the one read before it")
+    }
 }

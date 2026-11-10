@@ -45,6 +45,7 @@ public final class Store {
     }
 
     @ObservationIgnored private var cachedLastPerformed: [ExerciseID: Date]?
+    @ObservationIgnored private var cachedLastFinished: [ExerciseID: Exercise?] = [:]
 
     public func startMesocycle(_ draft: MesoDraft) throws {
         guard try context.fetchCount(Mesocycle.active) == 0 else { throw StoreError.anotherMesocycleIsActive }
@@ -300,8 +301,13 @@ public final class Store {
         commit()
     }
 
+    /// The exercise with this key in the most recent finished workout, cached until the next commit.
     public func lastFinishedExercise(_ key: ExerciseID) -> Exercise? {
-        MesoPlanner.lastFinishedExercise(key, in: context)
+        observeCommits()
+        if let cached = cachedLastFinished[key] { return cached }
+        let found = MesoPlanner.lastFinishedExercise(key, in: context)
+        cachedLastFinished[key] = found
+        return found
     }
 
     public func exerciseHistory(_ key: ExerciseID) -> [ExerciseHistoryGroup] {
@@ -450,6 +456,7 @@ public final class Store {
     func commit() {
         cachedSnapshot = nil
         cachedLastPerformed = nil
+        cachedLastFinished = [:]
         do {
             try context.save()
             revision += 1
