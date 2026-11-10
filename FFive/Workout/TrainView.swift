@@ -33,7 +33,7 @@ struct TrainView: View {
 
     @State private var showingBuilder = false
     @State private var showingSchedule = false
-    @State private var confirmEnd = false
+    @State private var ending: Mesocycle?
 
     private var openQuickWorkout: Workout? { openWorkouts.first { $0.mesocycle == nil } }
 
@@ -107,7 +107,7 @@ struct TrainView: View {
                 Text("Every session is done or skipped, deload included. End this mesocycle to plan the next one.")
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
-                Button("End Mesocycle") { confirmEnd = true }
+                Button("End Mesocycle") { ending = meso }
                     .buttonStyle(.primary)
                     .a11y(.workoutEnd)
                     .padding(.top, 4)
@@ -132,12 +132,7 @@ struct TrainView: View {
             }
         }
         .sheet(isPresented: $showingSchedule) { ScheduleSheet(meso: meso, week: meso.accumulationWeeks) }
-        .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button("End Mesocycle", role: .destructive) { WorkoutTabActions.end(meso, router: router, store: store) }
-                .a11y(.dialogEndMesocycle)
-        } message: {
-            Text("Logged sessions stay in Progress. You can plan a new mesocycle right after.")
-        }
+        .endMesocycleDialog($ending) { WorkoutTabActions.end($0, router: router, store: store) }
     }
 }
 
