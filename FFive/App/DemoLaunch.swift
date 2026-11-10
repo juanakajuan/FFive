@@ -3,7 +3,7 @@ import FFiveCore
 enum DemoLaunch {
     private(set) static var route: DemoRoute?
     private(set) static var isDemo = false
-    private static var taken: Set<DemoRoute> = []
+    private static var taken = false
 
     static func configure(_ mode: LaunchMode) {
         route = mode.demoRoute
@@ -11,11 +11,12 @@ enum DemoLaunch {
     }
 
     static func take(_ candidate: DemoRoute) -> Bool {
-        guard route == candidate else { return false }
-        return taken.insert(candidate).inserted
+        guard isPending(candidate) else { return false }
+        taken = true
+        return true
     }
 
     static func isPending(_ candidate: DemoRoute) -> Bool {
-        route == candidate && !taken.contains(candidate)
+        route == candidate && !taken
     }
 }

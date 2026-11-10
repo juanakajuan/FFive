@@ -42,6 +42,7 @@ struct SessionFocus: Equatable {
     let key: SessionKey
 }
 
+@MainActor
 @Observable
 final class AppRouter {
     var tab: AppTab = [.progress, .strength].contains(DemoLaunch.route) ? .more : .workout
@@ -54,20 +55,17 @@ final class AppRouter {
         tab = .workout
     }
 
-    @MainActor
     func end(_ meso: Mesocycle, store: Store) {
         store.endMesocycle(meso)
         endedMeso = meso
     }
 
-    @MainActor
     func delete(_ meso: Mesocycle, store: Store) {
         if focus?.meso == meso.persistentModelID { focus = nil }
         if endedMeso === meso { endedMeso = nil }
         store.deleteMesocycle(meso)
     }
 
-    @MainActor
     func deleteAllData(store: Store) {
         focus = nil
         endedMeso = nil
