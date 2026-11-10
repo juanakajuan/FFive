@@ -42,7 +42,7 @@ struct MoreView: View {
                     }
                     Rectangle().fill(Theme.hairline).frame(height: 1).padding(.top, 24)
                     Text("App version: \(version)")
-                        .font(.system(size: 13, design: .monospaced))
+                        .font(Theme.caption.monospaced())
                         .foregroundStyle(Theme.secondary)
                         .padding(.top, 16)
                 }

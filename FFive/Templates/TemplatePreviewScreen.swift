@@ -164,7 +164,7 @@ private struct DayTabs: View {
                             .font(Theme.detail.weight(.semibold))
                             .lineLimit(1)
                             .foregroundStyle(selected ? Theme.text : Theme.secondary)
-                            .padding(.horizontal, 12)
+                            .padding(.horizontal, Theme.rowInset)
                             .frame(minHeight: 32)
                             .background(
                                 selected ? Theme.raised : Theme.field,
@@ -196,18 +196,18 @@ private struct MuscleFocusCard: View {
                         MuscleDotLabel(muscle: entry.muscle)
                             .font(Theme.detail)
                             .frame(width: 110, alignment: .leading)
-                        RoundedRectangle(cornerRadius: 2)
+                        RoundedRectangle(cornerRadius: Theme.cornerRadius)
                             .fill(Theme.field)
                             .frame(height: 8)
                             .overlay(alignment: .leading) {
                                 GeometryReader { geometry in
-                                    RoundedRectangle(cornerRadius: 2)
+                                    RoundedRectangle(cornerRadius: Theme.cornerRadius)
                                         .fill(entry.muscle.tint)
                                         .frame(width: geometry.size.width * CGFloat(entry.count) / CGFloat(most))
                                 }
                             }
                         Text("\(entry.count)")
-                            .font(.system(size: 13, design: .monospaced))
+                            .font(Theme.caption.monospaced())
                             .foregroundStyle(Theme.secondary)
                             .frame(width: 20, alignment: .trailing)
                     }

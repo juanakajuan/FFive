@@ -158,7 +158,7 @@ private struct TabBar: View {
                         Image(systemName: tab.icon(selected: selected))
                             .font(.system(size: 22))
                             .frame(height: 26)
-                        Text(tab.title).font(.system(size: 10.5))
+                        Text(tab.title).font(Theme.caption)
                     }
                     .foregroundStyle(selected ? Theme.text : Theme.secondary)
                     .frame(maxWidth: .infinity)

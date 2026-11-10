@@ -169,19 +169,19 @@ struct TemplateListRow: View {
                         Image("Logo")
                             .resizable()
                             .frame(width: 14, height: 14)
-                            .clipShape(RoundedRectangle(cornerRadius: 3))
+                            .clipShape(RoundedRectangle(cornerRadius: Theme.cornerRadius))
                             .accessibilityHidden(true)
                     }
                     Image(systemName: template.emphasis == nil ? "person" : "target")
                         .font(.system(size: 10))
                         .accessibilityHidden(true)
                     Text(template.emphasis?.displayName.uppercased() ?? "CUSTOM")
-                        .font(.system(size: 11.5, design: .monospaced))
+                        .font(Theme.caption.monospaced())
                         .lineLimit(1)
                 }
                 .foregroundStyle(Theme.secondary)
                 Text(template.name)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(Theme.rowTitle)
                     .foregroundStyle(Theme.text)
                     .multilineTextAlignment(.leading)
             }

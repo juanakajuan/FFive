@@ -87,7 +87,7 @@ struct MesoBuilderView: View {
                         HStack(spacing: 10) {
                             Image(systemName: "wand.and.stars").font(.system(size: 18))
                             VStack(alignment: .leading, spacing: 3) {
-                                Text("Guided plan").font(.system(size: 16, weight: .semibold))
+                                Text("Guided plan").font(Theme.rowTitle)
                                 Text("Pick your days a week and what to grow")
                                     .font(Theme.caption)
                                     .foregroundStyle(Theme.secondary)
@@ -117,7 +117,7 @@ struct MesoBuilderView: View {
                     NavigationLink(value: Route.blank) {
                         HStack(spacing: 10) {
                             Image(systemName: "square.and.pencil").font(.system(size: 18))
-                            Text("Build from scratch").font(.system(size: 16, weight: .semibold))
+                            Text("Build from scratch").font(Theme.rowTitle)
                             Spacer()
                             RowChevron()
                         }
@@ -252,7 +252,7 @@ struct MesoEditorView: View {
             ForEach($draft.days) { $day in
                 Section {
                     TextField("Day name", text: $day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary))
-                        .font(.system(size: 16, weight: .semibold))
+                        .font(Theme.rowTitle)
                         .formField()
                         .themedRow(vertical: 8)
                     if editing == nil {
@@ -568,7 +568,7 @@ struct RIRSchedule: View {
                         .font(Theme.tag)
                         .foregroundStyle(Theme.secondary)
                     Text(phase.rir.map(String.init) ?? "—")
-                        .font(.system(size: 17, weight: .semibold).monospacedDigit())
+                        .font(Theme.rowTitle.monospacedDigit())
                         .foregroundStyle(phase == .deload ? Theme.infoText : Theme.text)
                 }
                 .frame(maxWidth: .infinity)

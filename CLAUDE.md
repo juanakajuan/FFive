@@ -31,6 +31,7 @@ Each rule is enforced by the check named beside it. A rule with no check is a ju
 | A view never stores a `@ViewBuilder` closure, it stores the built view | `scripts/lint.sh` rule `no-stored-builder` |
 | Alerts, sheets, confirmation dialogs and covers attach to a screen struct (a name ending in `View` or `Screen`), never a row or card | `scripts/lint.sh` rule `presentation-at-screen-root` |
 | Every card draws through `.surfaceCard()` in `Theme.swift`, never a hand-built `Theme.surface` rounded background | `scripts/lint.sh` rule `one-card-modifier` |
+| Text fonts, corner radii and on-accent colors come from `Theme` tokens, never a literal size, a numeric radius or `.white` | `scripts/lint.sh` rule `theme-tokens` |
 | Every file under `FFive/` typechecks together for iOS, against the built `FFiveCore` package | `scripts/typecheck-app.sh` |
 | Engine and planner rules keep their behavior | `swift test --package-path FFiveCore` |
 | Swift files match `.swift-format` and pass its lint rules | `scripts/format.sh --lint` |

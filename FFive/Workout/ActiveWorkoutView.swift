@@ -321,7 +321,7 @@ struct ActiveWorkoutView: View {
                     emptySession
                 }
             }
-            .padding(.vertical, 16)
+            .padding(.vertical, Theme.gutter)
         }
         .scrollDismissesKeyboard(.interactively)
         .safeAreaInset(edge: .top, spacing: 0) { header }
@@ -660,7 +660,7 @@ struct ExerciseCard: View {
             }
         }
         .surfaceCard(.rows, tag: exercise.muscle)
-        .opacity(isLocked ? 0.4 : 1)
+        .opacity(isLocked ? Theme.dimmed : 1)
         .overlay {
             if let feedbackRequiredFor {
                 FeedbackRequiredToast(muscle: feedbackRequiredFor).transition(
@@ -869,7 +869,7 @@ struct SetRow: View {
                     if let tag = set.type.tag {
                         ActionIcon.verticalEllipsis.scaleEffect(0.75).frame(height: 22)
                         Text(tag)
-                            .font(.system(size: 9, weight: .bold))
+                            .font(Theme.tag)
                             .foregroundStyle(Theme.infoText)
                             .lineLimit(1)
                             .fixedSize()
@@ -898,7 +898,7 @@ struct SetRow: View {
             .a11y(.setWeight, number)
             .frame(minWidth: SetColumns.field, maxWidth: .infinity)
             .padding(.leading, 12)
-            .opacity(set.status == .skipped ? 0.4 : 1)
+            .opacity(set.status == .skipped ? Theme.dimmed : 1)
 
             TextField(
                 "Set \(number) reps", value: reps, format: .number,
@@ -913,7 +913,7 @@ struct SetRow: View {
             .a11y(.setReps, number)
             .frame(minWidth: SetColumns.field, maxWidth: .infinity)
             .padding(.leading, 16)
-            .opacity(set.status == .skipped ? 0.4 : 1)
+            .opacity(set.status == .skipped ? Theme.dimmed : 1)
 
             Button {
                 if !set.isDone, let onLogBlocked {
@@ -1117,8 +1117,8 @@ private struct FeedbackRequiredToast: View {
 
     var body: some View {
         Label("Rate \(muscle.displayName.lowercased()) first", systemImage: "info.circle")
-            .font(Theme.body.weight(.semibold))
-            .foregroundStyle(.white)
+            .font(Theme.rowTitle)
+            .foregroundStyle(Theme.onAccent)
             .padding(.horizontal, 20)
             .padding(.vertical, 14)
             .background(Theme.danger, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
@@ -1230,7 +1230,7 @@ private struct NoteEditor: View {
                     .focused($focused)
                     .accessibilityLabel("Note")
                     .a11y(.noteText)
-                    .padding(12)
+                    .padding(Theme.rowInset)
                     .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
                 if let dayName {
                     VStack(alignment: .leading, spacing: 4) {

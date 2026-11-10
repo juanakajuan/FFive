@@ -18,12 +18,25 @@ enum Theme {
     static let accent = Color(light: 0x2F6FEB, dark: 0x2F6FEB)
     /// The unlit body in a muscle icon, which sits on a tinted tag.
     static let figure = Color(light: 0x111214, dark: 0x0A0A0B, lightAlpha: 0.22, darkAlpha: 0.6)
+    /// Text and glyphs drawn on an accent, danger or success fill.
+    static let onAccent = Color.white
+    /// An empty cell or an empty bar in a chart.
+    static let faint = Theme.text.opacity(0.2)
+
+    /// A control that can't be used, or a set or exercise that is locked or skipped.
+    static let dimmed: Double = 0.4
+    static let pressed: Double = 0.7
 
     static let cornerRadius: CGFloat = 4
     static let gutter: CGFloat = 16
+    /// The inset inside a raised box or a field: grouped cards, stat tiles, panels, text inputs.
+    static let rowInset: CGFloat = 12
 
     static let screenTitle = Font.system(size: 26, weight: .bold)
+    static let heroTitle = Font.system(size: 22, weight: .bold)
     static let cardTitle = Font.system(size: 18, weight: .bold)
+    /// The title of a tappable row or a button.
+    static let rowTitle = Font.system(size: 16, weight: .semibold)
     static let body = Font.system(size: 16)
     static let detail = Font.system(size: 14)
     static let columnHeader = Font.system(size: 14, weight: .medium)
@@ -160,8 +173,8 @@ struct ThemedField: ViewModifier {
             .monospacedDigit()
             .frame(maxWidth: .infinity, minHeight: height)
             .padding(.horizontal, 4)
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: 2))
-            .overlay(RoundedRectangle(cornerRadius: 2).stroke(Theme.hairline, lineWidth: 1))
+            .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius).stroke(Theme.hairline, lineWidth: 1))
     }
 }
 
@@ -184,11 +197,11 @@ extension View {
     func formField() -> some View {
         font(Theme.body)
             .foregroundStyle(Theme.text)
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Theme.rowInset)
             .padding(.vertical, 8)
             .frame(minHeight: 40)
-            .background(Theme.field, in: RoundedRectangle(cornerRadius: 2))
-            .overlay(RoundedRectangle(cornerRadius: 2).stroke(Theme.hairline, lineWidth: 1))
+            .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+            .overlay(RoundedRectangle(cornerRadius: Theme.cornerRadius).stroke(Theme.hairline, lineWidth: 1))
     }
 }
 
@@ -196,7 +209,7 @@ struct LogCheckbox: View {
     let status: SetStatus
 
     var body: some View {
-        let shape = RoundedRectangle(cornerRadius: 3)
+        let shape = RoundedRectangle(cornerRadius: Theme.cornerRadius)
         shape
             .fill(status == .done ? Theme.success : Color.clear)
             .overlay {
@@ -210,7 +223,8 @@ struct LogCheckbox: View {
                 switch status {
                 case .pending: EmptyView()
                 case .done:
-                    Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundStyle(.white)
+                    Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundStyle(
+                        Theme.onAccent)
                 case .skipped:
                     Image(systemName: "forward.end.fill").font(.system(size: 10, weight: .bold))
                         .foregroundStyle(Theme.secondary)
@@ -262,7 +276,7 @@ struct StatusBadge: View {
             .foregroundStyle(Theme.text)
             .padding(.horizontal, 6)
             .padding(.vertical, 4)
-            .background(Theme.infoFill, in: RoundedRectangle(cornerRadius: 2))
+            .background(Theme.infoFill, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             .fixedSize()
     }
 }
@@ -276,7 +290,7 @@ struct CountPill: View {
             .foregroundStyle(Theme.text)
             .padding(.horizontal, 5)
             .padding(.vertical, 3)
-            .background(Theme.raised, in: RoundedRectangle(cornerRadius: 3))
+            .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             .fixedSize()
     }
 }
@@ -290,8 +304,7 @@ struct SearchBox: View {
             .font(Theme.body)
             .foregroundStyle(Theme.text)
             .autocorrectionDisabled()
-            .padding(.leading, 12)
-            .padding(.trailing, 16)
+            .padding(.horizontal, Theme.rowInset)
             .frame(height: 40)
             .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             .accessibilityLabel(prompt)
@@ -326,7 +339,7 @@ struct FilterBar<MenuContent: View>: View {
     }
 }
 
-/// The one grouped box for settings-style menus. It owns the 12 pt inner inset, so rows add no horizontal
+/// The one grouped box for settings-style menus. It owns the inner `rowInset`, so rows add no horizontal
 /// padding; callers own the outer gutter. Tab-root browse lists use edge-to-edge rows instead.
 struct GroupedCard<Content: View>: View {
     let content: Content
@@ -335,7 +348,7 @@ struct GroupedCard<Content: View>: View {
 
     var body: some View {
         VStack(alignment: .leading, spacing: 0) { content }
-            .padding(.horizontal, 12)
+            .padding(.horizontal, Theme.rowInset)
             .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
     }
 }

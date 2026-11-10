@@ -13,7 +13,7 @@ struct StatTile: View {
                 .foregroundStyle(Theme.secondary)
                 .frame(height: 18)
             Text(value)
-                .font(.system(size: 22, weight: .bold))
+                .font(Theme.heroTitle)
                 .foregroundStyle(Theme.text)
                 .monospacedDigit()
                 .lineLimit(1)
@@ -26,7 +26,7 @@ struct StatTile: View {
                 .minimumScaleFactor(0.8)
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading)
-        .padding(12)
+        .padding(Theme.rowInset)
         .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
     }
 }
@@ -55,7 +55,10 @@ struct PhaseBadge: View {
             .foregroundStyle(Theme.text)
             .padding(.horizontal, 6)
             .padding(.vertical, 4)
-            .background(phase == .deload ? Theme.noteFill : Theme.infoFill, in: RoundedRectangle(cornerRadius: 2))
+            .background(
+                phase == .deload ? Theme.noteFill : Theme.infoFill,
+                in: RoundedRectangle(cornerRadius: Theme.cornerRadius)
+            )
             .fixedSize()
     }
 }
@@ -195,10 +198,10 @@ struct VolumeChart: View {
                 swatch(Theme.infoText, "Done")
                 swatch(Theme.infoFill, "Planned")
                 swatch(Theme.success, "Productive")
-                tick(Theme.text.opacity(0.7), "Minimum")
+                tick(Theme.secondary, "Minimum")
                 tick(Theme.danger, "Maximum")
             }
-            .font(.system(size: 11))
+            .font(Theme.caption)
             .foregroundStyle(Theme.secondary)
         }
     }
@@ -212,7 +215,7 @@ struct VolumeChart: View {
 
     private func swatch(_ color: Color, _ text: String) -> some View {
         HStack(spacing: 4) {
-            RoundedRectangle(cornerRadius: 2).fill(color).frame(width: 10, height: 10)
+            RoundedRectangle(cornerRadius: Theme.cornerRadius).fill(color).frame(width: 10, height: 10)
             Text(text)
         }
     }
@@ -233,10 +236,12 @@ private struct VolumeRow: View {
                 let x = { (sets: Int) in proxy.size.width * Double(sets) / scale }
                 VStack(alignment: .leading, spacing: 3) {
                     ZStack(alignment: .leading) {
-                        RoundedRectangle(cornerRadius: 2).fill(Theme.raised)
-                        RoundedRectangle(cornerRadius: 2).fill(Theme.infoFill).frame(width: x(volume.planned))
-                        RoundedRectangle(cornerRadius: 2).fill(Theme.infoText).frame(width: x(volume.done))
-                        Rectangle().fill(Theme.text.opacity(0.7)).frame(width: 2, height: 14)
+                        RoundedRectangle(cornerRadius: Theme.cornerRadius).fill(Theme.raised)
+                        RoundedRectangle(cornerRadius: Theme.cornerRadius).fill(Theme.infoFill).frame(
+                            width: x(volume.planned))
+                        RoundedRectangle(cornerRadius: Theme.cornerRadius).fill(Theme.infoText).frame(
+                            width: x(volume.done))
+                        Rectangle().fill(Theme.secondary).frame(width: 2, height: 14)
                             .offset(x: x(landmarks.mev) - 1)
                         Rectangle().fill(Theme.danger).frame(width: 2, height: 14)
                             .offset(x: x(landmarks.mrv) - 1)

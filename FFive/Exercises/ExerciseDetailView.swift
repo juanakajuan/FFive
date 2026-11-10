@@ -45,7 +45,7 @@ struct ExerciseDetailView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     MuscleTag(muscle: current.muscle)
                     Text(current.name)
-                        .font(.system(size: 22, weight: .bold))
+                        .font(Theme.heroTitle)
                         .foregroundStyle(Theme.text)
                     HStack(spacing: 6) {
                         Text(current.equipment)

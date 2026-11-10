@@ -52,7 +52,7 @@ extension Learn {
                     .frame(width: 28)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(article.title)
-                        .font(Theme.body.weight(.semibold))
+                        .font(Theme.rowTitle)
                         .foregroundStyle(Theme.text)
                     Text(article.summary)
                         .font(Theme.detail)
@@ -87,7 +87,7 @@ extension Learn {
             ScrollView {
                 VStack(alignment: .leading, spacing: 16) {
                     Text(article.summary)
-                        .font(.system(size: 18))
+                        .font(Theme.body)
                         .foregroundStyle(Theme.secondary)
                     TakeawaysCard(takeaways: article.takeaways)
                     ForEach(Array(article.blocks.enumerated()), id: \.offset) { _, block in
@@ -138,7 +138,7 @@ extension Learn {
                         .font(Theme.detail)
                 }
                 .foregroundStyle(Theme.text)
-                .padding(12)
+                .padding(Theme.rowInset)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .background(Theme.noteFill, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             case .landmarksChart:
@@ -159,7 +159,7 @@ extension Learn {
         var body: some View {
             VStack(alignment: .leading, spacing: 12) {
                 Label("Key takeaways", systemImage: "lightbulb")
-                    .font(Theme.body.weight(.semibold))
+                    .font(Theme.rowTitle)
                     .foregroundStyle(Theme.infoText)
                 ForEach(takeaways, id: \.self) { item in
                     HStack(alignment: .firstTextBaseline, spacing: 10) {
@@ -172,7 +172,7 @@ extension Learn {
                     }
                 }
             }
-            .padding(12)
+            .padding(Theme.rowInset)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.infoFill.opacity(0.6), in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
         }
@@ -230,7 +230,7 @@ extension Learn {
 
         var color: Color {
             switch self {
-            case .belowMEV: Theme.text.opacity(0.22)
+            case .belowMEV: Theme.faint
             case .towardMAV: Theme.infoText.opacity(0.6)
             case .mav: Theme.success
             case .towardMRV: Theme.danger.opacity(0.75)
@@ -258,7 +258,8 @@ extension Learn {
                 ) {
                     ForEach(LandmarkZone.allCases) { zone in
                         HStack(spacing: 6) {
-                            RoundedRectangle(cornerRadius: 3).fill(zone.color).frame(width: 14, height: 10)
+                            RoundedRectangle(cornerRadius: Theme.cornerRadius).fill(zone.color).frame(
+                                width: 14, height: 10)
                             Text(zone.label)
                         }
                     }
@@ -390,12 +391,12 @@ extension Learn {
         var body: some View {
             VStack(spacing: 2) {
                 Text(caption)
-                    .font(.system(size: 11))
+                    .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
                 Text(value)
-                    .font(.system(size: 20, weight: .bold).monospacedDigit())
+                    .font(Theme.heroTitle.monospacedDigit())
                 Text(unit)
-                    .font(.system(size: 11))
+                    .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
             }
             .lineLimit(1)
@@ -429,7 +430,7 @@ extension Learn {
                             .frame(width: rowLabelWidth, height: 1)
                         ForEach(Workload.allCases, id: \.self) { workload in
                             Text(workload.label)
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(Theme.tag)
                                 .foregroundStyle(Theme.secondary)
                                 .multilineTextAlignment(.center)
                                 .frame(maxWidth: .infinity)
@@ -438,7 +439,7 @@ extension Learn {
                     ForEach(Soreness.allCases, id: \.self) { soreness in
                         HStack(spacing: 4) {
                             Text(soreness.label)
-                                .font(.system(size: 11, weight: .semibold))
+                                .font(Theme.tag)
                                 .foregroundStyle(Theme.secondary)
                                 .frame(width: rowLabelWidth, alignment: .leading)
                             ForEach(Workload.allCases, id: \.self) { workload in
@@ -488,7 +489,7 @@ extension Learn {
             let changed = value != Learn.FeedbackRule.baseChange(soreness, workload)
             let shape = RoundedRectangle(cornerRadius: Theme.cornerRadius)
             return Text(verbatim: value > 0 ? "+\(value)" : "\(value)")
-                .font(Theme.body.weight(.semibold).monospacedDigit())
+                .font(Theme.rowTitle.monospacedDigit())
                 .frame(maxWidth: .infinity, minHeight: 38)
                 .background(color(for: value), in: shape)
                 .overlay { shape.strokeBorder(Theme.text.opacity(changed ? 0.85 : 0), lineWidth: 1.5) }
@@ -547,7 +548,7 @@ extension Learn {
 
 extension View {
     fileprivate func learnPanel() -> some View {
-        padding(16)
+        padding(Theme.gutter)
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
     }

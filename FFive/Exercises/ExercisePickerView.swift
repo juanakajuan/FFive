@@ -224,7 +224,7 @@ struct ExercisePickerView: View {
             } label: {
                 Text("Add")
                     .font(Theme.columnHeader)
-                    .foregroundStyle(.white)
+                    .foregroundStyle(Theme.onAccent)
                     .padding(.horizontal, 14)
                     .padding(.vertical, 8)
                     .background(Theme.accent, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
@@ -233,7 +233,7 @@ struct ExercisePickerView: View {
             .accessibilityLabel("Add \(entry.name)")
             .a11y(.pickerSuggestionAdd)
         }
-        .padding(12)
+        .padding(Theme.rowInset)
         .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
         .padding(.horizontal, Theme.gutter)
         .padding(.bottom, 8)

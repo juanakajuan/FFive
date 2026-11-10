@@ -32,7 +32,7 @@ struct WorkoutHeader<Trailing: View>: View {
         }
         .padding(.horizontal, Theme.gutter)
         .padding(.top, 8)
-        .padding(.bottom, 16)
+        .padding(.bottom, Theme.gutter)
         .frame(maxWidth: .infinity, alignment: .leading)
         .background(Theme.surface.ignoresSafeArea(edges: .top))
         .overlay(alignment: .bottom) { ProgressLine(progress: progress) }
@@ -84,13 +84,13 @@ struct ActionIcon: View {
 struct FloatingButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(Theme.body.weight(.semibold))
-            .foregroundStyle(.white)
+            .font(Theme.rowTitle)
+            .foregroundStyle(Theme.onAccent)
             .frame(maxWidth: .infinity, minHeight: 50)
             .background(Theme.accent, in: Capsule())
             .shadow(color: .black.opacity(0.4), radius: 10, y: 4)
             .contentShape(Capsule())
-            .opacity(configuration.isPressed ? 0.8 : 1)
+            .opacity(configuration.isPressed ? Theme.pressed : 1)
     }
 }
 

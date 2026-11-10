@@ -104,7 +104,7 @@ struct MesoNotesScreen: View {
                 }
                 .accessibilityLabel("New note")
                 .a11y(.mesoNoteText)
-                .padding(12)
+                .padding(Theme.rowInset)
                 .background(Theme.field, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
             HStack {
                 Text("\(draft.count)/\(MesoNote.maxLength)")

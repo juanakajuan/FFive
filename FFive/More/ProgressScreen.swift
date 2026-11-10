@@ -142,7 +142,7 @@ struct ProgressScreen: View {
                         Spacer()
                         VStack(alignment: .trailing, spacing: 2) {
                             Text("\(formatWeight(item.latest.rounded())) \(unit.rawValue)")
-                                .font(Theme.body.weight(.semibold).monospacedDigit())
+                                .font(Theme.rowTitle.monospacedDigit())
                                 .foregroundStyle(Theme.text)
                             if item.points.count > 1 {
                                 Text(
@@ -251,7 +251,7 @@ struct ExerciseTrendView: View {
                             Text("\(formatWeight(selected.value.rounded())) \(unit.rawValue)")
                                 .font(Theme.caption.bold())
                                 .foregroundStyle(Theme.text)
-                            Text(selected.bestSet).font(.system(size: 11)).foregroundStyle(Theme.secondary)
+                            Text(selected.bestSet).font(Theme.caption).foregroundStyle(Theme.secondary)
                         }
                         .padding(6)
                         .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
@@ -315,7 +315,7 @@ struct HistoryRow: View {
         VStack(alignment: .leading, spacing: 4) {
             HStack {
                 Text(workout.name)
-                    .font(Theme.body.weight(.semibold))
+                    .font(Theme.rowTitle)
                     .foregroundStyle(Theme.text)
                 Spacer()
                 Text(workout.startDate, format: .dateTime.month(.abbreviated).day())
@@ -341,7 +341,7 @@ struct HistoryRow: View {
             if !names.isEmpty {
                 Text(names.joined(separator: " · "))
                     .font(Theme.caption)
-                    .foregroundStyle(Theme.text.opacity(0.35))
+                    .foregroundStyle(Theme.text.opacity(Theme.dimmed))
                     .lineLimit(1)
             }
         }
