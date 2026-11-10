@@ -68,7 +68,7 @@ struct ExercisePickerView: View {
                             .themedRow(vertical: 8)
                             .listRowSeparator(.hidden)
                     }
-                    if !query.isEmpty && !all.contains(where: { $0.id == queryID }) {
+                    if !query.isEmpty && store.listing(queryID) == nil {
                         createRow
                             .themedRow()
                         Text(
