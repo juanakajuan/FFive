@@ -101,6 +101,34 @@ final class CustomExerciseTests: XCTestCase {
             store.lastFinishedExercise(renamed)?.workout?.name, first.name, "history is found by the new key")
     }
 
+    func testSaveReturnsTheListingAsStored() throws {
+        let store = try makeStore()
+        let saved = try store.saveCustomExercise(draft("  Zercher Squat \n", muscle: .quads, reps: -2...0))
+
+        XCTAssertEqual(saved.id, zercher)
+        XCTAssertEqual(saved.name, "Zercher Squat", "the name is the one the store kept")
+        XCTAssertEqual(saved.info.repRange, 1...1)
+        XCTAssertEqual(saved, store.listing(zercher))
+    }
+
+    func testRenameThatOnlyChangesCaseKeepsTheIdentityAndPinnedNote() throws {
+        let store = try makeStore()
+        let created = try store.saveCustomExercise(draft())
+        let row = try XCTUnwrap(log(store, "Zercher Squat", muscle: .quads).sortedExercises.first)
+        store.setNote("brace", on: row)
+        store.pinNote(on: row)
+        let custom = try XCTUnwrap(store.customExercise(zercher))
+
+        let recased = try store.saveCustomExercise(draft("ZERCHER Squat"), editing: custom)
+        XCTAssertEqual(recased.id, created.id)
+        XCTAssertEqual(recased.name, "ZERCHER Squat")
+        XCTAssertEqual(store.pinnedNote(named: recased.name), "brace")
+
+        let renamed = try store.saveCustomExercise(draft("Front Zercher"), editing: custom)
+        XCTAssertNotEqual(renamed.id, created.id)
+        XCTAssertEqual(renamed, store.listing(ExerciseID(folding: "Front Zercher")))
+    }
+
     func testNameCollisionsAreRejected() throws {
         let store = try makeStore()
         XCTAssertThrowsError(try store.saveCustomExercise(draft("bench  press"))) {

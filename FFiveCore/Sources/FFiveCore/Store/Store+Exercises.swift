@@ -61,8 +61,12 @@ extension Store {
         return CustomExercise.find(id, in: context)
     }
 
-    /// Creates the exercise, or with `editing` rewrites it. A new name moves every reference to the new identity.
-    public func saveCustomExercise(_ draft: CustomExerciseDraft, editing: CustomExercise? = nil) throws {
+    /// Creates the exercise, or with `editing` rewrites it, and returns it as saved. A new name moves every
+    /// reference to the new identity.
+    @discardableResult
+    public func saveCustomExercise(
+        _ draft: CustomExerciseDraft, editing: CustomExercise? = nil
+    ) throws -> ExerciseListing {
         guard let name = draft.name.noteText else { throw StoreError.nameEmpty }
         let key = ExerciseID(folding: name)
         let existing = CustomExercise.find(key, in: context)
@@ -74,15 +78,11 @@ extension Store {
         clean.name = name
         clean.cue = draft.cue?.noteText
         clean.repRange = lower...max(lower, draft.repRange.upperBound)
-        if let editing {
-            cascade(from: editing, to: clean)
-            editing.apply(clean)
-        } else {
-            let created = CustomExercise(name: name, muscle: clean.muscle)
-            created.apply(clean)
-            context.insert(created)
-        }
+        let saved = editing ?? CustomExercise(name: name, muscle: clean.muscle)
+        if let editing { cascade(from: editing, to: clean) } else { context.insert(saved) }
+        saved.apply(clean)
         commit()
+        return Self.listing(saved)
     }
 
     @discardableResult
