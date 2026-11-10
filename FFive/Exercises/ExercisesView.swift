@@ -77,15 +77,9 @@ struct ExercisesView: View {
             .sheet(isPresented: $creating) {
                 CustomExerciseEditor(
                     draft: CustomExerciseDraft(name: search, muscle: muscle ?? .chest, equipment: equipment ?? .machine)
-                ) { saved in
-                    showSaved(saved.name)
-                }
+                ) { path.append($0) }
             }
         }
-    }
-
-    private func showSaved(_ name: String) {
-        if let match = store.listing(ExerciseID(folding: name)) { path.append(match) }
     }
 
     private var filterLabel: String {

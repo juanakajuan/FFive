@@ -4,7 +4,7 @@ import SwiftUI
 /// Creates a custom exercise, or with `editing` changes one. Calls `onSaved` with what was saved.
 struct CustomExerciseEditor: View {
     let editing: CustomExercise?
-    let onSaved: (CustomExerciseDraft) -> Void
+    let onSaved: (ExerciseListing) -> Void
 
     @Environment(\.dismiss) private var dismiss
     @Environment(Store.self) private var store
@@ -14,7 +14,7 @@ struct CustomExerciseEditor: View {
 
     init(
         draft: CustomExerciseDraft, editing: CustomExercise? = nil,
-        onSaved: @escaping (CustomExerciseDraft) -> Void
+        onSaved: @escaping (ExerciseListing) -> Void
     ) {
         self.editing = editing
         self.onSaved = onSaved
@@ -22,7 +22,7 @@ struct CustomExerciseEditor: View {
         _draft = State(initialValue: draft)
     }
 
-    private var canSave: Bool { !draft.name.trimmingCharacters(in: .whitespaces).isEmpty }
+    private var canSave: Bool { !draft.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty }
 
     var body: some View {
         NavigationStack {
@@ -118,16 +118,13 @@ struct CustomExerciseEditor: View {
     }
 
     private func save() {
-        var result = draft
-        result.name = draft.name.trimmingCharacters(in: .whitespacesAndNewlines)
         do {
-            try store.saveCustomExercise(result, editing: editing)
+            let saved = try store.saveCustomExercise(draft, editing: editing)
+            dismiss()
+            onSaved(saved)
         } catch {
             nameTaken = true
-            return
         }
-        dismiss()
-        onSaved(result)
     }
 }
 

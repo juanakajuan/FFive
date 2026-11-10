@@ -10,14 +10,11 @@ struct ExerciseDetailView: View {
     @State private var editing: CustomExercise?
     @State private var confirmingDelete = false
     @Query private var logged: [Exercise]
-    @Query private var notes: [PinnedNote]
 
     init(listing: ExerciseListing) {
         self.listing = listing
         let key = listing.id.rawValue
-        let name = listing.name
         _logged = Query(filter: #Predicate<Exercise> { $0.exerciseKey == key })
-        _notes = Query(filter: #Predicate<PinnedNote> { $0.name == name })
     }
 
     private struct Session: Identifiable {
@@ -67,7 +64,7 @@ struct ExerciseDetailView: View {
                     if current.isHidden {
                         Callout(text: "Hidden from pickers. Your history is kept.", systemImage: "eye.slash")
                     }
-                    if let note = notes.first?.text {
+                    if let note = store.pinnedNote(named: current.name) {
                         Callout(text: note, systemImage: "note.text", style: .pinned)
                             .accessibilityLabel("Note: \(note)")
                     }
@@ -97,7 +94,7 @@ struct ExerciseDetailView: View {
         }
         .sheet(item: $editing) { custom in
             CustomExerciseEditor(draft: CustomExerciseDraft(custom), editing: custom) { saved in
-                if saved.name != current.name { dismiss() }
+                if saved.id != listing.id { dismiss() }
             }
         }
         .confirmationDialog("Delete this exercise?", isPresented: $confirmingDelete, titleVisibility: .visible) {
