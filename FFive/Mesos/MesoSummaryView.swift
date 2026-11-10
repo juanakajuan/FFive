@@ -94,7 +94,7 @@ private struct SetsByWeekCard: View {
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondary)
         }
-        .scheduleCard()
+        .surfaceCard()
     }
 
     private func color(_ sets: Int, _ landmarks: VolumeLandmarks) -> Color {
@@ -146,7 +146,7 @@ private struct StrengthChangeCard: View {
                 .font(Theme.caption)
                 .foregroundStyle(Theme.secondary)
         }
-        .scheduleCard()
+        .surfaceCard()
     }
 }
 
@@ -192,7 +192,7 @@ private struct FeedbackTrendCard: View {
                     .foregroundStyle(Theme.secondary)
             }
         }
-        .scheduleCard()
+        .surfaceCard()
     }
 
     private func bar(_ value: Double?) -> some View {

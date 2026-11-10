@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name"
-never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier"
 
 scan() {
     for file in "$@"; do
@@ -48,6 +48,8 @@ scan() {
                     hit("exercise-identity-by-name", i, "Exercise identity is ExerciseID, not the name string. Compare or key by exercise.key (or ExerciseID(folding: name) at an input boundary), fetch by exerciseKey, and look the catalog up by ID (exercise.info in a view, ExerciseCatalog.info(_:) in FFiveCore). Never fold a name by hand with lowercased() or caseInsensitiveCompare; ExerciseID(folding:) is the one folding.")
                 if (s ~ /\.accessibilityIdentifier\(/ && path !~ /FFiveCore\/Sources\/FFiveCore\/A11y\.swift$/)
                     hit("a11y-ids-typed", i, "Identifiers come from the A11y enum: .a11y(.setWeight, number) or .a11y(.pickerRow, key: entry.name). Add a case to FFiveCore/Sources/FFiveCore/A11y.swift, never a string here.")
+                if (s ~ /\.background\([ \t]*Theme\.surface[ \t]*,[ \t]*in:/ && path !~ /FFive\/Shared\/Theme\.swift$/)
+                    hit("one-card-modifier", i, "Every card draws through .surfaceCard() in Theme.swift (#148). Use .surfaceCard() for gutter padding on every side, or .surfaceCard(.rows) when rows set their own horizontal inset; never a hand-built Theme.surface rounded background or a second card modifier.")
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {

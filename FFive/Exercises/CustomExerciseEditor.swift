@@ -56,7 +56,7 @@ struct CustomExerciseEditor: View {
                     }
 
                     SectionHeading(text: "Trains")
-                    OutlinedGroup {
+                    GroupedCard {
                         pickerRow("Muscle") {
                             Picker("Muscle", selection: $draft.muscle) {
                                 ForEach(Muscle.allCases) { Text($0.displayName).tag($0) }
@@ -74,7 +74,7 @@ struct CustomExerciseEditor: View {
                     footnote("Muscle drives volume. Equipment sets how load steps up and whether body weight counts.")
 
                     SectionHeading(text: "Rep range")
-                    OutlinedGroup {
+                    GroupedCard {
                         Stepper("Min \(minReps) reps", value: $minReps, in: 1...maxReps)
                             .groupRow()
                         divider
@@ -113,7 +113,7 @@ struct CustomExerciseEditor: View {
     }
 
     private var divider: some View {
-        Rectangle().fill(Theme.hairline).frame(height: 1).padding(.leading, 12)
+        Rectangle().fill(Theme.hairline).frame(height: 1)
     }
 
     private func pickerRow(_ title: String, @ViewBuilder picker: () -> some View) -> some View {
@@ -150,11 +150,10 @@ struct CustomExerciseEditor: View {
 }
 
 extension View {
-    /// One row in an `OutlinedGroup`, as on Settings.
+    /// One row in a `GroupedCard`, as on Settings.
     fileprivate func groupRow() -> some View {
         font(Theme.body)
             .foregroundStyle(Theme.text)
-            .padding(.horizontal, 12)
             .frame(minHeight: 44)
     }
 }

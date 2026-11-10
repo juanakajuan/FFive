@@ -126,12 +126,25 @@ struct MuscleDotLabel: View {
     }
 }
 
+/// How a card insets its content.
+enum CardInset {
+    /// The gutter on every side.
+    case gutter
+    /// The gutter on top and a short bottom only, for a card of rows that set their own horizontal inset
+    /// so hairlines and set rows can run edge to edge.
+    case rows
+}
+
+/// The one card: every card on every screen draws through this modifier.
 struct SurfaceCard: ViewModifier {
+    var inset: CardInset
+
     func body(content: Content) -> some View {
         content
             .frame(maxWidth: .infinity, alignment: .leading)
-            .padding(.top, 16)
-            .padding(.bottom, 8)
+            .padding(.horizontal, inset == .gutter ? Theme.gutter : 0)
+            .padding(.top, Theme.gutter)
+            .padding(.bottom, inset == .gutter ? Theme.gutter : 8)
             .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
     }
 }
@@ -153,11 +166,11 @@ struct ThemedField: ViewModifier {
 }
 
 extension View {
-    func surfaceCard() -> some View { modifier(SurfaceCard()) }
+    func surfaceCard(_ inset: CardInset = .gutter) -> some View { modifier(SurfaceCard(inset: inset)) }
 
-    func surfaceCard(tag muscle: Muscle?) -> some View {
+    func surfaceCard(_ inset: CardInset = .gutter, tag muscle: Muscle?) -> some View {
         ZStack(alignment: .topLeading) {
-            surfaceCard()
+            surfaceCard(inset)
             if let muscle {
                 MuscleTag(muscle: muscle)
                     .alignmentGuide(.top) { $0.height / 2 }
@@ -313,14 +326,17 @@ struct FilterBar<MenuContent: View>: View {
     }
 }
 
-struct OutlinedGroup<Content: View>: View {
+/// The one grouped box for settings-style menus. It owns the 12 pt inner inset, so rows add no horizontal
+/// padding; callers own the outer gutter. Tab-root browse lists use edge-to-edge rows instead.
+struct GroupedCard<Content: View>: View {
     let content: Content
 
     init(@ViewBuilder content: () -> Content) { self.content = content() }
 
     var body: some View {
-        VStack(spacing: 0) { content }
-            .overlay(RoundedRectangle(cornerRadius: 6).stroke(Theme.hairline, lineWidth: 1))
+        VStack(alignment: .leading, spacing: 0) { content }
+            .padding(.horizontal, 12)
+            .background(Theme.raised, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
     }
 }
 

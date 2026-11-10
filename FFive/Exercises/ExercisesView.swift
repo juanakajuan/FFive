@@ -119,10 +119,8 @@ struct ExercisesView: View {
             Spacer(minLength: 8)
             RowChevron()
         }
-        .padding(.horizontal, Theme.gutter)
         .frame(minHeight: 73)
-        .contentShape(Rectangle())
-        .overlay(alignment: .bottom) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+        .browseRow()
     }
 }
 

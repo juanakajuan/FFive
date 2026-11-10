@@ -118,9 +118,8 @@ struct MesosView: View {
             .accessibilityLabel("\(meso.name) menu")
             .a11y(.mesosMenu, key: meso.name)
         }
-        .padding(.horizontal, Theme.gutter)
         .frame(minHeight: 66)
-        .overlay(alignment: .bottom) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+        .browseRow()
     }
 
     private var emptyState: some View {

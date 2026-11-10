@@ -66,12 +66,12 @@ struct MoreView: View {
     private func section<Rows: View>(_ title: String, @ViewBuilder rows: @escaping () -> Rows) -> some View {
         VStack(alignment: .leading, spacing: 0) {
             SectionHeading(text: title)
-            OutlinedGroup(content: rows)
+            GroupedCard(content: rows)
         }
     }
 
     private var divider: some View {
-        Rectangle().fill(Theme.hairline).frame(height: 1).padding(.leading, 12)
+        Rectangle().fill(Theme.hairline).frame(height: 1)
     }
 
     private func row(_ title: String, systemImage: String, to destination: Destination) -> some View {
@@ -86,7 +86,6 @@ struct MoreView: View {
                 RowChevron()
             }
             .foregroundStyle(Theme.text)
-            .padding(.horizontal, 12)
             .frame(minHeight: 44)
             .contentShape(Rectangle())
         }
