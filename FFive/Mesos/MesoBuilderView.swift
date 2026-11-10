@@ -430,10 +430,12 @@ struct MesoEditorView: View {
                         .foregroundStyle(Theme.secondary)
                 }
                 if let editing {
-                    FilledActionButton(title: "Save Template", isEnabled: draft.isStartable) {
+                    Button("Save Template") {
                         store.updateTemplate(editing, from: draft)
                         onStart()
                     }
+                    .buttonStyle(.primary)
+                    .disabled(!draft.isStartable)
                     .a11y(.builderUpdateTemplate)
                 } else {
                     if let current = activeMesos.first {
@@ -441,10 +443,10 @@ struct MesoEditorView: View {
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondary)
                     }
-                    FilledActionButton(
-                        title: "Start Mesocycle", isEnabled: draft.isStartable && activeMesos.isEmpty, action: start
-                    )
-                    .a11y(.builderStart)
+                    Button("Start Mesocycle", action: start)
+                        .buttonStyle(.primary)
+                        .disabled(!draft.isStartable || !activeMesos.isEmpty)
+                        .a11y(.builderStart)
                 }
             }
             .padding(.horizontal, Theme.gutter)
@@ -580,25 +582,6 @@ struct RIRSchedule: View {
             (0..<accumulationWeeks).map {
                 "week \($0 + 1), \(Progression.phase(week: $0, accumulationWeeks: accumulationWeeks).rir ?? 0) RIR"
             }.joined(separator: ", ") + ", then deload")
-    }
-}
-
-struct FilledActionButton: View {
-    let title: String
-    var isEnabled = true
-    let action: () -> Void
-
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(Theme.page)
-                .frame(maxWidth: .infinity, minHeight: 48)
-                .background(Theme.text, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
-                .opacity(isEnabled ? 1 : 0.35)
-        }
-        .buttonStyle(.plain)
-        .disabled(!isEnabled)
     }
 }
 

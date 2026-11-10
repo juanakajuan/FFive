@@ -24,19 +24,15 @@ struct MesoDetailView: View {
                 WeekVolumeCard(meso: meso, week: week)
                 MusclePrioritiesCard(meso: meso)
                 MesoNotesCard(meso: meso) { showingNotes = true }
-                Button("Save as Template") { templateName = meso.name }
-                    .font(.system(size: 16, weight: .semibold))
-                    .foregroundStyle(Theme.text)
-                    .frame(maxWidth: .infinity, minHeight: 48)
-                    .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
-                    .a11y(.mesoSaveTemplate)
-                if meso.isActive {
-                    Button("End Mesocycle", role: .destructive) { confirmEnd = true }
-                        .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(Theme.danger)
-                        .frame(maxWidth: .infinity, minHeight: 48)
-                        .background(Theme.surface, in: RoundedRectangle(cornerRadius: Theme.cornerRadius))
+                Group {
+                    Button("Save as Template") { templateName = meso.name }
+                        .a11y(.mesoSaveTemplate)
+                    if meso.isActive {
+                        Button("End Mesocycle", role: .destructive) { confirmEnd = true }
+                    }
                 }
+                .buttonStyle(.secondary)
+                .padding(.horizontal, Theme.gutter)
             }
             .padding(.bottom, Theme.gutter)
         }

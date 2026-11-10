@@ -83,12 +83,12 @@ struct TrainView: View {
                     message: "Plan a mesocycle of 3 to 6 hard weeks and a deload, or log a quick workout with no plan."
                 ) {
                     Button("Plan a Mesocycle") { showingBuilder = true }
-                        .buttonStyle(.wideFilled)
+                        .buttonStyle(.primary)
                         .a11y(.workoutPlan)
                     Button("Quick Workout") {
                         WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store)
                     }
-                    .buttonStyle(.wideOutlined)
+                    .buttonStyle(.secondary)
                     .a11y(.workoutQuick)
                 }
 
@@ -108,13 +108,13 @@ struct TrainView: View {
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
                 Button("End Mesocycle") { confirmEnd = true }
-                    .buttonStyle(.wideFilled)
+                    .buttonStyle(.primary)
                     .a11y(.workoutEnd)
                     .padding(.top, 4)
                 Button("Quick Workout") {
                     WorkoutTabActions.showQuickWorkout(openQuickWorkout, router: router, store: store)
                 }
-                .buttonStyle(.wideOutlined)
+                .buttonStyle(.secondary)
                 .a11y(.workoutQuick)
             }
             .padding(.horizontal, Theme.gutter)

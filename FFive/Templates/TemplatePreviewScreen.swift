@@ -134,7 +134,8 @@ struct TemplatePreviewScreen: View {
             .padding(.bottom, Theme.gutter)
         }
         .safeAreaInset(edge: .bottom) {
-            FilledActionButton(title: "Plan Mesocycle") { builder = .template(template) }
+            Button("Plan Mesocycle") { builder = .template(template) }
+                .buttonStyle(.primary)
                 .a11y(.templatePreviewPlan)
                 .padding(.horizontal, Theme.gutter)
                 .padding(.vertical, 10)

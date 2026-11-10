@@ -81,51 +81,6 @@ struct ActionIcon: View {
     }
 }
 
-struct WideButtonStyle: ButtonStyle {
-    enum Kind { case filled, outlined }
-
-    var kind: Kind
-
-    func makeBody(configuration: Configuration) -> some View {
-        WideButtonLabel(kind: kind, isPressed: configuration.isPressed) { configuration.label }
-    }
-}
-
-private struct WideButtonLabel<Label: View>: View {
-    let kind: WideButtonStyle.Kind
-    let isPressed: Bool
-    let label: Label
-    @Environment(\.isEnabled) private var isEnabled
-
-    init(kind: WideButtonStyle.Kind, isPressed: Bool, @ViewBuilder label: () -> Label) {
-        self.kind = kind
-        self.isPressed = isPressed
-        self.label = label()
-    }
-
-    var body: some View {
-        label
-            .font(Theme.body.weight(.semibold))
-            .foregroundStyle(kind == .filled ? Theme.page : Theme.text)
-            .frame(maxWidth: .infinity, minHeight: 44)
-            .background(
-                kind == .filled ? Theme.text : Color.clear, in: RoundedRectangle(cornerRadius: Theme.cornerRadius)
-            )
-            .overlay {
-                if kind == .outlined {
-                    RoundedRectangle(cornerRadius: Theme.cornerRadius).stroke(Theme.secondary, lineWidth: 1)
-                }
-            }
-            .contentShape(Rectangle())
-            .opacity(isEnabled ? (isPressed ? 0.7 : 1) : 0.35)
-    }
-}
-
-extension ButtonStyle where Self == WideButtonStyle {
-    static var wideFilled: WideButtonStyle { WideButtonStyle(kind: .filled) }
-    static var wideOutlined: WideButtonStyle { WideButtonStyle(kind: .outlined) }
-}
-
 struct FloatingButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
