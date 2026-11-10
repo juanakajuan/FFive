@@ -23,7 +23,7 @@ struct MesoSummaryView: View {
                     MesoNotesCard(meso: meso)
                 }
             }
-            .padding(.bottom, Theme.gutter)
+            .padding(Theme.gutter)
         }
         .background(Theme.page)
         .navigationTitle("\(meso.name) Summary")
