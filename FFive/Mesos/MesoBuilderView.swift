@@ -64,7 +64,7 @@ struct MesoBuilderView: View {
                     .padding(.horizontal, Theme.gutter)
                 }
                 if !customTemplates.isEmpty {
-                    SectionHeading(text: "Your templates")
+                    SectionHeading(text: TemplateGroup.custom)
                         .padding(.horizontal, Theme.gutter)
                     GroupedCard {
                         ForEach(customTemplates) { saved in
@@ -103,7 +103,7 @@ struct MesoBuilderView: View {
                     .a11y(.builderGuided)
                 }
                 .padding(.horizontal, Theme.gutter)
-                SectionHeading(text: "Start from a template")
+                SectionHeading(text: TemplateGroup.builtIn)
                     .padding(.horizontal, Theme.gutter)
                 GroupedCard {
                     ForEach(ExerciseCatalog.templates) { template in
