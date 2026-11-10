@@ -38,7 +38,8 @@ struct TemplatesView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    heading("Custom templates")
+                    SectionHeading(text: "Custom templates")
+                        .padding(.horizontal, Theme.gutter)
                     if customTemplates.isEmpty {
                         emptyNote("Save a mesocycle or a builder draft as a template and it shows up here.")
                     } else if custom.isEmpty {
@@ -53,7 +54,8 @@ struct TemplatesView: View {
                             }
                         }
                     }
-                    heading("FFive templates")
+                    SectionHeading(text: "FFive templates")
+                        .padding(.horizontal, Theme.gutter)
                     if builtIn.isEmpty {
                         emptyNote("No templates match.")
                     } else {
@@ -153,13 +155,6 @@ struct TemplatesView: View {
             .accessibilityLabel("\(saved.name) menu")
             .a11y(.templatesMenu, key: saved.name)
         }
-    }
-
-    private func heading(_ text: String) -> some View {
-        SectionHeading(text: text)
-            .padding(.horizontal, Theme.gutter)
-            .padding(.top, 16)
-            .padding(.bottom, 10)
     }
 
     private func emptyNote(_ text: String) -> some View {

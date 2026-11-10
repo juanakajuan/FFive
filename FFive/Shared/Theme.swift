@@ -324,14 +324,20 @@ struct OutlinedGroup<Content: View>: View {
     }
 }
 
+/// The one section heading. It owns its spacing, so callers add only horizontal padding.
+/// In a `List`, give its row `themedRow(vertical: 0)`.
 struct SectionHeading: View {
     let text: String
 
     var body: some View {
         Text(text)
-            .font(.system(size: 18, weight: .bold))
+            .font(Theme.cardTitle)
             .foregroundStyle(Theme.text)
+            .textCase(nil)
             .frame(maxWidth: .infinity, alignment: .leading)
+            .padding(.top, 16)
+            .padding(.bottom, 10)
+            .accessibilityAddTraits(.isHeader)
     }
 }
 

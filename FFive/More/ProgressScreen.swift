@@ -47,12 +47,6 @@ struct ProgressScreen: View {
         }
     }
 
-    private func heading(_ text: String) -> some View {
-        SectionHeading(text: text)
-            .themedRow(vertical: 8)
-            .listRowSeparator(.hidden)
-    }
-
     private func note(_ text: String) -> some View {
         Text(text)
             .font(Theme.caption)
@@ -74,7 +68,11 @@ struct ProgressScreen: View {
         {
             let week = min(selectedWeek ?? meso.nextUp?.week ?? meso.accumulationWeeks, meso.accumulationWeeks)
             let volumes = store.weeklyVolume(meso, week: week)
-            heading("Sets per muscle · \(meso.phase(week: week) == .deload ? "Deload" : "Week \(week + 1)")")
+            SectionHeading(
+                text: "Sets per muscle · \(meso.phase(week: week) == .deload ? "Deload" : "Week \(week + 1)")"
+            )
+            .themedRow(vertical: 0)
+            .listRowSeparator(.hidden)
             VStack(alignment: .leading, spacing: 14) {
                 if mesos.count > 1 {
                     HStack {
@@ -121,7 +119,9 @@ struct ProgressScreen: View {
                 "No loaded sets yet", systemImage: "chart.line.uptrend.xyaxis",
                 description: "Finish a session with weighted sets to start tracking estimated 1RM.")
         } else {
-            heading("Estimated 1RM")
+            SectionHeading(text: "Estimated 1RM")
+                .themedRow(vertical: 0)
+                .listRowSeparator(.hidden)
             ForEach(series) { item in
                 NavigationLink(value: item) {
                     HStack {
@@ -168,8 +168,9 @@ struct ProgressScreen: View {
         StatsRow(stats: store.weekStats())
             .themedRow(vertical: 4)
             .listRowSeparator(.hidden)
-        heading("History")
-            .padding(.top, 8)
+        SectionHeading(text: "History")
+            .themedRow(vertical: 0)
+            .listRowSeparator(.hidden)
         if history.isEmpty {
             empty("No workouts yet", systemImage: "dumbbell", description: "Finished sessions show up here.")
         }
@@ -201,7 +202,7 @@ struct ExerciseTrendView: View {
 
     var body: some View {
         ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
                 HStack(spacing: 8) {
                     StatTile(
                         title: "Current (\(unit.rawValue))", value: formatWeight(series.latest.rounded()),
@@ -215,14 +216,13 @@ struct ExerciseTrendView: View {
                 .fixedSize(horizontal: false, vertical: true)
 
                 SectionHeading(text: "Estimated 1RM over time")
-                    .padding(.top, 12)
                 chart
                 Text("Touch and drag the chart to read a session.")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
+                    .padding(.top, 8)
 
                 SectionHeading(text: "Sessions")
-                    .padding(.top, 12)
                 sessions
             }
             .padding(Theme.gutter)

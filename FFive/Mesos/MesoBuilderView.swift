@@ -51,8 +51,6 @@ struct MesoBuilderView: View {
                 if !mesos.isEmpty {
                     SectionHeading(text: "Copy a mesocycle")
                         .padding(.horizontal, Theme.gutter)
-                        .padding(.top, 16)
-                        .padding(.bottom, 10)
                     TemplateGroup {
                         ForEach(mesos) { meso in
                             NavigationLink(value: Route.copy(meso)) { CopySourceRow(meso: meso) }
@@ -67,8 +65,6 @@ struct MesoBuilderView: View {
                 if !customTemplates.isEmpty {
                     SectionHeading(text: "Your templates")
                         .padding(.horizontal, Theme.gutter)
-                        .padding(.top, 16)
-                        .padding(.bottom, 10)
                     TemplateGroup {
                         ForEach(customTemplates) { saved in
                             NavigationLink(value: Route.template(saved.template)) {
@@ -84,8 +80,6 @@ struct MesoBuilderView: View {
                 }
                 SectionHeading(text: "Plan it for me")
                     .padding(.horizontal, Theme.gutter)
-                    .padding(.top, 16)
-                    .padding(.bottom, 10)
                 TemplateGroup {
                     NavigationLink(value: Route.guided) {
                         HStack(spacing: 10) {
@@ -108,8 +102,6 @@ struct MesoBuilderView: View {
                 }
                 SectionHeading(text: "Start from a template")
                     .padding(.horizontal, Theme.gutter)
-                    .padding(.top, 16)
-                    .padding(.bottom, 10)
                 TemplateGroup {
                     ForEach(ExerciseCatalog.templates) { template in
                         NavigationLink(value: Route.template(template)) {
@@ -206,7 +198,8 @@ struct MesoEditorView: View {
                     .builderRow()
                     .a11y(.builderName)
                 } header: {
-                    header("Name")
+                    SectionHeading(text: "Name")
+                        .themedRow(vertical: 0)
                 }
 
                 Section {
@@ -225,7 +218,8 @@ struct MesoEditorView: View {
                         "Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next mesocycle starts fresh."
                     )
                 } header: {
-                    header("Length")
+                    SectionHeading(text: "Length")
+                        .themedRow(vertical: 0)
                 }
 
                 Section {
@@ -246,7 +240,8 @@ struct MesoEditorView: View {
                         "Each day gets a weekday that spreads rest through the week. Change any of them below."
                     )
                 } header: {
-                    header("Schedule")
+                    SectionHeading(text: "Schedule")
+                        .themedRow(vertical: 0)
                 }
             }
 
@@ -319,8 +314,8 @@ struct MesoEditorView: View {
                         footnote("Add at least one exercise, or remove this day.")
                     }
                 } header: {
-                    HStack {
-                        header("Day \((draft.days.firstIndex { $0.id == day.id } ?? 0) + 1)")
+                    HStack(alignment: .firstTextBaseline) {
+                        SectionHeading(text: "Day \((draft.days.firstIndex { $0.id == day.id } ?? 0) + 1)")
                         Spacer()
                         if draft.days.count > 1 {
                             Button("Remove Day", role: .destructive) {
@@ -330,6 +325,7 @@ struct MesoEditorView: View {
                             .foregroundStyle(Theme.danger)
                         }
                     }
+                    .themedRow(vertical: 0)
                 }
             }
 
@@ -357,7 +353,8 @@ struct MesoEditorView: View {
                     }
                     footnote(MusclePriority.explanation)
                 } header: {
-                    header("Muscle Priorities")
+                    SectionHeading(text: "Muscle Priorities")
+                        .themedRow(vertical: 0)
                 }
             }
         }
@@ -476,11 +473,6 @@ struct MesoEditorView: View {
                 }
             }
         }
-    }
-
-    private func header(_ text: String) -> some View {
-        SectionHeading(text: text)
-            .textCase(nil)
     }
 
     private func footnote(_ text: String) -> some View {

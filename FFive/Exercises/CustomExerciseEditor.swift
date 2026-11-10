@@ -42,7 +42,7 @@ struct CustomExerciseEditor: View {
     var body: some View {
         NavigationStack {
             ScrollView {
-                VStack(alignment: .leading, spacing: 12) {
+                VStack(alignment: .leading, spacing: 0) {
                     SectionHeading(text: "Name")
                     TextField("Name", text: $draft.name, prompt: Text("Name").foregroundStyle(Theme.secondary))
                         .formField()
@@ -52,10 +52,10 @@ struct CustomExerciseEditor: View {
                         Text("Another exercise already has this name. It may be hidden.")
                             .font(Theme.detail)
                             .foregroundStyle(Theme.danger)
+                            .padding(.top, 8)
                     }
 
                     SectionHeading(text: "Trains")
-                        .padding(.top, 20)
                     OutlinedGroup {
                         pickerRow("Muscle") {
                             Picker("Muscle", selection: $draft.muscle) {
@@ -74,7 +74,6 @@ struct CustomExerciseEditor: View {
                     footnote("Muscle drives volume. Equipment sets how load steps up and whether body weight counts.")
 
                     SectionHeading(text: "Rep range")
-                        .padding(.top, 20)
                     OutlinedGroup {
                         Stepper("Min \(minReps) reps", value: $minReps, in: 1...maxReps)
                             .groupRow()
@@ -84,7 +83,6 @@ struct CustomExerciseEditor: View {
                     }
 
                     SectionHeading(text: "Cue")
-                        .padding(.top, 20)
                     TextField(
                         "Cue", text: $cue, prompt: Text("Optional").foregroundStyle(Theme.secondary), axis: .vertical
                     )
@@ -92,7 +90,7 @@ struct CustomExerciseEditor: View {
                     .formField()
                     .a11y(.editorCue)
                 }
-                .padding(Theme.gutter)
+                .padding([.horizontal, .bottom], Theme.gutter)
             }
             .scrollDismissesKeyboard(.interactively)
             .background(Theme.page)
@@ -134,6 +132,7 @@ struct CustomExerciseEditor: View {
             .font(Theme.detail)
             .foregroundStyle(Theme.secondary)
             .fixedSize(horizontal: false, vertical: true)
+            .padding(.top, 8)
     }
 
     private func save() {
