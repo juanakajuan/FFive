@@ -157,6 +157,6 @@ struct ExerciseDetailView: View {
         .padding(.horizontal, Theme.gutter)
         .frame(minHeight: 60)
         .contentShape(Rectangle())
-        .overlay(alignment: .bottom) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+        .overlay(alignment: .bottom) { Hairline() }
     }
 }

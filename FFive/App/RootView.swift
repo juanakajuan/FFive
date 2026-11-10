@@ -173,6 +173,6 @@ private struct TabBar: View {
         .padding(.top, 6)
         .padding(.bottom, 2)
         .background(Theme.surface.ignoresSafeArea(edges: .bottom))
-        .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+        .overlay(alignment: .top) { Hairline() }
     }
 }

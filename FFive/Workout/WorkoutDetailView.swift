@@ -24,7 +24,7 @@ struct WorkoutDetailView: View {
                             .padding(.horizontal, Theme.gutter)
                             .padding(.bottom, 8)
                         ForEach(feedback, id: \.0) { muscle, value in
-                            Rectangle().fill(Theme.hairline).frame(height: 1).padding(.horizontal, Theme.gutter)
+                            Hairline().padding(.horizontal, Theme.gutter)
                             VStack(alignment: .leading, spacing: 6) {
                                 MuscleTag(muscle: muscle)
                                 Text(
@@ -118,7 +118,7 @@ private struct LoggedExerciseCard: View {
             .accessibilityHidden(true)
 
             ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
-                Rectangle().fill(Theme.hairline).frame(height: 1).padding(.horizontal, Theme.gutter)
+                Hairline().padding(.horizontal, Theme.gutter)
                 HStack(spacing: 0) {
                     VStack(alignment: .leading, spacing: 0) {
                         Text("\(index + 1)").foregroundStyle(Theme.secondary)

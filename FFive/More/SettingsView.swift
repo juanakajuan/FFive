@@ -21,7 +21,7 @@ struct SettingsView: View {
                 SectionHeading(text: "Units")
                 GroupedCard {
                     ForEach(Array(WeightUnit.allCases.enumerated()), id: \.element) { index, option in
-                        if index > 0 { divider }
+                        if index > 0 { Hairline() }
                         unitRow(option)
                     }
                 }
@@ -36,7 +36,7 @@ struct SettingsView: View {
                 SectionHeading(text: "Appearance")
                 GroupedCard {
                     ForEach(Array(Appearance.allCases.enumerated()), id: \.element) { index, option in
-                        if index > 0 { divider }
+                        if index > 0 { Hairline() }
                         appearanceRow(option)
                     }
                 }
@@ -49,7 +49,7 @@ struct SettingsView: View {
                 SectionHeading(text: "Equipment")
                 GroupedCard {
                     ForEach(Array(Equipment.allCases.enumerated()), id: \.element) { index, option in
-                        if index > 0 { divider }
+                        if index > 0 { Hairline() }
                         equipmentRow(option)
                     }
                 }
@@ -108,7 +108,7 @@ struct SettingsView: View {
                     }
                     .buttonStyle(.plain)
                     .a11y(.settingsExport)
-                    divider
+                    Hairline()
                     Button {
                         confirmDeleteAll = true
                     } label: {
@@ -201,10 +201,6 @@ struct SettingsView: View {
         .frame(minHeight: 44)
         .accessibilityElement(children: .combine)
         .a11y(.settingsSync)
-    }
-
-    private var divider: some View {
-        Rectangle().fill(Theme.hairline).frame(height: 1)
     }
 
     private func unitRow(_ option: WeightUnit) -> some View {

@@ -183,7 +183,7 @@ extension Learn {
 
         var body: some View {
             VStack(alignment: .leading, spacing: 14) {
-                Rectangle().fill(Theme.hairline).frame(height: 1)
+                Hairline()
                 Text("Evidence")
                     .font(Theme.cardTitle)
                     .accessibilityAddTraits(.isHeader)
@@ -525,7 +525,7 @@ extension Learn {
                 .font(Theme.columnHeader)
                 .textCase(.uppercase)
                 .foregroundStyle(Theme.secondary)
-                Rectangle().fill(Theme.hairline).frame(height: 1)
+                Hairline()
                     .gridCellUnsizedAxes(.horizontal)
                 ForEach(Equipment.allCases, id: \.self) { equipment in
                     GridRow {

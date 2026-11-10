@@ -162,6 +162,13 @@ struct SurfaceCard: ViewModifier {
     }
 }
 
+/// The one divider: a 1 pt hairline the width of its container.
+struct Hairline: View {
+    var body: some View {
+        Rectangle().fill(Theme.hairline).frame(height: 1)
+    }
+}
+
 struct ThemedField: ViewModifier {
     var height: CGFloat = 32
 

@@ -96,7 +96,7 @@ private struct SessionRow: View {
         .padding(.horizontal, Theme.gutter)
         .padding(.vertical, 12)
         .contentShape(Rectangle())
-        .overlay(alignment: .bottom) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+        .overlay(alignment: .bottom) { Hairline() }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(
             "\(title), \(date). "

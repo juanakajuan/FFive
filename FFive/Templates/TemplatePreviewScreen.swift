@@ -121,7 +121,7 @@ struct TemplatePreviewScreen: View {
                             .padding(.vertical, 10)
                             .accessibilityElement(children: .combine)
                             if index < slots.count - 1 {
-                                Rectangle().fill(Theme.hairline).frame(height: 1)
+                                Hairline()
                             }
                         }
                     }
@@ -141,7 +141,7 @@ struct TemplatePreviewScreen: View {
                 .padding(.horizontal, Theme.gutter)
                 .padding(.vertical, 10)
                 .background(Theme.surface)
-                .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+                .overlay(alignment: .top) { Hairline() }
         }
     }
 

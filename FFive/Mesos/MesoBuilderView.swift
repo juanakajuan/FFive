@@ -57,7 +57,7 @@ struct MesoBuilderView: View {
                                 .buttonStyle(.plain)
                                 .a11y(.builderCopySource, key: meso.name)
                             if meso.id != mesos.last?.id {
-                                Rectangle().fill(Theme.hairline).frame(height: 1)
+                                Hairline()
                             }
                         }
                     }
@@ -74,7 +74,7 @@ struct MesoBuilderView: View {
                             .buttonStyle(.plain)
                             .a11y(.builderCustomTemplate, key: saved.name)
                             if saved.id != customTemplates.last?.id {
-                                Rectangle().fill(Theme.hairline).frame(height: 1)
+                                Hairline()
                             }
                         }
                     }
@@ -112,7 +112,7 @@ struct MesoBuilderView: View {
                         }
                         .buttonStyle(.plain)
                         .a11y(.builderTemplate, key: template.name)
-                        Rectangle().fill(Theme.hairline).frame(height: 1)
+                        Hairline()
                     }
                     NavigationLink(value: Route.blank) {
                         HStack(spacing: 10) {
@@ -454,7 +454,7 @@ struct MesoEditorView: View {
             .padding(.horizontal, Theme.gutter)
             .padding(.vertical, 10)
             .background(Theme.surface)
-            .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+            .overlay(alignment: .top) { Hairline() }
         }
         .interactiveDismissDisabled(draft != original)
         .sheet(isPresented: $managingDays) { ManageDaysView(draft: $draft) }
