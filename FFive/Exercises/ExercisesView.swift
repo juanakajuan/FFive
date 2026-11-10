@@ -18,7 +18,7 @@ struct ExercisesView: View {
         let all = store.library(
             muscle: muscle, equipment: equipment, search: search, includeHidden: showHidden,
             performedOnly: performedOnly)
-        let listings = all.filter { !equipmentOnly || $0.fits(settings.equipment) }
+        let listings = all.scoped(to: settings.equipment, ownedOnly: equipmentOnly)
         NavigationStack(path: $path) {
             ScrollView {
                 LazyVStack(spacing: 0) {
@@ -92,22 +92,7 @@ struct ExercisesView: View {
 
     private func row(_ listing: ExerciseListing) -> some View {
         HStack(spacing: 12) {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(listing.name)
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.text)
-                HStack(spacing: 4) {
-                    MuscleDotLabel(muscle: listing.muscle)
-                    Text("•")
-                    Text(listing.equipment)
-                    if listing.isHidden {
-                        Text("•")
-                        Text("Hidden")
-                    }
-                }
-                .font(Theme.caption)
-                .foregroundStyle(Theme.secondary)
-            }
+            ExerciseListingLabel(listing: listing)
             Spacer(minLength: 8)
             RowChevron()
         }

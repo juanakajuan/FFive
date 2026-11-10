@@ -322,6 +322,30 @@ struct EquipmentScopeToggle: View {
     }
 }
 
+extension [ExerciseListing] {
+    /// The listings `EquipmentScopeToggle` shows: only those `equipment` can do while `ownedOnly` is on.
+    func scoped(to equipment: Set<Equipment>, ownedOnly: Bool) -> [ExerciseListing] {
+        ownedOnly ? filter { $0.fits(equipment) } : self
+    }
+}
+
+extension View {
+    /// The note under a form section.
+    func footnote() -> some View {
+        font(Theme.detail)
+            .foregroundStyle(Theme.secondary)
+            .fixedSize(horizontal: false, vertical: true)
+            .padding(.top, 8)
+    }
+
+    /// One row in a `GroupedCard`.
+    func groupRow() -> some View {
+        font(Theme.body)
+            .foregroundStyle(Theme.text)
+            .frame(minHeight: 44)
+    }
+}
+
 /// The app's one empty state: an icon over a title, a message, and the screen's next steps.
 struct EmptyState<Actions: View>: View {
     let title: String

@@ -14,7 +14,7 @@ struct ExerciseDetailView: View {
         let current = store.listing(listing.id) ?? listing
         let reps = current.info.repRange
         ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
+            LazyVStack(alignment: .leading, spacing: 0) {
                 VStack(alignment: .leading, spacing: 10) {
                     MuscleTag(muscle: current.muscle)
                     Text(current.name)
@@ -28,7 +28,7 @@ struct ExerciseDetailView: View {
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
                     if let last = history.first?.workout?.startDate {
-                        Text("Last performed \(last.formatted(.lastPerformed))")
+                        Text(last.lastPerformedPhrase())
                             .font(Theme.detail)
                             .foregroundStyle(Theme.secondary)
                             .a11y(.exerciseLastPerformed)
