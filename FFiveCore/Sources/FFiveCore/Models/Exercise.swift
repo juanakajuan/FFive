@@ -81,7 +81,7 @@ public final class Exercise {
 
     /// The done regular set with the highest estimated 1RM of its moved load, or nil when no set says anything
     /// about strength. A bodyweight lift needs the workout's body weight to count.
-    public var strongestSet: (entry: SetEntry, oneRepMax: Double)? {
+    var strongestSet: (entry: SetEntry, oneRepMax: Double)? {
         guard let rir = workout?.effortRIR else { return nil }
         let loading = loading
         return sets.compactMap { set -> (SetEntry, Double)? in

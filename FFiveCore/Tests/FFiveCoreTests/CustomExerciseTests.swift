@@ -207,12 +207,12 @@ final class CustomExerciseTests: XCTestCase {
                 .contains { $0.id == bench && $0.isHidden })
 
         let relaunched = try makeStore()
-        XCTAssertTrue(relaunched.isHidden(bench), "the choice is read from the same defaults")
+        XCTAssertEqual(relaunched.listing(bench)?.isHidden, true, "the choice is read from the same defaults")
 
         relaunched.setHidden(bench, false)
         XCTAssertTrue(
             relaunched.library(muscle: nil, equipment: nil, search: "bench press").contains { $0.id == bench })
-        XCTAssertFalse(try makeStore().isHidden(bench))
+        XCTAssertEqual(try makeStore().listing(bench)?.isHidden, false)
     }
 
     func testBackfillRecordsEveryUsedNonCatalogExerciseOnce() throws {

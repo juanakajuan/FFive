@@ -102,7 +102,7 @@ public struct MuscleVolume: Identifiable {
 }
 
 extension ExerciseCatalog {
-    public static func repRange(for id: ExerciseID) -> ClosedRange<Int> { info(id)?.repRange ?? 8...12 }
+    static func repRange(for id: ExerciseID) -> ClosedRange<Int> { info(id)?.repRange ?? 8...12 }
 
 }
 

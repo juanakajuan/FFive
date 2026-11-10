@@ -111,12 +111,12 @@ public final class Workout {
         return phase.rir
     }
 
-    public var trainedMuscles: [Muscle] {
+    var trainedMuscles: [Muscle] {
         var seen = Set<Muscle>()
         return sortedExercises.compactMap(\.muscle).filter { seen.insert($0).inserted }
     }
 
-    public func exercises(for muscle: Muscle) -> [Exercise] {
+    func exercises(for muscle: Muscle) -> [Exercise] {
         sortedExercises.filter { $0.muscle == muscle }
     }
 

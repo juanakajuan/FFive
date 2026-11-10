@@ -104,12 +104,6 @@ extension Store {
         return removal
     }
 
-    public func isHidden(_ id: ExerciseID) -> Bool {
-        observeCommits()
-        if let custom = CustomExercise.find(id, in: context) { return custom.isHidden }
-        return settings.hiddenExercises.contains(id)
-    }
-
     public func setHidden(_ id: ExerciseID, _ hidden: Bool) {
         if let custom = CustomExercise.find(id, in: context) {
             custom.isHidden = hidden
