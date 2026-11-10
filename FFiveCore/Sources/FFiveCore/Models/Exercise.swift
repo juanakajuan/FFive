@@ -92,6 +92,12 @@ public final class Exercise {
         }
         .max { $0.1 < $1.1 }
     }
+
+    /// The set that stands for this session in a history list: the strongest set, or the heaviest done set
+    /// when no set says anything about strength.
+    public var bestSet: SetEntry? {
+        strongestSet?.entry ?? sets.filter(\.isDone).max { ($0.weight, $0.reps) < ($1.weight, $1.reps) }
+    }
 }
 
 extension Exercise {

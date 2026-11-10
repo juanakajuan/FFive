@@ -1,5 +1,4 @@
 import FFiveCore
-import SwiftData
 import SwiftUI
 
 struct ExerciseDetailView: View {
@@ -9,32 +8,9 @@ struct ExerciseDetailView: View {
     @Environment(\.dismiss) private var dismiss
     @State private var editing: CustomExercise?
     @State private var confirmingDelete = false
-    @Query private var logged: [Exercise]
-
-    init(listing: ExerciseListing) {
-        self.listing = listing
-        let key = listing.id.rawValue
-        _logged = Query(filter: #Predicate<Exercise> { $0.exerciseKey == key })
-    }
-
-    private struct Session: Identifiable {
-        let workout: Workout
-        let best: SetEntry
-        var id: PersistentIdentifier { workout.persistentModelID }
-    }
-
-    private var history: [Session] {
-        logged.compactMap { exercise in
-            guard let workout = exercise.workout, workout.isFinished,
-                let best = exercise.sets.filter(\.isDone).max(by: { ($0.weight, $0.reps) < ($1.weight, $1.reps) })
-            else { return nil }
-            return Session(workout: workout, best: best)
-        }
-        .sorted { $0.workout.startDate > $1.workout.startDate }
-    }
 
     var body: some View {
-        let history = history
+        let history = store.exerciseHistory(listing.id).flatMap(\.sessions)
         let current = store.listing(listing.id) ?? listing
         let reps = current.info.repRange
         ScrollView {
@@ -51,7 +27,7 @@ struct ExerciseDetailView: View {
                     }
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
-                    if let last = history.first?.workout.startDate {
+                    if let last = history.first?.workout?.startDate {
                         Text("Last performed \(last.formatted(.lastPerformed))")
                             .font(Theme.detail)
                             .foregroundStyle(Theme.secondary)
@@ -81,8 +57,10 @@ struct ExerciseDetailView: View {
                         .padding(.vertical, 8)
                 }
                 ForEach(history) { session in
-                    NavigationLink(value: session.workout) { historyRow(session) }
-                        .buttonStyle(.plain)
+                    if let workout = session.workout, let best = session.bestSet {
+                        NavigationLink(value: workout) { historyRow(workout, best: best) }
+                            .buttonStyle(.plain)
+                    }
                 }
             }
         }
@@ -133,18 +111,18 @@ struct ExerciseDetailView: View {
         .accessibilityLabel("Exercise actions")
     }
 
-    private func historyRow(_ session: Session) -> some View {
+    private func historyRow(_ workout: Workout, best: SetEntry) -> some View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 3) {
-                Text(session.workout.startDate, format: .sessionDay)
+                Text(workout.startDate, format: .sessionDay)
                     .font(Theme.body)
                     .foregroundStyle(Theme.text)
-                Text(session.workout.name)
+                Text(workout.name)
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
             }
             Spacer(minLength: 8)
-            Text("\(session.best.weightText(unit: store.settings.weightUnit)) × \(session.best.reps)")
+            Text("\(best.weightText(unit: store.settings.weightUnit)) × \(best.reps)")
                 .font(Theme.body.monospacedDigit())
                 .foregroundStyle(Theme.text)
             RowChevron()

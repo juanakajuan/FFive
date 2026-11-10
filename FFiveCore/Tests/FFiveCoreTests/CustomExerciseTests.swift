@@ -96,7 +96,7 @@ final class CustomExerciseTests: XCTestCase {
         XCTAssertEqual(row.key, renamed)
         XCTAssertEqual(row.muscle, .glutes)
         XCTAssertEqual(try store.context.fetch(FetchDescriptor<DaySlot>()).map(\.key), [renamed])
-        XCTAssertEqual(store.pinnedNote(on: row), "brace")
+        XCTAssertEqual(store.pinnedNote(named: row.name), "brace")
         XCTAssertEqual(
             try store.context.fetch(CustomTemplate.all).first?.template.days.first?.exerciseNames, ["Front Zercher"])
         XCTAssertEqual(

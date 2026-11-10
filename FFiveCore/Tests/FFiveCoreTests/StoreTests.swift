@@ -957,12 +957,12 @@ final class StoreTests: XCTestCase {
         let workout = store.startQuickWorkout()
         store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
         let exercise = workout.exercises[0]
-        XCTAssertNil(store.pinnedNote(on: exercise))
+        XCTAssertNil(store.pinnedNote(named: exercise.name))
         store.setNote("Elbows in", on: exercise)
         store.pinNote(on: exercise)
-        XCTAssertEqual(store.pinnedNote(on: exercise), "Elbows in")
+        XCTAssertEqual(store.pinnedNote(named: exercise.name), "Elbows in")
         store.unpinNote(on: exercise)
-        XCTAssertNil(store.pinnedNote(on: exercise))
+        XCTAssertNil(store.pinnedNote(named: exercise.name))
     }
 
     func testMyorepSetsDoNotDriveNextWeekOrStrength() throws {
