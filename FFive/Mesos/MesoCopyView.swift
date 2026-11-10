@@ -19,7 +19,7 @@ struct MesoCopyView: View {
                 .pickerStyle(.segmented)
                 .a11y(.builderCopyWeek)
                 .padding(.horizontal, Theme.gutter)
-                .padding(.top, 16)
+                .padding(.top, Theme.gutter)
                 Text(loadsNote)
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
@@ -62,7 +62,7 @@ struct MesoCopyView: View {
     private func dayCard(_ day: MesoDraft.Day, number: Int) -> some View {
         GroupedCard {
             HStack(alignment: .firstTextBaseline) {
-                Text(day.name).font(.system(size: 16, weight: .semibold)).foregroundStyle(Theme.text)
+                Text(day.name).font(Theme.rowTitle).foregroundStyle(Theme.text)
                 Spacer()
                 Text(day.weekday?.name ?? "Day \(number)")
                     .font(Theme.columnHeader)
@@ -86,7 +86,7 @@ struct MesoCopyView: View {
             }
         }
         .padding(.horizontal, Theme.gutter)
-        .padding(.top, 16)
+        .padding(.top, Theme.gutter)
     }
 
     private func setsText(_ targets: [SetTarget]) -> String {
@@ -108,11 +108,11 @@ struct CopySourceRow: View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
                 Text(status)
-                    .font(.system(size: 11.5, design: .monospaced))
+                    .font(Theme.caption.monospaced())
                     .foregroundStyle(Theme.secondary)
                     .lineLimit(1)
                 Text(meso.name)
-                    .font(.system(size: 16, weight: .semibold))
+                    .font(Theme.rowTitle)
                     .foregroundStyle(Theme.text)
                     .multilineTextAlignment(.leading)
             }

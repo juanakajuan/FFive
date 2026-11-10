@@ -26,7 +26,7 @@ struct ExerciseHistorySheet: View {
                         }
                     }
                 }
-                .padding(.bottom, 16)
+                .padding(.bottom, Theme.gutter)
             }
             .overlay {
                 if groups.isEmpty {
@@ -73,7 +73,7 @@ private struct SessionRow: View {
             VStack(alignment: .leading, spacing: 6) {
                 HStack(alignment: .firstTextBaseline) {
                     Text(title)
-                        .font(Theme.body.weight(.semibold))
+                        .font(Theme.rowTitle)
                         .foregroundStyle(Theme.text)
                         .lineLimit(1)
                     Spacer(minLength: 8)

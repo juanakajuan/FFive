@@ -38,7 +38,7 @@ private struct ActionButtonLabel<Label: View>: View {
 
     var body: some View {
         label
-            .font(Theme.body.weight(.semibold))
+            .font(Theme.rowTitle)
             .foregroundStyle(foreground)
             .frame(maxWidth: .infinity, minHeight: ActionButtonStyle.height)
             .background(
@@ -50,7 +50,7 @@ private struct ActionButtonLabel<Label: View>: View {
                 }
             }
             .contentShape(Rectangle())
-            .opacity(isEnabled ? (isPressed ? 0.7 : 1) : 0.35)
+            .opacity(isEnabled ? (isPressed ? Theme.pressed : 1) : Theme.dimmed)
     }
 }
 

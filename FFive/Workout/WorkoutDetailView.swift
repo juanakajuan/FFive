@@ -47,7 +47,7 @@ struct WorkoutDetailView: View {
                     .surfaceCard(.rows)
                 }
             }
-            .padding(.bottom, 16)
+            .padding(.bottom, Theme.gutter)
         }
         .background(Theme.page)
         .navigationTitle(workout.name)
@@ -58,7 +58,7 @@ struct WorkoutDetailView: View {
         VStack(alignment: .leading, spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(workout.startDate, format: .dateTime.weekday(.wide).month(.wide).day().hour().minute())
-                    .font(Theme.body.weight(.semibold))
+                    .font(Theme.rowTitle)
                     .foregroundStyle(Theme.text)
                 if let meso = workout.mesocycle, let week = workout.week, let phase = workout.phase {
                     Text("\(meso.name) · \(phase == .deload ? "Deload week" : "Week \(week + 1), \(phase.badgeText)")")

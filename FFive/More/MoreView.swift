@@ -42,7 +42,7 @@ struct MoreView: View {
                     }
                     Hairline().padding(.top, 24)
                     Text("App version: \(version)")
-                        .font(.system(size: 13, design: .monospaced))
+                        .font(Theme.caption.monospaced())
                         .foregroundStyle(Theme.secondary)
                         .padding(.top, 16)
                 }

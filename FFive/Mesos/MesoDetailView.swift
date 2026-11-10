@@ -104,7 +104,7 @@ struct MesoDetailView: View {
     private func header(week: Int) -> some View {
         VStack(alignment: .leading, spacing: 6) {
             Text(meso.name)
-                .font(.system(size: 22, weight: .bold))
+                .font(Theme.heroTitle)
                 .foregroundStyle(Theme.text)
             HStack(spacing: 8) {
                 Text(meso.isActive ? "Week \(week + 1) of \(meso.totalWeeks)" : "\(meso.totalWeeks) weeks")

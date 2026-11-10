@@ -118,7 +118,7 @@ struct TrainView: View {
                 .a11y(.workoutQuick)
             }
             .surfaceCard()
-            .padding(.vertical, 16)
+            .padding(.vertical, Theme.gutter)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
             WorkoutHeader(title: Text("Mesocycle complete"), subtitle: Text(meso.name), progress: 1) {

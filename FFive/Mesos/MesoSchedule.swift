@@ -97,7 +97,7 @@ struct MesoScheduleGrid: View {
                     }
                 }
             } else {
-                cellIcon("circle", Theme.text.opacity(0.2))
+                cellIcon("circle", Theme.faint)
             }
         }
     }

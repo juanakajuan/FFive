@@ -98,7 +98,7 @@ private struct SetsByWeekCard: View {
     }
 
     private func color(_ sets: Int, _ landmarks: VolumeLandmarks) -> Color {
-        if sets == 0 { return Theme.text.opacity(0.2) }
+        if sets == 0 { return Theme.faint }
         if sets > landmarks.mrv { return Theme.danger }
         if landmarks.mav.contains(sets) { return Theme.success }
         return Theme.text
@@ -197,9 +197,9 @@ private struct FeedbackTrendCard: View {
 
     private func bar(_ value: Double?) -> some View {
         ZStack(alignment: .bottom) {
-            RoundedRectangle(cornerRadius: 2).fill(Theme.raised)
+            RoundedRectangle(cornerRadius: Theme.cornerRadius).fill(Theme.raised)
             if let value {
-                RoundedRectangle(cornerRadius: 2).fill(Theme.infoText).frame(height: 4 + 16 * value)
+                RoundedRectangle(cornerRadius: Theme.cornerRadius).fill(Theme.infoText).frame(height: 4 + 16 * value)
             }
         }
         .frame(maxWidth: .infinity)
