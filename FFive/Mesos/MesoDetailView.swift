@@ -32,9 +32,8 @@ struct MesoDetailView: View {
                     }
                 }
                 .buttonStyle(.secondary)
-                .padding(.horizontal, Theme.gutter)
             }
-            .padding(.bottom, Theme.gutter)
+            .padding(Theme.gutter)
         }
         .background(Theme.page)
         .navigationTitle(meso.name)
