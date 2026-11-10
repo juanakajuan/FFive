@@ -25,7 +25,7 @@ struct MesoGuidedView: View {
                         priorities[muscle] = $0
                     }
                     if muscle != Muscle.allCases.last {
-                        Rectangle().fill(Theme.hairline).frame(height: 1)
+                        Hairline()
                     }
                 }
                 Text(
@@ -53,7 +53,7 @@ struct MesoGuidedView: View {
             .padding(.horizontal, Theme.gutter)
             .padding(.vertical, 10)
             .background(Theme.surface)
-            .overlay(alignment: .top) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+            .overlay(alignment: .top) { Hairline() }
         }
     }
 }

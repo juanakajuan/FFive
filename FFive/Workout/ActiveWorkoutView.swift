@@ -649,7 +649,7 @@ struct ExerciseCard: View {
                 let comparisons = exercise.comparisons(with: store.lastFinishedExercise(exercise.key))
                 columnHeaders.padding(.top, 14)
                 ForEach(Array(sets.enumerated()), id: \.element.id) { index, set in
-                    if index > 0 { Rectangle().fill(Theme.hairline).frame(height: 1) }
+                    if index > 0 { Hairline() }
                     SetRow(
                         set: set, number: index + 1, unit: unit, rir: phase?.rir, focus: focus,
                         comparison: comparisons[ObjectIdentifier(set)], onCompleted: onSetCompleted,

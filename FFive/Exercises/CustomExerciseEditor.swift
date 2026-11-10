@@ -63,7 +63,7 @@ struct CustomExerciseEditor: View {
                             }
                             .a11y(.editorMuscle)
                         }
-                        divider
+                        Hairline()
                         pickerRow("Equipment") {
                             Picker("Equipment", selection: $draft.equipment) {
                                 ForEach(Equipment.allCases, id: \.self) { Text($0.displayName).tag($0) }
@@ -77,7 +77,7 @@ struct CustomExerciseEditor: View {
                     GroupedCard {
                         Stepper("Min \(minReps) reps", value: $minReps, in: 1...maxReps)
                             .groupRow()
-                        divider
+                        Hairline()
                         Stepper("Max \(maxReps) reps", value: $maxReps, in: minReps...50)
                             .groupRow()
                     }
@@ -110,10 +110,6 @@ struct CustomExerciseEditor: View {
         }
         .presentationDetents([.large])
         .interactiveDismissDisabled(edited != original)
-    }
-
-    private var divider: some View {
-        Rectangle().fill(Theme.hairline).frame(height: 1)
     }
 
     private func pickerRow(_ title: String, @ViewBuilder picker: () -> some View) -> some View {

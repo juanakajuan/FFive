@@ -32,15 +32,15 @@ struct MoreView: View {
                 VStack(alignment: .leading, spacing: 0) {
                     section("Training") {
                         row("Progress", systemImage: "chart.bar.xaxis", to: .progress)
-                        divider
+                        Hairline()
                         row("Learn", systemImage: "book", to: .learn)
                     }
                     section("App") {
                         row("Settings", systemImage: "gearshape", to: .settings)
-                        divider
+                        Hairline()
                         row("Changelog", systemImage: "list.bullet.rectangle", to: .changelog)
                     }
-                    Rectangle().fill(Theme.hairline).frame(height: 1).padding(.top, 24)
+                    Hairline().padding(.top, 24)
                     Text("App version: \(version)")
                         .font(.system(size: 13, design: .monospaced))
                         .foregroundStyle(Theme.secondary)
@@ -68,10 +68,6 @@ struct MoreView: View {
             SectionHeading(text: title)
             GroupedCard(content: rows)
         }
-    }
-
-    private var divider: some View {
-        Rectangle().fill(Theme.hairline).frame(height: 1)
     }
 
     private func row(_ title: String, systemImage: String, to destination: Destination) -> some View {
