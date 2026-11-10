@@ -17,7 +17,7 @@ struct SettingsView: View {
     var body: some View {
         @Bindable var settings = store.settings
         return ScrollView {
-            VStack(alignment: .leading, spacing: 12) {
+            VStack(alignment: .leading, spacing: 0) {
                 SectionHeading(text: "Units")
                 OutlinedGroup {
                     ForEach(Array(WeightUnit.allCases.enumerated()), id: \.element) { index, option in
@@ -31,9 +31,9 @@ struct SettingsView: View {
                 .font(Theme.detail)
                 .foregroundStyle(Theme.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
 
                 SectionHeading(text: "Appearance")
-                    .padding(.top, 20)
                 OutlinedGroup {
                     ForEach(Array(Appearance.allCases.enumerated()), id: \.element) { index, option in
                         if index > 0 { divider }
@@ -44,9 +44,9 @@ struct SettingsView: View {
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
                     .fixedSize(horizontal: false, vertical: true)
+                    .padding(.top, 8)
 
                 SectionHeading(text: "Equipment")
-                    .padding(.top, 20)
                 OutlinedGroup {
                     ForEach(Array(Equipment.allCases.enumerated()), id: \.element) { index, option in
                         if index > 0 { divider }
@@ -59,9 +59,9 @@ struct SettingsView: View {
                 .font(Theme.detail)
                 .foregroundStyle(Theme.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
 
                 SectionHeading(text: "Workout")
-                    .padding(.top, 20)
                 OutlinedGroup {
                     Toggle("Auto-Match Weights", isOn: $settings.autoMatchWeights)
                         .tint(Theme.success)
@@ -77,9 +77,9 @@ struct SettingsView: View {
                 .font(Theme.detail)
                 .foregroundStyle(Theme.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
 
                 SectionHeading(text: "iCloud Sync")
-                    .padding(.top, 20)
                 OutlinedGroup {
                     syncRow
                 }
@@ -89,9 +89,9 @@ struct SettingsView: View {
                 .font(Theme.detail)
                 .foregroundStyle(Theme.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
 
                 SectionHeading(text: "Data")
-                    .padding(.top, 20)
                 OutlinedGroup {
                     ShareLink(
                         item: TrainingExportFile(store: store),
@@ -134,9 +134,9 @@ struct SettingsView: View {
                 .font(Theme.detail)
                 .foregroundStyle(Theme.secondary)
                 .fixedSize(horizontal: false, vertical: true)
+                .padding(.top, 8)
 
                 SectionHeading(text: "About")
-                    .padding(.top, 20)
                 OutlinedGroup {
                     LabeledContent("Version", value: version)
                         .font(Theme.body)
@@ -145,7 +145,7 @@ struct SettingsView: View {
                         .frame(minHeight: 44)
                 }
             }
-            .padding(Theme.gutter)
+            .padding([.horizontal, .bottom], Theme.gutter)
         }
         .background(Theme.surface)
         .navigationTitle("Settings")

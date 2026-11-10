@@ -76,8 +76,6 @@ struct ExerciseDetailView: View {
 
                 SectionHeading(text: "History")
                     .padding(.horizontal, Theme.gutter)
-                    .padding(.top, 8)
-                    .padding(.bottom, 4)
                 if history.isEmpty {
                     Text("Sessions you finish with this exercise show up here.")
                         .font(Theme.detail)

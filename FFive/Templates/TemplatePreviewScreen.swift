@@ -106,7 +106,8 @@ struct TemplatePreviewScreen: View {
                         .foregroundStyle(Theme.secondary)
                         .padding(.horizontal, Theme.gutter)
                 }
-                heading("Days")
+                SectionHeading(text: "Days")
+                    .padding(.horizontal, Theme.gutter)
                 DayTabs(days: template.days.map(\.name), selection: $selectedDay)
                 if template.days.indices.contains(dayIndex) {
                     TemplateGroup {
@@ -126,7 +127,8 @@ struct TemplatePreviewScreen: View {
                     }
                     .padding(.top, 10)
                 }
-                heading("Muscle Focus")
+                SectionHeading(text: "Muscle Focus")
+                    .padding(.horizontal, Theme.gutter)
                 MuscleFocusCard(counts: template.weeklyExercises)
             }
             .padding(.bottom, Theme.gutter)
@@ -141,12 +143,6 @@ struct TemplatePreviewScreen: View {
         }
     }
 
-    private func heading(_ text: String) -> some View {
-        SectionHeading(text: text)
-            .padding(.horizontal, Theme.gutter)
-            .padding(.top, 16)
-            .padding(.bottom, 10)
-    }
 }
 
 /// One tab per day, scrolling sideways when the names run past the screen.

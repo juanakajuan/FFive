@@ -40,7 +40,7 @@ struct MoreView: View {
                         divider
                         row("Changelog", systemImage: "list.bullet.rectangle", to: .changelog)
                     }
-                    Rectangle().fill(Theme.hairline).frame(height: 1).padding(.top, 8)
+                    Rectangle().fill(Theme.hairline).frame(height: 1).padding(.top, 24)
                     Text("App version: \(version)")
                         .font(.system(size: 13, design: .monospaced))
                         .foregroundStyle(Theme.secondary)
@@ -64,12 +64,10 @@ struct MoreView: View {
     }
 
     private func section<Rows: View>(_ title: String, @ViewBuilder rows: @escaping () -> Rows) -> some View {
-        VStack(alignment: .leading, spacing: 10) {
+        VStack(alignment: .leading, spacing: 0) {
             SectionHeading(text: title)
             OutlinedGroup(content: rows)
         }
-        .padding(.top, 8)
-        .padding(.bottom, 24)
     }
 
     private var divider: some View {

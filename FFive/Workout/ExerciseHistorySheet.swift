@@ -17,9 +17,6 @@ struct ExerciseHistorySheet: View {
                     ForEach(Array(groups.enumerated()), id: \.element.id) { groupIndex, group in
                         SectionHeading(text: group.mesocycle?.name ?? "Quick Workouts")
                             .padding(.horizontal, Theme.gutter)
-                            .padding(.top, groupIndex == 0 ? 8 : 24)
-                            .padding(.bottom, 4)
-                            .accessibilityAddTraits(.isHeader)
                         ForEach(Array(group.sessions.enumerated()), id: \.element.id) { index, session in
                             if let workout = session.workout {
                                 NavigationLink(value: workout) { SessionRow(session: session, workout: workout) }

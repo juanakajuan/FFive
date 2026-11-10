@@ -13,9 +13,7 @@ struct LearnView: View {
             .listRowSeparator(.hidden)
             ForEach(Learn.Category.allCases) { category in
                 SectionHeading(text: category.rawValue)
-                    .accessibilityAddTraits(.isHeader)
-                    .themedRow(vertical: 8)
-                    .padding(.top, 12)
+                    .themedRow(vertical: 0)
                     .listRowSeparator(.hidden)
                 ForEach(Learn.articles.filter { $0.category == category }) { article in
                     NavigationLink {

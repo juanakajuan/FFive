@@ -54,8 +54,7 @@ private struct ChangelogList: View {
             ForEach(groups) { group in
                 if showsHeaders {
                     DayHeading(group: group)
-                        .themedRow(vertical: 8)
-                        .padding(.top, 12)
+                        .themedRow(vertical: 0)
                         .listRowSeparator(.hidden)
                 }
                 ForEach(group.entries, id: \.self) { EntryRow(entry: $0).themedRow() }
