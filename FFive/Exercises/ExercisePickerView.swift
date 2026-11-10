@@ -21,7 +21,7 @@ struct ExercisePickerView: View {
     var body: some View {
         let settings = store.settings
         let all = store.library(muscle: muscle, equipment: nil, search: search, performedOnly: performedOnly)
-        let entries = all.filter { !equipmentOnly || $0.fits(settings.equipment) }
+        let entries = all.scoped(to: settings.equipment, ownedOnly: equipmentOnly)
         let groups = Dictionary(grouping: entries, by: \.muscle)
         let queryID = ExerciseID(folding: query)
         let lastPerformed = store.lastPerformed()
@@ -171,22 +171,7 @@ struct ExercisePickerView: View {
             pick(entry.name, entry.muscle)
         } label: {
             HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.name)
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.text)
-                    HStack(spacing: 4) {
-                        MuscleDotLabel(muscle: entry.muscle)
-                        Text("\u{2022} \(entry.equipment)")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondary)
-                    }
-                    if let lastPerformed {
-                        Text("Last performed \(lastPerformed.formatted(.lastPerformed))")
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondary)
-                    }
-                }
+                ExerciseListingLabel(listing: entry, lastPerformed: lastPerformed)
                 Spacer(minLength: 0)
                 Image(systemName: "plus")
                     .font(.system(size: 18))
@@ -197,7 +182,7 @@ struct ExercisePickerView: View {
         .buttonStyle(.plain)
         .accessibilityLabel("\(entry.name), \(entry.equipment)")
         .accessibilityValue(
-            [entry.muscle.displayName, lastPerformed.map { "last performed \($0.formatted(.lastPerformed))" }]
+            [entry.muscle.displayName, lastPerformed?.lastPerformedPhrase(midSentence: true)]
                 .compactMap(\.self).joined(separator: ", ")
         )
         .a11y(.pickerRow, key: entry.name)
@@ -214,7 +199,7 @@ struct ExercisePickerView: View {
                     .font(Theme.body)
                     .foregroundStyle(Theme.text)
                 Text(
-                    [entry.equipment, lastPerformed.map { "last performed \($0.formatted(.lastPerformed))" }]
+                    [entry.equipment, lastPerformed?.lastPerformedPhrase(midSentence: true)]
                         .compactMap(\.self).joined(separator: " \u{2022} ")
                 )
                 .font(Theme.caption)
@@ -273,4 +258,11 @@ extension FormatStyle where Self == Date.FormatStyle {
 
     /// The day of a session in an exercise's history, such as "Tue, Mar 3, 2026".
     static var sessionDay: Date.FormatStyle { .dateTime.weekday(.abbreviated).month(.abbreviated).day().year() }
+}
+
+extension Date {
+    /// "Last performed Mar 3, 2026", or lowercase with `midSentence` for use after other text.
+    func lastPerformedPhrase(midSentence: Bool = false) -> String {
+        "\(midSentence ? "last" : "Last") performed \(formatted(.lastPerformed))"
+    }
 }

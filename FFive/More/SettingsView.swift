@@ -28,10 +28,7 @@ struct SettingsView: View {
                 Text(
                     "New prescriptions use this unit and its smallest jump: 5 lb, or 2.5 kg (2 kg for dumbbells). Loads you already logged keep their numbers and aren't converted."
                 )
-                .font(Theme.detail)
-                .foregroundStyle(Theme.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
+                .footnote()
 
                 SectionHeading(text: "Appearance")
                 GroupedCard {
@@ -41,10 +38,7 @@ struct SettingsView: View {
                     }
                 }
                 Text("System follows the iPhone's Light or Dark setting.")
-                    .font(Theme.detail)
-                    .foregroundStyle(Theme.secondary)
-                    .fixedSize(horizontal: false, vertical: true)
-                    .padding(.top, 8)
+                    .footnote()
 
                 SectionHeading(text: "Equipment")
                 GroupedCard {
@@ -56,27 +50,19 @@ struct SettingsView: View {
                 Text(
                     "The Exercises tab and the exercise picker show only exercises for the equipment you have. Custom exercises always show."
                 )
-                .font(Theme.detail)
-                .foregroundStyle(Theme.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
+                .footnote()
 
                 SectionHeading(text: "Workout")
                 GroupedCard {
                     Toggle("Auto-Match Weights", isOn: $settings.autoMatchWeights)
                         .tint(Theme.success)
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.text)
-                        .frame(minHeight: 44)
+                        .groupRow()
                         .a11y(.settingsAutoMatch)
                 }
                 Text(
                     "Changing a set's weight changes every later unlogged set of that exercise that had the same weight."
                 )
-                .font(Theme.detail)
-                .foregroundStyle(Theme.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
+                .footnote()
 
                 SectionHeading(text: "iCloud Sync")
                 GroupedCard {
@@ -85,10 +71,7 @@ struct SettingsView: View {
                 Text(
                     "Workouts, mesocycles, templates, custom exercises and notes sync through your private iCloud account to every device signed in to the same Apple ID. The settings on this screen stay on this device."
                 )
-                .font(Theme.detail)
-                .foregroundStyle(Theme.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
+                .footnote()
 
                 SectionHeading(text: "Data")
                 GroupedCard {
@@ -128,17 +111,12 @@ struct SettingsView: View {
                 Text(
                     "Export saves every mesocycle, workout, set, feedback entry, custom exercise, template and pinned note to a JSON file. Delete All Data removes them from this iPhone and iCloud, and resets these settings."
                 )
-                .font(Theme.detail)
-                .foregroundStyle(Theme.secondary)
-                .fixedSize(horizontal: false, vertical: true)
-                .padding(.top, 8)
+                .footnote()
 
                 SectionHeading(text: "About")
                 GroupedCard {
                     LabeledContent("Version", value: version)
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.text)
-                        .frame(minHeight: 44)
+                        .groupRow()
                 }
             }
             .padding([.horizontal, .bottom], Theme.gutter)

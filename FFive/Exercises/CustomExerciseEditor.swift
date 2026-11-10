@@ -71,7 +71,8 @@ struct CustomExerciseEditor: View {
                             .a11y(.editorEquipment)
                         }
                     }
-                    footnote("Muscle drives volume. Equipment sets how load steps up and whether body weight counts.")
+                    Text("Muscle drives volume. Equipment sets how load steps up and whether body weight counts.")
+                        .footnote()
 
                     SectionHeading(text: "Rep range")
                     GroupedCard {
@@ -123,14 +124,6 @@ struct CustomExerciseEditor: View {
         .groupRow()
     }
 
-    private func footnote(_ text: String) -> some View {
-        Text(text)
-            .font(Theme.detail)
-            .foregroundStyle(Theme.secondary)
-            .fixedSize(horizontal: false, vertical: true)
-            .padding(.top, 8)
-    }
-
     private func save() {
         do {
             let saved = try store.saveCustomExercise(edited, editing: editing)
@@ -139,14 +132,5 @@ struct CustomExerciseEditor: View {
         } catch {
             nameTaken = true
         }
-    }
-}
-
-extension View {
-    /// One row in a `GroupedCard`, as on Settings.
-    fileprivate func groupRow() -> some View {
-        font(Theme.body)
-            .foregroundStyle(Theme.text)
-            .frame(minHeight: 44)
     }
 }
