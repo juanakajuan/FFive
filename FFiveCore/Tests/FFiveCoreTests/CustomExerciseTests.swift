@@ -125,6 +125,13 @@ final class CustomExerciseTests: XCTestCase {
         XCTAssertEqual(store.customExercise(zercher)?.repRange, 1...1)
     }
 
+    func testBlankCueIsSavedAsNoCue() throws {
+        let store = try makeStore()
+        try store.saveCustomExercise(draft(cue: "  \n"))
+        XCTAssertNil(try XCTUnwrap(store.customExercise(zercher)).cue)
+        XCTAssertNil(try XCTUnwrap(store.library(muscle: .quads, equipment: nil, search: "zercher").first).info.cue)
+    }
+
     func testDeleteWithoutReferencesRemovesIt() throws {
         let store = try makeStore()
         try store.saveCustomExercise(draft())
