@@ -414,7 +414,7 @@ struct MesoEditorView: View {
         }
         .alert(
             "Save as Template",
-            isPresented: Binding(get: { templateName != nil }, set: { if !$0 { templateName = nil } })
+            isPresented: $templateName.isPresent()
         ) {
             TextField("Template name", text: Binding(get: { templateName ?? "" }, set: { templateName = $0 }))
             Button("Save") {

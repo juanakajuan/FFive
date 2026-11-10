@@ -95,7 +95,7 @@ struct TemplatesView: View {
             .sheet(item: $builder) { MesoBuilderView(startAt: $0) }
             .alert(
                 "Rename Template",
-                isPresented: Binding(get: { renaming != nil }, set: { if !$0 { renaming = nil } })
+                isPresented: $renaming.isPresent()
             ) {
                 TextField("Template name", text: $renameDraft)
                 Button("Save") {
@@ -105,7 +105,7 @@ struct TemplatesView: View {
             }
             .confirmationDialog(
                 "Delete this template?",
-                isPresented: Binding(get: { deleting != nil }, set: { if !$0 { deleting = nil } }),
+                isPresented: $deleting.isPresent(),
                 titleVisibility: .visible, presenting: deleting
             ) { saved in
                 Button("Delete Template", role: .destructive) { store.delete(saved) }
