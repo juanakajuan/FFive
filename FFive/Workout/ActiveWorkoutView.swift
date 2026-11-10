@@ -16,7 +16,7 @@ struct ActiveWorkoutView: View {
     @State private var notesFor: Mesocycle?
     @State private var confirmDiscard = false
     @State private var confirmReset = false
-    @State private var confirmEnd = false
+    @State private var ending: Mesocycle?
     @State private var renameDraft: String?
     @State private var relabelTo: WeekdayChoice?
     @State private var pickedSwap: SwapChoice?
@@ -145,16 +145,7 @@ struct ActiveWorkoutView: View {
             } message: {
                 Text("Logged sets are cleared. Exercises and targets stay.")
             }
-            .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
-                if let activeMeso {
-                    Button("End Mesocycle", role: .destructive) {
-                        WorkoutTabActions.end(activeMeso, router: router, store: store)
-                    }
-                    .a11y(.dialogEndMesocycle)
-                }
-            } message: {
-                Text("Logged sessions stay in Progress. You can plan a new mesocycle right after.")
-            }
+            .endMesocycleDialog($ending) { WorkoutTabActions.end($0, router: router, store: store) }
             .alert(
                 workout.mesocycle == nil ? "Rename Workout" : "Rename Day",
                 isPresented: $renameDraft.isPresent()
@@ -517,8 +508,8 @@ struct ActiveWorkoutView: View {
         }
         Button("Discard Workout", systemImage: "trash", role: .destructive) { confirmDiscard = true }
             .a11y(.menuDiscard)
-        if activeMeso != nil {
-            Button("End Mesocycle", systemImage: "flag.checkered", role: .destructive) { confirmEnd = true }
+        if let activeMeso {
+            Button("End Mesocycle", systemImage: "flag.checkered", role: .destructive) { ending = activeMeso }
                 .a11y(.menuEndMesocycle)
         }
     }

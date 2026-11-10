@@ -37,16 +37,7 @@ struct MesosView: View {
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
             .navigationDestination(for: MesoSummaryRoute.self) { MesoSummaryView(meso: $0.meso) }
             .sheet(isPresented: $showingBuilder) { MesoBuilderView() }
-            .confirmationDialog(
-                "End this mesocycle?",
-                isPresented: $ending.isPresent(),
-                titleVisibility: .visible, presenting: ending
-            ) { meso in
-                Button("End Mesocycle", role: .destructive) { router.end(meso, store: store) }
-                    .a11y(.dialogEndMesocycle)
-            } message: { _ in
-                Text("Logged sessions stay in Progress. You can plan a new mesocycle right after.")
-            }
+            .endMesocycleDialog($ending) { router.end($0, store: store) }
             .confirmationDialog(
                 "Delete this mesocycle?",
                 isPresented: $deleting.isPresent(),

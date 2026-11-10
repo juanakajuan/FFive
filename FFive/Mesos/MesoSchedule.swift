@@ -190,4 +190,17 @@ extension View {
             .a11y(.dialogTrainDay)
         }
     }
+
+    func endMesocycleDialog(_ meso: Binding<Mesocycle?>, onEnd: @escaping (Mesocycle) -> Void) -> some View {
+        confirmationDialog(
+            "End this mesocycle?",
+            isPresented: meso.isPresent(),
+            titleVisibility: .visible, presenting: meso.wrappedValue
+        ) { meso in
+            Button("End Mesocycle", role: .destructive) { onEnd(meso) }
+                .a11y(.dialogEndMesocycle)
+        } message: { _ in
+            Text("Logged sessions stay in Progress. You can plan a new mesocycle right after.")
+        }
+    }
 }

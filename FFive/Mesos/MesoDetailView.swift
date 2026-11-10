@@ -8,7 +8,7 @@ struct MesoDetailView: View {
     @Environment(Store.self) private var store
     @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
-    @State private var confirmEnd = false
+    @State private var ending: Mesocycle?
     @State private var confirmDelete = false
     @State private var trainAfterAll: SessionKey?
     @State private var templateName: String?
@@ -28,7 +28,7 @@ struct MesoDetailView: View {
                     Button("Save as Template") { templateName = meso.name }
                         .a11y(.mesoSaveTemplate)
                     if meso.isActive {
-                        Button("End Mesocycle", role: .destructive) { confirmEnd = true }
+                        Button("End Mesocycle", role: .destructive) { ending = meso }
                     }
                 }
                 .buttonStyle(.secondary)
@@ -68,12 +68,7 @@ struct MesoDetailView: View {
         }
         .sheet(isPresented: $showingNotes) { MesoNotesScreen(meso: meso) }
         .trainAfterAllDialog($trainAfterAll, of: meso, store: store, onOpen: open)
-        .confirmationDialog("End this mesocycle?", isPresented: $confirmEnd, titleVisibility: .visible) {
-            Button("End Mesocycle", role: .destructive) { router.end(meso, store: store) }
-                .a11y(.dialogEndMesocycle)
-        } message: {
-            Text("Logged sessions stay in Progress. You can plan a new mesocycle right after.")
-        }
+        .endMesocycleDialog($ending) { router.end($0, store: store) }
         .confirmationDialog("Delete this mesocycle?", isPresented: $confirmDelete, titleVisibility: .visible) {
             Button("Delete Mesocycle", role: .destructive) {
                 dismiss()
