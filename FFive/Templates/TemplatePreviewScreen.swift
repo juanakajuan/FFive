@@ -110,7 +110,7 @@ struct TemplatePreviewScreen: View {
                     .padding(.horizontal, Theme.gutter)
                 DayTabs(days: template.days.map(\.name), selection: $selectedDay)
                 if template.days.indices.contains(dayIndex) {
-                    TemplateGroup {
+                    GroupedCard {
                         let slots = template.days[dayIndex].slots
                         ForEach(Array(slots.enumerated()), id: \.offset) { index, slot in
                             VStack(alignment: .leading, spacing: 3) {
@@ -125,6 +125,7 @@ struct TemplatePreviewScreen: View {
                             }
                         }
                     }
+                    .padding(.horizontal, Theme.gutter)
                     .padding(.top, 10)
                 }
                 SectionHeading(text: "Muscle Focus")
@@ -188,7 +189,7 @@ private struct MuscleFocusCard: View {
 
     var body: some View {
         let most = counts.map(\.count).max() ?? 1
-        TemplateGroup {
+        GroupedCard {
             VStack(alignment: .leading, spacing: 8) {
                 ForEach(counts, id: \.muscle) { entry in
                     HStack(spacing: 10) {
@@ -221,5 +222,6 @@ private struct MuscleFocusCard: View {
             }
             .padding(.vertical, 12)
         }
+        .padding(.horizontal, Theme.gutter)
     }
 }

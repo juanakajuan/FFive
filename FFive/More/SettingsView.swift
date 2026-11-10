@@ -19,7 +19,7 @@ struct SettingsView: View {
         return ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 SectionHeading(text: "Units")
-                OutlinedGroup {
+                GroupedCard {
                     ForEach(Array(WeightUnit.allCases.enumerated()), id: \.element) { index, option in
                         if index > 0 { divider }
                         unitRow(option)
@@ -34,7 +34,7 @@ struct SettingsView: View {
                 .padding(.top, 8)
 
                 SectionHeading(text: "Appearance")
-                OutlinedGroup {
+                GroupedCard {
                     ForEach(Array(Appearance.allCases.enumerated()), id: \.element) { index, option in
                         if index > 0 { divider }
                         appearanceRow(option)
@@ -47,7 +47,7 @@ struct SettingsView: View {
                     .padding(.top, 8)
 
                 SectionHeading(text: "Equipment")
-                OutlinedGroup {
+                GroupedCard {
                     ForEach(Array(Equipment.allCases.enumerated()), id: \.element) { index, option in
                         if index > 0 { divider }
                         equipmentRow(option)
@@ -62,12 +62,11 @@ struct SettingsView: View {
                 .padding(.top, 8)
 
                 SectionHeading(text: "Workout")
-                OutlinedGroup {
+                GroupedCard {
                     Toggle("Auto-Match Weights", isOn: $settings.autoMatchWeights)
                         .tint(Theme.success)
                         .font(Theme.body)
                         .foregroundStyle(Theme.text)
-                        .padding(.horizontal, 12)
                         .frame(minHeight: 44)
                         .a11y(.settingsAutoMatch)
                 }
@@ -80,7 +79,7 @@ struct SettingsView: View {
                 .padding(.top, 8)
 
                 SectionHeading(text: "iCloud Sync")
-                OutlinedGroup {
+                GroupedCard {
                     syncRow
                 }
                 Text(
@@ -92,7 +91,7 @@ struct SettingsView: View {
                 .padding(.top, 8)
 
                 SectionHeading(text: "Data")
-                OutlinedGroup {
+                GroupedCard {
                     ShareLink(
                         item: TrainingExportFile(store: store),
                         preview: SharePreview(TrainingExportFile.fileName(on: .now))
@@ -104,7 +103,6 @@ struct SettingsView: View {
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(Theme.infoText)
                         }
-                        .padding(.horizontal, 12)
                         .frame(minHeight: 44)
                         .contentShape(Rectangle())
                     }
@@ -121,7 +119,6 @@ struct SettingsView: View {
                                 .font(.system(size: 15, weight: .semibold))
                                 .foregroundStyle(Theme.danger)
                         }
-                        .padding(.horizontal, 12)
                         .frame(minHeight: 44)
                         .contentShape(Rectangle())
                     }
@@ -137,11 +134,10 @@ struct SettingsView: View {
                 .padding(.top, 8)
 
                 SectionHeading(text: "About")
-                OutlinedGroup {
+                GroupedCard {
                     LabeledContent("Version", value: version)
                         .font(Theme.body)
                         .foregroundStyle(Theme.text)
-                        .padding(.horizontal, 12)
                         .frame(minHeight: 44)
                 }
             }
@@ -201,7 +197,6 @@ struct SettingsView: View {
                 ProgressView()
             }
         }
-        .padding(.horizontal, 12)
         .padding(.vertical, 8)
         .frame(minHeight: 44)
         .accessibilityElement(children: .combine)
@@ -209,7 +204,7 @@ struct SettingsView: View {
     }
 
     private var divider: some View {
-        Rectangle().fill(Theme.hairline).frame(height: 1).padding(.leading, 12)
+        Rectangle().fill(Theme.hairline).frame(height: 1)
     }
 
     private func unitRow(_ option: WeightUnit) -> some View {
@@ -227,7 +222,6 @@ struct SettingsView: View {
                         .foregroundStyle(Theme.infoText)
                 }
             }
-            .padding(.horizontal, 12)
             .frame(minHeight: 44)
             .contentShape(Rectangle())
         }
@@ -251,7 +245,6 @@ struct SettingsView: View {
                         .foregroundStyle(Theme.infoText)
                 }
             }
-            .padding(.horizontal, 12)
             .frame(minHeight: 44)
             .contentShape(Rectangle())
         }
@@ -275,7 +268,6 @@ struct SettingsView: View {
                         .foregroundStyle(Theme.infoText)
                 }
             }
-            .padding(.horizontal, 12)
             .frame(minHeight: 44)
             .contentShape(Rectangle())
         }

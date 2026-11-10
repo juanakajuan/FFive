@@ -45,13 +45,8 @@ struct TemplatesView: View {
                     } else if custom.isEmpty {
                         emptyNote("No custom templates match.")
                     } else {
-                        TemplateGroup {
-                            ForEach(custom) { saved in
-                                customRow(saved)
-                                if saved.id != custom.last?.id {
-                                    Rectangle().fill(Theme.hairline).frame(height: 1)
-                                }
-                            }
+                        ForEach(custom) { saved in
+                            customRow(saved).browseRow()
                         }
                     }
                     SectionHeading(text: "FFive templates")
@@ -59,17 +54,13 @@ struct TemplatesView: View {
                     if builtIn.isEmpty {
                         emptyNote("No templates match.")
                     } else {
-                        TemplateGroup {
-                            ForEach(builtIn) { template in
-                                NavigationLink(value: TemplatePreviewScreen.Subject.builtIn(template)) {
-                                    TemplateListRow(template: template)
-                                }
-                                .buttonStyle(.plain)
-                                .a11y(.templatesTemplate, key: template.name)
-                                if template.id != builtIn.last?.id {
-                                    Rectangle().fill(Theme.hairline).frame(height: 1)
-                                }
+                        ForEach(builtIn) { template in
+                            NavigationLink(value: TemplatePreviewScreen.Subject.builtIn(template)) {
+                                TemplateListRow(template: template)
                             }
+                            .buttonStyle(.plain)
+                            .a11y(.templatesTemplate, key: template.name)
+                            .browseRow()
                         }
                     }
                 }
@@ -161,19 +152,6 @@ struct TemplatesView: View {
         Text(text)
             .font(Theme.detail)
             .foregroundStyle(Theme.secondary)
-            .padding(.horizontal, Theme.gutter)
-    }
-}
-
-struct TemplateGroup<Content: View>: View {
-    let content: Content
-
-    init(@ViewBuilder content: () -> Content) { self.content = content() }
-
-    var body: some View {
-        VStack(spacing: 0) { content }
-            .padding(.horizontal, 12)
-            .background(Theme.raised, in: RoundedRectangle(cornerRadius: 8))
             .padding(.horizontal, Theme.gutter)
     }
 }

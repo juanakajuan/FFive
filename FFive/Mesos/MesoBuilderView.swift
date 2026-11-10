@@ -51,7 +51,7 @@ struct MesoBuilderView: View {
                 if !mesos.isEmpty {
                     SectionHeading(text: "Copy a mesocycle")
                         .padding(.horizontal, Theme.gutter)
-                    TemplateGroup {
+                    GroupedCard {
                         ForEach(mesos) { meso in
                             NavigationLink(value: Route.copy(meso)) { CopySourceRow(meso: meso) }
                                 .buttonStyle(.plain)
@@ -61,11 +61,12 @@ struct MesoBuilderView: View {
                             }
                         }
                     }
+                    .padding(.horizontal, Theme.gutter)
                 }
                 if !customTemplates.isEmpty {
                     SectionHeading(text: "Your templates")
                         .padding(.horizontal, Theme.gutter)
-                    TemplateGroup {
+                    GroupedCard {
                         ForEach(customTemplates) { saved in
                             NavigationLink(value: Route.template(saved.template)) {
                                 TemplateListRow(template: saved.template)
@@ -77,10 +78,11 @@ struct MesoBuilderView: View {
                             }
                         }
                     }
+                    .padding(.horizontal, Theme.gutter)
                 }
                 SectionHeading(text: "Plan it for me")
                     .padding(.horizontal, Theme.gutter)
-                TemplateGroup {
+                GroupedCard {
                     NavigationLink(value: Route.guided) {
                         HStack(spacing: 10) {
                             Image(systemName: "wand.and.stars").font(.system(size: 18))
@@ -100,9 +102,10 @@ struct MesoBuilderView: View {
                     .buttonStyle(.plain)
                     .a11y(.builderGuided)
                 }
+                .padding(.horizontal, Theme.gutter)
                 SectionHeading(text: "Start from a template")
                     .padding(.horizontal, Theme.gutter)
-                TemplateGroup {
+                GroupedCard {
                     ForEach(ExerciseCatalog.templates) { template in
                         NavigationLink(value: Route.template(template)) {
                             TemplateListRow(template: template)
@@ -125,6 +128,7 @@ struct MesoBuilderView: View {
                     .buttonStyle(.plain)
                     .a11y(.builderBlank)
                 }
+                .padding(.horizontal, Theme.gutter)
                 Text("You can rename days and change any exercise on the next screen.")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)

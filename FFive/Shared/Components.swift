@@ -268,6 +268,13 @@ extension View {
             .background(Theme.surface)
     }
 
+    /// One edge-to-edge row in a tab-root browse list (Mesos, Templates, Exercises): gutter inset, hairline below.
+    func browseRow() -> some View {
+        padding(.horizontal, Theme.gutter)
+            .contentShape(Rectangle())
+            .overlay(alignment: .bottom) { Rectangle().fill(Theme.hairline).frame(height: 1) }
+    }
+
     func themedRow(vertical: CGFloat = 12) -> some View {
         alignmentGuide(.listRowSeparatorLeading) { _ in 0 }
             .listRowBackground(Theme.surface)
