@@ -4,7 +4,7 @@ Tapping a template on the Templates tab pushes a read-only preview instead of op
 
 ## How to get to it (user POV)
 
-Templates tab, tap any row under `Custom templates` or `FFive templates`.
+Templates tab, tap any row under `Your templates` or `FFive templates`.
 
 ## Driving it with ffive-verify
 

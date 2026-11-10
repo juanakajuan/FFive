@@ -5,7 +5,7 @@ A lifter with no active block plans one from a program template. They rename it,
 ## Sub-features
 
 - `plan-open` opens the builder from the empty Workout tab.
-- `plan-template` picks a row under `Start from a template` (built-in templates for every emphasis at 2 to 6 days, plus barbell-only and dumbbell-only ones) and lands on Customize with its days and exercises.
+- `plan-template` picks a row under `FFive templates` (built-in templates for every emphasis at 2 to 6 days, plus barbell-only and dumbbell-only ones) and lands on Customize with its days and exercises.
 - `plan-customize` renames the block and changes its length with the stepper, which updates the RIR countdown.
 - `plan-start` starts the block, closes the builder, and shows Week 1 · Day 1 on the Workout tab.
 - `plan-mesos` lists the block on the Mesos tab as `<total> WEEKS - <days> DAYS/WEEK` with a `Current` badge.

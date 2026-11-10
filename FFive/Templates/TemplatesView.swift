@@ -38,18 +38,18 @@ struct TemplatesView: View {
         NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    SectionHeading(text: "Custom templates")
+                    SectionHeading(text: TemplateGroup.custom)
                         .padding(.horizontal, Theme.gutter)
                     if customTemplates.isEmpty {
                         emptyNote("Save a mesocycle or a builder draft as a template and it shows up here.")
                     } else if custom.isEmpty {
-                        emptyNote("No custom templates match.")
+                        emptyNote("None of your templates match.")
                     } else {
                         ForEach(custom) { saved in
                             customRow(saved).browseRow()
                         }
                     }
-                    SectionHeading(text: "FFive templates")
+                    SectionHeading(text: TemplateGroup.builtIn)
                         .padding(.horizontal, Theme.gutter)
                     if builtIn.isEmpty {
                         emptyNote("No templates match.")

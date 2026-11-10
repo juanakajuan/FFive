@@ -52,7 +52,7 @@ tap #tab.mesos
 wait #mesos.plan
 shot 06-empty-mesos
 tap #tab.templates
-wait text "Custom templates"
+wait text "Your templates"
 absent #templates.custom.my-template
 wait #templates.template.upper-lower-4-days
 shot 07-templates
