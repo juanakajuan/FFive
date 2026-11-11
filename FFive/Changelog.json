@@ -1,6 +1,237 @@
 {
   "releases" : [
     {
+      "date" : "2026-11-11",
+      "entries" : [
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Give every selection control a selection haptic, and finishing a workout or starting or ending a mesocycle a success haptic"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Animate every list insert and remove with .snappy"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Tapping the selected tab goes back to its first screen"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Ask before deleting a History workout or a mesocycle note"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Draw each meaning with one SF Symbol"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Draw the Copy a Mesocycle and Guided Plan week and day pickers with SegmentedButtons"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Tint every info icon and text link with Theme.infoText"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Place and name nav-bar menus consistently"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Give the Mesos row menu and the mesocycle page menu the same actions"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Show history dates in one format on every screen"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Show the app version only in Settings → About"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Leave developer-only changes out of the changelog and tag fixes in info"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Warn that template and exercise deletes can't be undone"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Call mesocycle notes one name everywhere"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Show the builder's current copy source with StatusBadge"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Spell W1, Estimated 1RM and Bodyweight the same everywhere"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Word Plan a Mesocycle the same everywhere and Remove a day in Manage Days"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Use Title Case for every heading, button and menu item"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "One separator and one days-per-week wording"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "fix",
+          "text" : "Name the template in the builder's reset dialog"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "improvement",
+          "text" : "Cache strengthSeries and weekStats until the next commit"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "improvement",
+          "text" : "Cache the last finished exercise per key until the next commit"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "fix",
+          "text" : "Offer Create in the picker only for a name no exercise holds"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "improvement",
+          "text" : "Scan the workout history once per commit for the exercise picker"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "fix",
+          "text" : "Draw sizes, radii and colors from Theme tokens"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "fix",
+          "text" : "Carry the list surface in the environment so a sheet names it once"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "fix",
+          "text" : "One pair of template group names on Templates and in the builder"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "fix",
+          "text" : "Draw every divider through one Hairline view"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "fix",
+          "text" : "Build every list from themedList and themedRow"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "fix",
+          "text" : "Draw every card through one surfaceCard modifier"
+        },
+        {
+          "date" : "2026-11-10",
+          "kind" : "fix",
+          "text" : "One grouped style for menus, edge-to-edge rows for browse lists"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Inset mesocycle cards by the gutter on the detail and summary screens"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "One primary and one secondary button style, 48 pt, in Shared"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Give every section heading one font and one spacing"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Show one row chevron on every row that opens a screen"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Label the Templates + button New Template"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Give the builder bold section headings and one trailing menu"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Delete unused MuscleChip"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Give the New Exercise sheet the app's own form styles"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Use one empty state everywhere"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Draw every logged set's checkbox at full strength"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Draw This Week's Sets and Progress → Volume with one chart"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Keep a draft on swipe-down and give edit sheets one background and detents"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Call a mesocycle a mesocycle in all UI copy"
+        },
+        {
+          "date" : "2026-11-09",
+          "kind" : "fix",
+          "text" : "Name the Workout tab in Progress's empty volume text"
+        }
+      ],
+      "version" : "1.7"
+    },
+    {
       "date" : "2026-11-08",
       "entries" : [
         {
