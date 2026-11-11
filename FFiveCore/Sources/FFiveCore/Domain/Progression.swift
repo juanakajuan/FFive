@@ -21,6 +21,23 @@ public enum WeekPhase: Equatable {
         if case .accumulation(let rir) = self { return rir }
         return nil
     }
+
+    public var badgeText: String {
+        switch self {
+        case .accumulation(let rir): "\(rir) RIR"
+        case .deload: "Deload"
+        }
+    }
+
+    /// Fits a schedule grid or a segmented control: "W2" or "DL". `week` is 0-based.
+    public func shortLabel(week: Int) -> String {
+        self == .deload ? "DL" : "W\(week + 1)"
+    }
+
+    /// Reads in a title or a sentence: "Week 2" or "Deload". `week` is 0-based.
+    public func longLabel(week: Int) -> String {
+        self == .deload ? "Deload" : "Week \(week + 1)"
+    }
 }
 
 public enum Progression {

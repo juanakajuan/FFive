@@ -564,7 +564,7 @@ struct RIRSchedule: View {
             ForEach(0...accumulationWeeks, id: \.self) { week in
                 let phase = Progression.phase(week: week, accumulationWeeks: accumulationWeeks)
                 VStack(spacing: 2) {
-                    Text(phase == .deload ? "DL" : "W\(week + 1)")
+                    Text(phase.shortLabel(week: week))
                         .font(Theme.tag)
                         .foregroundStyle(Theme.secondary)
                     Text(phase.rir.map(String.init) ?? "—")

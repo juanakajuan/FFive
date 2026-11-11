@@ -61,9 +61,11 @@ struct WorkoutDetailView: View {
                     .font(Theme.rowTitle)
                     .foregroundStyle(Theme.text)
                 if let meso = workout.mesocycle, let week = workout.week, let phase = workout.phase {
-                    Text("\(meso.name) · \(phase == .deload ? "Deload week" : "Week \(week + 1), \(phase.badgeText)")")
-                        .font(Theme.detail)
-                        .foregroundStyle(Theme.secondary)
+                    Text(
+                        "\(meso.name) · \(phase.longLabel(week: week))\(phase.rir == nil ? "" : ", \(phase.badgeText)")"
+                    )
+                    .font(Theme.detail)
+                    .foregroundStyle(Theme.secondary)
                 }
             }
             HStack(spacing: 8) {
