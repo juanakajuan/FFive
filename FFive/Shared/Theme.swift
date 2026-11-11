@@ -377,6 +377,24 @@ struct SectionHeading: View {
     }
 }
 
+/// A section heading over a grouped card, for a screen built from a `ScrollView`.
+struct GroupedSection<Content: View>: View {
+    let title: String
+    let content: Content
+
+    init(_ title: String, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            SectionHeading(text: title)
+            GroupedCard { content }
+        }
+    }
+}
+
 struct ScreenHeader<Trailing: View>: ViewModifier {
     let title: String
     let trailing: Trailing

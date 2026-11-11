@@ -49,9 +49,7 @@ struct MesoBuilderView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 if !mesos.isEmpty {
-                    SectionHeading(text: "Copy a mesocycle")
-                        .padding(.horizontal, Theme.gutter)
-                    GroupedCard {
+                    GroupedSection("Copy a mesocycle") {
                         ForEach(mesos) { meso in
                             NavigationLink(value: Route.copy(meso)) { CopySourceRow(meso: meso) }
                                 .buttonStyle(.plain)
@@ -61,12 +59,9 @@ struct MesoBuilderView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, Theme.gutter)
                 }
                 if !customTemplates.isEmpty {
-                    SectionHeading(text: TemplateGroup.custom)
-                        .padding(.horizontal, Theme.gutter)
-                    GroupedCard {
+                    GroupedSection(TemplateGroup.custom) {
                         ForEach(customTemplates) { saved in
                             NavigationLink(value: Route.template(saved.template)) {
                                 TemplateListRow(template: saved.template)
@@ -78,34 +73,15 @@ struct MesoBuilderView: View {
                             }
                         }
                     }
-                    .padding(.horizontal, Theme.gutter)
                 }
-                SectionHeading(text: "Plan it for me")
-                    .padding(.horizontal, Theme.gutter)
-                GroupedCard {
-                    NavigationLink(value: Route.guided) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "wand.and.stars").font(.system(size: 18))
-                            VStack(alignment: .leading, spacing: 3) {
-                                Text("Guided plan").font(Theme.rowTitle)
-                                Text("Pick your days a week and what to grow")
-                                    .font(Theme.caption)
-                                    .foregroundStyle(Theme.secondary)
-                            }
-                            Spacer()
-                            RowChevron()
-                        }
-                        .foregroundStyle(Theme.text)
-                        .padding(.vertical, 14)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
+                GroupedSection("Plan it for me") {
+                    linkRow(
+                        "Guided plan", systemImage: "wand.and.stars", detail: "Pick your days a week and what to grow",
+                        to: .guided
+                    )
                     .a11y(.builderGuided)
                 }
-                .padding(.horizontal, Theme.gutter)
-                SectionHeading(text: TemplateGroup.builtIn)
-                    .padding(.horizontal, Theme.gutter)
-                GroupedCard {
+                GroupedSection(TemplateGroup.builtIn) {
                     ForEach(ExerciseCatalog.templates) { template in
                         NavigationLink(value: Route.template(template)) {
                             TemplateListRow(template: template)
@@ -114,32 +90,42 @@ struct MesoBuilderView: View {
                         .a11y(.builderTemplate, key: template.name)
                         Hairline()
                     }
-                    NavigationLink(value: Route.blank) {
-                        HStack(spacing: 10) {
-                            Image(systemName: "square.and.pencil").font(.system(size: 18))
-                            Text("Build from scratch").font(Theme.rowTitle)
-                            Spacer()
-                            RowChevron()
-                        }
-                        .foregroundStyle(Theme.text)
-                        .padding(.vertical, 14)
-                        .contentShape(Rectangle())
-                    }
-                    .buttonStyle(.plain)
-                    .a11y(.builderBlank)
+                    linkRow("Build from scratch", systemImage: "square.and.pencil", to: .blank)
+                        .a11y(.builderBlank)
                 }
-                .padding(.horizontal, Theme.gutter)
                 Text("You can rename days and change any exercise on the next screen.")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
-                    .padding(.horizontal, Theme.gutter)
                     .padding(.top, 10)
             }
+            .padding(.horizontal, Theme.gutter)
             .padding(.bottom, Theme.gutter)
         }
         .background(Theme.surface)
         .navigationTitle("New Mesocycle")
         .navigationBarTitleDisplayMode(.inline)
+    }
+
+    private func linkRow(_ title: String, systemImage: String, detail: String? = nil, to route: Route) -> some View {
+        NavigationLink(value: route) {
+            HStack(spacing: 10) {
+                Image(systemName: systemImage).font(.system(size: 18))
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(title).font(Theme.rowTitle)
+                    if let detail {
+                        Text(detail)
+                            .font(Theme.caption)
+                            .foregroundStyle(Theme.secondary)
+                    }
+                }
+                Spacer()
+                RowChevron()
+            }
+            .foregroundStyle(Theme.text)
+            .padding(.vertical, 14)
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
     }
 
     @ViewBuilder
@@ -193,144 +179,11 @@ struct MesoEditorView: View {
     var body: some View {
         List {
             if editing == nil {
-                Section {
-                    TextField(
-                        "Mesocycle name", text: $draft.name,
-                        prompt: Text("Mesocycle name").foregroundStyle(Theme.secondary)
-                    )
-                    .formField()
-                    .themedRow(vertical: 8)
-                    .a11y(.builderName)
-                } header: {
-                    SectionHeading(text: "Name")
-                        .themedRow(vertical: 0)
-                }
-
-                Section {
-                    Stepper(value: $draft.accumulationWeeks, in: Mesocycle.accumulationWeekRange) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text("\(draft.accumulationWeeks) training weeks")
-                                .font(Theme.body)
-                                .foregroundStyle(Theme.text)
-                            Text("then 1 deload week").font(Theme.caption).foregroundStyle(Theme.secondary)
-                        }
-                    }
-                    .themedRow(vertical: 8)
-                    RIRSchedule(accumulationWeeks: draft.accumulationWeeks)
-                        .themedRow(vertical: 8)
-                    footnote(
-                        "Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next mesocycle starts fresh."
-                    )
-                } header: {
-                    SectionHeading(text: "Length")
-                        .themedRow(vertical: 0)
-                }
-
-                Section {
-                    Picker(
-                        "Starts on",
-                        selection: Binding(
-                            get: { draft.startWeekday }, set: { $0.map { draft.schedule(startingOn: $0) } })
-                    ) {
-                        if draft.startWeekday == nil { Text("Choose").tag(Weekday?.none) }
-                        ForEach(Weekday.allCases) { Text($0.name).tag(Weekday?.some($0)) }
-                    }
-                    .font(Theme.body)
-                    .foregroundStyle(Theme.text)
-                    .tint(Theme.secondary)
-                    .a11y(.builderStartWeekday)
-                    .themedRow(vertical: 8)
-                    footnote(
-                        "Each day gets a weekday that spreads rest through the week. Change any of them below."
-                    )
-                } header: {
-                    SectionHeading(text: "Schedule")
-                        .themedRow(vertical: 0)
-                }
+                blockSettings
             }
 
-            ForEach($draft.days) { $day in
-                Section {
-                    TextField("Day name", text: $day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary))
-                        .font(Theme.rowTitle)
-                        .formField()
-                        .themedRow(vertical: 8)
-                    if editing == nil {
-                        Picker("Weekday", selection: $day.weekday) {
-                            Text("None").tag(Weekday?.none)
-                            ForEach(Weekday.allCases) { Text($0.name).tag(Weekday?.some($0)) }
-                        }
-                        .font(Theme.body)
-                        .foregroundStyle(Theme.text)
-                        .tint(Theme.secondary)
-                        .a11y(.builderWeekday, (draft.days.firstIndex { $0.id == day.id } ?? 0) + 1)
-                        .themedRow(vertical: 8)
-                    }
-                    ForEach(day.slots) { slot in
-                        Button {
-                            picker = .swap(day: day.id, slot: slot)
-                        } label: {
-                            HStack(spacing: 10) {
-                                VStack(alignment: .leading, spacing: 3) {
-                                    Text(slot.exercise ?? "Choose an exercise")
-                                        .font(Theme.body)
-                                        .foregroundStyle(slot.exercise == nil ? Theme.infoText : Theme.text)
-                                    MuscleDotLabel(muscle: slot.muscle)
-                                }
-                                Spacer()
-                                Image(systemName: slot.exercise == nil ? "plus.circle" : "arrow.triangle.2.circlepath")
-                                    .font(.system(size: 14))
-                                    .foregroundStyle(Theme.secondary)
-                            }
-                            .contentShape(Rectangle())
-                        }
-                        .buttonStyle(.plain)
-                        .themedRow(vertical: 8)
-                    }
-                    .onDelete { offsets in update(day.id) { $0.slots.remove(atOffsets: offsets) } }
-                    .onMove { from, to in update(day.id) { $0.slots.move(fromOffsets: from, toOffset: to) } }
-                    Button {
-                        picker = .add(day: day.id)
-                    } label: {
-                        Label("Add Exercise", systemImage: "plus")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.infoText)
-                    }
-                    .themedRow(vertical: 8)
-                    Picker(
-                        selection: Binding<Muscle?>(
-                            get: { nil },
-                            set: { muscle in
-                                guard let muscle else { return }
-                                update(day.id) { $0.slots.append(MesoDraft.Slot(muscle: muscle)) }
-                            })
-                    ) {
-                        ForEach(Muscle.allCases) { Text($0.displayName).tag(Muscle?.some($0)) }
-                    } label: {
-                        Label("Add Muscle", systemImage: "plus.square.dashed")
-                            .font(Theme.body)
-                            .foregroundStyle(Theme.infoText)
-                    }
-                    .tint(Theme.secondary)
-                    .a11y(.builderAddMuscle)
-                    .themedRow(vertical: 8)
-                    if day.slots.isEmpty {
-                        footnote("Add at least one exercise, or remove this day.")
-                    }
-                } header: {
-                    HStack(alignment: .firstTextBaseline) {
-                        SectionHeading(text: "Day \((draft.days.firstIndex { $0.id == day.id } ?? 0) + 1)")
-                        Spacer()
-                        if draft.days.count > 1 {
-                            Button("Remove Day", role: .destructive) {
-                                withAnimation { draft.days.removeAll { $0.id == day.id } }
-                            }
-                            .font(Theme.detail)
-                            .foregroundStyle(Theme.danger)
-                        }
-                    }
-                    .themedRow(vertical: 0)
-                }
+            ForEach(Array($draft.days.enumerated()), id: \.element.id) { index, day in
+                daySection(day, number: index + 1)
             }
 
             Section {
@@ -348,18 +201,7 @@ struct MesoEditorView: View {
             }
 
             if editing == nil, !draft.muscles.isEmpty {
-                Section {
-                    ForEach(draft.muscles) { muscle in
-                        MusclePriorityRow(muscle: muscle, priority: draft.priorities[muscle] ?? .normal) {
-                            draft.priorities[muscle] = $0
-                        }
-                        .themedRow(vertical: 8)
-                    }
-                    footnote(MusclePriority.explanation)
-                } header: {
-                    SectionHeading(text: "Muscle Priorities")
-                        .themedRow(vertical: 0)
-                }
+                musclePriorities
             }
         }
         .themedList()
@@ -479,6 +321,165 @@ struct MesoEditorView: View {
         }
     }
 
+    @ViewBuilder
+    private var blockSettings: some View {
+        Section {
+            TextField(
+                "Mesocycle name", text: $draft.name,
+                prompt: Text("Mesocycle name").foregroundStyle(Theme.secondary)
+            )
+            .formField()
+            .themedRow(vertical: 8)
+            .a11y(.builderName)
+        } header: {
+            SectionHeading(text: "Name")
+                .themedRow(vertical: 0)
+        }
+
+        Section {
+            Stepper(value: $draft.accumulationWeeks, in: Mesocycle.accumulationWeekRange) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("\(draft.accumulationWeeks) training weeks")
+                        .font(Theme.body)
+                        .foregroundStyle(Theme.text)
+                    Text("then 1 deload week").font(Theme.caption).foregroundStyle(Theme.secondary)
+                }
+            }
+            .themedRow(vertical: 8)
+            RIRSchedule(accumulationWeeks: draft.accumulationWeeks)
+                .themedRow(vertical: 8)
+            footnote(
+                "Effort climbs each week as reps in reserve (RIR) count down toward zero. The deload then sheds fatigue so the next mesocycle starts fresh."
+            )
+        } header: {
+            SectionHeading(text: "Length")
+                .themedRow(vertical: 0)
+        }
+
+        Section {
+            Picker(
+                "Starts on",
+                selection: Binding(
+                    get: { draft.startWeekday }, set: { $0.map { draft.schedule(startingOn: $0) } })
+            ) {
+                if draft.startWeekday == nil { Text("Choose").tag(Weekday?.none) }
+                ForEach(Weekday.allCases) { Text($0.name).tag(Weekday?.some($0)) }
+            }
+            .font(Theme.body)
+            .foregroundStyle(Theme.text)
+            .tint(Theme.secondary)
+            .a11y(.builderStartWeekday)
+            .themedRow(vertical: 8)
+            footnote(
+                "Each day gets a weekday that spreads rest through the week. Change any of them below."
+            )
+        } header: {
+            SectionHeading(text: "Schedule")
+                .themedRow(vertical: 0)
+        }
+    }
+
+    private func daySection(_ day: Binding<MesoDraft.Day>, number: Int) -> some View {
+        let id = day.wrappedValue.id
+        let slots = day.wrappedValue.slots
+        return Section {
+            TextField("Day name", text: day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary))
+                .font(Theme.rowTitle)
+                .formField()
+                .themedRow(vertical: 8)
+            if editing == nil {
+                Picker("Weekday", selection: day.weekday) {
+                    Text("None").tag(Weekday?.none)
+                    ForEach(Weekday.allCases) { Text($0.name).tag(Weekday?.some($0)) }
+                }
+                .font(Theme.body)
+                .foregroundStyle(Theme.text)
+                .tint(Theme.secondary)
+                .a11y(.builderWeekday, number)
+                .themedRow(vertical: 8)
+            }
+            ForEach(slots) { slot in
+                Button {
+                    picker = .swap(day: id, slot: slot)
+                } label: {
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 3) {
+                            Text(slot.exercise ?? "Choose an exercise")
+                                .font(Theme.body)
+                                .foregroundStyle(slot.exercise == nil ? Theme.infoText : Theme.text)
+                            MuscleDotLabel(muscle: slot.muscle)
+                        }
+                        Spacer()
+                        Image(systemName: slot.exercise == nil ? "plus.circle" : "arrow.triangle.2.circlepath")
+                            .font(.system(size: 14))
+                            .foregroundStyle(Theme.secondary)
+                    }
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .themedRow(vertical: 8)
+            }
+            .onDelete { offsets in update(id) { $0.slots.remove(atOffsets: offsets) } }
+            .onMove { from, to in update(id) { $0.slots.move(fromOffsets: from, toOffset: to) } }
+            Button {
+                picker = .add(day: id)
+            } label: {
+                Label("Add Exercise", systemImage: "plus")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.infoText)
+            }
+            .themedRow(vertical: 8)
+            Picker(
+                selection: Binding<Muscle?>(
+                    get: { nil },
+                    set: { muscle in
+                        guard let muscle else { return }
+                        update(id) { $0.slots.append(MesoDraft.Slot(muscle: muscle)) }
+                    })
+            ) {
+                ForEach(Muscle.allCases) { Text($0.displayName).tag(Muscle?.some($0)) }
+            } label: {
+                Label("Add Muscle", systemImage: "plus.square.dashed")
+                    .font(Theme.body)
+                    .foregroundStyle(Theme.infoText)
+            }
+            .tint(Theme.secondary)
+            .a11y(.builderAddMuscle)
+            .themedRow(vertical: 8)
+            if slots.isEmpty {
+                footnote("Add at least one exercise, or remove this day.")
+            }
+        } header: {
+            HStack(alignment: .firstTextBaseline) {
+                SectionHeading(text: "Day \(number)")
+                Spacer()
+                if draft.days.count > 1 {
+                    Button("Remove Day", role: .destructive) {
+                        withAnimation { draft.days.removeAll { $0.id == id } }
+                    }
+                    .font(Theme.detail)
+                    .foregroundStyle(Theme.danger)
+                }
+            }
+            .themedRow(vertical: 0)
+        }
+    }
+
+    private var musclePriorities: some View {
+        Section {
+            ForEach(draft.muscles) { muscle in
+                MusclePriorityRow(muscle: muscle, priority: draft.priorities[muscle] ?? .normal) {
+                    draft.priorities[muscle] = $0
+                }
+                .themedRow(vertical: 8)
+            }
+            footnote(MusclePriority.explanation)
+        } header: {
+            SectionHeading(text: "Muscle Priorities")
+                .themedRow(vertical: 0)
+        }
+    }
+
     private func footnote(_ text: String) -> some View {
         Text(text)
             .font(Theme.caption)
@@ -513,15 +514,15 @@ struct ManageDaysView: View {
     var body: some View {
         NavigationStack {
             List {
-                ForEach($draft.days) { $day in
-                    let index = (draft.days.firstIndex { $0.id == day.id } ?? 0) + 1
+                ForEach(Array($draft.days.enumerated()), id: \.element.id) { offset, day in
+                    let index = offset + 1
                     VStack(alignment: .leading, spacing: 6) {
                         TextField(
-                            "Day name", text: $day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary)
+                            "Day name", text: day.name, prompt: Text("Day name").foregroundStyle(Theme.secondary)
                         )
                         .formField()
                         .a11y(.manageDaysName, index)
-                        Text(details(day, index: index))
+                        Text(details(day.wrappedValue, index: index))
                             .font(Theme.caption)
                             .foregroundStyle(Theme.secondary)
                     }
