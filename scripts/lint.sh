@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint"
-never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control"
 
 scan() {
     for file in "$@"; do
@@ -59,6 +59,8 @@ scan() {
                     hit("nav-menu-convention", i, "Menus share one placement and one name form (#178). Put a nav-bar menu in ToolbarItem(placement: .primaryAction), never .topBarTrailing, and name every menu \"<Thing> Menu\" (\"Mesocycle Menu\", \"\\(meso.name) Menu\"), never \"menu\", \"Options\" or \"actions\".")
                 if (path !~ /FFive\/Shared\/Theme\.swift$/ && (s ~ /\.(foregroundStyle|foregroundColor|tint)\([ \t]*Theme\.accent[ \t]*\)/ || (line[i] ~ /ActionIcon\(systemName:.*"info\.circle/ && line[i] !~ /tint:[ \t]*Theme\.infoText/)))
                     hit("info-and-link-tint", i, "Every ⓘ icon and text link is Theme.infoText (#179). Tint a text link with .foregroundStyle(Theme.infoText), never Theme.accent, which is for fills; draw a ⓘ action icon with ActionIcon.info(filled:), never ActionIcon(systemName: \"info.circle\").")
+                if (path !~ /FFive\/Shared\/Components\.swift$/ && (s ~ /\.pickerStyle\([ \t]*(\.segmented|SegmentedPickerStyle)/))
+                    hit("one-segmented-control", i, "Every segmented control is SegmentedButtons in Components.swift (#180). Use SegmentedButtons(options:selection:label:), never Picker with .pickerStyle(.segmented).")
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {

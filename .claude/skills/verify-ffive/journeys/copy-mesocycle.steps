@@ -32,7 +32,8 @@ wait nav "Copy Full Body, 3 Days"
 wait text "~Week 1 starts from the weights and reps logged"
 wait text "4 sets of 135 lb*9"
 shot 02-review-week-1
-tap button "Week 2"
+tap #segment.week-2
+selected #segment.week-2
 absent text "4 sets of 135 lb*9"
 wait text "Full Body B"
 shot 03-review-week-2
