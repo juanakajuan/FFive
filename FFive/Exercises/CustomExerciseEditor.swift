@@ -48,6 +48,7 @@ struct CustomExerciseEditor: View {
                             Picker("Muscle", selection: $draft.muscle) {
                                 ForEach(Muscle.allCases) { Text($0.displayName).tag($0) }
                             }
+                            .sensoryFeedback(.selection, trigger: draft.muscle)
                             .a11y(.editorMuscle)
                         }
                         Hairline()
@@ -55,6 +56,7 @@ struct CustomExerciseEditor: View {
                             Picker("Equipment", selection: $draft.equipment) {
                                 ForEach(Equipment.allCases, id: \.self) { Text($0.displayName).tag($0) }
                             }
+                            .sensoryFeedback(.selection, trigger: draft.equipment)
                             .a11y(.editorEquipment)
                         }
                     }

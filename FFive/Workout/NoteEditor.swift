@@ -59,6 +59,7 @@ struct NoteEditor: View {
                         .buttonStyle(.plain)
                         .accessibilityLabel(pinned ? "Unpin from \(dayName)" : "Pin to \(dayName)")
                         .a11y(.notePin)
+                        .sensoryFeedback(.selection, trigger: pinned)
                         Text("Shows on every later \(dayName) session in this mesocycle until you unpin it.")
                             .font(Theme.detail)
                             .foregroundStyle(Theme.secondary)

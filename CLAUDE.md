@@ -37,6 +37,7 @@ Each rule is enforced by the check named beside it. A rule with no check is a ju
 | Every ⓘ action icon and text link is `Theme.infoText`: a link never uses `Theme.accent`, and a ⓘ action icon is `ActionIcon.info(filled:)` | `scripts/lint.sh` rule `info-and-link-tint` |
 | Every segmented control is `SegmentedButtons` in `Components.swift`, never a `Picker` with `.pickerStyle(.segmented)` | `scripts/lint.sh` rule `one-segmented-control` |
 | A meaning that has a symbol in the `Symbol` registry in `Theme.swift` (skip, edit, rename, cue, note, pin, progress) draws through it, never a literal | `scripts/lint.sh` rule `one-symbol-per-meaning` |
+| Every `Picker` and `Toggle` gives a selection haptic: `.sensoryFeedback(.selection, trigger:)` on its own modifier chain, or on the `Menu` or `FilterBar` that holds it. Finishing a workout and starting or ending a mesocycle go through `AppRouter`, which plays the success haptic | `scripts/lint.sh` rule `selection-haptics` |
 | Every file under `FFive/` typechecks together for iOS, against the built `FFiveCore` package | `scripts/typecheck-app.sh` |
 | Engine and planner rules keep their behavior | `swift test --package-path FFiveCore` |
 | Swift files match `.swift-format` and pass its lint rules | `scripts/format.sh --lint` |

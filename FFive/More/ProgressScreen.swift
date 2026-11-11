@@ -90,6 +90,7 @@ struct ProgressScreen: View {
                         }
                         .pickerStyle(.menu)
                         .tint(Theme.text)
+                        .sensoryFeedback(.selection, trigger: meso.persistentModelID)
                     }
                 }
                 SegmentedButtons(

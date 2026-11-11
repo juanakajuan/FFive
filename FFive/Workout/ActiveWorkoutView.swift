@@ -528,8 +528,7 @@ struct ActiveWorkoutView: View {
     }
 
     private func finish() {
-        store.finish(workout)
-        router.focus = nil
+        router.finish(workout, store: store)
     }
 
     private func discard() {
@@ -717,6 +716,7 @@ struct ExerciseCard: View {
             }
             .accessibilityLabel("Exercise Menu")
             .a11y(.exerciseMenu, position)
+            .sensoryFeedback(.selection, trigger: jointPain?.wrappedValue)
         }
     }
 
@@ -874,6 +874,7 @@ struct SetRow: View {
             }
             .accessibilityLabel(set.type.tag == nil ? "Set \(number) Menu" : "Set \(number) Menu, \(set.type.title)")
             .a11y(.setMenu, number)
+            .sensoryFeedback(.selection, trigger: set.type)
 
             TextField(
                 "Set \(number) weight", value: weight, format: .number,

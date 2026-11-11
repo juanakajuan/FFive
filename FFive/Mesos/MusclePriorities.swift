@@ -27,6 +27,7 @@ struct MusclePriorityRow: View {
                 .a11y(.musclePriority, key: muscle.rawValue)
                 .accessibilityLabel("\(muscle.displayName) priority")
                 .accessibilityValue(priority.label)
+                .sensoryFeedback(.selection, trigger: priority)
             } else {
                 Text(priority.label).font(Theme.detail).foregroundStyle(Theme.secondary)
             }

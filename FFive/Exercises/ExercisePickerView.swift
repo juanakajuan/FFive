@@ -57,6 +57,7 @@ struct ExercisePickerView: View {
                 .accessibilityAddTraits(performedOnly ? .isSelected : [])
                 .padding(.bottom, 4)
                 .a11y(.pickerPerformedOnly)
+                .sensoryFeedback(.selection, trigger: performedOnly)
                 if let suggested {
                     suggestionCard(suggested, lastPerformed: lastPerformed[suggested.id])
                 }
