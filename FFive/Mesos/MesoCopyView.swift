@@ -13,13 +13,11 @@ struct MesoCopyView: View {
         let draft = source.copyDraft(week: week)
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Picker("Source week", selection: $week) {
-                    ForEach(source.copyableWeeks, id: \.self) { Text("Week \($0 + 1)").tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .a11y(.builderCopyWeek)
-                .padding(.horizontal, Theme.gutter)
-                .padding(.top, Theme.gutter)
+                SegmentedButtons(options: Array(source.copyableWeeks), selection: $week) { "Week \($0 + 1)" }
+                    .accessibilityElement(children: .contain)
+                    .a11y(.builderCopyWeek)
+                    .padding(.horizontal, Theme.gutter)
+                    .padding(.top, Theme.gutter)
                 Text(loadsNote)
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)

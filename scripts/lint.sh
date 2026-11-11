@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-symbol-per-meaning"
-never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-symbol-per-meaning"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control one-symbol-per-meaning"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control one-symbol-per-meaning"
 
 scan() {
     for file in "$@"; do
@@ -59,6 +59,8 @@ scan() {
                     hit("nav-menu-convention", i, "Menus share one placement and one name form (#178). Put a nav-bar menu in ToolbarItem(placement: .primaryAction), never .topBarTrailing, and name every menu \"<Thing> Menu\" (\"Mesocycle Menu\", \"\\(meso.name) Menu\"), never \"menu\", \"Options\" or \"actions\".")
                 if (path !~ /FFive\/Shared\/Theme\.swift$/ && (s ~ /\.(foregroundStyle|foregroundColor|tint)\([ \t]*Theme\.accent[ \t]*\)/ || (line[i] ~ /ActionIcon\(systemName:.*"info\.circle/ && line[i] !~ /tint:[ \t]*Theme\.infoText/)))
                     hit("info-and-link-tint", i, "Every ⓘ icon and text link is Theme.infoText (#179). Tint a text link with .foregroundStyle(Theme.infoText), never Theme.accent, which is for fills; draw a ⓘ action icon with ActionIcon.info(filled:), never ActionIcon(systemName: \"info.circle\").")
+                if (path !~ /FFive\/Shared\/Components\.swift$/ && (s ~ /\.pickerStyle\([ \t]*(\.segmented|SegmentedPickerStyle)/))
+                    hit("one-segmented-control", i, "Every segmented control is SegmentedButtons in Components.swift (#180). Use SegmentedButtons(options:selection:label:), never Picker with .pickerStyle(.segmented).")
                 if (path !~ /FFive\/Shared\/Theme\.swift$/ && path !~ /FFiveCore\// && line[i] ~ /"(forward(\.end)?(\.circle)?(\.fill)?|pencil|square\.and\.pencil|lightbulb(\.fill)?|pin(\.fill)?|note\.text|chart\.bar(\.xaxis)?)"/)
                     hit("one-symbol-per-meaning", i, "Each meaning draws one SF Symbol (#181). Use the Symbol registry in Theme.swift (Symbol.skip, .skippedDay, .edit, .rename, .cue, .note, .pin, .pinnedNote, .progress), never a literal or a variant of one of those symbols. Add a case there for a new meaning.")
                 for (c = 1; c <= length(s); c++) {
