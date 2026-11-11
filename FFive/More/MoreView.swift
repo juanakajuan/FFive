@@ -19,13 +19,6 @@ struct MoreView: View {
     @State private var path = NavigationPath(
         DemoLaunch.take(.progress) || DemoLaunch.isPending(.strength) ? [Destination.progress] : [])
 
-    private var version: String {
-        let info = Bundle.main.infoDictionary
-        let short = info?["CFBundleShortVersionString"] as? String ?? "?"
-        let build = info?["CFBundleVersion"] as? String ?? "?"
-        return "\(short) (\(build))"
-    }
-
     var body: some View {
         NavigationStack(path: $path) {
             ScrollView {
@@ -40,11 +33,6 @@ struct MoreView: View {
                         Hairline()
                         row("Changelog", systemImage: "list.bullet.rectangle", to: .changelog)
                     }
-                    Hairline().padding(.top, 24)
-                    Text("App version: \(version)")
-                        .font(Theme.caption.monospaced())
-                        .foregroundStyle(Theme.secondary)
-                        .padding(.top, 16)
                 }
                 .padding(.horizontal, Theme.gutter)
                 .padding(.bottom, Theme.gutter)
