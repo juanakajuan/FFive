@@ -57,9 +57,8 @@ private struct SessionRow: View {
     @Environment(Store.self) private var store
 
     private var title: String {
-        guard let key = workout.key else { return workout.name }
-        let lead = workout.phase == .deload ? "Deload" : "Week \(key.week + 1)"
-        return "\(lead) · Day \(key.dayIndex + 1) · \(workout.name)"
+        guard let key = workout.key, let phase = workout.phase else { return workout.name }
+        return "\(phase.longLabel(week: key.week)) · Day \(key.dayIndex + 1) · \(workout.name)"
     }
 
     var body: some View {

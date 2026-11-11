@@ -28,6 +28,17 @@ final class EngineTests: XCTestCase {
         (0...weeks).map { Progression.phase(week: $0, accumulationWeeks: weeks) }
     }
 
+    func testWeekLabels() {
+        let phases = schedule(3)
+        expect(
+            "short labels, 3 weeks", phases.enumerated().map { $1.shortLabel(week: $0) },
+            ["W1", "W2", "W3", "DL"])
+        expect(
+            "long labels, 3 weeks", phases.enumerated().map { $1.longLabel(week: $0) },
+            ["Week 1", "Week 2", "Week 3", "Deload"])
+        expect("badges, 3 weeks", phases.map(\.badgeText), ["2 RIR", "1 RIR", "0 RIR", "Deload"])
+    }
+
     func testRirSchedule() {
         expect(
             "rir schedule, 3 weeks: 2 1 0 then deload", schedule(3),

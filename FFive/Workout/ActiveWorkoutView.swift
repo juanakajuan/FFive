@@ -436,9 +436,8 @@ struct ActiveWorkoutView: View {
 
     private var headerTitle: Text {
         guard let key = workout.key, let phase = workout.phase else { return Text("Quick Workout") }
-        let lead = phase == .deload ? "Deload" : "Week \(key.week + 1)"
         let day = workout.weekday?.name ?? "Day \(key.dayIndex + 1)"
-        return Text("\(lead) ") + Text(day).foregroundStyle(Theme.secondary)
+        return Text("\(phase.longLabel(week: key.week)) ") + Text(day).foregroundStyle(Theme.secondary)
     }
 
     private var headerSubtitle: Text {

@@ -36,7 +36,7 @@ struct MesoScheduleGrid: View {
                 }
                 ForEach(0..<meso.totalWeeks, id: \.self) { week in
                     GridRow {
-                        Text(week == meso.accumulationWeeks ? "DL" : "W\(week + 1)")
+                        Text(meso.phase(week: week).shortLabel(week: week))
                             .font(Theme.tag)
                             .foregroundStyle(week == next?.week ? Theme.text : Theme.secondary)
                             .frame(width: 28, alignment: .leading)

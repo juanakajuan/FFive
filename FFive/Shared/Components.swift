@@ -63,15 +63,6 @@ struct PhaseBadge: View {
     }
 }
 
-extension WeekPhase {
-    var badgeText: String {
-        switch self {
-        case .accumulation(let rir): "\(rir) RIR"
-        case .deload: "Deload"
-        }
-    }
-}
-
 struct SegmentedButtons<Option: Hashable>: View {
     let options: [Option]
     @Binding var selection: Option

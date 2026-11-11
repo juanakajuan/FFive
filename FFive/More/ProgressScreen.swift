@@ -69,7 +69,7 @@ struct ProgressScreen: View {
             let week = min(selectedWeek ?? meso.nextUp?.week ?? meso.accumulationWeeks, meso.accumulationWeeks)
             let volumes = store.weeklyVolume(meso, week: week)
             SectionHeading(
-                text: "Sets per muscle · \(meso.phase(week: week) == .deload ? "Deload" : "Week \(week + 1)")"
+                text: "Sets per muscle · \(meso.phase(week: week).longLabel(week: week))"
             )
             .themedRow(vertical: 0)
             .listRowSeparator(.hidden)
@@ -96,7 +96,7 @@ struct ProgressScreen: View {
                 SegmentedButtons(
                     options: Array(0..<meso.totalWeeks),
                     selection: Binding(get: { week }, set: { selectedWeek = $0 }),
-                    label: { $0 == meso.accumulationWeeks ? "DL" : "W\($0 + 1)" })
+                    label: { meso.phase(week: $0).shortLabel(week: $0) })
                 VolumeChart(volumes: volumes)
             }
             .themedRow(vertical: 4)
@@ -323,9 +323,9 @@ struct HistoryRow: View {
                     .foregroundStyle(Theme.secondary)
             }
             HStack(spacing: 12) {
-                if let meso = workout.mesocycle, let week = workout.week {
+                if let meso = workout.mesocycle, let week = workout.week, let phase = workout.phase {
                     meta(
-                        "\(meso.name) · \(workout.phase == .deload ? "Deload" : "W\(week + 1)")",
+                        "\(meso.name) · \(phase.longLabel(week: week))",
                         systemImage: "calendar"
                     )
                     .lineLimit(1)

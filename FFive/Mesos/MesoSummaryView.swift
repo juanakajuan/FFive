@@ -50,7 +50,7 @@ struct MesoSummarySheet: View {
 }
 
 private func weekLabel(_ week: Int, in summary: MesoSummary) -> String {
-    week == summary.deloadWeek ? "DL" : "W\(week + 1)"
+    Progression.phase(week: week, accumulationWeeks: summary.deloadWeek).shortLabel(week: week)
 }
 
 private struct SetsByWeekCard: View {
