@@ -65,7 +65,7 @@ struct MesoNotesScreen: View {
                         HStack(alignment: .top, spacing: 12) {
                             MesoNoteText(note: note)
                             Button {
-                                store.deleteNote(note, from: meso)
+                                withAnimation(.snappy) { store.deleteNote(note, from: meso) }
                             } label: {
                                 Image(systemName: "trash").foregroundStyle(Theme.danger)
                             }
@@ -112,7 +112,7 @@ struct MesoNotesScreen: View {
                     .foregroundStyle(Theme.secondary)
                 Spacer()
                 Button("Add Note") {
-                    store.addNote(draft, to: meso)
+                    withAnimation(.snappy) { store.addNote(draft, to: meso) }
                     draft = ""
                 }
                 .font(Theme.detail.weight(.semibold))

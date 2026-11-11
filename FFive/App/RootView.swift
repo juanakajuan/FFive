@@ -65,7 +65,7 @@ final class AppRouter {
     func delete(_ meso: Mesocycle, store: Store) {
         if focus?.meso == meso.persistentModelID { focus = nil }
         if endedMeso === meso { endedMeso = nil }
-        store.deleteMesocycle(meso)
+        withAnimation(.snappy) { store.deleteMesocycle(meso) }
     }
 
     func deleteAllData(store: Store) {

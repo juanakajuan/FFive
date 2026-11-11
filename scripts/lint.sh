@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control one-symbol-per-meaning"
-never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control one-symbol-per-meaning"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control one-symbol-per-meaning one-motion-curve"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control one-symbol-per-meaning one-motion-curve"
 
 scan() {
     for file in "$@"; do
@@ -63,6 +63,8 @@ scan() {
                     hit("one-segmented-control", i, "Every segmented control is SegmentedButtons in Components.swift (#180). Use SegmentedButtons(options:selection:label:), never Picker with .pickerStyle(.segmented).")
                 if (path !~ /FFive\/Shared\/Theme\.swift$/ && path !~ /FFiveCore\// && line[i] ~ /"(forward(\.end)?(\.circle)?(\.fill)?|pencil|square\.and\.pencil|lightbulb(\.fill)?|pin(\.fill)?|note\.text|chart\.bar(\.xaxis)?)"/)
                     hit("one-symbol-per-meaning", i, "Each meaning draws one SF Symbol (#181). Use the Symbol registry in Theme.swift (Symbol.skip, .skippedDay, .edit, .rename, .cue, .note, .pin, .pinnedNote, .progress), never a literal or a variant of one of those symbols. Add a case there for a new meaning.")
+                if ((s ~ /withAnimation/ && s !~ /withAnimation\(\.snappy\)/) || (s ~ /\.animation\(/ && s !~ /\.animation\(\.snappy[,)]/))
+                    hit("one-motion-curve", i, "Every animation uses .snappy (#185). Write withAnimation(.snappy) { ... } around a change that inserts, removes or reveals rows, and .animation(.snappy, value:) for an implicit one; never a bare withAnimation, .easeInOut or another curve.")
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {

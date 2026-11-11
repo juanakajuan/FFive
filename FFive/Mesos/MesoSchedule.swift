@@ -92,8 +92,10 @@ struct MesoScheduleGrid: View {
                 .buttonStyle(.plain)
                 .contextMenu {
                     if meso.canSkip(key) {
-                        Button("Skip Day", systemImage: Symbol.skip) { withAnimation { store.skip(key, of: meso) } }
-                            .a11y(.menuSkipDay)
+                        Button("Skip Day", systemImage: Symbol.skip) {
+                            withAnimation(.snappy) { store.skip(key, of: meso) }
+                        }
+                        .a11y(.menuSkipDay)
                     }
                 }
             } else {
@@ -122,8 +124,9 @@ struct MesoLengthCard: View {
         let range = Mesocycle.accumulationWeekRange
         VStack(alignment: .leading, spacing: 12) {
             Stepper(
-                onIncrement: meso.canAddWeek ? { withAnimation { store.changeLength(of: meso, by: 1) } } : nil,
-                onDecrement: meso.canRemoveWeek ? { withAnimation { store.changeLength(of: meso, by: -1) } } : nil
+                onIncrement: meso.canAddWeek ? { withAnimation(.snappy) { store.changeLength(of: meso, by: 1) } } : nil,
+                onDecrement: meso.canRemoveWeek
+                    ? { withAnimation(.snappy) { store.changeLength(of: meso, by: -1) } } : nil
             ) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("\(weeks) training weeks").font(Theme.cardTitle).foregroundStyle(Theme.text)
