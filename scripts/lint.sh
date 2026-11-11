@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control"
-never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control confirm-deletes"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control confirm-deletes"
 
 scan() {
     for file in "$@"; do
@@ -61,6 +61,8 @@ scan() {
                     hit("info-and-link-tint", i, "Every ⓘ icon and text link is Theme.infoText (#179). Tint a text link with .foregroundStyle(Theme.infoText), never Theme.accent, which is for fills; draw a ⓘ action icon with ActionIcon.info(filled:), never ActionIcon(systemName: \"info.circle\").")
                 if (path !~ /FFive\/Shared\/Components\.swift$/ && (s ~ /\.pickerStyle\([ \t]*(\.segmented|SegmentedPickerStyle)/))
                     hit("one-segmented-control", i, "Every segmented control is SegmentedButtons in Components.swift (#180). Use SegmentedButtons(options:selection:label:), never Picker with .pickerStyle(.segmented).")
+                if (((s ~ /\.onDelete/ && (s src[i + 1]) ~ /(store|router)\./) || (s ~ /(store|router)\.delete[A-Za-z]*\(/ && ((s ~ /Button[ \t]*[({]/ && s !~ /role:[ \t]*\.destructive/) || (i > 1 && src[i - 1] ~ /Button[ \t]*[({]/ && src[i - 1] !~ /role:[ \t]*\.destructive/)))))
+                    hit("confirm-deletes", i, "Deleting saved data asks first, and every delete button is destructive (#183). From a swipe (.onDelete) or a button, set screen state (deleting = item) and delete from a .confirmationDialog whose Button has role: .destructive; never write the delete straight from the swipe or from a button without that role.")
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {

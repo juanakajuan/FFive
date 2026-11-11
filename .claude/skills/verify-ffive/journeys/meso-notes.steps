@@ -38,6 +38,14 @@ wait text "Swap to cambered bar next block"
 count #meso-note.delete.1 "1"
 shot 05-two-notes
 tap #meso-note.delete.2
+wait #dialog.delete-note
+wait text "Delete this note?"
+shot 06a-delete-confirm
+tap button "Cancel"
+absent #dialog.delete-note
+wait text "Sleep has been rough this block, keep RIR honest"
+tap #meso-note.delete.2
+tap #dialog.delete-note
 absent text "Sleep has been rough this block, keep RIR honest"
 wait text "Swap to cambered bar next block"
 shot 06-after-delete

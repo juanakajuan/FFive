@@ -5,7 +5,7 @@ tap #more.progress
 wait nav "Progress"
 selected #segment.volume
 wait text "Sets per Muscle*Week 2"
-wait any "~Quads 4 of"
+wait any "~Quads, 4 of"
 tap #segment.w1
 wait text "Sets per Muscle*Week 1"
 shot 01-volume-w1
@@ -21,3 +21,19 @@ tap #history.row.morning-workout
 wait nav "Morning Workout"
 wait text "Bench Press"
 shot 03-history-detail
+tap button "Progress"
+wait #history.row.morning-workout
+swipe left #history.row.morning-workout
+tap button "Delete"
+wait #dialog.delete-workout
+wait text "Delete this workout?"
+wait text "~Morning Workout leaves History and Progress."
+shot 04-delete-confirm
+tap button "Cancel"
+absent #dialog.delete-workout
+wait #history.row.morning-workout
+swipe left #history.row.morning-workout
+tap button "Delete"
+tap #dialog.delete-workout
+absent #history.row.morning-workout
+shot 05-after-delete

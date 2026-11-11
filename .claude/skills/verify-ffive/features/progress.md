@@ -21,10 +21,11 @@ Preconditions:
 - Demo baseline (`launch -seedDemo`).
 - Journey: `journeys/progress.steps`.
 
-- **Volume.** Steps: `tap #tab.more timeout=20`, `tap #more.progress`, `wait nav "Progress"`, `selected #segment.volume`, `wait text "Sets per Muscle*Week 2"`, `wait any "~Quads 4 of"`, `tap #segment.w1`, `wait text "Sets per Muscle*Week 1"`.
+- **Volume.** Steps: `tap #tab.more timeout=20`, `tap #more.progress`, `wait nav "Progress"`, `selected #segment.volume`, `wait text "Sets per Muscle*Week 2"`, `wait any "~Quads, 4 of"`, `tap #segment.w1`, `wait text "Sets per Muscle*Week 1"`.
 - **Strength.** Steps: `tap #segment.strength`, `wait text "Estimated 1RM"`, `tap #strength.row.leg-press`, `wait nav "Leg Press"`.
 - **History.** Steps: `tap button "Progress"` (back), `tap #segment.history`, `wait text "All Time"`, `tap #history.row.morning-workout`, `wait nav "Morning Workout"`, `wait text "Bench Press"`.
-- **Proof.** Keep shots `01-volume-w1`, `02-strength-trend`, and `03-history-detail`. For a change to how numbers are computed, compare the chart's accessibility label (`any "~<Muscle> <done> of <planned> sets"`) with the planner's expectations in `FFiveCore/Tests/FFiveCoreTests/PlannerTests.swift`.
+- **History delete.** Steps: `tap button "Progress"`, `swipe left #history.row.morning-workout`, `tap button "Delete"`, `wait #dialog.delete-workout`, `tap button "Cancel"` keeps the row; swipe again and `tap #dialog.delete-workout`, then `absent #history.row.morning-workout`.
+- **Proof.** Keep shots `01-volume-w1`, `02-strength-trend`, and `03-history-detail`. For a change to how numbers are computed, compare the chart's accessibility label (`any "~<Muscle>, <done> of <planned> sets"`) with the planner's expectations in `FFiveCore/Tests/FFiveCoreTests/PlannerTests.swift`.
 
 ## Gotchas
 
