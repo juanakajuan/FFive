@@ -53,6 +53,14 @@ final class AppRouter {
     var endedMeso: Mesocycle?
     /// Counts finished workouts and started or ended mesocycles; RootView plays a success haptic on each.
     private(set) var milestones = 0
+    /// Counts taps on the tab that is already open. Each one rebuilds that tab at its first screen,
+    /// as the system tab bar pops a tab's stack to its root.
+    private(set) var reopenCount = 0
+
+    func select(_ tab: AppTab) {
+        if tab == self.tab { reopenCount += 1 }
+        self.tab = tab
+    }
 
     func openSession(_ key: SessionKey, in meso: Mesocycle) {
         focus = SessionFocus(meso: meso.persistentModelID, key: key)
@@ -81,7 +89,7 @@ final class AppRouter {
     func delete(_ meso: Mesocycle, store: Store) {
         if focus?.meso == meso.persistentModelID { focus = nil }
         if endedMeso === meso { endedMeso = nil }
-        store.deleteMesocycle(meso)
+        withAnimation(.snappy) { store.deleteMesocycle(meso) }
     }
 
     func deleteAllData(store: Store) {
@@ -112,8 +120,9 @@ struct RootView: View {
                 case .more: MoreView()
                 }
             }
+            .id(router.reopenCount)
             .frame(maxHeight: .infinity)
-            if !keyboardShown { TabBar(selection: $router.tab) }
+            if !keyboardShown { TabBar(router: router) }
         }
         .onReceive(NotificationCenter.default.publisher(for: UIResponder.keyboardWillShowNotification)) { _ in
             keyboardShown = true
@@ -162,14 +171,14 @@ extension RootView {
 }
 
 private struct TabBar: View {
-    @Binding var selection: AppTab
+    let router: AppRouter
 
     var body: some View {
         HStack(spacing: 0) {
             ForEach(AppTab.allCases, id: \.self) { tab in
-                let selected = tab == selection
+                let selected = tab == router.tab
                 Button {
-                    selection = tab
+                    router.select(tab)
                 } label: {
                     VStack(spacing: 3) {
                         Image(systemName: tab.icon(selected: selected))

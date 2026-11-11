@@ -2,7 +2,7 @@
 
 ## Commands
 
-- `scripts/check` is the one gate. It prints `CHECK PASS` or `CHECK FAIL <step>` in about 15 seconds. Run it before every push. CI runs the same command on every PR and every push to `main`.
+- `scripts/check` is the one gate. It prints `CHECK PASS` or `CHECK FAIL <step>` in about 15 seconds. There is no CI. The `pre-push` hook runs it on each commit you push, as committed, and refuses the push on a fail.
 - `scripts/format.sh` reformats every Swift file in place with swift-format, which ships with the Swift toolchain. Its settings live in `.swift-format`. `scripts/format.sh --lint` fails on any file it would change and on any swift-format lint rule hit. Run `scripts/format.sh` before you commit.
 - `scripts/lint.sh` holds the lint rules. Its baseline, `scripts/lint-baseline.txt`, lists the hits that already exist. A new hit fails, and so does a baseline line whose hit is gone. Fix a hit and delete its line. Add a line only with the operator's approval.
 - Use the `verify-ffive` skill to prove a change on the simulator. `scripts/check` does not drive the app.
@@ -14,7 +14,7 @@ Never change files or commit in the main checkout. It stays on `main` and only p
 - Start each change in its own worktree off `origin/main`: `git fetch origin && git worktree add -b <branch> .claude/worktrees/<name> origin/main`. Name the branch `fix/<issue>-<slug>` or `feat/<issue>-<slug>`.
 - Edit, run `scripts/check`, commit and push from the worktree, then open the PR.
 - Every change ends in an open PR. Once `scripts/check` passes, push the branch and run `gh pr create` without asking. This rule is standing approval to push a non-`main` branch and open a PR. It does not cover pushing to `main`, force-pushing, or merging.
-- `scripts/git-hooks/pre-commit` refuses commits on `main`. Enable it once per clone with `git config core.hooksPath scripts/git-hooks`.
+- `scripts/git-hooks/pre-commit` refuses commits on `main`, and `scripts/git-hooks/pre-push` runs `scripts/check`. Enable both once per clone with `git config core.hooksPath scripts/git-hooks`.
 
 ## Layout
 
@@ -37,12 +37,14 @@ Each rule is enforced by the check named beside it. A rule with no check is a ju
 | Every ⓘ action icon and text link is `Theme.infoText`: a link never uses `Theme.accent`, and a ⓘ action icon is `ActionIcon.info(filled:)` | `scripts/lint.sh` rule `info-and-link-tint` |
 | Every segmented control is `SegmentedButtons` in `Components.swift`, never a `Picker` with `.pickerStyle(.segmented)` | `scripts/lint.sh` rule `one-segmented-control` |
 | A meaning that has a symbol in the `Symbol` registry in `Theme.swift` (skip, edit, rename, cue, note, pin, progress) draws through it, never a literal | `scripts/lint.sh` rule `one-symbol-per-meaning` |
+| Every animation uses `.snappy`: a list insert or remove runs in `withAnimation(.snappy)`, never a bare `withAnimation` or another curve | `scripts/lint.sh` rule `one-motion-curve` |
+| Deleting saved data asks first: a swipe or button sets screen state and a `.confirmationDialog` deletes, and every delete button has `role: .destructive` | `scripts/lint.sh` rule `confirm-deletes` |
 | Every `Picker` and `Toggle` gives a selection haptic: `.sensoryFeedback(.selection, trigger:)` on its own modifier chain, or on the `Menu` or `FilterBar` that holds it. Finishing a workout and starting or ending a mesocycle go through `AppRouter`, which plays the success haptic | `scripts/lint.sh` rule `selection-haptics` |
 | Every file under `FFive/` typechecks together for iOS, against the built `FFiveCore` package | `scripts/typecheck-app.sh` |
 | Engine and planner rules keep their behavior | `swift test --package-path FFiveCore` |
 | Swift files match `.swift-format` and pass its lint rules | `scripts/format.sh --lint` |
 | Each lint rule still catches its real past mistake | `scripts/lint.sh --self-test` |
-| Every PR and every push to main runs the gate in CI | `.github/workflows/check.yml` |
+| Every push runs the gate on the committed tree | `scripts/git-hooks/pre-push` |
 | No commit lands on `main` locally; changes happen in a worktree | `scripts/git-hooks/pre-commit` |
 | Every change ends in an open PR, opened without asking | none, judgment |
 | A PR or issue whose change shows on screen carries screenshots or a recording | none, judgment |

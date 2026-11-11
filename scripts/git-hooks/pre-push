@@ -1,0 +1,23 @@
+#!/bin/sh
+# Run scripts/check on each commit being pushed, as committed. This is the
+# only gate: there is no CI. Uncommitted and untracked files are left out, so
+# a pass can't hinge on a file you forgot to add.
+# Enable once per clone: git config core.hooksPath scripts/git-hooks
+# The tree is checked in a cache dir per worktree that keeps .build between
+# pushes, so only the first push from a worktree pays for a cold build.
+zero=0000000000000000000000000000000000000000
+dir="$(git rev-parse --absolute-git-dir)/pre-push-check"
+tmp="$(mktemp -d)"
+trap 'rm -rf "$tmp"' EXIT
+
+while read -r _ local_sha _ _; do
+    [ "$local_sha" = "$zero" ] && continue
+    rm -rf "$tmp/tree" && mkdir -p "$tmp/tree" "$dir"
+    git archive "$local_sha" | tar -x -C "$tmp/tree" || exit 1
+    rsync -a --delete --exclude .build "$tmp/tree/" "$dir/" || exit 1
+    echo "pre-push: scripts/check on $(git rev-parse --short "$local_sha")" >&2
+    if ! (cd "$dir" && scripts/check) >&2; then
+        echo "pre-push: refusing to push. Fix it, commit, and push again." >&2
+        exit 1
+    fi
+done

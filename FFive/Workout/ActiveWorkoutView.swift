@@ -369,7 +369,7 @@ struct ActiveWorkoutView: View {
             jointPain: jointPain(for: muscle),
             onShowHistory: { historyFor = exercise },
             onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) },
-            onRemove: { store.removeExercise(exercise, from: workout) },
+            onRemove: { withAnimation(.snappy) { store.removeExercise(exercise, from: workout) } },
             onOpenArticle: { article = $0 }
         )
 
@@ -536,12 +536,12 @@ struct ActiveWorkoutView: View {
     }
 
     private func skip(_ key: SessionKey, of meso: Mesocycle) {
-        withAnimation { store.skip(key, of: meso) }
+        withAnimation(.snappy) { store.skip(key, of: meso) }
         router.focus = nil
     }
 
     private func addExercise(_ name: String, muscle: Muscle) {
-        store.addExercise(named: name, muscle: muscle, to: workout)
+        withAnimation(.snappy) { store.addExercise(named: name, muscle: muscle, to: workout) }
     }
 }
 
@@ -645,8 +645,8 @@ struct ExerciseCard: View {
                     SetRow(
                         set: set, number: index + 1, unit: unit, rir: phase?.rir, focus: focus,
                         comparison: comparisons[ObjectIdentifier(set)], onCompleted: onSetCompleted,
-                        onLogBlocked: onLogBlocked, onAdd: { store.addSet(to: exercise) }
-                    ) { store.deleteSet(set, from: exercise) }
+                        onLogBlocked: onLogBlocked, onAdd: { withAnimation(.snappy) { store.addSet(to: exercise) } }
+                    ) { withAnimation(.snappy) { store.deleteSet(set, from: exercise) } }
                     .id(set.persistentModelID)
                 }
             }
@@ -681,7 +681,7 @@ struct ExerciseCard: View {
                         .disabled(exercise.sets.contains(where: \.isDone))
                         .a11y(.menuSwap)
                 }
-                Button("Add Set", systemImage: "plus") { store.addSet(to: exercise) }
+                Button("Add Set", systemImage: "plus") { withAnimation(.snappy) { store.addSet(to: exercise) } }
                     .a11y(.menuAddSet)
                 if exercise.sets.contains(where: { $0.status == .pending }) {
                     Button("Skip Remaining Sets", systemImage: Symbol.skip) {
