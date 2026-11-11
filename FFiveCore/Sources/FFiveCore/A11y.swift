@@ -60,6 +60,8 @@ public enum A11y: String, CaseIterable {
     case dialogEndMesocycle = "dialog.end-mesocycle"
     case menuDeleteMesocycle = "menu.delete-mesocycle"
     case dialogDeleteMesocycle = "dialog.delete-mesocycle"
+    case dialogDeleteWorkout = "dialog.delete-workout"
+    case dialogDeleteNote = "dialog.delete-note"
     case dialogDiscard = "dialog.discard"
     case dialogReset = "dialog.reset"
     case dialogTrainDay = "dialog.train-day"

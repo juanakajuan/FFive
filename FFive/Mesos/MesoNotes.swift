@@ -54,6 +54,7 @@ struct MesoNotesScreen: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var draft = ""
+    @State private var deleting: MesoNote?
     @FocusState private var focused: Bool
 
     var body: some View {
@@ -64,8 +65,8 @@ struct MesoNotesScreen: View {
                     ForEach(Array(meso.notes.reversed().enumerated()), id: \.element.id) { index, note in
                         HStack(alignment: .top, spacing: 12) {
                             MesoNoteText(note: note)
-                            Button {
-                                store.deleteNote(note, from: meso)
+                            Button(role: .destructive) {
+                                deleting = note
                             } label: {
                                 Image(systemName: "trash").foregroundStyle(Theme.danger)
                             }
@@ -78,6 +79,14 @@ struct MesoNotesScreen: View {
                 .padding(Theme.gutter)
             }
             .background(Theme.page)
+            .confirmationDialog(
+                "Delete this note?",
+                isPresented: $deleting.isPresent(),
+                titleVisibility: .visible, presenting: deleting
+            ) { note in
+                Button("Delete Note", role: .destructive) { store.deleteNote(note, from: meso) }
+                    .a11y(.dialogDeleteNote)
+            }
             .navigationTitle("Mesocycle Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
