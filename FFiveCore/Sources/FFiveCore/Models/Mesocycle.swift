@@ -139,6 +139,11 @@ public final class Mesocycle {
         workouts.first { $0.key == key }
     }
 
+    /// The built, unfinished sessions of `key`'s day in later weeks.
+    func laterOpenSessions(after key: SessionKey) -> [Workout] {
+        workouts.filter { !$0.isFinished && $0.dayIndex == key.dayIndex && ($0.week ?? 0) > key.week }
+    }
+
     func latestWorkout(dayIndex: Int, before week: Int) -> Workout? {
         workouts
             .filter { $0.dayIndex == dayIndex && ($0.week ?? .max) < week }

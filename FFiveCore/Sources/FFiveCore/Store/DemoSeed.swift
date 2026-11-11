@@ -12,7 +12,7 @@ public enum DemoSeed {
         let context = store.context
         let unit = store.settings.weightUnit
         let now = Date.now
-        func snapshot() -> PlanningSnapshot { PlanningSnapshot(context: context) }
+        func planning() -> PlanningContext { PlanningContext(unit: unit, snapshot: PlanningSnapshot(context: context)) }
 
         quickWorkout(
             "Morning Workout", at: now - 19 * day,
@@ -45,15 +45,14 @@ public enum DemoSeed {
         for dayIndex in meso.days.indices {
             let start = meso.startDate + Double(dayIndex) * 2 * day
             let workout = MesoPlanner.workout(
-                for: meso, at: SessionKey(week: 0, dayIndex: dayIndex), unit: unit,
-                snapshot: snapshot(), in: context)
+                for: meso, at: SessionKey(week: 0, dayIndex: dayIndex), planning: planning(), in: context)
             workout.startDate = start
             let pending = workout.pendingSoreness
             for muscle in workout.trainedMuscles {
                 guard let record = pending[muscle] else { continue }
                 MesoPlanner.recordSoreness(
                     sorenessAnswers[answer % sorenessAnswers.count], on: record, during: workout,
-                    unit: unit, snapshot: snapshot(), in: context)
+                    planning: planning(), in: context)
                 answer += 1
             }
             for (index, exercise) in workout.sortedExercises.enumerated() {
@@ -72,13 +71,12 @@ public enum DemoSeed {
         }
 
         let current = MesoPlanner.workout(
-            for: meso, at: SessionKey(week: 1, dayIndex: 0), unit: unit,
-            snapshot: snapshot(), in: context)
+            for: meso, at: SessionKey(week: 1, dayIndex: 0), planning: planning(), in: context)
         current.startDate = now - 24 * 60
         if let first = current.trainedMuscles.first {
             if let record = current.pendingSoreness[first] {
                 MesoPlanner.recordSoreness(
-                    .healedOnTime, on: record, during: current, unit: unit, snapshot: snapshot(), in: context)
+                    .healedOnTime, on: record, during: current, planning: planning(), in: context)
             }
             for exercise in current.exercises(for: first) {
                 logAllSets(of: exercise, beatTargetBy: 0, unit: unit)

@@ -106,10 +106,52 @@ extension ExerciseCatalog {
 
 }
 
+/// What planning reads besides the block itself: the lifter's weight unit and what they have lifted before.
+struct PlanningContext {
+    let unit: WeightUnit
+    let snapshot: PlanningSnapshot
+
+    /// The next session's targets for `exercise`, logged at `previousRIR`, aiming at `rir` over `setCount` sets.
+    fileprivate func nextTargets(
+        after exercise: Exercise, at previousRIR: Int, rir: Int, setCount: Int, bodyweight: Double?
+    ) -> [SetTarget] {
+        let sets = exercise.sortedSets
+        let loading = snapshot.loading(for: exercise.key, bodyweight: bodyweight)
+        return Progression.nextTargets(
+            previousTargets: sets.map(\.target),
+            logged: sets.map(\.logged),
+            previousRIR: previousRIR,
+            targetRIR: rir,
+            repRange: snapshot.repRange(for: exercise.key),
+            increment: loading.increment(unit),
+            offset: loading.offset ?? 0,
+            setCount: setCount)
+    }
+
+    /// Targets for a lift with no earlier session in the block, from its latest one-rep max when there is one.
+    fileprivate func freshTargets(for key: ExerciseID, count: Int, rir: Int, bodyweight: Double?) -> [SetTarget] {
+        let loading = snapshot.loading(for: key, bodyweight: bodyweight)
+        guard let offset = loading.offset, let oneRepMax = snapshot.latestOneRepMax(of: key) else {
+            return Array(repeating: .calibrate, count: count)
+        }
+        let reps = Progression.startingReps(in: snapshot.repRange(for: key))
+        let load = Progression.load(
+            forReps: reps, rir: rir, oneRepMax: oneRepMax, increment: loading.increment(unit), offset: offset)
+        return Array(repeating: load + offset > 0 ? SetTarget(weight: load, reps: reps) : .calibrate, count: count)
+    }
+
+    /// Fresh targets for a lift added to `workout`, at its effort and body weight.
+    fileprivate func freshTargets(for key: ExerciseID, count: Int, in workout: Workout) -> [SetTarget] {
+        freshTargets(
+            for: key, count: count, rir: workout.phase?.rir ?? MesoPlanner.deloadRIR,
+            bodyweight: workout.bodyweight ?? snapshot.bodyweight)
+    }
+}
+
 @MainActor
 enum MesoPlanner {
     /// Deload sessions and exercises added during one load at the easiest accumulation effort.
-    private static let deloadRIR = 3
+    fileprivate static let deloadRIR = 3
 
     @discardableResult
     static func start(_ draft: MesoDraft, in context: ModelContext) -> Mesocycle {
@@ -134,11 +176,10 @@ enum MesoPlanner {
 
     /// The session for `key`, built from the plan the first time it is asked for.
     static func workout(
-        for meso: Mesocycle, at key: SessionKey, unit: WeightUnit, snapshot: PlanningSnapshot,
-        in context: ModelContext
+        for meso: Mesocycle, at key: SessionKey, planning: PlanningContext, in context: ModelContext
     ) -> Workout {
         if let existing = meso.workout(at: key) { return existing }
-        let planned = plan(meso, at: key, unit: unit, snapshot: snapshot)
+        let planned = plan(meso, at: key, planning: planning)
         let days = meso.sortedDays
         let day = days.indices.contains(key.dayIndex) ? days[key.dayIndex] : nil
         let workout = Workout(name: day?.name ?? "Day \(key.dayIndex + 1)")
@@ -146,7 +187,7 @@ enum MesoPlanner {
         workout.weekday = day?.weekday
         workout.week = key.week
         workout.dayIndex = key.dayIndex
-        workout.bodyweight = snapshot.bodyweight
+        workout.bodyweight = planning.snapshot.bodyweight
         meso.workouts.append(workout)
         fill(workout, with: planned, in: context)
         return workout
@@ -154,9 +195,9 @@ enum MesoPlanner {
 
     /// Replaces a built session's exercises with what the plan prescribes now, keeping the session itself so a
     /// screen showing it stays put.
-    static func rebuild(_ workout: Workout, unit: WeightUnit, snapshot: PlanningSnapshot, in context: ModelContext) {
+    static func rebuild(_ workout: Workout, planning: PlanningContext, in context: ModelContext) {
         guard let meso = workout.mesocycle, let key = workout.key else { return }
-        let planned = plan(meso, at: key, unit: unit, snapshot: snapshot)
+        let planned = plan(meso, at: key, planning: planning)
         for exercise in workout.exercises { workout.remove(exercise, in: context) }
         fill(workout, with: planned, in: context)
     }
@@ -170,14 +211,12 @@ enum MesoPlanner {
     }
 
     /// What the session at `key` would prescribe if it were built now. Reads only; never inserts.
-    static func plan(_ meso: Mesocycle, at key: SessionKey, unit: WeightUnit, snapshot: PlanningSnapshot)
-        -> [PlannedExercise]
-    {
+    static func plan(_ meso: Mesocycle, at key: SessionKey, planning: PlanningContext) -> [PlannedExercise] {
         let base = meso.latestWorkout(dayIndex: key.dayIndex, before: key.week)
         switch meso.phase(week: key.week) {
         case .deload:
             guard let base else {
-                return templatePlan(meso, dayIndex: key.dayIndex, rir: deloadRIR, unit: unit, snapshot: snapshot).map {
+                return templatePlan(meso, dayIndex: key.dayIndex, rir: deloadRIR, planning: planning).map {
                     PlannedExercise(
                         name: $0.name, key: $0.key, muscle: $0.muscle,
                         targets: Progression.deloadTargets(
@@ -194,34 +233,32 @@ enum MesoPlanner {
             }
         case .accumulation(let rir):
             guard let base, let baseRIR = base.phase?.rir else {
-                return templatePlan(meso, dayIndex: key.dayIndex, rir: rir, unit: unit, snapshot: snapshot)
+                return templatePlan(meso, dayIndex: key.dayIndex, rir: rir, planning: planning)
             }
-            return progressedPlan(
-                from: base, baseRIR: baseRIR, meso: meso, key: key, rir: rir, unit: unit, snapshot: snapshot)
+            return progressedPlan(from: base, baseRIR: baseRIR, meso: meso, key: key, rir: rir, planning: planning)
         }
     }
 
-    private static func templatePlan(
-        _ meso: Mesocycle, dayIndex: Int, rir: Int, unit: WeightUnit, snapshot: PlanningSnapshot
-    ) -> [PlannedExercise] {
+    private static func templatePlan(_ meso: Mesocycle, dayIndex: Int, rir: Int, planning: PlanningContext)
+        -> [PlannedExercise]
+    {
         let days = meso.sortedDays
         guard days.indices.contains(dayIndex) else { return [] }
         return days[dayIndex].sortedSlots.map { slot in
             PlannedExercise(
                 name: slot.exerciseName, key: slot.key, muscle: slot.muscle,
                 targets: slot.startingTargets
-                    ?? freshTargets(
-                        for: slot.key,
-                        count: initialSetCount(of: slot, dayIndex: dayIndex, in: meso),
-                        rir: rir, unit: unit, snapshot: snapshot, bodyweight: snapshot.bodyweight))
+                    ?? planning.freshTargets(
+                        for: slot.key, count: initialSetCount(of: slot, dayIndex: dayIndex, in: meso), rir: rir,
+                        bodyweight: planning.snapshot.bodyweight))
         }
     }
 
     private static func progressedPlan(
         from base: Workout, baseRIR: Int, meso: Mesocycle, key: SessionKey,
-        rir: Int, unit: WeightUnit, snapshot: PlanningSnapshot
+        rir: Int, planning: PlanningContext
     ) -> [PlannedExercise] {
-        let bodyweight = base.bodyweight ?? snapshot.bodyweight
+        let bodyweight = base.bodyweight ?? planning.snapshot.bodyweight
         let exercises = base.plannedExercises
         var counts = exercises.map { max(1, $0.sets.count) }
         for muscle in base.trainedMuscles {
@@ -241,37 +278,17 @@ enum MesoPlanner {
             let planned = exercise.planned
             let targets: [SetTarget]
             if planned.key == exercise.key {
-                targets = nextTargets(
-                    after: exercise, at: baseRIR, rir: rir, setCount: counts[index], unit: unit, snapshot: snapshot,
-                    bodyweight: bodyweight)
+                targets = planning.nextTargets(
+                    after: exercise, at: baseRIR, rir: rir, setCount: counts[index], bodyweight: bodyweight)
             } else if let (previous, previousRIR) = latestExercise(planned.key, before: base, in: meso) {
-                targets = nextTargets(
-                    after: previous, at: previousRIR, rir: rir, setCount: counts[index], unit: unit,
-                    snapshot: snapshot, bodyweight: bodyweight)
+                targets = planning.nextTargets(
+                    after: previous, at: previousRIR, rir: rir, setCount: counts[index], bodyweight: bodyweight)
             } else {
-                targets = freshTargets(
-                    for: planned.key, count: counts[index], rir: rir, unit: unit, snapshot: snapshot,
-                    bodyweight: bodyweight)
+                targets = planning.freshTargets(
+                    for: planned.key, count: counts[index], rir: rir, bodyweight: bodyweight)
             }
             return PlannedExercise(name: planned.name, key: planned.key, muscle: planned.muscle, targets: targets)
         }
-    }
-
-    private static func nextTargets(
-        after exercise: Exercise, at previousRIR: Int, rir: Int, setCount: Int, unit: WeightUnit,
-        snapshot: PlanningSnapshot, bodyweight: Double?
-    ) -> [SetTarget] {
-        let sets = exercise.sortedSets
-        let loading = snapshot.loading(for: exercise.key, bodyweight: bodyweight)
-        return Progression.nextTargets(
-            previousTargets: sets.map(\.target),
-            logged: sets.map(\.logged),
-            previousRIR: previousRIR,
-            targetRIR: rir,
-            repRange: snapshot.repRange(for: exercise.key),
-            increment: loading.increment(unit),
-            offset: loading.offset ?? 0,
-            setCount: setCount)
     }
 
     /// The latest accumulation session of `base`'s day before it that did `key`, so a lift a session-only swap
@@ -312,25 +329,15 @@ enum MesoPlanner {
     private static func initialSetCount(of slot: DaySlot, dayIndex: Int, in meso: Mesocycle) -> Int {
         if let carried = slot.startingTargets { return carried.count }
         guard let muscle = slot.muscle else { return 2 }
-        let sessions = meso.days.filter { $0.slots.contains { $0.muscleRaw == slot.muscleRaw } }.count
         let inSession = meso.sortedDays[dayIndex].slots.filter { $0.muscleRaw == slot.muscleRaw }.count
-        return Progression.initialSetsPerExercise(
-            muscle: muscle, priority: meso.priority(of: muscle), sessionsPerWeek: sessions,
-            exercisesInSession: inSession)
+        return initialSetCount(of: muscle, exercisesInSession: inSession, in: meso)
     }
 
-    private static func freshTargets(
-        for key: ExerciseID, count: Int, rir: Int, unit: WeightUnit, snapshot: PlanningSnapshot,
-        bodyweight: Double?
-    ) -> [SetTarget] {
-        let loading = snapshot.loading(for: key, bodyweight: bodyweight)
-        guard let offset = loading.offset, let oneRepMax = snapshot.latestOneRepMax(of: key) else {
-            return Array(repeating: .calibrate, count: count)
-        }
-        let reps = Progression.startingReps(in: snapshot.repRange(for: key))
-        let load = Progression.load(
-            forReps: reps, rir: rir, oneRepMax: oneRepMax, increment: loading.increment(unit), offset: offset)
-        return Array(repeating: load + offset > 0 ? SetTarget(weight: load, reps: reps) : .calibrate, count: count)
+    private static func initialSetCount(of muscle: Muscle, exercisesInSession: Int, in meso: Mesocycle) -> Int {
+        let sessions = meso.days.filter { $0.slots.contains { $0.muscleRaw == muscle.rawValue } }.count
+        return Progression.initialSetsPerExercise(
+            muscle: muscle, priority: meso.priority(of: muscle), sessionsPerWeek: sessions,
+            exercisesInSession: exercisesInSession)
     }
 
     private static func firstWeekTargets(of key: ExerciseID, dayIndex: Int, in meso: Mesocycle) -> [SetTarget] {
@@ -349,8 +356,7 @@ enum MesoPlanner {
     }
 
     static func addExercise(
-        named name: String, muscle: Muscle, to workout: Workout, unit: WeightUnit,
-        snapshot: PlanningSnapshot, in context: ModelContext
+        named name: String, muscle: Muscle, to workout: Workout, planning: PlanningContext, in context: ModelContext
     ) {
         let exercise = Exercise(name: name, order: (workout.exercises.map(\.order).max() ?? -1) + 1, muscle: muscle)
         workout.exercises.append(exercise)
@@ -368,16 +374,9 @@ enum MesoPlanner {
             }
             return
         }
-        let sessions = meso.days.filter { $0.slots.contains { $0.muscleRaw == muscle.rawValue } }.count
-        let count = Progression.initialSetsPerExercise(
-            muscle: muscle, priority: meso.priority(of: muscle), sessionsPerWeek: sessions,
-            exercisesInSession: workout.exercises(for: muscle).count)
+        let count = initialSetCount(of: muscle, exercisesInSession: workout.exercises(for: muscle).count, in: meso)
         replaceSets(
-            of: exercise,
-            with: freshTargets(
-                for: exercise.key, count: count, rir: workout.phase?.rir ?? deloadRIR,
-                unit: unit, snapshot: snapshot, bodyweight: workout.bodyweight ?? snapshot.bodyweight),
-            in: context)
+            of: exercise, with: planning.freshTargets(for: exercise.key, count: count, in: workout), in: context)
     }
 
     static func lastFinishedExercise(_ key: ExerciseID, in context: ModelContext) -> Exercise? {
@@ -392,8 +391,8 @@ enum MesoPlanner {
     /// In a block, `.thisSession` keeps the old exercise for later weeks and `.laterWeeks` hands the new one on,
     /// including to the same exercise in later same-day sessions that are built but not started.
     static func swap(
-        _ exercise: Exercise, to name: String, muscle: Muscle, scope: PlanScope, unit: WeightUnit,
-        snapshot: PlanningSnapshot, in context: ModelContext
+        _ exercise: Exercise, to name: String, muscle: Muscle, scope: PlanScope, planning: PlanningContext,
+        in context: ModelContext
     ) {
         let original = exercise.key
         let meso = exercise.workout?.mesocycle
@@ -401,25 +400,19 @@ enum MesoPlanner {
             exercise.plannedName = exercise.name
             exercise.plannedMuscleRaw = exercise.muscle?.rawValue
         }
-        replace(exercise, with: name, muscle: muscle, unit: unit, snapshot: snapshot, in: context)
-        if meso == nil || scope == .laterWeeks || exercise.planned.key == exercise.key {
-            exercise.plannedName = nil
-            exercise.plannedMuscleRaw = nil
-        }
+        replace(exercise, with: name, muscle: muscle, planning: planning, in: context)
+        if meso == nil || scope == .laterWeeks || exercise.planned.key == exercise.key { exercise.clearPlanned() }
         guard let meso, scope == .laterWeeks, let key = exercise.workout?.key else { return }
-        for later in meso.workouts
-        where !later.isFinished && later.dayIndex == key.dayIndex && (later.week ?? 0) > key.week {
+        for later in meso.laterOpenSessions(after: key) {
             for match in later.exercises where match.key == original && !match.sets.contains(where: \.isDone) {
-                replace(match, with: name, muscle: muscle, unit: unit, snapshot: snapshot, in: context)
-                match.plannedName = nil
-                match.plannedMuscleRaw = nil
+                replace(match, with: name, muscle: muscle, planning: planning, in: context)
+                match.clearPlanned()
             }
         }
     }
 
     private static func replace(
-        _ exercise: Exercise, with name: String, muscle: Muscle, unit: WeightUnit,
-        snapshot: PlanningSnapshot, in context: ModelContext
+        _ exercise: Exercise, with name: String, muscle: Muscle, planning: PlanningContext, in context: ModelContext
     ) {
         exercise.rename(name)
         exercise.muscle = muscle
@@ -427,10 +420,7 @@ enum MesoPlanner {
         guard let workout = exercise.workout, workout.mesocycle != nil else { return }
         replaceSets(
             of: exercise,
-            with: freshTargets(
-                for: exercise.key, count: max(1, exercise.sets.count),
-                rir: workout.phase?.rir ?? deloadRIR, unit: unit, snapshot: snapshot,
-                bodyweight: workout.bodyweight ?? snapshot.bodyweight),
+            with: planning.freshTargets(for: exercise.key, count: max(1, exercise.sets.count), in: workout),
             in: context)
     }
 
@@ -449,8 +439,7 @@ enum MesoPlanner {
         }
         guard let meso = workout.mesocycle, scope == .laterWeeks, let key = workout.key else { return }
         let keys = ordered.map(\.key)
-        for later in meso.workouts
-        where !later.isFinished && later.dayIndex == key.dayIndex && (later.week ?? 0) > key.week {
+        for later in meso.laterOpenSessions(after: key) {
             let rank = { (exercise: Exercise) in keys.firstIndex(of: exercise.key) ?? keys.count }
             let following = later.sortedExercises.enumerated().sorted {
                 (rank($0.element), $0.offset) < (rank($1.element), $1.offset)
@@ -475,23 +464,21 @@ enum MesoPlanner {
     /// from and the muscle is still untouched, its set count is re-planned with the now-complete feedback.
     static func recordSoreness(
         _ soreness: Soreness, on record: MuscleFeedbackRecord, during workout: Workout,
-        unit: WeightUnit, snapshot: PlanningSnapshot, in context: ModelContext
+        planning: PlanningContext, in context: ModelContext
     ) {
         record.value.soreness = soreness
         guard let muscle = record.muscle, let meso = workout.mesocycle, let key = workout.key,
             let base = meso.latestWorkout(dayIndex: key.dayIndex, before: key.week), base === record.workout,
             !workout.exercises(for: muscle).contains(where: { $0.sets.contains(where: \.isDone) })
         else { return }
-        let planned = plan(meso, at: key, unit: unit, snapshot: snapshot)
+        let planned = plan(meso, at: key, planning: planning)
         for exercise in workout.exercises(for: muscle) {
             guard let match = planned.first(where: { $0.key == exercise.key && $0.muscle == muscle }) else { continue }
             replaceSets(of: exercise, with: match.targets, in: context)
         }
     }
 
-    static func weeklyVolume(_ meso: Mesocycle, week: Int, unit: WeightUnit, snapshot: PlanningSnapshot)
-        -> [MuscleVolume]
-    {
+    static func weeklyVolume(_ meso: Mesocycle, week: Int, planning: PlanningContext) -> [MuscleVolume] {
         var done: [Muscle: Int] = [:]
         var planned: [Muscle: Int] = [:]
         for day in meso.days.indices {
@@ -506,7 +493,7 @@ enum MesoPlanner {
                     done[muscle, default: 0] += exercise.sets.filter(\.isDone).count
                 }
             case .upcoming:
-                for exercise in plan(meso, at: key, unit: unit, snapshot: snapshot) {
+                for exercise in plan(meso, at: key, planning: planning) {
                     guard let muscle = exercise.muscle else { continue }
                     planned[muscle, default: 0] += exercise.targets.count
                 }
