@@ -37,19 +37,23 @@ public final class Mesocycle {
     public var weekdays: [Weekday?] { sortedDays.map(\.weekday) }
     public var isActive: Bool { finishedDate == nil }
 
+    /// The day at `index` in plan order, or nil when the block has no such day.
+    func day(at index: Int) -> MesoDay? {
+        let days = sortedDays
+        return days.indices.contains(index) ? days[index] : nil
+    }
+
     /// Later weeks are built from the day's name, so renaming it also relabels the sessions already built.
     func renameDay(_ dayIndex: Int, to name: String) {
-        let days = sortedDays
-        guard days.indices.contains(dayIndex) else { return }
-        days[dayIndex].name = name
+        guard let day = day(at: dayIndex) else { return }
+        day.name = name
         for workout in workouts where workout.dayIndex == dayIndex { workout.name = name }
     }
 
     /// Later weeks are built with the day's weekday, so relabeling it also relabels the sessions already built.
     func relabelDay(_ dayIndex: Int, as weekday: Weekday?) {
-        let days = sortedDays
-        guard days.indices.contains(dayIndex) else { return }
-        days[dayIndex].weekday = weekday
+        guard let day = day(at: dayIndex) else { return }
+        day.weekday = weekday
         for workout in workouts where workout.dayIndex == dayIndex { workout.weekday = weekday }
     }
 
@@ -113,8 +117,7 @@ public final class Mesocycle {
         for workout in workouts where !workout.hasLog {
             guard let week = workout.week else { continue }
             if week >= totalWeeks {
-                workouts.removeAll { $0 === workout }
-                context.delete(workout)
+                remove(workout, in: context)
             } else if before[week] != phase(week: week) {
                 rebuild.append(workout)
             }
@@ -175,8 +178,7 @@ public final class Mesocycle {
     func skip(_ key: SessionKey, in context: ModelContext) {
         guard canSkip(key) else { return }
         if case .inProgress(let workout) = status(at: key) {
-            workouts.removeAll { $0 === workout }
-            context.delete(workout)
+            remove(workout, in: context)
         }
         if !skippedSessions.contains(key) { skippedSessions.append(key) }
     }
@@ -190,11 +192,16 @@ public final class Mesocycle {
             if workout.completedSets > 0 {
                 workout.finish(in: context)
             } else {
-                workouts.removeAll { $0 === workout }
-                context.delete(workout)
+                remove(workout, in: context)
             }
         }
         finishedDate = .now
+    }
+
+    /// Deletes a session built for this block.
+    func remove(_ workout: Workout, in context: ModelContext) {
+        workouts.removeAll { $0 === workout }
+        context.delete(workout)
     }
 
     /// The sessions with a logged set, which go with the block when it is deleted.
