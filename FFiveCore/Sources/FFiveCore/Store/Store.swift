@@ -46,6 +46,8 @@ public final class Store {
 
     @ObservationIgnored private var cachedLastPerformed: [ExerciseID: Date]?
     @ObservationIgnored private var cachedLastFinished: [ExerciseID: Exercise?] = [:]
+    @ObservationIgnored private var cachedWeekStats: (weekStart: Date, stats: WeekStats)?
+    @ObservationIgnored private var cachedStrengthSeries: [StrengthSeries]?
 
     public func startMesocycle(_ draft: MesoDraft) throws {
         guard try context.fetchCount(Mesocycle.active) == 0 else { throw StoreError.anotherMesocycleIsActive }
@@ -324,22 +326,34 @@ public final class Store {
         return built
     }
 
+    /// Cached until the next commit or until `now` falls in another week.
     public func weekStats(now: Date = .now) -> WeekStats {
         observeCommits()
         let weekStart = Calendar.current.dateInterval(of: .weekOfYear, for: now)?.start ?? now
+        if let cachedWeekStats, cachedWeekStats.weekStart == weekStart { return cachedWeekStats.stats }
         let thisWeek =
             (try? context.fetch(
                 FetchDescriptor<Workout>(predicate: #Predicate { $0.endDate != nil && $0.startDate >= weekStart })))
             ?? []
-        return WeekStats(
+        let stats = WeekStats(
             thisWeek: thisWeek.count,
             time: thisWeek.reduce(0) { $0 + $1.duration },
             allTime: (try? context.fetchCount(Workout.history)) ?? 0)
+        cachedWeekStats = (weekStart, stats)
+        return stats
     }
 
     /// Most recently trained exercise first. A session that logs one exercise twice gives one point, its stronger set.
+    /// Cached until the next commit.
     public func strengthSeries() -> [StrengthSeries] {
         observeCommits()
+        if let cachedStrengthSeries { return cachedStrengthSeries }
+        let built = buildStrengthSeries()
+        cachedStrengthSeries = built
+        return built
+    }
+
+    private func buildStrengthSeries() -> [StrengthSeries] {
         var finished = FetchDescriptor<Workout>(
             predicate: #Predicate { $0.endDate != nil }, sortBy: [SortDescriptor(\.startDate)])
         finished.relationshipKeyPathsForPrefetching = [\.storedExercises]
@@ -457,6 +471,8 @@ public final class Store {
         cachedSnapshot = nil
         cachedLastPerformed = nil
         cachedLastFinished = [:]
+        cachedWeekStats = nil
+        cachedStrengthSeries = nil
         do {
             try context.save()
             revision += 1

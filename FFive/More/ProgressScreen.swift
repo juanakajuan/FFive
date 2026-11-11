@@ -37,7 +37,6 @@ struct ProgressScreen: View {
         }
         .background(Theme.surface)
         .navigationTitle("Progress")
-        .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
         .navigationDestination(for: StrengthSeries.self) { ExerciseTrendView(series: $0, unit: unit) }
         .navigationDestination(item: $demoSeries) { ExerciseTrendView(series: $0, unit: unit) }
         .task {
