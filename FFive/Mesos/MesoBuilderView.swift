@@ -248,11 +248,19 @@ struct MesoEditorView: View {
                 }
             }
         }
-        .confirmationDialog("Reset this mesocycle?", isPresented: $confirmReset, titleVisibility: .visible) {
-            Button("Reset", role: .destructive) { draft = original }
+        .confirmationDialog(
+            editing == nil ? "Reset this mesocycle?" : "Reset this template?",
+            isPresented: $confirmReset,
+            titleVisibility: .visible
+        ) {
+            Button(editing == nil ? "Reset Mesocycle" : "Reset Template", role: .destructive) { draft = original }
                 .a11y(.dialogReset)
         } message: {
-            Text("Days, exercises and settings go back to how they were when you opened this screen.")
+            Text(
+                editing == nil
+                    ? "Days, exercises and settings go back to how they were when you opened this screen."
+                    : "Days and exercises go back to how they were when you opened this screen."
+            )
         }
         .alert(
             "Save as Template",
