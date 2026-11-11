@@ -9,7 +9,8 @@
 #
 # Every upload carries a new release number: --version or --bump is required unless
 # --local. The version change also rewrites FFive/Changelog.json from the git history
-# (scripts/changelog.sh), so the build's What's New lists every feat, fix and perf commit since the last release.
+# (scripts/changelog.sh), so the build's What's New lists every feat, fix and perf commit since the last
+# release that changes the shipped app.
 # Both files are committed only once the upload (or --local export) succeeds; a failed run
 # restores them, so rerun the same command. The build number is a UTC timestamp on every run.
 #
