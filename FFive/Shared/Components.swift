@@ -115,7 +115,7 @@ struct ChipPicker<Option: Hashable>: View {
                 Text(title).font(Theme.detail).foregroundStyle(Theme.secondary)
                 if meaning != nil {
                     Button {
-                        withAnimation(.easeInOut(duration: 0.2)) { showsHelp.toggle() }
+                        withAnimation(.snappy) { showsHelp.toggle() }
                     } label: {
                         Image(systemName: showsHelp ? "questionmark.circle.fill" : "questionmark.circle")
                             .font(Theme.detail)

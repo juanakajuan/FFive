@@ -59,7 +59,7 @@ extension View {
             titleVisibility: .visible, presenting: deleting.wrappedValue
         ) { saved in
             Button("Delete Template", role: .destructive) {
-                store.delete(saved)
+                withAnimation(.snappy) { store.delete(saved) }
                 onDelete()
             }
             .a11y(.dialogDeleteTemplate)

@@ -45,7 +45,7 @@ struct ProgressScreen: View {
             isPresented: $deleting.isPresent(),
             titleVisibility: .visible, presenting: deleting
         ) { workout in
-            Button("Delete Workout", role: .destructive) { store.delete(workout) }
+            Button("Delete Workout", role: .destructive) { withAnimation(.snappy) { store.delete(workout) } }
                 .a11y(.dialogDeleteWorkout)
         } message: { workout in
             Text("\(workout.name) leaves History and Progress.")

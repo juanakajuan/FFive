@@ -188,7 +188,9 @@ struct MesoEditorView: View {
 
             Section {
                 Button {
-                    withAnimation { draft.days.append(MesoDraft.Day(name: "Day \(draft.days.count + 1)", slots: [])) }
+                    withAnimation(.snappy) {
+                        draft.days.append(MesoDraft.Day(name: "Day \(draft.days.count + 1)", slots: []))
+                    }
                 } label: {
                     Label("Add Day", systemImage: "calendar.badge.plus")
                         .font(Theme.body)
@@ -212,7 +214,7 @@ struct MesoEditorView: View {
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
                 if editMode.isEditing {
-                    Button("Done") { withAnimation { editMode = .inactive } }
+                    Button("Done") { withAnimation(.snappy) { editMode = .inactive } }
                         .fontWeight(.semibold)
                         .a11y(.builderDoneEditing)
                 } else {
@@ -225,7 +227,7 @@ struct MesoEditorView: View {
                             .a11y(.builderSaveTemplate)
                         }
                         Button("Edit Exercises", systemImage: "arrow.up.arrow.down") {
-                            withAnimation { editMode = .active }
+                            withAnimation(.snappy) { editMode = .active }
                         }
                         .a11y(.menuEditExercises)
                         Button("Manage Days", systemImage: "list.number") { managingDays = true }
@@ -463,7 +465,7 @@ struct MesoEditorView: View {
                 Spacer()
                 if draft.days.count > 1 {
                     Button("Remove Day", role: .destructive) {
-                        withAnimation { draft.days.removeAll { $0.id == id } }
+                        withAnimation(.snappy) { draft.days.removeAll { $0.id == id } }
                     }
                     .font(Theme.detail)
                     .foregroundStyle(Theme.danger)
@@ -498,7 +500,7 @@ struct MesoEditorView: View {
 
     private func update(_ dayID: UUID, _ change: (inout MesoDraft.Day) -> Void) {
         guard let index = draft.days.firstIndex(where: { $0.id == dayID }) else { return }
-        change(&draft.days[index])
+        withAnimation(.snappy) { change(&draft.days[index]) }
     }
 
     private func autofill() {
@@ -537,7 +539,7 @@ struct ManageDaysView: View {
                             Spacer()
                             if draft.days.count > 1 {
                                 Button("Remove Day", role: .destructive) {
-                                    withAnimation { draft.days.remove(atOffsets: [offset]) }
+                                    withAnimation(.snappy) { draft.days.remove(atOffsets: [offset]) }
                                 }
                                 .buttonStyle(.borderless)
                                 .font(Theme.detail)

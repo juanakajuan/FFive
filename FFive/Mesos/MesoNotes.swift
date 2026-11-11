@@ -84,8 +84,10 @@ struct MesoNotesScreen: View {
                 isPresented: $deleting.isPresent(),
                 titleVisibility: .visible, presenting: deleting
             ) { note in
-                Button("Delete Note", role: .destructive) { store.deleteNote(note, from: meso) }
-                    .a11y(.dialogDeleteNote)
+                Button("Delete Note", role: .destructive) {
+                    withAnimation(.snappy) { store.deleteNote(note, from: meso) }
+                }
+                .a11y(.dialogDeleteNote)
             }
             .navigationTitle("Mesocycle Notes")
             .navigationBarTitleDisplayMode(.inline)
@@ -121,7 +123,7 @@ struct MesoNotesScreen: View {
                     .foregroundStyle(Theme.secondary)
                 Spacer()
                 Button("Add Note") {
-                    store.addNote(draft, to: meso)
+                    withAnimation(.snappy) { store.addNote(draft, to: meso) }
                     draft = ""
                 }
                 .font(Theme.detail.weight(.semibold))
