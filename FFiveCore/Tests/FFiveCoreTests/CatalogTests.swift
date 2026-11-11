@@ -10,16 +10,9 @@ final class CatalogTests: XCTestCase {
         -> Exercise
     {
         let workout = store.startQuickWorkout()
-        workout.startDate = start
         store.addExercise(named: name, muscle: muscle, to: workout)
-        let exercise = workout.exercises[0]
-        for set in exercise.sortedSets {
-            set.weight = weight
-            set.reps = reps
-            store.log(set, done: true)
-        }
-        store.finish(workout)
-        return exercise
+        store.finishAll(workout, weight: weight, reps: reps, startedAt: start)
+        return workout.exercises[0]
     }
 
     func testCaseVariantsShareHistory() throws {

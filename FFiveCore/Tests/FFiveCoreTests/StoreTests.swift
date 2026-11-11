@@ -8,21 +8,6 @@ final class StoreTests: XCTestCase {
     let day1 = SessionKey(week: 0, dayIndex: 0)
     let day2 = SessionKey(week: 0, dayIndex: 1)
 
-    func twoDayDraft() -> MesoDraft {
-        var draft = MesoDraft(template: nil)
-        draft.days = [
-            .init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest)]),
-            .init(name: "B", slots: [.init(exercise: "Barbell Row", muscle: .back)]),
-        ]
-        return draft
-    }
-
-    func startedStore() throws -> (Store, Mesocycle) {
-        let store = Store(inMemory: true)
-        try store.startMesocycle(twoDayDraft())
-        return (store, try XCTUnwrap(store.context.fetch(Mesocycle.active).first))
-    }
-
     func testMesoNotesAddInOrderAndDeleteOne() throws {
         let (store, meso) = try startedStore()
 
@@ -136,7 +121,7 @@ final class StoreTests: XCTestCase {
 
     func testBuilderWeekdaysLabelTheDaysAndTheirSessions() throws {
         let store = Store(inMemory: true)
-        var draft = twoDayDraft()
+        var draft = MesoDraft.twoDay
         draft.days[0].weekday = .thursday
         try store.startMesocycle(draft)
         let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
@@ -212,7 +197,7 @@ final class StoreTests: XCTestCase {
     func testSecondStartIsRefused() throws {
         let (store, _) = try startedStore()
 
-        XCTAssertThrowsError(try store.startMesocycle(twoDayDraft())) { error in
+        XCTAssertThrowsError(try store.startMesocycle(.twoDay)) { error in
             XCTAssertEqual(error as? StoreError, .anotherMesocycleIsActive)
         }
         XCTAssertEqual(
@@ -357,12 +342,7 @@ final class StoreTests: XCTestCase {
         let workout = store.startQuickWorkout()
         store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
         store.addSet(to: workout.exercises[0])
-        for set in workout.exercises[0].sortedSets {
-            set.weight = 100
-            set.reps = 8
-            store.log(set, done: true)
-        }
-        store.finish(workout)
+        store.finishAll(workout)
     }
 
     func testASetNeedsRepsAndWeightBeforeItLogs() throws {
@@ -511,7 +491,7 @@ final class StoreTests: XCTestCase {
     func testAddExerciseUsesPlannerInBlockAndPrefillInQuick() throws {
         let store = Store(inMemory: true)
         finishedBench(store)
-        try store.startMesocycle(twoDayDraft())
+        try store.startMesocycle(.twoDay)
         let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
         let session = store.buildSession(meso, at: day2)
 
@@ -579,7 +559,7 @@ final class StoreTests: XCTestCase {
             container: ModelContainer(
                 for: AppStore.schema, configurations: ModelConfiguration(schema: AppStore.schema, url: url)),
             settings: Settings()
-        ).startMesocycle(twoDayDraft())
+        ).startMesocycle(.twoDay)
         let readOnly = ModelConfiguration(schema: AppStore.schema, url: url, allowsSave: false)
         let store = Store(
             container: try ModelContainer(for: AppStore.schema, configurations: readOnly), settings: Settings())
@@ -722,7 +702,7 @@ final class StoreTests: XCTestCase {
     func testSwapAndRemoveExercise() throws {
         let store = Store(inMemory: true)
         finishedBench(store)
-        try store.startMesocycle(twoDayDraft())
+        try store.startMesocycle(.twoDay)
         let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
         let session = store.buildSession(meso, at: day2)
         let row = session.sortedExercises[0]
@@ -826,7 +806,7 @@ final class StoreTests: XCTestCase {
         }
         let writer = ModelContext(try container())
         writer.insert(Exercise(name: "Bench Press", order: 0, muscle: .chest))
-        MesoPlanner.start(twoDayDraft(), in: writer)
+        MesoPlanner.start(.twoDay, in: writer)
         for exercise in try writer.fetch(FetchDescriptor<Exercise>()) { exercise.exerciseKey = nil }
         for slot in try writer.fetch(FetchDescriptor<DaySlot>()) { slot.exerciseKey = nil }
         try writer.save()
@@ -858,7 +838,7 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(
             store.lastFinishedExercise(ExerciseID(folding: "Bench Press"))?.sortedSets.filter(\.isDone).count, 2)
 
-        try store.startMesocycle(twoDayDraft())
+        try store.startMesocycle(.twoDay)
         let meso = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
         let session = store.buildSession(meso, at: day1)
         store.log(session.sortedExercises[0].sortedSets[0], done: true)
@@ -1048,14 +1028,5 @@ final class StoreTests: XCTestCase {
         store.setType(.myorepMatch, of: bench.sortedSets.last!)
         store.addSet(to: bench)
         XCTAssertEqual(bench.sortedSets.last?.type, .myorepMatch)
-    }
-}
-
-extension Store {
-    /// Fills an empty set with a lift, since a set without reps and weight cannot be logged.
-    func logEntered(_ set: SetEntry) {
-        if set.weight == 0 { set.weight = 100 }
-        if set.reps == 0 { set.reps = 8 }
-        log(set, done: true)
     }
 }

@@ -5,40 +5,26 @@ import XCTest
 
 @MainActor
 final class ExerciseHistoryTests: XCTestCase {
-    func draft() -> MesoDraft {
-        var draft = MesoDraft(template: nil)
-        draft.days = [.init(name: "Push", slots: [.init(exercise: "Bench Press", muscle: .chest)])]
-        return draft
-    }
-
-    func logAll(_ workout: Workout, _ store: Store, at start: Date) {
-        for set in workout.exercises.flatMap(\.sortedSets) {
-            set.weight = 100
-            set.reps = 8
-            store.log(set, done: true)
-        }
-        workout.startDate = start
-        store.finish(workout)
-    }
+    let draft = MesoDraft(days: [.init(name: "Push", slots: [.init(exercise: "Bench Press", muscle: .chest)])])
 
     func testListsEveryFinishedSessionNewestFirstGroupedByMeso() throws {
         let store = Store(inMemory: true)
         let t0 = Date(timeIntervalSince1970: 1_800_000_000)
         let day = 86_400.0
 
-        try store.startMesocycle(draft())
+        try store.startMesocycle(draft)
         let first = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
-        logAll(store.buildSession(first, at: SessionKey(week: 0, dayIndex: 0)), store, at: t0)
-        logAll(store.buildSession(first, at: SessionKey(week: 1, dayIndex: 0)), store, at: t0 + 7 * day)
+        store.finishAll(store.buildSession(first, at: SessionKey(week: 0, dayIndex: 0)), startedAt: t0)
+        store.finishAll(store.buildSession(first, at: SessionKey(week: 1, dayIndex: 0)), startedAt: t0 + 7 * day)
         store.endMesocycle(first)
 
         let quick = store.startQuickWorkout()
         store.addExercise(named: "bench press", muscle: .chest, to: quick)
-        logAll(quick, store, at: t0 + 10 * day)
+        store.finishAll(quick, startedAt: t0 + 10 * day)
 
-        try store.startMesocycle(draft())
+        try store.startMesocycle(draft)
         let second = try XCTUnwrap(store.context.fetch(Mesocycle.active).first)
-        logAll(store.buildSession(second, at: SessionKey(week: 0, dayIndex: 0)), store, at: t0 + 14 * day)
+        store.finishAll(store.buildSession(second, at: SessionKey(week: 0, dayIndex: 0)), startedAt: t0 + 14 * day)
         store.buildSession(second, at: SessionKey(week: 1, dayIndex: 0))
 
         let skipped = store.startQuickWorkout()
@@ -99,7 +85,7 @@ final class ExerciseHistoryTests: XCTestCase {
         let store = Store(inMemory: true)
         let workout = store.startQuickWorkout()
         store.addExercise(named: "Sled Drag", muscle: .quads, to: workout)
-        logAll(workout, store, at: Date(timeIntervalSince1970: 1_700_000_000))
+        store.finishAll(workout, startedAt: Date(timeIntervalSince1970: 1_700_000_000))
         let old = ExerciseID(folding: "Sled Drag")
         XCTAssertEqual(store.lastPerformed()[old], workout.startDate)
 

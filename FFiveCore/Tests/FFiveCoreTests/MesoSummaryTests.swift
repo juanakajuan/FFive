@@ -5,13 +5,7 @@ import XCTest
 
 @MainActor
 final class MesoSummaryTests: XCTestCase {
-    func startedStore() throws -> (Store, Mesocycle) {
-        let store = Store(inMemory: true)
-        var draft = MesoDraft(template: nil)
-        draft.days = [.init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest)])]
-        try store.startMesocycle(draft)
-        return (store, try XCTUnwrap(store.context.fetch(Mesocycle.active).first))
-    }
+    let benchDay = MesoDraft(days: [.init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest)])])
 
     @discardableResult
     func train(
@@ -29,7 +23,7 @@ final class MesoSummaryTests: XCTestCase {
     }
 
     func testSummaryCountsDoneSetsPerMuscleEachWeek() throws {
-        let (store, meso) = try startedStore()
+        let (store, meso) = try startedStore(benchDay)
         train(store, meso, week: 0, weight: 60, sets: 2, workload: .easy)
         train(store, meso, week: 1, weight: 65, sets: 3, workload: .tooMuch)
 
@@ -42,7 +36,7 @@ final class MesoSummaryTests: XCTestCase {
     }
 
     func testSummaryReportsE1RMChangeFromFirstToLastSession() throws {
-        let (store, meso) = try startedStore()
+        let (store, meso) = try startedStore(benchDay)
         train(store, meso, week: 0, weight: 60, sets: 1, workload: .good)
         train(store, meso, week: 1, weight: 70, sets: 1, workload: .good)
 
@@ -54,7 +48,7 @@ final class MesoSummaryTests: XCTestCase {
     }
 
     func testSummaryTracksFeedbackPerWeek() throws {
-        let (store, meso) = try startedStore()
+        let (store, meso) = try startedStore(benchDay)
         train(store, meso, week: 0, weight: 60, sets: 1, workload: .easy)
         train(store, meso, week: 1, weight: 60, sets: 1, workload: .tooMuch)
 
@@ -68,7 +62,7 @@ final class MesoSummaryTests: XCTestCase {
     }
 
     func testRenameTrimsAndIgnoresEmptyNames() throws {
-        let (store, meso) = try startedStore()
+        let (store, meso) = try startedStore(benchDay)
 
         store.rename(meso, to: "  Spring Block  ")
         XCTAssertEqual(meso.name, "Spring Block")
