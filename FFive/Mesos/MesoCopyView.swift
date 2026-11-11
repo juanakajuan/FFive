@@ -107,10 +107,14 @@ struct CopySourceRow: View {
     var body: some View {
         HStack(spacing: 8) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(status)
-                    .font(Theme.caption.monospaced())
-                    .foregroundStyle(Theme.secondary)
-                    .lineLimit(1)
+                if let finished = meso.finishedDate {
+                    Text("FINISHED \(finished.formatted(date: .abbreviated, time: .omitted).uppercased())")
+                        .font(Theme.caption.monospaced())
+                        .foregroundStyle(Theme.secondary)
+                        .lineLimit(1)
+                } else {
+                    StatusBadge(text: "Current")
+                }
                 Text(meso.name)
                     .font(Theme.rowTitle)
                     .foregroundStyle(Theme.text)
@@ -122,10 +126,5 @@ struct CopySourceRow: View {
         }
         .padding(.vertical, 12)
         .contentShape(Rectangle())
-    }
-
-    private var status: String {
-        guard let finished = meso.finishedDate else { return "CURRENT" }
-        return "FINISHED \(finished.formatted(date: .abbreviated, time: .omitted).uppercased())"
     }
 }
