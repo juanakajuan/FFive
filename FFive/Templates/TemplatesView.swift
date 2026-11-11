@@ -117,7 +117,7 @@ struct TemplatesView: View {
                     .frame(width: 24, height: 44)
                     .contentShape(Rectangle())
             }
-            .accessibilityLabel("\(saved.name) menu")
+            .accessibilityLabel("\(saved.name) Menu")
             .a11y(.templatesMenu, key: saved.name)
         }
     }

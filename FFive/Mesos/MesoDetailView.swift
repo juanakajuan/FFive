@@ -39,7 +39,7 @@ struct MesoDetailView: View {
         .navigationTitle(meso.name)
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .primaryAction) {
                 Menu {
                     NavigationLink(value: MesoSummaryRoute(meso: meso)) {
                         Label("Summary", systemImage: "chart.bar")
@@ -52,7 +52,7 @@ struct MesoDetailView: View {
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
-                .accessibilityLabel("Mesocycle menu")
+                .accessibilityLabel("Mesocycle Menu")
                 .a11y(.mesoMenu)
             }
         }

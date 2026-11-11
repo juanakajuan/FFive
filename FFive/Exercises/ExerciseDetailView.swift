@@ -108,7 +108,7 @@ struct ExerciseDetailView: View {
         } label: {
             Image(systemName: "ellipsis.circle")
         }
-        .accessibilityLabel("Exercise actions")
+        .accessibilityLabel("Exercise Menu")
     }
 
     private func historyRow(_ workout: Workout, best: SetEntry) -> some View {

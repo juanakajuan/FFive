@@ -11,13 +11,13 @@ A lifter attaches a note to an exercise in a workout. By default it stays with t
 - `note-exercise-unpin` unpins with `Unpin note`. The note stays on the current workout and stops carrying forward.
 - `note-exercise-delete` removes it, pinned or not, with `Exercise menu`, then `Delete Note`. Saving blank text also removes it.
 - `note-exercise-detail` shows a pinned note on the exercise's page in the Exercises tab.
-- `note-day` adds a day note with `Workout menu`, then `Add Note` (or `Edit Note`), through a `Workout Note` sheet. It shows as `Workout note: <text>` at the top of the session and in the summary card of the workout's detail page.
+- `note-day` adds a day note with `Workout Menu`, then `Add Note` (or `Edit Note`), through a `Workout Note` sheet. It shows as `Workout note: <text>` at the top of the session and in the summary card of the workout's detail page.
 - `note-day-pin` pins a day note to its block day. On a block day the `Workout Note` sheet has `#note.pin`, labeled `Pin to <day name>` or `Unpin from <day name>`; a quick workout's sheet has none. Saving while pinned stores the text on the `MesoDay` (`pinnedNote`) and shows `Pinned workout note: <text>` on that session and every later session of the same day, not on the block's other days. Finishing a session copies the pinned text into its own note, so history keeps it. Unpinning and saving leaves the note on that session alone.
 
 ## How to get to it (user POV)
 
 - Workout tab, any session (block day or quick workout): an exercise card's `Exercise menu`, and the pin beside its note.
-- Workout tab, any session: the header's `Workout menu`.
+- Workout tab, any session: the header's `Workout Menu`.
 - Exercises tab: tap an exercise row to see its pinned note.
 - More, Progress, History: tap a finished workout to see its day note and its exercises' notes.
 

@@ -4,14 +4,14 @@ A lifter deletes a block, finished or current. A confirmation, "Delete this meso
 
 ## Sub-features
 
-- `delete-row` deletes from the Mesos row's `<name> menu`: `#menu.delete-mesocycle`, then `#dialog.delete-mesocycle`.
+- `delete-row` deletes from the Mesos row's `<name> Menu`: `#menu.delete-mesocycle`, then `#dialog.delete-mesocycle`.
 - `delete-detail` deletes from the block's detail page menu (`#meso.menu`), which pops back to the Mesos list.
 - `delete-count` the dialog message reads `Its <n> logged workout(s) leave(s) History and Progress. This can't be undone.`, or `It has no logged workouts.` for none.
 - `delete-history` the block's sessions leave Progress, History and Strength.
 
 ## How to get to it (user POV)
 
-- Mesos tab: a block row's `<name> menu`, then `Delete`, then `Delete Mesocycle`.
+- Mesos tab: a block row's `<name> Menu`, then `Delete`, then `Delete Mesocycle`.
 - Mesos tab, a block's detail page: the top-right menu, then `Delete`, then `Delete Mesocycle`.
 
 ## Driving it with ffive-verify

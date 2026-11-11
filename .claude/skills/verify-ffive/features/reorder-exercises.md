@@ -11,7 +11,7 @@
 
 ## How to get to it (user POV)
 
-- Workout tab, `Workout menu`, `Reorder Exercises`, on a block day or a quick workout.
+- Workout tab, `Workout Menu`, `Reorder Exercises`, on a block day or a quick workout.
 
 ## Driving it with ffive-verify
 

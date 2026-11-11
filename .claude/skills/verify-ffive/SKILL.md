@@ -30,7 +30,7 @@ V=.claude/skills/verify-ffive/scripts/ffive-verify
 $V launch
 ```
 
-This creates the simulator if needed (latest iOS runtime, iPhone 18 Pro, override with `FFIVE_DEVICE_TYPE`) and boots it. It builds the app and the driver into `.verify/build*`, installs the app, then runs a smoke drive: launch with `-seedDemo` and wait for the Workout tab and its `Workout menu`. It is ready when the last line is `READY udid=<UDID> stamp=<git sha>`. A cold first run takes about 3 minutes. With build caches in place, a launch that has to boot a shut-down simulator took about 100 seconds; one on a booted simulator rebuilds incrementally in under a minute.
+This creates the simulator if needed (latest iOS runtime, iPhone 18 Pro, override with `FFIVE_DEVICE_TYPE`) and boots it. It builds the app and the driver into `.verify/build*`, installs the app, then runs a smoke drive: launch with `-seedDemo` and wait for the Workout tab and its `Workout Menu`. It is ready when the last line is `READY udid=<UDID> stamp=<git sha>`. A cold first run takes about 3 minutes. With build caches in place, a launch that has to boot a shut-down simulator took about 100 seconds; one on a booted simulator rebuilds incrementally in under a minute.
 
 Run `launch` again after every app or driver code change, because `drive` does not rebuild. `launch` is idempotent and reuses the same simulator.
 

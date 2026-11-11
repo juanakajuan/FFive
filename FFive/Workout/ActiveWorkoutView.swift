@@ -429,7 +429,7 @@ struct ActiveWorkoutView: View {
             } label: {
                 ActionIcon.verticalEllipsis
             }
-            .accessibilityLabel("Workout menu")
+            .accessibilityLabel("Workout Menu")
             .a11y(.workoutMenu)
         }
     }
@@ -710,7 +710,7 @@ struct ExerciseCard: View {
             } label: {
                 ActionIcon.verticalEllipsis
             }
-            .accessibilityLabel("Exercise menu")
+            .accessibilityLabel("Exercise Menu")
             .a11y(.exerciseMenu, position)
         }
     }
@@ -867,7 +867,7 @@ struct SetRow: View {
                 }
                 .frame(width: SetColumns.menu, height: 44)
             }
-            .accessibilityLabel(set.type.tag == nil ? "Set \(number) menu" : "Set \(number) menu, \(set.type.title)")
+            .accessibilityLabel(set.type.tag == nil ? "Set \(number) Menu" : "Set \(number) Menu, \(set.type.title)")
             .a11y(.setMenu, number)
 
             TextField(
