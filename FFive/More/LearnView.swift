@@ -356,7 +356,7 @@ extension Learn {
                     ForEach(0..<weeks, id: \.self) { week in
                         let rir = Learn.rir(week: week, accumulationWeeks: weeks)
                         WeekChip(
-                            caption: "Wk \(week + 1)", value: "\(rir)", unit: "RIR",
+                            caption: "W\(week + 1)", value: "\(rir)", unit: "RIR",
                             fill: Theme.infoText.opacity(0.2 + 0.18 * Double(3 - rir)),
                             spoken: "Week \(week + 1), \(rir) reps in reserve")
                     }
