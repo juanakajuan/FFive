@@ -71,7 +71,7 @@ struct TemplatesView: View {
                         .padding(.horizontal, Theme.gutter)
                         .padding(.bottom, 12)
                     FilterBar(label: filterLabel) {
-                        Picker("Days per week", selection: $daysPerWeek) {
+                        Picker("Days per Week", selection: $daysPerWeek) {
                             Text("All").tag(Int?.none)
                             ForEach(Self.dayCounts, id: \.self) { Text("\($0)/week").tag(Int?.some($0)) }
                         }

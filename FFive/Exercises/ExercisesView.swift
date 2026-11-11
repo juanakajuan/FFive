@@ -59,9 +59,9 @@ struct ExercisesView: View {
                             ForEach(Equipment.allCases, id: \.self) { Text($0.displayName).tag(Equipment?.some($0)) }
                         }
                         .pickerStyle(.menu)
-                        Toggle("Show hidden", isOn: $showHidden)
+                        Toggle("Show Hidden", isOn: $showHidden)
                             .a11y(.exercisesShowHidden)
-                        Toggle("Only exercises I\u{2019}ve performed", isOn: $performedOnly)
+                        Toggle("Only Exercises I\u{2019}ve Performed", isOn: $performedOnly)
                             .a11y(.exercisesPerformedOnly)
                     }
                 }

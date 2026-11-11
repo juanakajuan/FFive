@@ -228,7 +228,7 @@ extension Learn {
     static let articles: [Article] = [
         Article(
             id: "landmarks", category: .system,
-            title: "Volume landmarks", symbol: "chart.bar.xaxis",
+            title: "Volume Landmarks", symbol: "chart.bar.xaxis",
             summary: "How many hard sets each muscle needs per week, and how many it can recover from.",
             takeaways: [
                 "Volume is the number of hard sets a muscle gets each week. More sets build more muscle, up to the point where you stop recovering.",
@@ -238,7 +238,7 @@ extension Learn {
             blocks: [
                 .heading("Counting sets"),
                 .paragraph(
-                    "The app measures volume in hard sets per muscle per week. A hard set ends within about 3 reps of failure, and warm-up sets do not count. The app counts sets instead of total weight lifted, because hard sets across a wide range of reps build about the same amount of muscle (see Rep ranges)."
+                    "The app measures volume in hard sets per muscle per week. A hard set ends within about 3 reps of failure, and warm-up sets do not count. The app counts sets instead of total weight lifted, because hard sets across a wide range of reps build about the same amount of muscle (see Rep Ranges)."
                 ),
                 .paragraph(
                     "Across studies, more weekly sets lead to more growth. Schoenfeld, Ogborn and Krieger (2017) pooled 15 studies and found that growth rose step by step with weekly sets. Pelland and colleagues (2026) analyzed 67 studies and saw the same rise, with each extra set adding a little less than the one before."
@@ -299,7 +299,7 @@ extension Learn {
                     "In week 1 each muscle gets about its MEV, split across the sessions and exercises that train it, with at least 2 sets per exercise. Week 1 also asks for reps in the lower half of each exercise's range. If the app has no earlier numbers for an exercise, you pick a weight that leaves the target RIR. All of this leaves room to add reps and sets later."
                 ),
                 .paragraph(
-                    "After each session the app reads your feedback and adds, holds, or removes sets for the next week (see Session feedback). By the final week most muscles usually sit inside their MAV, and some get close to their MRV."
+                    "After each session the app reads your feedback and adds, holds, or removes sets for the next week (see Session Feedback). By the final week most muscles usually sit inside their MAV, and some get close to their MRV."
                 ),
                 .heading("Then a deload"),
                 .paragraph(
@@ -314,7 +314,7 @@ extension Learn {
 
         Article(
             id: "overload", category: .system,
-            title: "Progressive overload", symbol: "arrow.up.right.circle",
+            title: "Progressive Overload", symbol: "arrow.up.right.circle",
             summary: "Add reps first, then weight. How the app sets each week's targets.",
             takeaways: [
                 "Each week the app keeps your weight and adds the reps that the lower RIR target frees up.",
@@ -357,7 +357,7 @@ extension Learn {
 
         Article(
             id: "rir", category: .gym,
-            title: "Reps in reserve", symbol: "speedometer",
+            title: "Reps in Reserve", symbol: "speedometer",
             summary: "How hard each set should be, and how to judge it.",
             takeaways: [
                 "RIR is how many more good reps you could have done when you ended the set.",
@@ -399,7 +399,7 @@ extension Learn {
 
         Article(
             id: "exercises", category: .gym,
-            title: "Choosing exercises", symbol: "scalemass",
+            title: "Choosing Exercises", symbol: "scalemass",
             summary: "Stimulus-to-fatigue ratio, and what makes one exercise better than another.",
             takeaways: [
                 "A good exercise trains the target muscle hard without much extra fatigue. RP calls this the stimulus-to-fatigue ratio (SFR).",
@@ -417,7 +417,7 @@ extension Learn {
                 .heading("What raises SFR"),
                 .bullets([
                     "**Stability.** When a machine, bench, or pad holds you in place, more effort goes to the target muscle and less to balance.",
-                    "**Load in the stretch.** Exercises that work the muscle hard while it is long tend to grow it well (see Technique for growth).",
+                    "**Load in the stretch.** Exercises that work the muscle hard while it is long tend to grow it well (see Technique for Growth).",
                     "**Joint comfort.** An exercise that hurts a joint costs recovery and limits how hard you can push. Swap it.",
                     "**Feeling the muscle.** A strong pump and a clear sense that the target muscle did the work are rough signs of a good fit.",
                     "**Low whole-body cost.** Heavy deadlifts and squats tire you far beyond the muscles they target. They have a place, but each set costs a lot.",
@@ -439,7 +439,7 @@ extension Learn {
 
         Article(
             id: "reps", category: .gym,
-            title: "Rep ranges", symbol: "number.circle",
+            title: "Rep Ranges", symbol: "number.circle",
             summary: "Why light and heavy sets both build muscle, and how the app picks a range.",
             takeaways: [
                 "Light and heavy sets build similar muscle when both end close to failure.",
@@ -474,7 +474,7 @@ extension Learn {
 
         Article(
             id: "technique", category: .gym,
-            title: "Technique for growth", symbol: "figure.strengthtraining.traditional",
+            title: "Technique for Growth", symbol: "figure.strengthtraining.traditional",
             summary: "Full range of motion, the stretched position, and controlled lowering.",
             takeaways: [
                 "Use the full range of motion you can control, and do not cut reps short at the stretched end.",
@@ -512,7 +512,7 @@ extension Learn {
 
         Article(
             id: "rest", category: .gym,
-            title: "Rest between sets", symbol: "timer",
+            title: "Rest Between Sets", symbol: "timer",
             summary: "How long to rest so the next set can still reach its target.",
             takeaways: [
                 "Rest until you could repeat the last set at its target, usually 2 to 3 minutes, longer for big lifts.",
@@ -537,7 +537,7 @@ extension Learn {
 
         Article(
             id: "feedback", category: .recovery,
-            title: "Session feedback", symbol: "slider.horizontal.3",
+            title: "Session Feedback", symbol: "slider.horizontal.3",
             summary: "The four questions the app asks, and how each answer changes next week's sets.",
             takeaways: [
                 "You rate pump, workload, and joint pain after training a muscle, and soreness at the start of its next session.",
@@ -616,7 +616,7 @@ extension Learn {
 
         Article(
             id: "frequency", category: .recovery,
-            title: "Training frequency", symbol: "repeat",
+            title: "Training Frequency", symbol: "repeat",
             summary: "How often to train each muscle, and why the programs hit most muscles twice a week.",
             takeaways: [
                 "For a fixed number of weekly sets, how many days you spread them over matters little for growth.",

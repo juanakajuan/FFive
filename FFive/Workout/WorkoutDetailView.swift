@@ -18,7 +18,7 @@ struct WorkoutDetailView: View {
                 }
                 if !feedback.isEmpty {
                     VStack(alignment: .leading, spacing: 0) {
-                        Text("How it felt")
+                        Text("How It Felt")
                             .font(Theme.cardTitle)
                             .foregroundStyle(Theme.text)
                             .padding(.horizontal, Theme.gutter)

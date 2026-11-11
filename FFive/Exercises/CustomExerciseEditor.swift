@@ -61,7 +61,7 @@ struct CustomExerciseEditor: View {
                     Text("Muscle drives volume. Equipment sets how load steps up and whether body weight counts.")
                         .footnote()
 
-                    SectionHeading(text: "Rep range")
+                    SectionHeading(text: "Rep Range")
                     GroupedCard {
                         Stepper("Min \(draft.minReps) reps", value: $draft.minReps, in: 1...draft.maxReps)
                             .groupRow()

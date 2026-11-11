@@ -347,7 +347,7 @@ extension Learn {
         var body: some View {
             VStack(alignment: .leading, spacing: 14) {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Weeks before the deload")
+                    Text("Weeks Before the Deload")
                         .font(Theme.detail.weight(.semibold))
                     SegmentedButtons(options: Array(Learn.accumulationWeekOptions), selection: $weeks) { "\($0)" }
                 }
@@ -455,7 +455,7 @@ extension Learn {
                     SegmentedButtons(options: Pump.allCases, selection: $pump, label: \.label)
                 }
 
-                Toggle("Moderate or worse joint pain", isOn: $jointPain)
+                Toggle("Moderate or Worse Joint Pain", isOn: $jointPain)
                     .font(Theme.detail.weight(.semibold))
                     .tint(Theme.success)
 

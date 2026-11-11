@@ -4,7 +4,7 @@ Progress, pushed from the More tab, shows three panes. Volume is weekly sets per
 
 ## Sub-features
 
-- `progress-volume` shows the `Sets per muscle · Week <n>` chart for the active block, with a week picker (`W1`… `DL`) and a block picker when there are several blocks.
+- `progress-volume` shows the `Sets per Muscle · Week <n>` chart for the active block, with a week picker (`W1`… `DL`) and a block picker when there are several blocks.
 - `progress-strength` lists exercises with e1RM (`<name>, <muscle>, <n> session(s), <e1RM> <unit>`) and opens an exercise trend page.
 - `progress-history` shows stats tiles plus finished workouts, and opens a WorkoutDetail with its exercises and sets.
 - `progress-empty` shows the "No mesocycle yet" empty state on the Volume pane with no block. Not yet driven.
@@ -21,7 +21,7 @@ Preconditions:
 - Demo baseline (`launch -seedDemo`).
 - Journey: `journeys/progress.steps`.
 
-- **Volume.** Steps: `tap #tab.more timeout=20`, `tap #more.progress`, `wait nav "Progress"`, `selected #segment.volume`, `wait text "Sets per muscle*Week 2"`, `wait any "~Quads 4 of"`, `tap #segment.w1`, `wait text "Sets per muscle*Week 1"`.
+- **Volume.** Steps: `tap #tab.more timeout=20`, `tap #more.progress`, `wait nav "Progress"`, `selected #segment.volume`, `wait text "Sets per Muscle*Week 2"`, `wait any "~Quads 4 of"`, `tap #segment.w1`, `wait text "Sets per Muscle*Week 1"`.
 - **Strength.** Steps: `tap #segment.strength`, `wait text "Estimated 1RM"`, `tap #strength.row.leg-press`, `wait nav "Leg Press"`.
 - **History.** Steps: `tap button "Progress"` (back), `tap #segment.history`, `wait text "All Time"`, `tap #history.row.morning-workout`, `wait nav "Morning Workout"`, `wait text "Bench Press"`.
 - **Proof.** Keep shots `01-volume-w1`, `02-strength-trend`, and `03-history-detail`. For a change to how numbers are computed, compare the chart's accessibility label (`any "~<Muscle> <done> of <planned> sets"`) with the planner's expectations in `FFiveCore/Tests/FFiveCoreTests/PlannerTests.swift`.

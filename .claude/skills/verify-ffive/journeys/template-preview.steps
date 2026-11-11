@@ -56,10 +56,10 @@ wait nav "Three Day Split"
 tap #template-preview.menu
 tap #menu.delete-template
 tap #dialog.delete-template
-wait text "Your templates"
+wait text "Your Templates"
 absent #templates.custom.three-day-split
 shot custom-deleted
 launch
 tap #tab.templates timeout=20
-wait text "Your templates"
+wait text "Your Templates"
 absent #templates.custom.three-day-split

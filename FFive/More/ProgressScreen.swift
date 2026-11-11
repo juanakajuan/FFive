@@ -68,7 +68,7 @@ struct ProgressScreen: View {
             let week = min(selectedWeek ?? meso.nextUp?.week ?? meso.accumulationWeeks, meso.accumulationWeeks)
             let volumes = store.weeklyVolume(meso, week: week)
             SectionHeading(
-                text: "Sets per muscle · \(meso.phase(week: week).longLabel(week: week))"
+                text: "Sets per Muscle · \(meso.phase(week: week).longLabel(week: week))"
             )
             .themedRow(vertical: 0)
             .listRowSeparator(.hidden)
@@ -207,14 +207,14 @@ struct ExerciseTrendView: View {
                         title: "Current (\(unit.rawValue))", value: formatWeight(series.latest.rounded()),
                         icon: "scalemass")
                     StatTile(
-                        title: "Since first",
+                        title: "Since First",
                         value: (series.change >= 0 ? "+" : "") + formatWeight(series.change.rounded()),
                         icon: "chart.line.uptrend.xyaxis")
                     StatTile(title: "Sessions", value: "\(series.points.count)", icon: "calendar")
                 }
                 .fixedSize(horizontal: false, vertical: true)
 
-                SectionHeading(text: "Estimated 1RM over time")
+                SectionHeading(text: "Estimated 1RM Over Time")
                 chart
                 Text("Touch and drag the chart to read a session.")
                     .font(Theme.caption)
@@ -280,7 +280,7 @@ struct ExerciseTrendView: View {
             HStack {
                 Text("Date")
                 Spacer()
-                Text("Best set")
+                Text("Best Set")
                 Text("e1RM").frame(width: 60, alignment: .trailing)
             }
             .font(Theme.columnHeader)

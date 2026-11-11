@@ -37,7 +37,7 @@ struct FeedbackSheet: View {
                         selection: draft.workload
                     ) { draft.workload = $0 }
                     ChipPicker(
-                        title: "Joint pain", options: JointPain.allCases, columns: 4, label: \.label,
+                        title: "Joint Pain", options: JointPain.allCases, columns: 4, label: \.label,
                         meaning: \.meaning,
                         selection: draft.jointPain
                     ) { draft.jointPain = $0 }
