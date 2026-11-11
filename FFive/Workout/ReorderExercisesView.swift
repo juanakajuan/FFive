@@ -26,7 +26,7 @@ struct ReorderExercisesView: View {
                     Section {
                         SegmentedButtons(
                             options: [PlanScope.thisSession, .laterWeeks], selection: $scope
-                        ) { $0 == .thisSession ? "This session" : "Later weeks too" }
+                        ) { $0 == .thisSession ? "This Session Only" : "Later Weeks Too" }
                         Text(
                             scope == .thisSession
                                 ? "Later weeks keep the order they have now."

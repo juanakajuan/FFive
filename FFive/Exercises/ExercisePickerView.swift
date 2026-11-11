@@ -41,7 +41,7 @@ struct ExercisePickerView: View {
                     performedOnly.toggle()
                 } label: {
                     HStack {
-                        Text("Only exercises I\u{2019}ve performed")
+                        Text("Only Exercises I\u{2019}ve Performed")
                             .font(Theme.detail)
                             .foregroundStyle(Theme.secondary)
                         Spacer()

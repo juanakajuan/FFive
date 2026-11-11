@@ -49,7 +49,7 @@ public enum FeedbackMetric: CaseIterable, Identifiable {
         case .soreness: "Soreness"
         case .pump: "Pump"
         case .workload: "Workload"
-        case .jointPain: "Joint pain"
+        case .jointPain: "Joint Pain"
         }
     }
 

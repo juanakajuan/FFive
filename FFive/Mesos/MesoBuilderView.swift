@@ -49,7 +49,7 @@ struct MesoBuilderView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 if !mesos.isEmpty {
-                    GroupedSection("Copy a mesocycle") {
+                    GroupedSection("Copy a Mesocycle") {
                         ForEach(mesos) { meso in
                             NavigationLink(value: Route.copy(meso)) { CopySourceRow(meso: meso) }
                                 .buttonStyle(.plain)
@@ -74,9 +74,9 @@ struct MesoBuilderView: View {
                         }
                     }
                 }
-                GroupedSection("Plan it for me") {
+                GroupedSection("Plan It for Me") {
                     linkRow(
-                        "Guided plan", systemImage: "wand.and.stars", detail: "Pick your days a week and what to grow",
+                        "Guided Plan", systemImage: "wand.and.stars", detail: "Pick your days a week and what to grow",
                         to: .guided
                     )
                     .a11y(.builderGuided)
@@ -90,7 +90,7 @@ struct MesoBuilderView: View {
                         .a11y(.builderTemplate, key: template.name)
                         Hairline()
                     }
-                    linkRow("Build from scratch", systemImage: "square.and.pencil", to: .blank)
+                    linkRow("Build from Scratch", systemImage: "square.and.pencil", to: .blank)
                         .a11y(.builderBlank)
                 }
                 Text("You can rename days and change any exercise on the next screen.")

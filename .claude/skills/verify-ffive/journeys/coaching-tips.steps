@@ -13,11 +13,11 @@ wait text "~Pick a weight you expect"
 wait #tip.learn-more.1
 shot 01-starting-load-tip
 tap #tip.learn-more.1
-wait nav "Reps in reserve"
+wait nav "Reps in Reserve"
 scrollto text "Your first week"
 shot 02-learn-first-week
 tap #sheet.done
-absent nav "Reps in reserve"
+absent nav "Reps in Reserve"
 tap #tip.dismiss.1
 absent text "~Pick a weight you expect"
 shot 03-starting-load-dismissed
@@ -29,7 +29,7 @@ selected #set.log.1
 wait text "~Rest until you could match"
 shot 04-rest-tip
 tap #tip.learn-more.1
-wait nav "Rest between sets"
+wait nav "Rest Between Sets"
 shot 05-learn-rest
 tap #sheet.done
 tap #tip.dismiss.1

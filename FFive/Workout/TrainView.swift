@@ -121,7 +121,7 @@ struct TrainView: View {
             .padding(.vertical, Theme.gutter)
         }
         .safeAreaInset(edge: .top, spacing: 0) {
-            WorkoutHeader(title: Text("Mesocycle complete"), subtitle: Text(meso.name), progress: 1) {
+            WorkoutHeader(title: Text("Mesocycle Complete"), subtitle: Text(meso.name), progress: 1) {
                 Button {
                     showingSchedule = true
                 } label: {

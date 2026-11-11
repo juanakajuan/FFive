@@ -6,8 +6,8 @@ A lifter saves a block's layout, or a builder draft, as a template of their own.
 
 - `save-draft` saves the builder's current days from the `Save as Template` toolbar button on `Customize`. It is disabled while any slot is empty (the same rule as Start). Days with no exercise are left out.
 - `save-meso` saves a block's days from the `Save as Template` button on its detail page, active or finished.
-- `list` shows `Your templates` above `FFive templates` on the Templates tab, filtered by the same search and days-per-week filter. An emphasis filter hides every custom template. With none saved it shows a hint.
-- `picker` shows `Your templates` above `FFive templates` in the builder, only when one exists.
+- `list` shows `Your Templates` above `FFive Templates` on the Templates tab, filtered by the same search and days-per-week filter. An emphasis filter hides every custom template. With none saved it shows a hint.
+- `picker` shows `Your Templates` above `FFive Templates` in the builder, only when one exists.
 - `copy` duplicates a template from its preview menu or a custom row's menu, as `<name> copy`, and opens it in `Edit Template`.
 - `rename-delete` uses the row's menu on the Templates tab. Names stay unique across built-in and custom templates: a taken name gets ` 2`, ` 3`, and so on.
 - `persist` keeps templates after a relaunch, in `ZCUSTOMTEMPLATE(ZNAME, ZLAYOUTDATA)`, where the layout is JSON.
@@ -16,7 +16,7 @@ A lifter saves a block's layout, or a builder draft, as a template of their own.
 
 - Builder: `Plan a Mesocycle` or the `New Mesocycle` "+", pick a template, then the download icon in the toolbar on `Customize`.
 - Mesos tab: tap the block's row, scroll to the bottom, tap `Save as Template`.
-- Templates tab: the `Your templates` section, with a menu on each row.
+- Templates tab: the `Your Templates` section, with a menu on each row.
 
 ## Driving it with ffive-verify
 

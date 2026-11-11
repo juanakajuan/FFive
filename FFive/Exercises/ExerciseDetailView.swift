@@ -97,7 +97,7 @@ struct ExerciseDetailView: View {
                     .a11y(.detailEdit)
             }
             Button(
-                current.isHidden ? "Show in pickers" : "Hide from pickers",
+                current.isHidden ? "Show in Pickers" : "Hide from Pickers",
                 systemImage: current.isHidden ? "eye" : "eye.slash"
             ) { store.setHidden(current.id, !current.isHidden) }
             .a11y(.detailHide)

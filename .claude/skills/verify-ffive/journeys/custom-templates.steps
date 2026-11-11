@@ -1,6 +1,6 @@
 launch
 tap #tab.templates timeout=20
-wait text "Your templates"
+wait text "Your Templates"
 tap #tab.mesos
 tap #mesos.plan
 tap #builder.template.upper-lower-4-days

@@ -24,7 +24,7 @@ wait #workout.plan timeout=10
 store-expect Mesocycle finishedDate not-null
 tap #workout.plan
 wait nav "New Mesocycle"
-wait text "Copy a mesocycle"
+wait text "Copy a Mesocycle"
 wait text "FINISHED*"
 shot 01-start-screen
 tap #builder.copy-source.full-body-3-days

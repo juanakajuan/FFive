@@ -1,6 +1,6 @@
 # Reorder exercises
 
-`Reorder Exercises` in the workout menu opens a sheet of the session's exercises with drag handles. Save puts the cards in the new order. In a block day the sheet also asks whether later weeks of that day follow the new order (`Later weeks too`, the default) or keep theirs (`This session`). A quick workout has no such choice.
+`Reorder Exercises` in the workout menu opens a sheet of the session's exercises with drag handles. Save puts the cards in the new order. In a block day the sheet also asks whether later weeks of that day follow the new order (`Later Weeks Too`, the default) or keep theirs (`This Session Only`). A quick workout has no such choice.
 
 ## Sub-features
 
