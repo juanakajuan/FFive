@@ -22,7 +22,7 @@ struct ExerciseDetailView: View {
                         .foregroundStyle(Theme.text)
                     HStack(spacing: 6) {
                         Text(current.equipment)
-                        Text("•")
+                        Text("·")
                         Text("\(reps.lowerBound)–\(reps.upperBound) reps")
                     }
                     .font(Theme.detail)
