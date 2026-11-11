@@ -44,7 +44,6 @@ public enum A11y: String, CaseIterable {
     case manageDaysDone = "manage-days.done"
     case manageDaysRemove = "manage-days.remove"
     case menuEndMesocycle = "menu.end-mesocycle"
-    case menuView = "menu.view"
     case menuSummary = "menu.summary"
     case menuSwap = "menu.swap"
     case dialogSwapSession = "dialog.swap-session"

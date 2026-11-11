@@ -110,7 +110,7 @@ cmd_launch() {
     log "smoke drive"
     local smoke
     smoke="$(mktemp "$work/smoke.XXXXXX")"
-    printf '%s\n' 'launch -seedDemo' 'wait button "Workout" timeout=20' 'wait button "Workout menu"' 'shot ready' >"$smoke"
+    printf '%s\n' 'launch -seedDemo' 'wait button "Workout" timeout=20' 'wait button "Workout Menu"' 'shot ready' >"$smoke"
     cmd_drive "$smoke" --name launch-smoke
     rm -f "$smoke" "$work/launch.pid"
     echo "READY udid=$udid stamp=$(source_stamp)"

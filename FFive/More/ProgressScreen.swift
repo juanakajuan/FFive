@@ -317,7 +317,7 @@ struct HistoryRow: View {
                     .font(Theme.rowTitle)
                     .foregroundStyle(Theme.text)
                 Spacer()
-                Text(workout.startDate, format: .dateTime.month(.abbreviated).day())
+                Text(workout.startDate, format: .sessionDay)
                     .font(Theme.detail)
                     .foregroundStyle(Theme.secondary)
             }

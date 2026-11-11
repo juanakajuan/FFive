@@ -8,7 +8,7 @@ A lifter ends the active block early or once it is complete. Ending finishes eve
 - `end-history` keeps the in-progress session's logged sets as a finished workout in Progress, History.
 - `end-summary` opens the block's summary as a sheet over every end entry point. `Done` (`#sheet.done`) closes it.
 - `end-mesos` marks the Mesos row `Finished`. The `New Mesocycle` "+" is never disabled; while a block runs the builder opens but keeps `Start Mesocycle` disabled, so ending re-enables Start.
-- `end-other-entries` ends the block from the Mesos row's `<name> Menu`, the block's detail page (its `End Mesocycle` button has no id, so tap it by label and the dialog by `#dialog.end-mesocycle`), or the "Mesocycle Complete" screen. `meso-summary.steps` and `rename-mesocycle.steps` drive the Mesos row and the detail page. The "Mesocycle Complete" screen is not yet driven.
+- `end-other-entries` ends the block from the Mesos row's `<name> Menu` or the detail page's `#meso.menu` (both by `#menu.end-mesocycle`), the block's detail page body (its `End Mesocycle` button has no id, so tap it by label and the dialog by `#dialog.end-mesocycle`), or the "Mesocycle Complete" screen. `meso-summary.steps` and `rename-mesocycle.steps` drive the Mesos row and the detail page. The "Mesocycle Complete" screen is not yet driven.
 
 ## How to get to it (user POV)
 
