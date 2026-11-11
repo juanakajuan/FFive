@@ -70,11 +70,11 @@ struct MesoScheduleGrid: View {
                 Button {
                     onSkipped(key)
                 } label: {
-                    cellIcon("forward.circle", Theme.secondary)
+                    cellIcon(Symbol.skippedDay, Theme.secondary)
                 }
                 .buttonStyle(.plain)
             } else {
-                cellIcon("forward.circle", Theme.secondary)
+                cellIcon(Symbol.skippedDay, Theme.secondary)
             }
         case .upcoming, .inProgress:
             if isCurrentWeek {
@@ -92,7 +92,7 @@ struct MesoScheduleGrid: View {
                 .buttonStyle(.plain)
                 .contextMenu {
                     if meso.canSkip(key) {
-                        Button("Skip Day", systemImage: "forward") { withAnimation { store.skip(key, of: meso) } }
+                        Button("Skip Day", systemImage: Symbol.skip) { withAnimation { store.skip(key, of: meso) } }
                             .a11y(.menuSkipDay)
                     }
                 }

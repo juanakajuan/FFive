@@ -46,7 +46,7 @@ struct TemplatePreviewScreen: View {
                 ToolbarItem(placement: .primaryAction) {
                     Menu("Template Menu", systemImage: "ellipsis.circle") {
                         if let saved {
-                            Button("Edit", systemImage: "square.and.pencil") { builder = .editTemplate(saved) }
+                            Button("Edit", systemImage: Symbol.edit) { builder = .editTemplate(saved) }
                                 .a11y(.menuEditTemplate)
                         }
                         TemplateMenuItems(

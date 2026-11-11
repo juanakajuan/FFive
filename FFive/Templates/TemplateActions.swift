@@ -26,7 +26,7 @@ struct TemplateMenuItems: View {
         Button("Copy", systemImage: "doc.on.doc") { builder = .editTemplate(store.copyTemplate(template)) }
             .a11y(.menuCopyTemplate)
         if let saved {
-            Button("Rename", systemImage: "pencil") { renaming = TemplateRename(saved) }
+            Button("Rename", systemImage: Symbol.rename) { renaming = TemplateRename(saved) }
                 .a11y(.menuRenameTemplate)
             Button("Delete", systemImage: "trash", role: .destructive) { deleting = saved }
                 .a11y(.menuDeleteTemplate)

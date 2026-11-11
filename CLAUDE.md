@@ -34,6 +34,7 @@ Each rule is enforced by the check named beside it. A rule with no check is a ju
 | Text fonts, corner radii and on-accent colors come from `Theme` tokens, never a literal size, a numeric radius or `.white` | `scripts/lint.sh` rule `theme-tokens` |
 | Every divider is `Hairline()` in `Theme.swift`, never a hand-built `Theme.hairline` rectangle | `scripts/lint.sh` rule `one-divider` |
 | A nav-bar menu sits in `.primaryAction`, and every menu's label reads "<Thing> Menu" | `scripts/lint.sh` rule `nav-menu-convention` |
+| A meaning that has a symbol in the `Symbol` registry in `Theme.swift` (skip, edit, rename, cue, note, pin, progress) draws through it, never a literal | `scripts/lint.sh` rule `one-symbol-per-meaning` |
 | Every file under `FFive/` typechecks together for iOS, against the built `FFiveCore` package | `scripts/typecheck-app.sh` |
 | Engine and planner rules keep their behavior | `swift test --package-path FFiveCore` |
 | Swift files match `.swift-format` and pass its lint rules | `scripts/format.sh --lint` |

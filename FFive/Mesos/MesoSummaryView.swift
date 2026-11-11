@@ -12,7 +12,7 @@ struct MesoSummaryView: View {
             VStack(spacing: Theme.gutter) {
                 if summary.sets.isEmpty {
                     EmptyState(
-                        "No sessions yet", systemImage: "chart.bar",
+                        "No sessions yet", systemImage: Symbol.progress,
                         message: "Finish a session in this mesocycle to see its summary.")
                 } else {
                     SetsByWeekCard(summary: summary)

@@ -6,15 +6,15 @@ wait text "WEEK 1 DAY 2" timeout=20
 tap #tab.mesos
 tap #mesos.row.verify-block
 wait nav "Verify Block"
-count button "forward.circle" "1"
+count button "forward.end.circle" "1"
 count button "circle.lefthalf.filled" "2"
 shot 01-detail-before
 longpress button "circle.lefthalf.filled"
 tap #menu.skip-day
-count button "forward.circle" "2"
+count button "forward.end.circle" "2"
 count button "circle.lefthalf.filled" "1"
 shot 02-skipped-from-detail
-tap button "forward.circle"
+tap button "forward.end.circle"
 wait text "Train this day after all?"
 tap #dialog.train-day
 wait text "WEEK 1 DAY 2" timeout=10

@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention"
-never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention one-symbol-per-meaning"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention one-symbol-per-meaning"
 
 scan() {
     for file in "$@"; do
@@ -57,6 +57,8 @@ scan() {
                     hit("one-divider", i, "Every divider is Hairline() in Theme.swift (#147). Use Hairline(), with .padding for an inset; never a hand-built Theme.hairline rectangle or a private divider.")
                 if (s ~ /placement:[ \t]*\.topBarTrailing/ || line[i] ~ /(\.accessibilityLabel|Menu)\(.*["( ](menu|[Oo]ptions|[Aa]ctions)[",]/)
                     hit("nav-menu-convention", i, "Menus share one placement and one name form (#178). Put a nav-bar menu in ToolbarItem(placement: .primaryAction), never .topBarTrailing, and name every menu \"<Thing> Menu\" (\"Mesocycle Menu\", \"\\(meso.name) Menu\"), never \"menu\", \"Options\" or \"actions\".")
+                if (path !~ /FFive\/Shared\/Theme\.swift$/ && path !~ /FFiveCore\// && line[i] ~ /"(forward(\.end)?(\.circle)?(\.fill)?|pencil|square\.and\.pencil|lightbulb(\.fill)?|pin(\.fill)?|note\.text|chart\.bar(\.xaxis)?)"/)
+                    hit("one-symbol-per-meaning", i, "Each meaning draws one SF Symbol (#181). Use the Symbol registry in Theme.swift (Symbol.skip, .skippedDay, .edit, .rename, .cue, .note, .pin, .pinnedNote, .progress), never a literal or a variant of one of those symbols. Add a case there for a new meaning.")
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {

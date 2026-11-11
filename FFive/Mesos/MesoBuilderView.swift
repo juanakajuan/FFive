@@ -90,7 +90,7 @@ struct MesoBuilderView: View {
                         .a11y(.builderTemplate, key: template.name)
                         Hairline()
                     }
-                    linkRow("Build from Scratch", systemImage: "square.and.pencil", to: .blank)
+                    linkRow("Build from Scratch", systemImage: "square.dashed", to: .blank)
                         .a11y(.builderBlank)
                 }
                 Text("You can rename days and change any exercise on the next screen.")

@@ -9,13 +9,13 @@ tap #workout.menu
 tap #menu.skip-day
 wait text "WEEK 1 DAY 3"
 tap #workout.schedule
-count button "forward.circle" "1"
+count button "forward.end.circle" "1"
 shot 02-skipped-from-menu
 longpress button "circle"
 tap #menu.skip-day
-count button "forward.circle" "2"
+count button "forward.end.circle" "2"
 shot 03-skipped-from-grid
 launch
 wait text "WEEK 1 DAY 3" timeout=20
 tap #workout.schedule
-count button "forward.circle" "2"
+count button "forward.end.circle" "2"
