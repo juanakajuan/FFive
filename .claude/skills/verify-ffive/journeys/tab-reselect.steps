@@ -1,0 +1,26 @@
+# tab-reselect: tapping the open tab again pops its stack back to the tab's first screen (#182).
+launch -seedDemo
+tap #tab.more timeout=20
+tap #more.progress
+wait nav "Progress"
+shot 01-progress-pushed
+tap #tab.more
+wait #more.progress
+absent nav "Progress"
+shot 02-more-root-after-reselect
+tap #tab.mesos
+tap #mesos.row.full-body-3-days
+wait nav "Full Body, 3 Days"
+tap #tab.mesos
+wait #mesos.new
+absent nav "Full Body, 3 Days"
+shot 03-mesos-root-after-reselect
+tap #tab.exercises
+type #exercises.search "Squat"
+key return
+tap #exercises.row.squat
+wait nav "Squat"
+tap #tab.exercises
+absent nav "Squat"
+wait #exercises.search
+shot 04-exercises-root-after-reselect
