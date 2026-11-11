@@ -79,15 +79,7 @@ struct SettingsView: View {
                         item: TrainingExportFile(store: store),
                         preview: SharePreview(TrainingExportFile.fileName(on: .now))
                     ) {
-                        HStack {
-                            Text("Export Training Data").font(Theme.body).foregroundStyle(Theme.text)
-                            Spacer()
-                            Image(systemName: "square.and.arrow.up")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(Theme.infoText)
-                        }
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
+                        rowLabel("Export Training Data", symbol: "square.and.arrow.up")
                     }
                     .buttonStyle(.plain)
                     .a11y(.settingsExport)
@@ -95,15 +87,7 @@ struct SettingsView: View {
                     Button {
                         confirmDeleteAll = true
                     } label: {
-                        HStack {
-                            Text("Delete All Data").font(Theme.body).foregroundStyle(Theme.danger)
-                            Spacer()
-                            Image(systemName: "trash")
-                                .font(.system(size: 15, weight: .semibold))
-                                .foregroundStyle(Theme.danger)
-                        }
-                        .frame(minHeight: 44)
-                        .contentShape(Rectangle())
+                        rowLabel("Delete All Data", symbol: "trash", tint: Theme.danger)
                     }
                     .buttonStyle(.plain)
                     .a11y(.settingsDeleteAll)
@@ -182,73 +166,54 @@ struct SettingsView: View {
     }
 
     private func unitRow(_ option: WeightUnit) -> some View {
-        let selected = option == store.settings.weightUnit
-        let title = "\(option.label) (\(option.rawValue))"
-        return Button {
-            store.settings.weightUnit = option
-        } label: {
-            HStack {
-                Text(title).font(Theme.body).foregroundStyle(Theme.text)
-                Spacer()
-                if selected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Theme.infoText)
-                }
-            }
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(title)
-        .accessibilityAddTraits(selected ? .isSelected : [])
-        .a11y(.settingsUnit, key: option.rawValue)
+        checkRow(
+            "\(option.label) (\(option.rawValue))",
+            isSelected: option == store.settings.weightUnit,
+            id: .settingsUnit, key: option.rawValue
+        ) { store.settings.weightUnit = option }
     }
 
     private func appearanceRow(_ option: Appearance) -> some View {
-        let selected = option == store.settings.appearance
-        return Button {
-            store.settings.appearance = option
-        } label: {
-            HStack {
-                Text(option.label).font(Theme.body).foregroundStyle(Theme.text)
-                Spacer()
-                if selected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Theme.infoText)
-                }
-            }
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
-        }
-        .buttonStyle(.plain)
-        .accessibilityLabel(option.label)
-        .accessibilityAddTraits(selected ? .isSelected : [])
-        .a11y(.settingsAppearance, key: option.rawValue)
+        checkRow(
+            option.label,
+            isSelected: option == store.settings.appearance,
+            id: .settingsAppearance, key: option.rawValue
+        ) { store.settings.appearance = option }
     }
 
     private func equipmentRow(_ option: Equipment) -> some View {
-        let selected = store.settings.equipment.contains(option)
-        return Button {
-            store.settings.toggle(option)
-        } label: {
-            HStack {
-                Text(option.displayName).font(Theme.body).foregroundStyle(Theme.text)
-                Spacer()
-                if selected {
-                    Image(systemName: "checkmark")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(Theme.infoText)
-                }
-            }
-            .frame(minHeight: 44)
-            .contentShape(Rectangle())
+        checkRow(
+            option.displayName,
+            isSelected: store.settings.equipment.contains(option),
+            id: .settingsEquipment, key: option.rawValue
+        ) { store.settings.toggle(option) }
+    }
+
+    private func checkRow(
+        _ title: String, isSelected: Bool, id: A11y, key: String, action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            rowLabel(title, symbol: isSelected ? "checkmark" : nil)
         }
         .buttonStyle(.plain)
-        .accessibilityLabel(option.displayName)
-        .accessibilityAddTraits(selected ? .isSelected : [])
-        .a11y(.settingsEquipment, key: option.rawValue)
+        .accessibilityLabel(title)
+        .accessibilityAddTraits(isSelected ? .isSelected : [])
+        .a11y(id, key: key)
+    }
+
+    /// A full-width row: the title on the left, an optional symbol on the right.
+    private func rowLabel(_ title: String, symbol: String?, tint: Color? = nil) -> some View {
+        HStack {
+            Text(title).font(Theme.body).foregroundStyle(tint ?? Theme.text)
+            Spacer()
+            if let symbol {
+                Image(systemName: symbol)
+                    .font(.system(size: 15, weight: .semibold))
+                    .foregroundStyle(tint ?? Theme.infoText)
+            }
+        }
+        .frame(minHeight: 44)
+        .contentShape(Rectangle())
     }
 }
 
