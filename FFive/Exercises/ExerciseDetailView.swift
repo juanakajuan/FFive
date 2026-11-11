@@ -85,7 +85,7 @@ struct ExerciseDetailView: View {
             .a11y(.dialogDeleteExercise)
         } message: {
             Text(
-                "Your history is kept. If you have logged it or planned it, it is archived and hidden from pickers instead of removed."
+                "Your history is kept. If you have logged it or planned it, it is archived and hidden from pickers instead of removed. This can't be undone."
             )
         }
     }
