@@ -30,12 +30,12 @@ struct MoreView: View {
         NavigationStack(path: $path) {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
-                    section("Training") {
+                    GroupedSection("Training") {
                         row("Progress", systemImage: "chart.bar.xaxis", to: .progress)
                         Hairline()
                         row("Learn", systemImage: "book", to: .learn)
                     }
-                    section("App") {
+                    GroupedSection("App") {
                         row("Settings", systemImage: "gearshape", to: .settings)
                         Hairline()
                         row("Changelog", systemImage: "list.bullet.rectangle", to: .changelog)
@@ -60,13 +60,6 @@ struct MoreView: View {
                 }
             }
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
-        }
-    }
-
-    private func section<Rows: View>(_ title: String, @ViewBuilder rows: @escaping () -> Rows) -> some View {
-        VStack(alignment: .leading, spacing: 0) {
-            SectionHeading(text: title)
-            GroupedCard(content: rows)
         }
     }
 
