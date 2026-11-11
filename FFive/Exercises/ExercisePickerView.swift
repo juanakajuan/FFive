@@ -255,9 +255,6 @@ struct ExercisePickerView: View {
 extension FormatStyle where Self == Date.FormatStyle {
     /// The day an exercise was last done, such as "Mar 3, 2026".
     static var lastPerformed: Date.FormatStyle { .dateTime.month(.abbreviated).day().year() }
-
-    /// The day of a session in an exercise's history, such as "Tue, Mar 3, 2026".
-    static var sessionDay: Date.FormatStyle { .dateTime.weekday(.abbreviated).month(.abbreviated).day().year() }
 }
 
 extension Date {
