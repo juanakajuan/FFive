@@ -9,7 +9,7 @@ struct MesoNotesCard: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Notes").font(Theme.cardTitle).foregroundStyle(Theme.text)
+                Text("Mesocycle Notes").font(Theme.cardTitle).foregroundStyle(Theme.text)
                 Spacer()
                 if let onEdit {
                     Button(meso.notes.isEmpty ? "Add Note" : "Edit", action: onEdit)
@@ -78,7 +78,7 @@ struct MesoNotesScreen: View {
                 .padding(Theme.gutter)
             }
             .background(Theme.page)
-            .navigationTitle("\(meso.name) Notes")
+            .navigationTitle("Mesocycle Notes")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {
