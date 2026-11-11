@@ -537,7 +537,7 @@ struct ManageDaysView: View {
                             Spacer()
                             if draft.days.count > 1 {
                                 Button("Remove Day", role: .destructive) {
-                                    withAnimation { draft.days.remove(at: offset) }
+                                    withAnimation { draft.days.remove(atOffsets: [offset]) }
                                 }
                                 .buttonStyle(.borderless)
                                 .font(Theme.detail)
