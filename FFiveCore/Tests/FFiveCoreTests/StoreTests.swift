@@ -968,6 +968,18 @@ final class StoreTests: XCTestCase {
             "an open workout and last week's session stay out of this week")
     }
 
+    func testWeekStatsFollowTheWeekOfNow() throws {
+        let store = Store(inMemory: true)
+        let now = try XCTUnwrap(Calendar.current.date(from: DateComponents(year: 2026, month: 11, day: 4, hour: 12)))
+        finished(store, at: now - 3600, minutes: 30, [("Barbell Row", .back, 80)])
+
+        XCTAssertEqual(store.weekStats(now: now).thisWeek, 1)
+        XCTAssertEqual(
+            store.weekStats(now: now + 7 * 86_400), WeekStats(thisWeek: 0, time: 0, allTime: 1),
+            "a read in the next week counts that week, not the one read before it")
+        XCTAssertEqual(store.weekStats(now: now).thisWeek, 1)
+    }
+
     func testStrengthSeriesPointsKeepTheirIdentity() throws {
         let store = Store(inMemory: true)
         let start = Date(timeIntervalSince1970: 1_700_000_000)
@@ -982,6 +994,19 @@ final class StoreTests: XCTestCase {
         XCTAssertEqual(bench.points.last?.bestSet, "110 × 8", "the stronger of the two sets")
         XCTAssertEqual(Set(bench.points.map(\.id)).count, bench.points.count)
         XCTAssertEqual(store.strengthSeries(), series, "ids come from the lift and the date, so a re-read is equal")
+    }
+
+    func testStrengthSeriesFollowsCommits() throws {
+        let store = Store(inMemory: true)
+        let start = Date(timeIntervalSince1970: 1_700_000_000)
+        finished(store, at: start, [("Bench Press", .chest, 100)])
+        XCTAssertEqual(store.strengthSeries().first?.points.count, 1)
+
+        finished(store, at: start + 86_400, [("Bench Press", .chest, 105)])
+        XCTAssertEqual(store.strengthSeries().first?.points.count, 2, "a finished session shows on the next read")
+
+        store.delete(try XCTUnwrap(try store.context.fetch(Workout.history).first))
+        XCTAssertEqual(store.strengthSeries().first?.points.count, 1, "a deleted session drops off")
     }
 
     func testPinnedNoteFollowsTheExercise() throws {

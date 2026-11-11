@@ -90,12 +90,20 @@ struct PerfProbe {
 
         let (store, meso) = stores[budgetSize]!
         var strength: [Double] = []
+        var progressWarm: [Double] = []
+        var progressSeries = 0
         for _ in 0..<rounds {
             store.commit()
             strength.append(time { _ = store.strengthSeries() })
+            for _ in 0..<warmPerRound {
+                progressWarm.append(time { progressSeries = progressRender(store) })
+            }
         }
         print(
             "perf-probe: strengthSeries median \(format(median(strength))) ms (min \(format(strength.min()!))) at \(budgetSize) finished workouts over \(rounds) reads, each after a commit"
+        )
+        print(
+            "perf-probe: progress screen median \(format(median(progressWarm))) ms (min \(format(progressWarm.min()!))) per render between commits at \(budgetSize) finished workouts (strengthSeries and weekStats)"
         )
 
         let session = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
@@ -150,6 +158,14 @@ struct PerfProbe {
             cardWarm[scaleSize]! <= cardBudgetMillis,
             "exercise cards min \(format(cardWarm[scaleSize]!)) ms at \(scaleSize) exceeds \(format(cardBudgetMillis)) ms, so a keystroke in a set field fetches the workout history"
         )
+        gate(
+            progressSeries == lifts.count,
+            "progress screen found \(progressSeries) strength series at \(budgetSize), not the \(lifts.count) seeded, so the probe timed the wrong work"
+        )
+        gate(
+            progressWarm.min()! <= cardBudgetMillis,
+            "progress screen min \(format(progressWarm.min()!)) ms at \(budgetSize) exceeds \(format(cardBudgetMillis)) ms, so a render between commits rescans the workout history"
+        )
         if failed { exit(1) }
     }
 
@@ -159,6 +175,14 @@ struct PerfProbe {
     private static func pickerRender(_ store: Store) -> Int {
         _ = store.lastPerformed()
         return store.library(muscle: nil, equipment: nil, search: "", performedOnly: true).count
+    }
+
+    /// What one body pass of the Progress screen asks the store for, Strength and History panes together.
+    /// Returns how many strength series it found.
+    @MainActor
+    private static func progressRender(_ store: Store) -> Int {
+        _ = store.weekStats()
+        return store.strengthSeries().count
     }
 
     /// What one body pass of every exercise card in a session asks the store for.
