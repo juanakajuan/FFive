@@ -10,8 +10,7 @@ struct TemplatesView: View {
     @State private var daysPerWeek: Int?
     @State private var emphasis: TemplateEmphasis?
     @State private var builder: MesoBuilderView.Route?
-    @State private var renaming: CustomTemplate?
-    @State private var renameDraft = ""
+    @State private var renaming: TemplateRename?
     @State private var deleting: CustomTemplate?
 
     private static let dayCounts = Set(ExerciseCatalog.templates.map(\.days.count)).sorted()
@@ -93,26 +92,7 @@ struct TemplatesView: View {
             }
             .navigationDestination(for: TemplatePreviewScreen.Subject.self) { TemplatePreviewScreen(subject: $0) }
             .sheet(item: $builder) { MesoBuilderView(startAt: $0) }
-            .alert(
-                "Rename Template",
-                isPresented: $renaming.isPresent()
-            ) {
-                TextField("Template name", text: $renameDraft)
-                Button("Save") {
-                    if let renaming { store.rename(renaming, to: renameDraft) }
-                }
-                Button("Cancel", role: .cancel) {}
-            }
-            .confirmationDialog(
-                "Delete this template?",
-                isPresented: $deleting.isPresent(),
-                titleVisibility: .visible, presenting: deleting
-            ) { saved in
-                Button("Delete Template", role: .destructive) { store.delete(saved) }
-                    .a11y(.dialogDeleteTemplate)
-            } message: { saved in
-                Text("\(saved.name) is removed from your templates. Mesocycles started from it keep their plan.")
-            }
+            .templateActions(renaming: $renaming, deleting: $deleting, store: store)
         }
     }
 
@@ -126,15 +106,9 @@ struct TemplatesView: View {
             .a11y(.templatesCustom, key: saved.name)
 
             Menu {
-                Button("Copy", systemImage: "doc.on.doc") { builder = .editTemplate(store.copyTemplate(template)) }
-                    .a11y(.menuCopyTemplate)
-                Button("Rename", systemImage: "pencil") {
-                    renameDraft = saved.name
-                    renaming = saved
-                }
-                .a11y(.menuRenameTemplate)
-                Button("Delete", systemImage: "trash", role: .destructive) { deleting = saved }
-                    .a11y(.menuDeleteTemplate)
+                TemplateMenuItems(
+                    template: template, saved: saved, builder: $builder, renaming: $renaming, deleting: $deleting
+                )
             } label: {
                 Image(systemName: "ellipsis")
                     .rotationEffect(.degrees(90))

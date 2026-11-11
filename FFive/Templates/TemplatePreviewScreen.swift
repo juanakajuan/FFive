@@ -14,8 +14,7 @@ struct TemplatePreviewScreen: View {
     @Environment(\.dismiss) private var dismiss
     @State private var selectedDay = 0
     @State private var builder: MesoBuilderView.Route?
-    @State private var renaming: CustomTemplate?
-    @State private var renameDraft = ""
+    @State private var renaming: TemplateRename?
     @State private var deleting: CustomTemplate?
 
     private var saved: CustomTemplate? {
@@ -50,48 +49,17 @@ struct TemplatePreviewScreen: View {
                             Button("Edit", systemImage: "square.and.pencil") { builder = .editTemplate(saved) }
                                 .a11y(.menuEditTemplate)
                         }
-                        Button("Copy", systemImage: "doc.on.doc") {
-                            builder = .editTemplate(store.copyTemplate(template))
-                        }
-                        .a11y(.menuCopyTemplate)
-                        if let saved {
-                            Button("Rename", systemImage: "pencil") {
-                                renameDraft = saved.name
-                                renaming = saved
-                            }
-                            .a11y(.menuRenameTemplate)
-                            Button("Delete", systemImage: "trash", role: .destructive) { deleting = saved }
-                                .a11y(.menuDeleteTemplate)
-                        }
+                        TemplateMenuItems(
+                            template: template, saved: saved, builder: $builder, renaming: $renaming,
+                            deleting: $deleting
+                        )
                     }
                     .a11y(.templatePreviewMenu)
                 }
             }
         }
         .sheet(item: $builder) { MesoBuilderView(startAt: $0) }
-        .alert(
-            "Rename Template",
-            isPresented: $renaming.isPresent()
-        ) {
-            TextField("Template name", text: $renameDraft)
-            Button("Save") {
-                if let renaming { store.rename(renaming, to: renameDraft) }
-            }
-            Button("Cancel", role: .cancel) {}
-        }
-        .confirmationDialog(
-            "Delete this template?",
-            isPresented: $deleting.isPresent(),
-            titleVisibility: .visible, presenting: deleting
-        ) { saved in
-            Button("Delete Template", role: .destructive) {
-                store.delete(saved)
-                dismiss()
-            }
-            .a11y(.dialogDeleteTemplate)
-        } message: { saved in
-            Text("\(saved.name) is removed from your templates. Mesocycles started from it keep their plan.")
-        }
+        .templateActions(renaming: $renaming, deleting: $deleting, store: store) { dismiss() }
     }
 
     private func content(_ template: ProgramTemplate) -> some View {
