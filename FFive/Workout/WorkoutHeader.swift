@@ -61,8 +61,14 @@ private struct ProgressLine: View {
 struct ActionIcon: View {
     let systemName: String
     var rotated = false
+    var tint = Theme.text
 
     static let verticalEllipsis = ActionIcon(systemName: "ellipsis", rotated: true)
+
+    /// The ⓘ detail icon, tinted like every other ⓘ and text link.
+    static func info(filled: Bool) -> ActionIcon {
+        ActionIcon(systemName: filled ? "info.circle.fill" : "info.circle", tint: Theme.infoText)
+    }
 
     static var calendar: ActionIcon {
         if #available(iOS 26, *) {
@@ -75,7 +81,7 @@ struct ActionIcon: View {
         Image(systemName: systemName)
             .font(.system(size: 22))
             .rotationEffect(.degrees(rotated ? 90 : 0))
-            .foregroundStyle(Theme.text)
+            .foregroundStyle(tint)
             .frame(width: 28, height: 28)
             .contentShape(Rectangle())
     }

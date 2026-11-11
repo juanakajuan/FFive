@@ -668,7 +668,7 @@ struct ExerciseCard: View {
                 Button {
                     withAnimation(.snappy) { showingCue.toggle() }
                 } label: {
-                    ActionIcon(systemName: showingCue ? "info.circle.fill" : "info.circle")
+                    ActionIcon.info(filled: showingCue)
                 }
                 .accessibilityLabel("Technique cue")
                 .a11y(.exerciseCue, position)
