@@ -189,18 +189,26 @@ final class DriverTests: XCTestCase {
     /// Drags the list a third of the screen at a time, with no fling, until the target sits in the middle half.
     /// XCUITest calls an element under the Workout tab's pinned header or above the tab bar hittable, but a
     /// tap there lands on the header or bar, so on-screen is not enough.
+    /// A lazy list drops rows scrolled past, so a target above the screen is often not in the tree at all. The
+    /// search then drags down the list, and once a drag leaves the screen unchanged it searches back up.
     private func scrollToMiddle(_ target: XCUIElement, _ args: [String]) throws {
         let height = app.windows.firstMatch.frame.height
         let band = (height * 0.25)...(height * 0.75)
         func centered() -> Bool { target.exists && target.isHittable && band.contains(target.frame.midY) }
+        var searchingDown = true
         for _ in 0..<36 where !centered() {
             let before = target.exists ? target.frame : .null
-            let up = !(target.exists && target.frame.midY < band.lowerBound)
+            let screenBefore = target.exists ? nil : XCUIScreen.main.screenshot().pngRepresentation
+            let up = target.exists ? target.frame.midY >= band.lowerBound : searchingDown
             let (from, to) = up ? (0.7, 0.37) : (0.37, 0.7)
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: from)).press(
                 forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: to)),
                 withVelocity: .slow, thenHoldForDuration: 0.2)
             if target.exists, target.frame == before { break }
+            if let screenBefore, !target.exists, screenBefore == XCUIScreen.main.screenshot().pngRepresentation {
+                if !searchingDown { break }
+                searchingDown = false
+            }
         }
         guard target.exists && target.isHittable else { throw StepError("never scrolled into view: \(args)") }
     }

@@ -9,7 +9,7 @@ A lifter sets their body weight for a session from the workout menu. A new sessi
 - `bodyweight-signed-load` logs added load or assistance in `#set.weight.<n>`. The keyboard has a minus key.
 - `bodyweight-labels` shows `BW+25` and `BW−40` (U+2212) in the finished workout's detail page and the exercise history sheet.
 - `bodyweight-strength` counts body weight in the Progress strength row, as in `Pull-Up, Back, 1 session, 260 lb` for 180 + 25 × 8.
-- `bodyweight-carry` starts the next session with the last body weight entered.
+- `bodyweight-carry` starts the next session with the body weight of the most recently started session that has one.
 
 ## How to get to it (user POV)
 

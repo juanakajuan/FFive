@@ -11,14 +11,14 @@ A lifter with no active block plans one from a program template. They rename it,
 - `plan-mesos` lists the block on the Mesos tab as `<total> weeks · <days>/week` with a `Current` badge.
 - `plan-persist` keeps the block after a relaunch.
 - `plan-scratch` builds a block from scratch (`Build from Scratch`). Not yet driven.
-- `plan-guided` builds the days from days per week and muscle priorities (`Plan It for Me`, `#builder.guided`). See `guided-plan.md`.
+- `plan-guided` builds the days from days per week and muscle priorities (the `Guided Plan` row under `Plan It for Me`, `#builder.guided`). See `guided-plan.md`.
 
 ## How to get to it (user POV)
 
 - Workout tab with no active block: choose `Plan a Mesocycle`.
 - Mesos tab: `Plan a Mesocycle` in the empty state (only when no block has ever existed), or the `New Mesocycle` "+" in the header.
 - Templates tab: tap a template row to open its preview, then `Plan a Mesocycle` (`#template-preview.plan`) opens the builder on Customize. The `New Template` "+" (`#templates.new`) opens a blank one.
-- The builder sheet: `Copy a Mesocycle` (once any block exists), `Your Templates` (once one is saved), `Plan It for Me`, a template row, or `Build from Scratch`.
+- The builder sheet: `Copy a Mesocycle` (once any block exists), `Your Templates` (once one is saved), `Guided Plan` under `Plan It for Me`, a template row, or `Build from Scratch`.
 - While a block is active, both "+" buttons and the Templates preview still open the builder, but it shows "End <name> before starting a new mesocycle." with `Start Mesocycle` disabled. The lifter must end the block first (`End Mesocycle` in the `Workout Menu`, the Mesos row's `<name> Menu`, or the block's detail page).
 
 ## Driving it with ffive-verify

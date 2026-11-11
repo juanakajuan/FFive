@@ -21,7 +21,7 @@ tap #workout.menu
 tap #menu.reorder
 wait nav "Reorder Exercises"
 # A quick workout has no later weeks, so the scope control is a block-only thing.
-absent #segment.this-session
+absent #segment.this-session-only
 drag button "Reorder Bench Press" to button "Reorder Lateral Raise"
 shot 02-sheet
 tap #reorder.save
@@ -36,7 +36,8 @@ tap #workout.menu
 tap #menu.reorder
 wait nav "Reorder Exercises"
 selected #segment.later-weeks-too
-tap #segment.this-session
+tap #segment.this-session-only
+selected #segment.this-session-only
 wait text "Later weeks keep the order they have now."
 tap #reorder.cancel
 absent nav "Reorder Exercises"

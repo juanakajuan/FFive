@@ -13,7 +13,8 @@ A lifter can skip a session of the current week, either from the `Workout Menu` 
 ## How to get to it (user POV)
 
 - Workout tab: `Workout Menu`, then `Skip Day`. It only appears while the shown day has no logged set.
-- Schedule grid (the Workout tab's `Schedule` sheet, or the block's detail page on the Mesos tab): long-press an upcoming (`circle`) or open (`circle.lefthalf.filled`) current-week cell, then `Skip Day`.
+- Workout tab, a block day with every exercise removed: the empty card's `Skip Day` (`#workout.skip-day`). `journeys/empty-workout.steps` drives it.
+- Schedule grid (the Workout tab's `Schedule` sheet, or the block's detail page on the Mesos tab): long-press an upcoming (`circle`, or `play.circle.fill` for a next-up day not built yet) or open (`circle.lefthalf.filled`) current-week cell, then `Skip Day`.
 - The same grid: tap a skipped current-week cell, then `Train Day <n>`.
 
 ## Driving it with ffive-verify

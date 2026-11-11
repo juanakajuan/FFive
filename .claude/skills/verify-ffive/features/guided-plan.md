@@ -1,6 +1,6 @@
 # Guided plan
 
-A lifter who doesn't want to pick a template asks the builder to plan the days for them. They choose how many days a week they train (2 to 6, 4 by default) and a priority for each muscle, then `Build Plan` opens Customize with a draft named `<n>-Day Plan`. Emphasized muscles train three times a week, normal ones twice, and maintained ones once. Days are named Upper, Lower, or Full Body, lettered when a name repeats. Every slot names only a muscle, so `Start Mesocycle` stays disabled until the lifter picks or autofills the exercises. The rule is `GuidedPlan` in FFiveCore.
+A lifter who doesn't want to pick a template asks the builder to plan the days for them. They choose how many days a week they train (2 to 6, 4 by default) and a priority for each muscle, then `Build Plan` opens Customize with a draft named `<n>-Day Plan`. Emphasized muscles train up to three times a week, normal ones up to twice, and maintained ones once, capped by the days per week (on 2 days an emphasized muscle trains twice). Days are named Upper, Lower, or Full Body, lettered when a name repeats. Every slot names only a muscle, so `Start Mesocycle` stays disabled until the lifter picks or autofills the exercises. The rule is `GuidedPlan` in FFiveCore.
 
 ## Sub-features
 

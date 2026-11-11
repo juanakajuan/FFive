@@ -15,7 +15,7 @@ This directory is the maintained source for verifying FFive's user-facing behavi
 ## Driving conventions
 
 - The tabs are Workout, Mesos, Templates, Exercises, and More. The tab bar is a row of plain buttons with the ids `#tab.workout`, `#tab.mesos`, `#tab.templates`, `#tab.exercises`, and `#tab.more`. The `tab` kind matches nothing. Settings, Progress, and Learn are pushed from More.
-- Only the selected tab is rendered, and a tab starts over at its root each time it is reopened. Re-enter pushed pages after every tab switch.
+- Only the selected tab is rendered, and a tab starts over at its root each time it is reopened or its button is tapped again while open. Re-enter pushed pages after every tab switch. `journeys/tab-reselect.steps` drives the reselect.
 - Address every control by its `#id` from `FFiveCore/Sources/FFiveCore/A11y.swift`. An indexed id ends in the 1-based set number or card position (`#set.weight.1`, `#exercise.menu.2`). A keyed id ends in the slug of a name (`#picker.row.lateral-raise`). `drive` rejects an unknown id before it touches the simulator.
 - Assert screen text by its visible text, with no separator characters in the step. Leave out `·`, `•`, `×`, a spaced `-`, and `/`. Put a `*` where the separator sits, as in `wait text "Sets per Muscle*Week 2"`, so one step still checks both halves of the same text.
 - A few controls have no id and keep a label. They are the schedule grid cells (SF Symbol identifiers such as `forward.end.circle`), the builder's `Increment` and `Decrement`, the back buttons, and History rows of quick workouts, whose names depend on the clock.
