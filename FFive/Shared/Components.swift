@@ -310,6 +310,7 @@ struct EquipmentScopeToggle: View {
         }
         .padding(.horizontal, Theme.gutter)
         .frame(minHeight: 44)
+        .sensoryFeedback(.selection, trigger: isOn)
     }
 }
 

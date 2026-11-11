@@ -458,6 +458,7 @@ extension Learn {
                 Toggle("Moderate or Worse Joint Pain", isOn: $jointPain)
                     .font(Theme.detail.weight(.semibold))
                     .tint(Theme.success)
+                    .sensoryFeedback(.selection, trigger: jointPain)
 
                 Text(
                     adjusted

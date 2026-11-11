@@ -82,6 +82,8 @@ struct TemplatesView: View {
                         }
                         .pickerStyle(.menu)
                     }
+                    .sensoryFeedback(.selection, trigger: daysPerWeek)
+                    .sensoryFeedback(.selection, trigger: emphasis)
                 }
                 .background(Theme.surface)
             }
@@ -177,6 +179,7 @@ extension MesoBuilderView.Route: Identifiable {
 #Preview {
     let store = Store(inMemory: true)
     return TemplatesView()
+        .environment(AppRouter())
         .environment(store)
         .modelContainer(store.container)
         .preferredColorScheme(.dark)

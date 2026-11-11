@@ -51,6 +51,8 @@ final class AppRouter {
     var focus: SessionFocus?
     /// The block that just ended, whose summary shows over every tab until it is dismissed.
     var endedMeso: Mesocycle?
+    /// Counts finished workouts and started or ended mesocycles; RootView plays a success haptic on each.
+    private(set) var milestones = 0
     /// Counts taps on the tab that is already open. Each one rebuilds that tab at its first screen,
     /// as the system tab bar pops a tab's stack to its root.
     private(set) var reopenCount = 0
@@ -68,6 +70,20 @@ final class AppRouter {
     func end(_ meso: Mesocycle, store: Store) {
         store.endMesocycle(meso)
         endedMeso = meso
+        milestones += 1
+    }
+
+    func finish(_ workout: Workout, store: Store) {
+        store.finish(workout)
+        focus = nil
+        milestones += 1
+    }
+
+    /// Starts `draft`, and returns false when another mesocycle is still active.
+    func start(_ draft: MesoDraft, store: Store) -> Bool {
+        guard (try? store.startMesocycle(draft)) != nil else { return false }
+        milestones += 1
+        return true
     }
 
     func delete(_ meso: Mesocycle, store: Store) {
@@ -117,6 +133,7 @@ struct RootView: View {
         .dismissesKeyboardOnTapOutside()
         .environment(router)
         .tint(Theme.text)
+        .sensoryFeedback(.success, trigger: router.milestones)
         .preferredColorScheme(store.settings.appearance.colorScheme)
         .sheet(item: $router.endedMeso) { MesoSummarySheet(meso: $0) }
         .sheet(

@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control one-symbol-per-meaning confirm-deletes one-motion-curve"
-never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control one-symbol-per-meaning confirm-deletes one-motion-curve"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control one-symbol-per-meaning confirm-deletes one-motion-curve selection-haptics"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint one-segmented-control one-symbol-per-meaning confirm-deletes one-motion-curve selection-haptics"
 
 scan() {
     for file in "$@"; do
@@ -19,6 +19,25 @@ scan() {
             gsub(/\t/, " ", text)
             gsub(/^ +| +$/, "", text)
             printf "%s\t%s\t%d\t%s\t%s\n", rule, path, i, text, fix
+        }
+        function depthChange(s,    c, ch, d) {
+            d = 0
+            for (c = 1; c <= length(s); c++) {
+                ch = substr(s, c, 1)
+                if (ch == "(" || ch == "{" || ch == "[") d++
+                else if (ch == ")" || ch == "}" || ch == "]") d--
+            }
+            return d
+        }
+        # Whether the control that starts on line i carries .sensoryFeedback(.selection, ...) in its own modifier chain.
+        function hapticFollows(i,    j, d) {
+            d = 0
+            for (j = i; j <= NR; j++) {
+                if (j > i && d <= 0 && src[j] !~ /^[ \t]*\./) return 0
+                if (src[j] ~ /\.sensoryFeedback\([ \t]*\.selection/) return 1
+                d += depthChange(src[j])
+            }
+            return 0
         }
         { line[NR] = $0; src[NR] = code($0) }
         END {
@@ -67,13 +86,18 @@ scan() {
                     hit("one-motion-curve", i, "Every animation uses .snappy (#185). Write withAnimation(.snappy) { ... } around a change that inserts, removes or reveals rows, and .animation(.snappy, value:) for an implicit one; never a bare withAnimation, .easeInOut or another curve.")
                 if (((s ~ /\.onDelete/ && (s src[i + 1]) ~ /(store|router)\./) || (s ~ /(store|router)\.delete[A-Za-z]*\(/ && ((s ~ /Button[ \t]*[({]/ && s !~ /role:[ \t]*\.destructive/) || (i > 1 && src[i - 1] ~ /Button[ \t]*[({]/ && src[i - 1] !~ /role:[ \t]*\.destructive/)))))
                     hit("confirm-deletes", i, "Deleting saved data asks first, and every delete button is destructive (#183). From a swipe (.onDelete) or a button, set screen state (deleting = item) and delete from a .confirmationDialog whose Button has role: .destructive; never write the delete straight from the swipe or from a button without that role.")
+                if (path !~ /FFiveCore\// && s ~ /(^|[^A-Za-z0-9_])(Picker|Toggle)\(/ && !hapticFollows(i) && !(mp > 0 && hapticFollows(menuLine[mp])))
+                    hit("selection-haptics", i, "Every selection control gives a selection haptic (#184). Chain .sensoryFeedback(.selection, trigger: <the selected value>) onto this Picker or Toggle, as SegmentedButtons and ChipPicker do. Inside a Menu or FilterBar, chain it onto that container instead: menu content leaves the view tree when the menu closes.")
+                if (s ~ /(^|[^A-Za-z0-9_])(Menu|FilterBar)[ \t]*[({]/) pendingMenu = i
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {
                         depth++
+                        if (pendingMenu) { mp++; menuLine[mp] = pendingMenu; menuAt[mp] = depth; pendingMenu = 0 }
                         if (pending != "") { sp++; name[sp] = pending; at[sp] = depth; pending = "" }
                     } else if (ch == "}") {
                         if (sp > 0 && at[sp] == depth) sp--
+                        if (mp > 0 && menuAt[mp] == depth) mp--
                         depth--
                     }
                 }

@@ -56,6 +56,7 @@ struct SettingsView: View {
                 GroupedCard {
                     Toggle("Auto-Match Weights", isOn: $settings.autoMatchWeights)
                         .tint(Theme.success)
+                        .sensoryFeedback(.selection, trigger: settings.autoMatchWeights)
                         .groupRow()
                         .a11y(.settingsAutoMatch)
                 }
@@ -109,6 +110,7 @@ struct SettingsView: View {
         .navigationTitle("Settings")
         .sensoryFeedback(.selection, trigger: store.settings.weightUnit)
         .sensoryFeedback(.selection, trigger: store.settings.appearance)
+        .sensoryFeedback(.selection, trigger: store.settings.equipment)
         .confirmationDialog("Delete all data?", isPresented: $confirmDeleteAll, titleVisibility: .visible) {
             Button("Delete All Data", role: .destructive) { router.deleteAllData(store: store) }
                 .a11y(.dialogDeleteAllData)

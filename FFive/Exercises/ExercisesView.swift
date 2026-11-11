@@ -64,6 +64,10 @@ struct ExercisesView: View {
                         Toggle("Only Exercises I\u{2019}ve Performed", isOn: $performedOnly)
                             .a11y(.exercisesPerformedOnly)
                     }
+                    .sensoryFeedback(.selection, trigger: muscle)
+                    .sensoryFeedback(.selection, trigger: equipment)
+                    .sensoryFeedback(.selection, trigger: showHidden)
+                    .sensoryFeedback(.selection, trigger: performedOnly)
                 }
                 .background(Theme.surface)
             }

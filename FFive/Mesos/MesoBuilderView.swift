@@ -157,6 +157,7 @@ struct MesoEditorView: View {
     }
 
     @Environment(Store.self) private var store
+    @Environment(AppRouter.self) private var router
     @Query(Mesocycle.active) private var activeMesos: [Mesocycle]
     @State private var picker: PickerRequest?
     @State private var templateName: String?
@@ -378,6 +379,7 @@ struct MesoEditorView: View {
             .font(Theme.body)
             .foregroundStyle(Theme.text)
             .tint(Theme.secondary)
+            .sensoryFeedback(.selection, trigger: draft.startWeekday)
             .a11y(.builderStartWeekday)
             .themedRow(vertical: 8)
             footnote(
@@ -405,6 +407,7 @@ struct MesoEditorView: View {
                 .font(Theme.body)
                 .foregroundStyle(Theme.text)
                 .tint(Theme.secondary)
+                .sensoryFeedback(.selection, trigger: day.wrappedValue.weekday)
                 .a11y(.builderWeekday, number)
                 .themedRow(vertical: 8)
             }
@@ -454,6 +457,7 @@ struct MesoEditorView: View {
                     .foregroundStyle(Theme.infoText)
             }
             .tint(Theme.secondary)
+            .sensoryFeedback(.selection, trigger: slots.count) { old, new in new > old }
             .a11y(.builderAddMuscle)
             .themedRow(vertical: 8)
             if slots.isEmpty {
@@ -510,7 +514,7 @@ struct MesoEditorView: View {
     }
 
     private func start() {
-        guard (try? store.startMesocycle(draft)) != nil else { return }
+        guard router.start(draft, store: store) else { return }
         onStart()
     }
 }
