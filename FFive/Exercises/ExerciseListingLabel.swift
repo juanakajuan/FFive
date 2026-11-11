@@ -14,10 +14,10 @@ struct ExerciseListingLabel: View {
             Group {
                 HStack(spacing: 4) {
                     MuscleDotLabel(muscle: listing.muscle)
-                    Text("•")
+                    Text("·")
                     Text(listing.equipment)
                     if listing.isHidden {
-                        Text("•")
+                        Text("·")
                         Text("Hidden")
                     }
                 }
