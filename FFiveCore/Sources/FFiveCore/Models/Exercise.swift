@@ -36,6 +36,12 @@ public final class Exercise {
         return (plannedName, ExerciseID(folding: plannedName), plannedMuscleRaw.flatMap(Muscle.init(rawValue:)))
     }
 
+    /// Hands this exercise itself on to later weeks, dropping what a session-only swap set aside.
+    func clearPlanned() {
+        plannedName = nil
+        plannedMuscleRaw = nil
+    }
+
     func rename(_ name: String) {
         self.name = name
         exerciseKey = ExerciseID(folding: name).rawValue

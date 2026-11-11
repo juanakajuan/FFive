@@ -44,6 +44,8 @@ public final class Store {
         return built
     }
 
+    private var planning: PlanningContext { PlanningContext(unit: unit, snapshot: snapshot) }
+
     @ObservationIgnored private var cachedLastPerformed: [ExerciseID: Date]?
     @ObservationIgnored private var cachedLastFinished: [ExerciseID: Exercise?] = [:]
     @ObservationIgnored private var cachedWeekStats: (weekStart: Date, stats: WeekStats)?
@@ -179,19 +181,19 @@ public final class Store {
     /// already built for the weeks that changed. A change `Mesocycle.canAddWeek` or `canRemoveWeek` refuses does nothing.
     public func changeLength(of meso: Mesocycle, by delta: Int) {
         guard let rebuild = meso.changeLength(by: delta, in: context) else { return }
-        for workout in rebuild { MesoPlanner.rebuild(workout, unit: unit, snapshot: snapshot, in: context) }
+        for workout in rebuild { MesoPlanner.rebuild(workout, planning: planning, in: context) }
         commit()
     }
 
     @discardableResult
     public func buildSession(_ meso: Mesocycle, at key: SessionKey) -> Workout {
-        let workout = MesoPlanner.workout(for: meso, at: key, unit: unit, snapshot: snapshot, in: context)
+        let workout = MesoPlanner.workout(for: meso, at: key, planning: planning, in: context)
         commit()
         return workout
     }
 
     public func weeklyVolume(_ meso: Mesocycle, week: Int) -> [MuscleVolume] {
-        MesoPlanner.weeklyVolume(meso, week: week, unit: unit, snapshot: snapshot)
+        MesoPlanner.weeklyVolume(meso, week: week, planning: planning)
     }
 
     /// A block day is built as soon as the tab shows it. Until a set is logged its clock restarts each time it is
@@ -258,12 +260,12 @@ public final class Store {
 
     /// In a block the planner prescribes the sets; in a quick workout they prefill from the last time it was done.
     public func addExercise(named name: String, muscle: Muscle, to workout: Workout) {
-        MesoPlanner.addExercise(named: name, muscle: muscle, to: workout, unit: unit, snapshot: snapshot, in: context)
+        MesoPlanner.addExercise(named: name, muscle: muscle, to: workout, planning: planning, in: context)
         commit()
     }
 
     public func swapExercise(_ exercise: Exercise, to name: String, muscle: Muscle, scope: PlanScope) {
-        MesoPlanner.swap(exercise, to: name, muscle: muscle, scope: scope, unit: unit, snapshot: snapshot, in: context)
+        MesoPlanner.swap(exercise, to: name, muscle: muscle, scope: scope, planning: planning, in: context)
         commit()
     }
 
@@ -278,7 +280,7 @@ public final class Store {
     }
 
     public func recordSoreness(_ soreness: Soreness, on record: MuscleFeedbackRecord, during workout: Workout) {
-        MesoPlanner.recordSoreness(soreness, on: record, during: workout, unit: unit, snapshot: snapshot, in: context)
+        MesoPlanner.recordSoreness(soreness, on: record, during: workout, planning: planning, in: context)
         commit()
     }
 
@@ -290,7 +292,7 @@ public final class Store {
         let exercise = set.exercise
         let order = set.order
         let (weight, reps) = (set.weight, set.reps)
-        MesoPlanner.recordSoreness(soreness, on: record, during: workout, unit: unit, snapshot: snapshot, in: context)
+        MesoPlanner.recordSoreness(soreness, on: record, during: workout, planning: planning, in: context)
         let replanned = exercise?.sortedSets.first { $0.order == order }
         replanned?.weight = weight
         replanned?.reps = reps

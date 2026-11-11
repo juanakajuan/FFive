@@ -15,6 +15,9 @@ final class PlannerTests: XCTestCase {
     let t0 = Date(timeIntervalSince1970: 1_800_000_000)
 
     func snapshot(_ context: ModelContext) -> PlanningSnapshot { PlanningSnapshot(context: context) }
+    func planning(_ context: ModelContext) -> PlanningContext {
+        PlanningContext(unit: .lb, snapshot: snapshot(context))
+    }
 
     func testMesocycleLifecycle() {
         let context = ModelContext(AppStore.makeContainer(inMemory: true))
@@ -49,8 +52,7 @@ final class PlannerTests: XCTestCase {
 
         func session(_ week: Int, _ dayIndex: Int, at date: Date) -> Workout {
             let workout = MesoPlanner.workout(
-                for: meso, at: SessionKey(week: week, dayIndex: dayIndex), unit: .lb,
-                snapshot: snapshot(context), in: context)
+                for: meso, at: SessionKey(week: week, dayIndex: dayIndex), planning: planning(context), in: context)
             workout.startDate = date
             return workout
         }
@@ -106,9 +108,9 @@ final class PlannerTests: XCTestCase {
         let pendingB = w0b.pendingSoreness
         expect("soreness is asked for muscles trained earlier", Set(pendingB.keys), [.chest, .back])
         MesoPlanner.recordSoreness(
-            .never, on: pendingB[.chest]!, during: w0b, unit: .lb, snapshot: snapshot(context), in: context)
+            .never, on: pendingB[.chest]!, during: w0b, planning: planning(context), in: context)
         MesoPlanner.recordSoreness(
-            .healedOnTime, on: pendingB[.back]!, during: w0b, unit: .lb, snapshot: snapshot(context), in: context)
+            .healedOnTime, on: pendingB[.back]!, during: w0b, planning: planning(context), in: context)
         expect(
             "soreness is written back to the earlier session", w0a.feedbackRecord(for: .chest)?.value.soreness, .never)
         expect("answered soreness is no longer pending", w0b.pendingSoreness.isEmpty, true)
@@ -118,7 +120,7 @@ final class PlannerTests: XCTestCase {
         }
         w0b.finish(in: context)
 
-        let doneW0 = MesoPlanner.weeklyVolume(meso, week: 0, unit: .lb, snapshot: snapshot(context)).first {
+        let doneW0 = MesoPlanner.weeklyVolume(meso, week: 0, planning: planning(context)).first {
             $0.muscle == .chest
         }
         expect("weekly volume counts done chest sets across both days", doneW0?.done, 11)
@@ -141,10 +143,10 @@ final class PlannerTests: XCTestCase {
         expect("once-a-week muscles ask for soreness from last week's same day", calves?.workout === w0a, true)
         expect("twice-a-week muscles ask about the most recent session", pendingW1A[.chest]?.workout === w0b, true)
         MesoPlanner.recordSoreness(
-            .never, on: pendingW1A[.chest]!, during: w1a, unit: .lb, snapshot: snapshot(context), in: context)
+            .never, on: pendingW1A[.chest]!, during: w1a, planning: planning(context), in: context)
         expect("soreness for another day's session leaves this plan alone", counts(w1a)["Bench Press"], 5)
         MesoPlanner.recordSoreness(
-            .never, on: calves!, during: w1a, unit: .lb, snapshot: snapshot(context), in: context)
+            .never, on: calves!, during: w1a, planning: planning(context), in: context)
         expect(
             "answering soreness re-plans the untouched muscle (never sore + easy -> +3)", counts(w1a)["Calf Raise"], 11)
 
@@ -203,10 +205,11 @@ final class PlannerTests: XCTestCase {
             meso = MesoPlanner.start(draft, in: context)
         }
 
+        var planning: PlanningContext { PlanningContext(unit: .lb, snapshot: PlanningSnapshot(context: context)) }
+
         func session(_ week: Int) -> Workout {
             MesoPlanner.workout(
-                for: meso, at: SessionKey(week: week, dayIndex: 0), unit: .lb,
-                snapshot: PlanningSnapshot(context: context), in: context)
+                for: meso, at: SessionKey(week: week, dayIndex: 0), planning: planning, in: context)
         }
 
         func reorder(_ workout: Workout, to names: [String], _ scope: PlanScope) {
@@ -216,8 +219,8 @@ final class PlannerTests: XCTestCase {
 
         func swap(_ workout: Workout, _ from: String, to name: String, _ scope: PlanScope) {
             MesoPlanner.swap(
-                workout.exercises.first { $0.name == from }!, to: name, muscle: .chest, scope: scope, unit: .lb,
-                snapshot: PlanningSnapshot(context: context), in: context)
+                workout.exercises.first { $0.name == from }!, to: name, muscle: .chest, scope: scope,
+                planning: planning, in: context)
         }
 
         func finish(_ workout: Workout) {
@@ -405,7 +408,7 @@ final class PlannerTests: XCTestCase {
         ]
         func key(_ week: Int, _ dayIndex: Int) -> SessionKey { SessionKey(week: week, dayIndex: dayIndex) }
         func session(_ week: Int, _ dayIndex: Int) -> Workout {
-            MesoPlanner.workout(for: meso, at: key(week, dayIndex), unit: .lb, snapshot: snapshot(context), in: context)
+            MesoPlanner.workout(for: meso, at: key(week, dayIndex), planning: planning(context), in: context)
         }
         func log(_ workout: Workout) {
             for exercise in workout.exercises {
@@ -416,7 +419,7 @@ final class PlannerTests: XCTestCase {
             }
         }
         func planned(_ week: Int, _ dayIndex: Int, _ name: String) -> Int? {
-            MesoPlanner.plan(meso, at: key(week, dayIndex), unit: .lb, snapshot: snapshot(context)).first {
+            MesoPlanner.plan(meso, at: key(week, dayIndex), planning: planning(context)).first {
                 $0.name == name
             }?.targets.count
         }
@@ -450,7 +453,7 @@ final class PlannerTests: XCTestCase {
         meso.skip(key(1, 0), in: context)
         expect("skip: skipping twice records the key once", meso.skippedSessions, [key(1, 0)])
         expect("skip: the skipped day frees its MRV room (+3 in full)", planned(1, 1, "Incline Dumbbell Press"), 8)
-        let chest = MesoPlanner.weeklyVolume(meso, week: 1, unit: .lb, snapshot: snapshot(context)).first {
+        let chest = MesoPlanner.weeklyVolume(meso, week: 1, planning: planning(context)).first {
             $0.muscle == .chest
         }
         expect("skip: weekly volume counts the skipped day as 0 sets", chest.map { [$0.planned, $0.done] }, [8, 0])
@@ -505,7 +508,7 @@ final class PlannerTests: XCTestCase {
         expect("weekdays move with their days", meso.weekdays, [.friday, .monday, .wednesday])
         expect("the moved day trains first", meso.nextUp, SessionKey(week: 0, dayIndex: 0))
         let first = MesoPlanner.workout(
-            for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb, snapshot: snapshot(context), in: context)
+            for: meso, at: SessionKey(week: 0, dayIndex: 0), planning: planning(context), in: context)
         expect("first session holds the moved day's exercises", first.sortedExercises.map(\.name), ["Calf Raise"])
     }
 
@@ -532,8 +535,7 @@ final class PlannerTests: XCTestCase {
         func key(_ week: Int) -> SessionKey { SessionKey(week: week, dayIndex: 0) }
         func planned(_ week: Int) -> [String: Int] {
             Dictionary(
-                uniqueKeysWithValues: MesoPlanner.plan(meso, at: key(week), unit: .lb, snapshot: snapshot(context)).map
-                {
+                uniqueKeysWithValues: MesoPlanner.plan(meso, at: key(week), planning: planning(context)).map {
                     ($0.name, $0.targets.count)
                 })
         }
@@ -541,7 +543,7 @@ final class PlannerTests: XCTestCase {
             "week 1: maintained chest starts at MV 8, emphasized back and normal quads at MEV",
             planned(0), ["Bench Press": 8, "Lat Pulldown": 10, "Leg Extension": 8])
 
-        let w0 = MesoPlanner.workout(for: meso, at: key(0), unit: .lb, snapshot: snapshot(context), in: context)
+        let w0 = MesoPlanner.workout(for: meso, at: key(0), planning: planning(context), in: context)
         for exercise in w0.exercises {
             for set in exercise.sets {
                 (set.weight, set.reps) = (100, 10)
@@ -618,10 +620,12 @@ final class PlannerTests: XCTestCase {
         ]
         let meso = MesoPlanner.start(draft, in: context)
         let started = MesoPlanner.workout(
-            for: meso, at: SessionKey(week: 0, dayIndex: 0), unit: .lb, snapshot: .empty, in: context)
+            for: meso, at: SessionKey(week: 0, dayIndex: 0), planning: PlanningContext(unit: .lb, snapshot: .empty),
+            in: context)
         started.sortedExercises[0].sortedSets[0].status = .done
         let untouched = MesoPlanner.workout(
-            for: meso, at: SessionKey(week: 0, dayIndex: 1), unit: .lb, snapshot: .empty, in: context)
+            for: meso, at: SessionKey(week: 0, dayIndex: 1), planning: PlanningContext(unit: .lb, snapshot: .empty),
+            in: context)
 
         meso.end(in: context)
         expect("end: the block gets a finished date", meso.finishedDate != nil, true)
