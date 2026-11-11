@@ -14,7 +14,7 @@ struct MesoNotesCard: View {
                 if let onEdit {
                     Button(meso.notes.isEmpty ? "Add Note" : "Edit", action: onEdit)
                         .font(Theme.detail.weight(.semibold))
-                        .foregroundStyle(Theme.accent)
+                        .foregroundStyle(Theme.infoText)
                         .a11y(.mesoNotesEdit)
                 }
             }
