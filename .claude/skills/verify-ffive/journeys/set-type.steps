@@ -19,12 +19,12 @@ selected #set.log.1
 tap #set.menu.1
 tap #menu.add-set
 wait #set.weight.2
-exists any "Set 2 menu"
+exists any "Set 2 Menu"
 tap #set.menu.2
 wait button "Myorep match"
 shot 01-set-menu-picker
 tap button "Myorep match"
-wait any "Set 2 menu, Myorep match"
+wait any "Set 2 Menu, Myorep match"
 store-expect SetEntry typeRaw myorepMatch
 replace #set.reps.2 "5"
 tap #keyboard.done

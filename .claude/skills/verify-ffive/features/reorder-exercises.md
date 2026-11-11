@@ -19,7 +19,7 @@ Preconditions: `ffive-verify reset-data`. Journey: `journeys/reorder-exercises.s
 
 - **Open.** Steps: `tap #workout.menu`, `tap #menu.reorder`, `wait nav "Reorder Exercises"`.
 - **Drag.** Each row's handle is a button labeled `Reorder <exercise>`. Steps: `drag button "Reorder Bench Press" to button "Reorder Lateral Raise"`, `tap #reorder.save`. Result: the store's `ZORDER` follows the new order and survives a relaunch. The journey's `store-expect` only proves the row exists, so read the order with `ffive-verify store "select ZNAME, ZORDER from ZEXERCISE order by ZORDER"`.
-- **Scope.** `#segment.later-weeks-too` and `#segment.this-session`, block days only. To see the effect, finish the day (delete extra sets, remove other exercises, log the rest), skip the week's other days with `#menu.skip-day`, and read the next week's `ZORDER` with `ffive-verify store`.
+- **Scope.** `#segment.later-weeks-too` and `#segment.this-session-only`, block days only. To see the effect, finish the day (delete extra sets, remove other exercises, log the rest), skip the week's other days with `#menu.skip-day`, and read the next week's `ZORDER` with `ffive-verify store`.
 
 ## Gotchas
 

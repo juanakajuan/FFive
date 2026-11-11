@@ -1,11 +1,11 @@
 # Set type
 
-A lifter marks any set as Regular, Myorep, or Myorep match from the set's menu. A non-regular set shows a `MYO` or `MATCH` tag between its reps field and its log checkbox, and the same tag under the set number in the finished workout's detail page and beside it in the exercise history sheet. Both history views list logged sets only. The menu's picker is `#menu.set-type`. A set added with `Add Set` copies the type of the set before it. Progression ignores myo-rep sets for load and rep targets and for 1RM estimates.
+A lifter marks any set as Regular, Myorep, or Myorep match from the set's menu. A non-regular set shows a `MYO` or `MATCH` tag between its reps field and its log checkbox, and the same tag under the set number in the finished workout's detail page and at the end of the set's value in the exercise history sheet (`25 lb × 5 MATCH`). Both history views list logged sets only. The menu's picker is `#menu.set-type`. A set added with `Add Set` appends a set after the card's last one and copies the last set's type. Progression ignores myo-rep sets for load and rep targets and for 1RM estimates.
 
 ## Sub-features
 
 - `set-type-pick` sets the type with `#set.menu.<n>`, then `button "Regular"`, `button "Myorep"`, or `button "Myorep match"`. The current type carries a checkmark.
-- `set-type-row` shows the tag on the row. The tag is hidden from accessibility, so assert the menu's label, as in `any "Set 2 menu, Myorep match"`.
+- `set-type-row` shows the tag on the row. The tag is hidden from accessibility, so assert the menu's label, as in `any "Set 2 Menu, Myorep match"`.
 - `set-type-history` shows the type in the finished workout's detail page. Assert the row label, as in `any "Set 2, Myorep match*25 lb*5"`.
 
 ## How to get to it (user POV)
