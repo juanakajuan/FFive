@@ -10,8 +10,9 @@ tap #builder.guided
 wait nav "Guided Plan"
 value #muscle-priority.abs "Maintain"
 value #muscle-priority.chest "Normal"
-tap #builder.guided-days
-tap button "3"
+wait #builder.guided-days
+tap #segment.3
+selected #segment.3
 tap #muscle-priority.chest
 tap button "Emphasize"
 value #muscle-priority.chest "Emphasize"

@@ -12,7 +12,7 @@ Loads carry when the block's last finished accumulation session is under 21 days
 
 - Preconditions: `ffive-verify reset-data`.
 - Journey: `ffive-verify drive .claude/skills/verify-ffive/journeys/copy-mesocycle.steps --name copy-mesocycle`. It plans `Full Body, 3 Days`, logs Squat 135 × 9, ends the block, copies it, checks the review for both weeks, starts `Copied Block`, and checks the first session's sets read 135 and 9 (`store-expect SetEntry targetWeight 135`) across a relaunch.
-- Ids: `#builder.copy-source.<slug>` (row), `#builder.copy-week` (segmented picker; tap weeks as `button "Week 2"`), `#builder.copy-use`.
+- Ids: `#builder.copy-source.<slug>` (row), `#builder.copy-week` (the `SegmentedButtons` row; tap weeks as `#segment.week-2`), `#builder.copy-use`.
 
 ## Gotchas
 

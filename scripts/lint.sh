@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention"
-never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention one-segmented-control"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention one-segmented-control"
 
 scan() {
     for file in "$@"; do
@@ -57,6 +57,8 @@ scan() {
                     hit("one-divider", i, "Every divider is Hairline() in Theme.swift (#147). Use Hairline(), with .padding for an inset; never a hand-built Theme.hairline rectangle or a private divider.")
                 if (s ~ /placement:[ \t]*\.topBarTrailing/ || line[i] ~ /(\.accessibilityLabel|Menu)\(.*["( ](menu|[Oo]ptions|[Aa]ctions)[",]/)
                     hit("nav-menu-convention", i, "Menus share one placement and one name form (#178). Put a nav-bar menu in ToolbarItem(placement: .primaryAction), never .topBarTrailing, and name every menu \"<Thing> Menu\" (\"Mesocycle Menu\", \"\\(meso.name) Menu\"), never \"menu\", \"Options\" or \"actions\".")
+                if (path !~ /FFive\/Shared\/Components\.swift$/ && (s ~ /\.pickerStyle\([ \t]*(\.segmented|SegmentedPickerStyle)/))
+                    hit("one-segmented-control", i, "Every segmented control is SegmentedButtons in Components.swift (#180). Use SegmentedButtons(options:selection:label:), never Picker with .pickerStyle(.segmented).")
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {

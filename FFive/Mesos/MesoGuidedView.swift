@@ -14,11 +14,9 @@ struct MesoGuidedView: View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
                 SectionHeading(text: "Days per Week")
-                Picker("Days per Week", selection: $daysPerWeek) {
-                    ForEach(Array(MesoDraft.guidedDaysPerWeek), id: \.self) { Text("\($0)").tag($0) }
-                }
-                .pickerStyle(.segmented)
-                .a11y(.builderGuidedDays)
+                SegmentedButtons(options: Array(MesoDraft.guidedDaysPerWeek), selection: $daysPerWeek) { "\($0)" }
+                    .accessibilityElement(children: .contain)
+                    .a11y(.builderGuidedDays)
                 SectionHeading(text: "Muscles")
                 ForEach(Muscle.allCases) { muscle in
                     MusclePriorityRow(muscle: muscle, priority: priorities[muscle] ?? .normal) {
