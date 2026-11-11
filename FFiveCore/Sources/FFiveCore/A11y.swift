@@ -42,6 +42,7 @@ public enum A11y: String, CaseIterable {
     case menuManageDays = "menu.manage-days"
     case manageDaysName = "manage-days.name"
     case manageDaysDone = "manage-days.done"
+    case manageDaysRemove = "manage-days.remove"
     case menuEndMesocycle = "menu.end-mesocycle"
     case menuView = "menu.view"
     case menuSummary = "menu.summary"
@@ -175,7 +176,8 @@ public enum A11y: String, CaseIterable {
         .exerciseHistory, .exerciseHistorySession,
         .exercisePin,
         .tipLearnMore, .tipDismiss,
-        .mesoNoteDelete, .builderWeekday, .manageDaysName, .templatePreviewDay,
+        .mesoNoteDelete, .builderWeekday, .manageDaysName, .manageDaysRemove,
+        .templatePreviewDay,
     ]
     static let keyed: Set<A11y> = [
         .pickerRow, .pickerDetail, .exercisesRow, .builderTemplate, .builderCustomTemplate, .builderCopySource,

@@ -103,7 +103,7 @@ struct TemplatePreviewScreen: View {
             .padding(.bottom, Theme.gutter)
         }
         .safeAreaInset(edge: .bottom) {
-            Button("Plan Mesocycle") { builder = .template(template) }
+            Button("Plan a Mesocycle") { builder = .template(template) }
                 .buttonStyle(.primary)
                 .a11y(.templatePreviewPlan)
                 .padding(.horizontal, Theme.gutter)

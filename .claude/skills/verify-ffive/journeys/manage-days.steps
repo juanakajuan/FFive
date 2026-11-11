@@ -1,4 +1,4 @@
-# manage-days: reorder, rename and delete builder days, then start the block and train them in the new order.
+# manage-days: reorder, rename and remove builder days, then start the block and train them in the new order.
 # Before: ffive-verify reset-data. After: ffive-verify store "select ZORDER, ZNAME, ZWEEKDAYRAW from ZMESODAY order by ZORDER"
 launch
 wait #workout.plan timeout=20
@@ -20,8 +20,7 @@ wait text "Day 1*Friday*6 exercises"
 value #manage-days.name.1 "Lower B"
 value #manage-days.name.2 "Upper A"
 replace #manage-days.name.2 "Upper Heavy"
-tap image "remove" #3
-tap button "Delete"
+tap #manage-days.remove.4
 absent field "Upper B"
 shot 02-after
 tap #manage-days.done

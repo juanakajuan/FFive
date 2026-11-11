@@ -513,7 +513,7 @@ struct MesoEditorView: View {
     }
 }
 
-/// Lists the draft's days to drag into the order the block trains them, rename or delete.
+/// Lists the draft's days to drag into the order the block trains them, rename or remove.
 /// A day's weekday label moves with it.
 struct ManageDaysView: View {
     @Binding var draft: MesoDraft
@@ -530,15 +530,25 @@ struct ManageDaysView: View {
                         )
                         .formField()
                         .a11y(.manageDaysName, index)
-                        Text(details(day.wrappedValue, index: index))
-                            .font(Theme.caption)
-                            .foregroundStyle(Theme.secondary)
+                        HStack(alignment: .firstTextBaseline) {
+                            Text(details(day.wrappedValue, index: index))
+                                .font(Theme.caption)
+                                .foregroundStyle(Theme.secondary)
+                            Spacer()
+                            if draft.days.count > 1 {
+                                Button("Remove Day", role: .destructive) {
+                                    withAnimation { draft.days.remove(at: offset) }
+                                }
+                                .buttonStyle(.borderless)
+                                .font(Theme.detail)
+                                .foregroundStyle(Theme.danger)
+                                .a11y(.manageDaysRemove, index)
+                            }
+                        }
                     }
                     .themedRow(vertical: 8)
-                    .deleteDisabled(draft.days.count == 1)
                 }
                 .onMove { draft.moveDays(fromOffsets: $0, toOffset: $1) }
-                .onDelete { draft.days.remove(atOffsets: $0) }
                 Text("Drag a day to change the order the mesocycle trains it in. Its weekday moves with it.")
                     .font(Theme.caption)
                     .foregroundStyle(Theme.secondary)
