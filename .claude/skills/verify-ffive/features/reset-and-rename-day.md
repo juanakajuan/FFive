@@ -13,7 +13,7 @@
 
 ## How to get to it (user POV)
 
-- Workout tab, `Workout menu`, `Reset Workout` or `Rename Day`, on a block day.
+- Workout tab, `Workout Menu`, `Reset Workout` or `Rename Day`, on a block day.
 - Workout tab, the calendar button, the grid header.
 
 ## Driving it with ffive-verify

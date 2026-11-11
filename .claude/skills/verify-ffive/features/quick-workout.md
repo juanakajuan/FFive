@@ -5,18 +5,18 @@ A lifter logs a free-form session outside any block. They add exercises from the
 ## Sub-features
 
 - `quick-start` starts a free-form workout named after the time of day (Morning, Afternoon, or Evening Workout). The Workout tab shows it headed `QUICK WORKOUT` with the subtitle `<name> · <timer>`.
-- `quick-add` adds a catalog exercise through the searchable picker, opened with `Workout menu`, then `Add Exercise`. The new exercise gets one empty set, or last time's sets when it has history.
+- `quick-add` adds a catalog exercise through the searchable picker, opened with `Workout Menu`, then `Add Exercise`. The new exercise gets one empty set, or last time's sets when it has history.
 - `quick-custom` creates a custom exercise with `Create “<query>”` and a muscle. Not yet driven.
 - `quick-log` edits `Set n weight` and `Set n reps` and ticks `Log set n`, which carries the Selected trait while logged.
 - `quick-finish` finishes the workout with `Finish Workout`, pinned above the tab bar and shown only once the workout has an exercise, every exercise has a set, and every set is logged or skipped. Finishing updates the stats row (This Week, Time, All Time) and History.
-- `quick-resume` returns to an open quick workout with `Workout menu`, then `Resume Quick Workout`, while a block day picked from `Schedule` is showing. Driven on the demo seed, which proves the UI only. Steps: `tap #workout.menu`, `tap #menu.quick-workout`, `wait text "QUICK WORKOUT"`, `tap #workout.schedule`, `tap button "circle.lefthalf.filled"`, `wait text "WEEK 2 DAY 1"`, `tap #workout.menu`, `tap #menu.quick-workout`, `absent text "WEEK 2 DAY 1"`.
-- `quick-rename` renames the workout with `Workout menu`, then `Rename`. Not yet driven.
-- `quick-discard` uses `Workout menu`, then `Discard Workout`, and confirms with `Discard Workout`. Not yet driven.
+- `quick-resume` returns to an open quick workout with `Workout Menu`, then `Resume Quick Workout`, while a block day picked from `Schedule` is showing. Driven on the demo seed, which proves the UI only. Steps: `tap #workout.menu`, `tap #menu.quick-workout`, `wait text "QUICK WORKOUT"`, `tap #workout.schedule`, `tap button "circle.lefthalf.filled"`, `wait text "WEEK 2 DAY 1"`, `tap #workout.menu`, `tap #menu.quick-workout`, `absent text "WEEK 2 DAY 1"`.
+- `quick-rename` renames the workout with `Workout Menu`, then `Rename`. Not yet driven.
+- `quick-discard` uses `Workout Menu`, then `Discard Workout`, and confirms with `Discard Workout`. Not yet driven.
 
 ## How to get to it (user POV)
 
 - Workout tab with no active block: the `Quick Workout` button on the plan card.
-- Workout tab with an active block: `Workout menu`, then `Quick Workout`. It reads `Resume Quick Workout` while one is open.
+- Workout tab with an active block: `Workout Menu`, then `Quick Workout`. It reads `Resume Quick Workout` while one is open.
 - Workout tab with a finished block ("Mesocycle Complete"): the `Quick Workout` button under `End Mesocycle`.
 
 ## Driving it with ffive-verify
@@ -40,4 +40,4 @@ Preconditions:
 - The stats row only renders with no active block. With a block, verify through More, Progress, then History instead.
 - While a block is active, an open quick workout takes over the Workout tab until it is finished or discarded. A day picked from `Schedule` shows instead.
 - A new exercise's set is `0` lb × `10` reps, and the zero weight shows the `lb` placeholder. Address fields by `#set.weight.<n>` and `#set.reps.<n>`, and check typed values with `value`.
-- The `Workout menu` items do not appear in `tree` dumps, but tapping them by id works.
+- The `Workout Menu` items do not appear in `tree` dumps, but tapping them by id works.

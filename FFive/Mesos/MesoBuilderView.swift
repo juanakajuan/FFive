@@ -210,7 +210,7 @@ struct MesoEditorView: View {
         .navigationBarTitleDisplayMode(.inline)
         .environment(\.editMode, $editMode)
         .toolbar {
-            ToolbarItem(placement: .topBarTrailing) {
+            ToolbarItem(placement: .primaryAction) {
                 if editMode.isEditing {
                     Button("Done") { withAnimation { editMode = .inactive } }
                         .fontWeight(.semibold)
@@ -243,7 +243,7 @@ struct MesoEditorView: View {
                     } label: {
                         Image(systemName: "ellipsis.circle")
                     }
-                    .accessibilityLabel("Options")
+                    .accessibilityLabel(editing == nil ? "Mesocycle Menu" : "Template Menu")
                     .a11y(.builderMenu)
                 }
             }

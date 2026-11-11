@@ -98,7 +98,7 @@ struct MesosView: View {
                     .frame(width: 24, height: 44)
                     .contentShape(Rectangle())
             }
-            .accessibilityLabel("\(meso.name) menu")
+            .accessibilityLabel("\(meso.name) Menu")
             .a11y(.mesosMenu, key: meso.name)
         }
         .frame(minHeight: 66)

@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider"
-never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention"
 
 scan() {
     for file in "$@"; do
@@ -55,6 +55,8 @@ scan() {
                     hit("theme-tokens", i, "Sizes, radii and colors come from Theme tokens (#146). Text uses a Theme font (rowTitle, heroTitle, body, detail, caption, tag...), every corner uses Theme.cornerRadius, and text on an accent, danger or success fill uses Theme.onAccent. Add a token in Theme.swift only for a value that repeats.")
                 if (s ~ /Rectangle\(\)[ \t]*\.fill\([ \t]*Theme\.hairline/ && path !~ /FFive\/Shared\/Theme\.swift$/)
                     hit("one-divider", i, "Every divider is Hairline() in Theme.swift (#147). Use Hairline(), with .padding for an inset; never a hand-built Theme.hairline rectangle or a private divider.")
+                if (s ~ /placement:[ \t]*\.topBarTrailing/ || line[i] ~ /(\.accessibilityLabel|Menu)\(.*["( ](menu|[Oo]ptions|[Aa]ctions)[",]/)
+                    hit("nav-menu-convention", i, "Menus share one placement and one name form (#178). Put a nav-bar menu in ToolbarItem(placement: .primaryAction), never .topBarTrailing, and name every menu \"<Thing> Menu\" (\"Mesocycle Menu\", \"\\(meso.name) Menu\"), never \"menu\", \"Options\" or \"actions\".")
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {

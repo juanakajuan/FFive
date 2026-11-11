@@ -15,7 +15,7 @@ The workout header reads `WEEK <n> <WEEKDAY>` in place of `DAY <n>` when the ses
 ## How to get to it (user POV)
 
 - Mesos, New Mesocycle, a template, the `Weekday` row of a day.
-- Workout tab, `Workout menu`, `Relabel`, on a block day. Quick workouts have no `Relabel`.
+- Workout tab, `Workout Menu`, `Relabel`, on a block day. Quick workouts have no `Relabel`.
 - Workout tab, the calendar button, the grid header.
 
 ## Driving it with ffive-verify

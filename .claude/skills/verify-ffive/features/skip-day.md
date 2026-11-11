@@ -1,10 +1,10 @@
 # Skip a day
 
-A lifter can skip a session of the current week, either from the `Workout menu` or by long-pressing its cell in the schedule grid. A skipped day shows a fast-forward icon, the Workout tab shows the block's first open day, and the skip persists. Tapping a skipped day of the current week offers to train it after all, which shows that session on the Workout tab.
+A lifter can skip a session of the current week, either from the `Workout Menu` or by long-pressing its cell in the schedule grid. A skipped day shows a fast-forward icon, the Workout tab shows the block's first open day, and the skip persists. Tapping a skipped day of the current week offers to train it after all, which shows that session on the Workout tab.
 
 ## Sub-features
 
-- `skip-menu` skips the day the Workout tab shows with `Workout menu`, then `Skip Day`.
+- `skip-menu` skips the day the Workout tab shows with `Workout Menu`, then `Skip Day`.
 - `skip-grid` skips an upcoming or open current-week day with no logged set from the cell's long-press `Skip Day` menu. Skipping a day that was already built deletes its workout row.
 - `skip-persist` keeps skips after a relaunch, stored in `ZMESOCYCLE.ZSKIPPEDSESSIONS`.
 - `unskip` taps a skipped current-week cell and chooses `Train Day <n>`. It removes the skip and shows that day on the Workout tab.
@@ -12,7 +12,7 @@ A lifter can skip a session of the current week, either from the `Workout menu` 
 
 ## How to get to it (user POV)
 
-- Workout tab: `Workout menu`, then `Skip Day`. It only appears while the shown day has no logged set.
+- Workout tab: `Workout Menu`, then `Skip Day`. It only appears while the shown day has no logged set.
 - Schedule grid (the Workout tab's `Schedule` sheet, or the block's detail page on the Mesos tab): long-press an upcoming (`circle`) or open (`circle.lefthalf.filled`) current-week cell, then `Skip Day`.
 - The same grid: tap a skipped current-week cell, then `Train Day <n>`.
 
@@ -37,5 +37,5 @@ Preconditions:
 - `longpress button "circle"` hits the first on-screen plain `circle` cell of the current week. The day the Workout tab shows is already built, so its cell is `circle.lefthalf.filled` and never matches. After unskip-day.steps, Days 2 and 3 are both built, so the Mesos detail grid shows two `circle.lefthalf.filled` buttons. Future weeks' circles are images, not buttons.
 - Only current-week skipped, open, and upcoming cells react. A skipped cell in an earlier week is a plain image. Finished cells always open the read-only workout.
 - A day with a logged set cannot be skipped. `Skip Day` disappears from the workout menu and from the cell's long-press menu.
-- The `Workout menu` items do not appear in `tree` dumps, but tapping them by id works. The grid cell's long-press `Skip Day` is the same `#menu.skip-day`.
+- The `Workout Menu` items do not appear in `tree` dumps, but tapping them by id works. The grid cell's long-press `Skip Day` is the same `#menu.skip-day`.
 - In the demo seed, Week 2 · Day 3 starts out skipped. Account for it before you count `forward.circle` in a `-seedDemo` run.
