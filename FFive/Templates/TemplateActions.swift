@@ -64,7 +64,9 @@ extension View {
             }
             .a11y(.dialogDeleteTemplate)
         } message: { saved in
-            Text("\(saved.name) is removed from your templates. Mesocycles started from it keep their plan.")
+            Text(
+                "\(saved.name) is removed from your templates. Mesocycles started from it keep their plan. This can't be undone."
+            )
         }
     }
 }
