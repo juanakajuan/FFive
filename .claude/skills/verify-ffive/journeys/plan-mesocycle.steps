@@ -19,7 +19,7 @@ wait text "Upper A*Verify Block*"
 shot 03-session
 tap #tab.mesos
 wait text "Verify Block"
-wait text "6 WEEKS*4 DAYS*"
+wait text "6 weeks*4*week"
 shot 04-mesos
 launch
 wait text "WEEK 1 DAY 1" timeout=20

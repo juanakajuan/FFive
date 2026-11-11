@@ -384,6 +384,6 @@ struct RowChevron: View {
 
 /// The section names for saved and built-in templates, shared by the Templates tab and the builder.
 enum TemplateGroup {
-    static let custom = "Your templates"
-    static let builtIn = "FFive templates"
+    static let custom = "Your Templates"
+    static let builtIn = "FFive Templates"
 }

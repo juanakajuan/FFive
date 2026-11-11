@@ -8,7 +8,7 @@ A lifter can skip a session of the current week, either from the `Workout menu` 
 - `skip-grid` skips an upcoming or open current-week day with no logged set from the cell's long-press `Skip Day` menu. Skipping a day that was already built deletes its workout row.
 - `skip-persist` keeps skips after a relaunch, stored in `ZMESOCYCLE.ZSKIPPEDSESSIONS`.
 - `unskip` taps a skipped current-week cell and chooses `Train Day <n>`. It removes the skip and shows that day on the Workout tab.
-- `skip-complete` reaches "Mesocycle complete" once every session is done or skipped. Not yet driven.
+- `skip-complete` reaches "Mesocycle Complete" once every session is done or skipped. Not yet driven.
 
 ## How to get to it (user POV)
 

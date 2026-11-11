@@ -29,7 +29,7 @@ struct SorenessSheet: View {
                         }
                     }
                     ChipPicker(
-                        title: "Soreness after that session", options: Soreness.allCases, columns: 2,
+                        title: "Soreness After That Session", options: Soreness.allCases, columns: 2,
                         label: \.label, meaning: \.meaning, selection: draft
                     ) { draft = $0 }
                     Text("Today's sets for \(muscle.displayName.lowercased()) are planned from this answer.")

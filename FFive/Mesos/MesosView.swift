@@ -64,7 +64,7 @@ struct MesosView: View {
                             .foregroundStyle(Theme.text)
                             .lineLimit(1)
                         Text(
-                            "\(Text("\(meso.totalWeeks)").foregroundStyle(Theme.text)) WEEKS - \(Text("\(meso.days.count)").foregroundStyle(Theme.text)) DAYS/WEEK"
+                            "\(Text("\(meso.totalWeeks)").foregroundStyle(Theme.text)) weeks · \(Text("\(meso.days.count)").foregroundStyle(Theme.text))/week"
                         )
                         .font(Theme.caption.weight(.medium))
                         .foregroundStyle(Theme.secondary)

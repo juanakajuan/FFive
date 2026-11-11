@@ -13,8 +13,8 @@ struct MesoGuidedView: View {
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                SectionHeading(text: "Days per week")
-                Picker("Days per week", selection: $daysPerWeek) {
+                SectionHeading(text: "Days per Week")
+                Picker("Days per Week", selection: $daysPerWeek) {
                     ForEach(Array(MesoDraft.guidedDaysPerWeek), id: \.self) { Text("\($0)").tag($0) }
                 }
                 .pickerStyle(.segmented)

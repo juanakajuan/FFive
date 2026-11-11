@@ -4,16 +4,16 @@ A lifter who doesn't want to pick a template asks the builder to plan the days f
 
 ## Sub-features
 
-- `guided-open` opens `Guided Plan` from the builder's `Plan it for me` section (`#builder.guided`, the `Guided plan` row).
-- `guided-days` is the `Days per week` segmented control, `#builder.guided-days`, whose options are tapped by label (`button "3"`).
+- `guided-open` opens `Guided Plan` from the builder's `Plan It for Me` section (`#builder.guided`, the `Guided Plan` row).
+- `guided-days` is the `Days per Week` segmented control, `#builder.guided-days`, whose options are tapped by label (`button "3"`).
 - `guided-priorities` is one priority menu per muscle, `#muscle-priority.<muscle raw value>`. Front delts, traps, forearms, and abs start at Maintain; the rest start at Normal.
 - `guided-build` is `#builder.guided-build`. It pushes Customize with muscle-only slots and the chosen priorities in the editor's `Muscle Priorities` section.
 - `guided-start` autofills the slots (`#builder.menu`, `#menu.autofill`) and starts the block. Its days and slots persist as `MesoDay` and `DaySlot` rows.
 
 ## How to get to it (user POV)
 
-- Workout tab with no active block: `Plan a Mesocycle`, then `Guided plan`.
-- Mesos tab: `Plan a Mesocycle` in the empty state or the `New Mesocycle` "+", then `Guided plan`.
+- Workout tab with no active block: `Plan a Mesocycle`, then `Guided Plan`.
+- Mesos tab: `Plan a Mesocycle` in the empty state or the `New Mesocycle` "+", then `Guided Plan`.
 
 ## Driving it with ffive-verify
 
