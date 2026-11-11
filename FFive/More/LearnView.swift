@@ -158,7 +158,7 @@ extension Learn {
 
         var body: some View {
             VStack(alignment: .leading, spacing: 12) {
-                Label("Key takeaways", systemImage: "lightbulb")
+                Label("Key takeaways", systemImage: "checklist")
                     .font(Theme.rowTitle)
                     .foregroundStyle(Theme.infoText)
                 ForEach(takeaways, id: \.self) { item in

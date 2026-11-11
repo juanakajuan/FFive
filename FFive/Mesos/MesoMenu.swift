@@ -24,11 +24,11 @@ struct MesoMenuItems: View {
             switch action {
             case .summary:
                 NavigationLink(value: MesoSummaryRoute(meso: meso)) {
-                    Label("Summary", systemImage: "chart.bar")
+                    Label("Summary", systemImage: Symbol.progress)
                 }
                 .a11y(.menuSummary)
             case .rename:
-                Button("Rename", systemImage: "pencil") { renaming = MesoRename(meso) }
+                Button("Rename", systemImage: Symbol.rename) { renaming = MesoRename(meso) }
                     .a11y(.menuRename)
             case .end:
                 Button("End Mesocycle", systemImage: "flag.checkered", role: .destructive) { ending = meso }

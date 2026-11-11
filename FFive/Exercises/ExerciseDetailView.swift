@@ -34,14 +34,14 @@ struct ExerciseDetailView: View {
                             .a11y(.exerciseLastPerformed)
                     }
                     if let cue = current.info.cue {
-                        Callout(text: cue, systemImage: "lightbulb")
+                        Callout(text: cue, systemImage: Symbol.cue)
                             .padding(.top, 4)
                     }
                     if current.isHidden {
                         Callout(text: "Hidden from pickers. Your history is kept.", systemImage: "eye.slash")
                     }
                     if let note = store.pinnedNote(named: current.name) {
-                        Callout(text: note, systemImage: "note.text", style: .pinned)
+                        Callout(text: note, systemImage: Symbol.pinnedNote, style: .pinned)
                             .accessibilityLabel("Note: \(note)")
                     }
                 }
@@ -93,7 +93,7 @@ struct ExerciseDetailView: View {
     private func actions(_ current: ExerciseListing) -> some View {
         Menu {
             if current.isCustom {
-                Button("Edit", systemImage: "pencil") { editing = store.customExercise(current.id) }
+                Button("Edit", systemImage: Symbol.edit) { editing = store.customExercise(current.id) }
                     .a11y(.detailEdit)
             }
             Button(

@@ -24,7 +24,7 @@ struct MoreView: View {
             ScrollView {
                 VStack(alignment: .leading, spacing: 0) {
                     GroupedSection("Training") {
-                        row("Progress", systemImage: "chart.bar.xaxis", to: .progress)
+                        row("Progress", systemImage: Symbol.progress, to: .progress)
                         Hairline()
                         row("Learn", systemImage: "book", to: .learn)
                     }

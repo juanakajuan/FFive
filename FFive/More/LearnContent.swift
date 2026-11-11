@@ -228,7 +228,7 @@ extension Learn {
     static let articles: [Article] = [
         Article(
             id: "landmarks", category: .system,
-            title: "Volume Landmarks", symbol: "chart.bar.xaxis",
+            title: "Volume Landmarks", symbol: "ruler",
             summary: "How many hard sets each muscle needs per week, and how many it can recover from.",
             takeaways: [
                 "Volume is the number of hard sets a muscle gets each week. More sets build more muscle, up to the point where you stop recovering.",

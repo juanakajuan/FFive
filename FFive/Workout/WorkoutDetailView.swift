@@ -78,7 +78,7 @@ struct WorkoutDetailView: View {
             }
             .fixedSize(horizontal: false, vertical: true)
             if let note = workout.note {
-                Callout(text: note, systemImage: "note.text", style: .note)
+                Callout(text: note, systemImage: Symbol.note, style: .note)
                     .accessibilityLabel("Workout note: \(note)")
             }
         }
@@ -100,7 +100,7 @@ private struct LoggedExerciseCard: View {
                     .foregroundStyle(Theme.text)
                     .accessibilityAddTraits(.isHeader)
                 if let note = exercise.note {
-                    Callout(text: note, systemImage: "note.text", style: .note)
+                    Callout(text: note, systemImage: Symbol.note, style: .note)
                         .accessibilityLabel("Note: \(note)")
                 }
             }
