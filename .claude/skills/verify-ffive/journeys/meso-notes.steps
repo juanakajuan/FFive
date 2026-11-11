@@ -41,7 +41,7 @@ tap #meso-note.delete.2
 wait #dialog.delete-note
 wait text "Delete this note?"
 shot 06a-delete-confirm
-tap button "Cancel"
+tap any "dismiss popup"
 absent #dialog.delete-note
 wait text "Sleep has been rough this block, keep RIR honest"
 tap #meso-note.delete.2

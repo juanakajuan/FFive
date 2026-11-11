@@ -8,7 +8,7 @@ A lifter keeps a list of notes on the whole block, each up to 500 characters. No
 - Mesos tab, a block's detail page: the `Mesocycle Notes` card below Muscle Priorities. Its button `#meso-notes.edit` reads `Add Note` with no notes and `Edit` otherwise.
 - The block's summary (`Mesocycle Menu`, `Summary`, or the sheet shown on end) shows the same `Mesocycle Notes` card read-only when the block has notes.
 
-Both entry points open the `Mesocycle Notes` sheet: a field `#meso-note.text` with a `n/500` counter, `#meso-note.add`, and one card per note with a trash button `#meso-note.delete.<n>`, numbered from 1 in on-screen (newest first) order. The trash button asks first: `#dialog.delete-note` deletes the note, `button "Cancel"` keeps it. `#sheet.done` closes it.
+Both entry points open the `Mesocycle Notes` sheet: a field `#meso-note.text` with a `n/500` counter, `#meso-note.add`, and one card per note with a trash button `#meso-note.delete.<n>`, numbered from 1 in on-screen (newest first) order. The trash button asks first: `#dialog.delete-note` deletes the note, a tap outside it, `any "dismiss popup"`, keeps it. `#sheet.done` closes it.
 
 ## Driving it with ffive-verify
 

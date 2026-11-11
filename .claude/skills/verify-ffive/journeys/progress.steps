@@ -29,7 +29,7 @@ wait #dialog.delete-workout
 wait text "Delete this workout?"
 wait text "~Morning Workout leaves History and Progress."
 shot 04-delete-confirm
-tap button "Cancel"
+tap any "dismiss popup"
 absent #dialog.delete-workout
 wait #history.row.morning-workout
 swipe left #history.row.morning-workout
