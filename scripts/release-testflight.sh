@@ -2,17 +2,20 @@
 # Archives FFive from the committed HEAD and uploads it to TestFlight.
 #
 #   scripts/release-testflight.sh --version 1.1
-#                                           set MARKETING_VERSION = 1.1, archive and upload, then commit it
+#                                           set MARKETING_VERSION = 1.1, archive and upload, then open its PR
 #   scripts/release-testflight.sh --bump patch|minor|major
-#                                           bump MARKETING_VERSION (1.0 -> 1.0.1, 1.1 or 2.0), upload, then commit
+#                                           bump MARKETING_VERSION (1.0 -> 1.0.1, 1.1 or 2.0), upload, then open its PR
 #   scripts/release-testflight.sh --local   archive and export an .ipa to build/release, no upload
 #
 # Every upload carries a new release number: --version or --bump is required unless
 # --local. The version change also rewrites FFive/Changelog.json from the git history
 # (scripts/changelog.sh), so the build's What's New lists every feat, fix and perf commit since the last
 # release that changes the shipped app.
-# Both files are committed only once the upload (or --local export) succeeds; a failed run
-# restores them, so rerun the same command. The build number is a UTC timestamp on every run.
+# Both files change in this checkout only while the build runs, and a failed run restores them, so
+# rerun the same command. Once the upload (or --local export) succeeds, the script commits them on
+# branch chore/release-X.Y in worktree .claude/worktrees/release-X.Y, branched from the built commit,
+# pushes it and opens a PR, because commits never land on main directly. The checkout goes back to
+# how it was. The build number is a UTC timestamp on every run.
 #
 # An upload first runs scripts/cloudkit-schema.sh, which stops it when CloudKit Production lacks a
 # field this build syncs. Pass --skip-cloudkit-check to upload anyway.
@@ -88,8 +91,16 @@ if [ -n "$(git -C "$root" status --porcelain)" ]; then
 fi
 
 changelog="$root/FFive/Changelog.json"
-commit="$(git -C "$root" rev-parse --short HEAD)"
+built="$(git -C "$root" rev-parse --short HEAD)"
+commit="$built"
 if [ -n "$new_version" ]; then
+    branch="chore/release-$new_version"
+    worktree="$root/.claude/worktrees/release-$new_version"
+    # Check before building: the commit runs only after the upload, too late to fail cheaply.
+    if git -C "$root" rev-parse -q --verify "refs/heads/$branch" > /dev/null || [ -e "$worktree" ]; then
+        echo "error: branch $branch or worktree $worktree already exists; remove it first" >&2
+        exit 1
+    fi
     # The version change stays uncommitted until the build ships. A failed run puts both
     # files back, so the same --bump or --version can simply be rerun.
     restore() { git -C "$root" checkout -q -- "$project" "$changelog"; }
@@ -159,10 +170,17 @@ xcodebuild -exportArchive \
 
 version="$(/usr/libexec/PlistBuddy -c 'Print :ApplicationProperties:CFBundleShortVersionString' "$archive/Info.plist")"
 if [ -n "$new_version" ]; then
-    git -C "$root" commit -q -m "chore: bump version to $new_version" -- "$project" "$changelog"
+    git -C "$root" worktree add -q -b "$branch" "$worktree" "$built"
+    cp "$project" "$worktree/FFive.xcodeproj/project.pbxproj"
+    cp "$changelog" "$worktree/FFive/Changelog.json"
+    git -C "$worktree" commit -q -m "chore: bump version to $new_version" -- FFive.xcodeproj/project.pbxproj FFive/Changelog.json
+    restore
     trap - EXIT INT TERM
-    commit="$(git -C "$root" rev-parse --short HEAD)"
-    echo "==> committed version $new_version and its changelog as $commit"
+    echo "==> committed version $new_version and its changelog on $branch in $worktree"
+    git -C "$worktree" push -q -u origin "$branch" \
+        && (cd "$worktree" && gh pr create --title "chore: bump version to $new_version" \
+            --body "Records release $new_version, build $build from $built, and its changelog.") \
+        || { echo "error: build $build is out, but its version commit is not in a PR yet; push $branch from $worktree and open the PR by hand" >&2; exit 1; }
 fi
 if [ "$destination" = upload ]; then
     echo "==> uploaded FFive $version ($build) from $commit; it appears in TestFlight once App Store Connect finishes processing"

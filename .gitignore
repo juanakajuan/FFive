@@ -10,3 +10,6 @@ DerivedData/
 # SwiftPM
 .build/
 .swiftpm/
+
+# Worktrees, one per change (CLAUDE.md, scripts/release-testflight.sh)
+.claude/worktrees/
