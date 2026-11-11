@@ -4,19 +4,19 @@ A lifter attaches a note to an exercise in a workout. By default it stays with t
 
 ## Sub-features
 
-- `note-exercise-add` adds an exercise note with `Exercise menu`, then `Add Note`. An `Exercise Note` sheet takes the text in `#note.text` and saves with `#note.save`. The card shows it as a callout labeled `Note: <text>`, with the pin button `#exercise.pin.<n>` beside it.
+- `note-exercise-add` adds an exercise note with `Exercise Menu`, then `Add Note`. An `Exercise Note` sheet takes the text in `#note.text` and saves with `#note.save`. The card shows it as a callout labeled `Note: <text>`, with the pin button `#exercise.pin.<n>` beside it.
 - `note-exercise-local` keeps an unpinned note off later workouts, and shows it in the finished workout's detail page. Pinning moves the text out of the workout, so a note that is pinned when the workout finishes does not show in its detail page.
 - `note-exercise-pin` pins it with `Pin note`. The button becomes `Unpin note`, and the note shows on the exercise's card in later workouts, including after a relaunch.
-- `note-exercise-edit` edits it with `Exercise menu`, then `Edit Note`. Editing a pinned note edits the pin.
+- `note-exercise-edit` edits it with `Exercise Menu`, then `Edit Note`. Editing a pinned note edits the pin.
 - `note-exercise-unpin` unpins with `Unpin note`. The note stays on the current workout and stops carrying forward.
-- `note-exercise-delete` removes it, pinned or not, with `Exercise menu`, then `Delete Note`. Saving blank text also removes it.
+- `note-exercise-delete` removes it, pinned or not, with `Exercise Menu`, then `Delete Note`. Saving blank text also removes it.
 - `note-exercise-detail` shows a pinned note on the exercise's page in the Exercises tab.
 - `note-day` adds a day note with `Workout Menu`, then `Add Note` (or `Edit Note`), through a `Workout Note` sheet. It shows as `Workout note: <text>` at the top of the session and in the summary card of the workout's detail page.
 - `note-day-pin` pins a day note to its block day. On a block day the `Workout Note` sheet has `#note.pin`, labeled `Pin to <day name>` or `Unpin from <day name>`; a quick workout's sheet has none. Saving while pinned stores the text on the `MesoDay` (`pinnedNote`) and shows `Pinned workout note: <text>` on that session and every later session of the same day, not on the block's other days. Finishing a session copies the pinned text into its own note, so history keeps it. Unpinning and saving leaves the note on that session alone.
 
 ## How to get to it (user POV)
 
-- Workout tab, any session (block day or quick workout): an exercise card's `Exercise menu`, and the pin beside its note.
+- Workout tab, any session (block day or quick workout): an exercise card's `Exercise Menu`, and the pin beside its note.
 - Workout tab, any session: the header's `Workout Menu`.
 - Exercises tab: tap an exercise row to see its pinned note.
 - More, Progress, History: tap a finished workout to see its day note and its exercises' notes.
