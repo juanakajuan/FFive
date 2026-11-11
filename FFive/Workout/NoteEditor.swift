@@ -48,7 +48,7 @@ struct NoteEditor: View {
                             pinned.toggle()
                         } label: {
                             HStack(spacing: 12) {
-                                ActionIcon(systemName: pinned ? "pin.fill" : "pin")
+                                ActionIcon(systemName: pinned ? Symbol.pinnedNote : Symbol.pin)
                                 Text("Pin to \(dayName)")
                                     .font(Theme.body)
                                     .foregroundStyle(Theme.text)

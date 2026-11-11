@@ -66,6 +66,19 @@ enum Theme {
     }
 }
 
+/// One SF Symbol per meaning (#181). Name a meaning here before a second screen draws it.
+enum Symbol {
+    static let skip = "forward.end"
+    static let skippedDay = "forward.end.circle"
+    static let edit = "square.and.pencil"
+    static let rename = "pencil"
+    static let cue = "lightbulb.fill"
+    static let note = "note.text"
+    static let pin = "pin"
+    static let pinnedNote = "pin.fill"
+    static let progress = "chart.bar.xaxis"
+}
+
 extension UIColor {
     convenience init(rgb: UInt32, alpha: CGFloat = 1) {
         self.init(
@@ -233,7 +246,7 @@ struct LogCheckbox: View {
                     Image(systemName: "checkmark").font(.system(size: 13, weight: .bold)).foregroundStyle(
                         Theme.onAccent)
                 case .skipped:
-                    Image(systemName: "forward.end.fill").font(.system(size: 10, weight: .bold))
+                    Image(systemName: Symbol.skip).font(.system(size: 10, weight: .bold))
                         .foregroundStyle(Theme.secondary)
                 }
             }

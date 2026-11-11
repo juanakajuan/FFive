@@ -26,15 +26,17 @@ enum AppTab: CaseIterable, Hashable {
         }
     }
 
-    func icon(selected: Bool) -> String {
+    private var symbol: String {
         switch self {
-        case .workout: selected ? "calendar.circle.fill" : "calendar"
-        case .mesos: selected ? "folder.fill" : "folder"
-        case .templates: selected ? "square.grid.2x2.fill" : "square.grid.2x2"
+        case .workout: "calendar.circle"
+        case .mesos: "folder"
+        case .templates: "square.grid.2x2"
         case .exercises: "dumbbell"
-        case .more: selected ? "ellipsis.circle.fill" : "ellipsis.circle"
+        case .more: "ellipsis.circle"
         }
     }
+
+    func icon(selected: Bool) -> String { selected ? symbol + ".fill" : symbol }
 }
 
 struct SessionFocus: Equatable {

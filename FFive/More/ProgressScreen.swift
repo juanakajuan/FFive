@@ -116,7 +116,7 @@ struct ProgressScreen: View {
             )
         } else {
             empty(
-                "No mesocycles yet", systemImage: "chart.bar.xaxis",
+                "No mesocycles yet", systemImage: Symbol.progress,
                 description: "Plan a mesocycle on the Workout tab to see weekly sets against each muscle's landmarks.")
         }
     }

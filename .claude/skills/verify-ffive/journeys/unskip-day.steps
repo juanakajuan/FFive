@@ -5,13 +5,13 @@
 launch
 wait text "WEEK 1 DAY 3" timeout=20
 tap #workout.schedule
-count button "forward.circle" "2"
-tap button "forward.circle"
+count button "forward.end.circle" "2"
+tap button "forward.end.circle"
 wait text "Train this day after all?"
 tap #dialog.train-day
 wait text "WEEK 1 DAY 2"
 wait text "~Lower A"
 shot 01-unskipped-session
 tap #workout.schedule
-count button "forward.circle" "1"
+count button "forward.end.circle" "1"
 shot 02-schedule

@@ -293,11 +293,11 @@ struct ActiveWorkoutView: View {
         ScrollView {
             LazyVStack(spacing: 16) {
                 if let pinned = workout.pinnedNote {
-                    Callout(text: pinned, systemImage: "pin.fill", style: .pinned)
+                    Callout(text: pinned, systemImage: Symbol.pinnedNote, style: .pinned)
                         .padding(.horizontal, Theme.gutter)
                         .accessibilityLabel("Pinned workout note: \(pinned)")
                 } else if let note = workout.note {
-                    Callout(text: note, systemImage: "note.text", style: .note)
+                    Callout(text: note, systemImage: Symbol.note, style: .note)
                         .padding(.horizontal, Theme.gutter)
                         .accessibilityLabel("Workout note: \(note)")
                 }
@@ -395,7 +395,7 @@ struct ActiveWorkoutView: View {
                 .buttonStyle(.primary)
                 .a11y(.workoutAddExercise)
             if let meso = workout.mesocycle, let key = workout.key, meso.canSkip(key) {
-                Button("Skip Day", systemImage: "forward") { skip(key, of: meso) }
+                Button("Skip Day", systemImage: Symbol.skip) { skip(key, of: meso) }
                     .buttonStyle(.secondary)
                     .a11y(.workoutSkipDay)
             } else {
@@ -457,7 +457,7 @@ struct ActiveWorkoutView: View {
                 .a11y(.menuReorder)
         }
         if let meso = workout.mesocycle, let key = workout.key, meso.canSkip(key) {
-            Button("Skip Day", systemImage: "forward") { skip(key, of: meso) }
+            Button("Skip Day", systemImage: Symbol.skip) { skip(key, of: meso) }
                 .a11y(.menuSkipDay)
         }
         if activeMeso != nil, openQuickWorkout !== workout {
@@ -470,7 +470,7 @@ struct ActiveWorkoutView: View {
             .a11y(.menuQuickWorkout)
         }
         let dayNote = workout.pinnedNote ?? workout.note
-        Button(dayNote == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
+        Button(dayNote == nil ? "Add Note" : "Edit Note", systemImage: Symbol.note) {
             noteEdit = NoteEdit(
                 target: .day, draft: dayNote ?? "",
                 pinned: workout.mesocycle == nil ? nil : workout.pinnedNote != nil)
@@ -488,8 +488,10 @@ struct ActiveWorkoutView: View {
             bodyweightDraft = workout.bodyweight.map(formatWeight) ?? ""
         }
         .a11y(.menuBodyweight)
-        Button(workout.mesocycle == nil ? "Rename" : "Rename Day", systemImage: "pencil") { renameDraft = workout.name }
-            .a11y(.menuRename)
+        Button(workout.mesocycle == nil ? "Rename" : "Rename Day", systemImage: Symbol.rename) {
+            renameDraft = workout.name
+        }
+        .a11y(.menuRename)
         if workout.mesocycle != nil {
             Menu("Relabel", systemImage: "calendar.day.timeline.left") {
                 ForEach(Weekday.allCases) { day in
@@ -596,12 +598,15 @@ struct ExerciseCard: View {
             VStack(spacing: 8) {
                 if let note {
                     HStack(spacing: 8) {
-                        Callout(text: note, systemImage: "note.text", style: pinned == nil ? .note : .pinned)
-                            .accessibilityLabel("Note: \(note)")
+                        Callout(
+                            text: note, systemImage: pinned == nil ? Symbol.note : Symbol.pinnedNote,
+                            style: pinned == nil ? .note : .pinned
+                        )
+                        .accessibilityLabel("Note: \(note)")
                         Button {
                             if pinned == nil { store.pinNote(on: exercise) } else { store.unpinNote(on: exercise) }
                         } label: {
-                            ActionIcon(systemName: pinned == nil ? "pin" : "pin.fill")
+                            ActionIcon(systemName: pinned == nil ? Symbol.pin : Symbol.pinnedNote)
                         }
                         .accessibilityLabel(pinned == nil ? "Pin note" : "Unpin note")
                         .a11y(.exercisePin, position)
@@ -611,7 +616,7 @@ struct ExerciseCard: View {
                     Callout(
                         text: [info.cue, "\(info.repRange.lowerBound)–\(info.repRange.upperBound) reps."]
                             .compactMap { $0 }.joined(separator: " "),
-                        systemImage: "lightbulb.fill")
+                        systemImage: Symbol.cue)
                 }
                 if exercise.isBodyweight, exercise.workout?.bodyweight == nil {
                     Callout(
@@ -680,7 +685,7 @@ struct ExerciseCard: View {
                 Button("Add Set", systemImage: "plus") { store.addSet(to: exercise) }
                     .a11y(.menuAddSet)
                 if exercise.sets.contains(where: { $0.status == .pending }) {
-                    Button("Skip Remaining Sets", systemImage: "forward.end") {
+                    Button("Skip Remaining Sets", systemImage: Symbol.skip) {
                         store.skipRemainingSets(of: exercise)
                     }
                     .a11y(.menuSkipRemaining)
@@ -695,7 +700,7 @@ struct ExerciseCard: View {
                     .pickerStyle(.menu)
                     .a11y(.menuJointPain)
                 }
-                Button(note == nil ? "Add Note" : "Edit Note", systemImage: "note.text") {
+                Button(note == nil ? "Add Note" : "Edit Note", systemImage: Symbol.note) {
                     onEditNote(note ?? "")
                 }
                 .a11y(.menuExerciseNote)
@@ -838,7 +843,7 @@ struct SetRow: View {
                     .a11y(.menuAddSet)
                 switch set.status {
                 case .pending:
-                    Button("Skip Set", systemImage: "forward.end") { store.skip(set, skipped: true) }
+                    Button("Skip Set", systemImage: Symbol.skip) { store.skip(set, skipped: true) }
                         .a11y(.menuSkipSet)
                 case .skipped:
                     Button("Unskip Set", systemImage: "arrow.uturn.backward") { store.skip(set, skipped: false) }
