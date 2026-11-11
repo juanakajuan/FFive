@@ -1,0 +1,3 @@
+# Commits scripts/changelog.sh leaves out of the app's changelog: they touch shipped code but change
+# nothing a lifter sees. One per line, the full SHA then its subject.
+d40f86e0ea8ae1239d9d6e6adf6bd8c448573dcd feat: push the CloudKit schema in debug builds and gate TestFlight uploads on Production (#124)

@@ -107,7 +107,7 @@ private struct EntryRow: View {
         switch entry.kind {
         case .feature: Theme.accent
         case .improvement: Theme.success
-        case .fix: Theme.danger
+        case .fix: Theme.infoText
         }
     }
 

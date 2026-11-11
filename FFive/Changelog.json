@@ -6,11 +6,6 @@
         {
           "date" : "2026-11-08",
           "kind" : "fix",
-          "text" : "Compare CloudKit schema fields in the C locale so the TestFlight gate stops failing on Mesocycle"
-        },
-        {
-          "date" : "2026-11-08",
-          "kind" : "fix",
           "text" : "Give an empty workout an empty state with Add Exercise and a way out"
         },
         {
@@ -27,11 +22,6 @@
           "date" : "2026-11-08",
           "kind" : "fix",
           "text" : "Label the Templates filter lists as Days per week and Emphasis submenus"
-        },
-        {
-          "date" : "2026-11-07",
-          "kind" : "fix",
-          "text" : "Commit the TestFlight version bump only after the upload succeeds"
         },
         {
           "date" : "2026-11-07",
@@ -68,11 +58,6 @@
           "date" : "2026-11-07",
           "kind" : "feature",
           "text" : "Manage builder days — reorder, rename and delete"
-        },
-        {
-          "date" : "2026-11-07",
-          "kind" : "feature",
-          "text" : "Push the CloudKit schema in debug builds and gate TestFlight uploads on Production"
         },
         {
           "date" : "2026-11-07",
@@ -302,7 +287,13 @@
           "date" : "2026-11-05",
           "kind" : "feature",
           "text" : "Reset a block workout and rename its day"
-        },
+        }
+      ],
+      "version" : "1.1"
+    },
+    {
+      "date" : "2026-11-05",
+      "entries" : [
         {
           "date" : "2026-11-05",
           "kind" : "feature",
@@ -334,7 +325,7 @@
           "text" : "Pin search and filters on Templates and Exercises while the list scrolls"
         }
       ],
-      "version" : "1.1"
+      "version" : "1.0.2"
     },
     {
       "date" : "2026-11-05",
