@@ -403,8 +403,11 @@ public final class Store {
     }
 
     public func delete(_ workout: Workout) {
-        workout.mesocycle?.workouts.removeAll { $0 === workout }
-        context.delete(workout)
+        if let meso = workout.mesocycle {
+            meso.remove(workout, in: context)
+        } else {
+            context.delete(workout)
+        }
         commit()
     }
 

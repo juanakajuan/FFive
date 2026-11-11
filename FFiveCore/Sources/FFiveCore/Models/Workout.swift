@@ -48,8 +48,8 @@ public final class Workout {
 
     /// The block day this session trains. A quick workout has none.
     var day: MesoDay? {
-        guard let days = mesocycle?.sortedDays, let dayIndex, days.indices.contains(dayIndex) else { return nil }
-        return days[dayIndex]
+        guard let dayIndex else { return nil }
+        return mesocycle?.day(at: dayIndex)
     }
 
     /// The note pinned to this session's day, which shows in place of the session's own note.

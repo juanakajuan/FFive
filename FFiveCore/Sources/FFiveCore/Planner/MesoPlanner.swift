@@ -180,8 +180,7 @@ enum MesoPlanner {
     ) -> Workout {
         if let existing = meso.workout(at: key) { return existing }
         let planned = plan(meso, at: key, planning: planning)
-        let days = meso.sortedDays
-        let day = days.indices.contains(key.dayIndex) ? days[key.dayIndex] : nil
+        let day = meso.day(at: key.dayIndex)
         let workout = Workout(name: day?.name ?? "Day \(key.dayIndex + 1)")
         context.insert(workout)
         workout.weekday = day?.weekday
@@ -242,9 +241,8 @@ enum MesoPlanner {
     private static func templatePlan(_ meso: Mesocycle, dayIndex: Int, rir: Int, planning: PlanningContext)
         -> [PlannedExercise]
     {
-        let days = meso.sortedDays
-        guard days.indices.contains(dayIndex) else { return [] }
-        return days[dayIndex].sortedSlots.map { slot in
+        guard let day = meso.day(at: dayIndex) else { return [] }
+        return day.sortedSlots.map { slot in
             PlannedExercise(
                 name: slot.exerciseName, key: slot.key, muscle: slot.muscle,
                 targets: slot.startingTargets
@@ -318,7 +316,7 @@ enum MesoPlanner {
             {
                 return total + workout.setCount(for: muscle)
             }
-            let slots = meso.sortedDays.indices.contains(day) ? meso.sortedDays[day].slots : []
+            let slots = meso.day(at: day)?.slots ?? []
             return total
                 + slots.filter { $0.muscle == muscle }.reduce(0) {
                     $0 + initialSetCount(of: $1, dayIndex: day, in: meso)
@@ -329,7 +327,7 @@ enum MesoPlanner {
     private static func initialSetCount(of slot: DaySlot, dayIndex: Int, in meso: Mesocycle) -> Int {
         if let carried = slot.startingTargets { return carried.count }
         guard let muscle = slot.muscle else { return 2 }
-        let inSession = meso.sortedDays[dayIndex].slots.filter { $0.muscleRaw == slot.muscleRaw }.count
+        let inSession = (meso.day(at: dayIndex)?.slots ?? []).filter { $0.muscleRaw == slot.muscleRaw }.count
         return initialSetCount(of: muscle, exercisesInSession: inSession, in: meso)
     }
 
