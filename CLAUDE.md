@@ -38,6 +38,7 @@ Each rule is enforced by the check named beside it. A rule with no check is a ju
 | Every segmented control is `SegmentedButtons` in `Components.swift`, never a `Picker` with `.pickerStyle(.segmented)` | `scripts/lint.sh` rule `one-segmented-control` |
 | A meaning that has a symbol in the `Symbol` registry in `Theme.swift` (skip, edit, rename, cue, note, pin, progress) draws through it, never a literal | `scripts/lint.sh` rule `one-symbol-per-meaning` |
 | Every animation uses `.snappy`: a list insert or remove runs in `withAnimation(.snappy)`, never a bare `withAnimation` or another curve | `scripts/lint.sh` rule `one-motion-curve` |
+| Deleting saved data asks first: a swipe or button sets screen state and a `.confirmationDialog` deletes, and every delete button has `role: .destructive` | `scripts/lint.sh` rule `confirm-deletes` |
 | Every file under `FFive/` typechecks together for iOS, against the built `FFiveCore` package | `scripts/typecheck-app.sh` |
 | Engine and planner rules keep their behavior | `swift test --package-path FFiveCore` |
 | Swift files match `.swift-format` and pass its lint rules | `scripts/format.sh --lint` |

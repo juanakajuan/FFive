@@ -138,11 +138,14 @@ final class DriverTests: XCTestCase {
             app.typeText(XCUIKeyboardKey.return.rawValue)
             try poll(timeout) { app.keyboards.firstMatch.exists ? "keyboard still up after return" : nil }
         case "swipe":
-            switch args.first {
-            case "up": app.swipeUp()
-            case "down": app.swipeDown()
-            case "left": app.swipeLeft()
-            case "right": app.swipeRight()
+            guard !args.isEmpty else { throw StepError("swipe needs up, down, left, or right") }
+            let direction = args.removeFirst()
+            let target: XCUIElement = args.isEmpty ? app : try onScreen(args, timeout)
+            switch direction {
+            case "up": target.swipeUp()
+            case "down": target.swipeDown()
+            case "left": target.swipeLeft()
+            case "right": target.swipeRight()
             default: throw StepError("swipe needs up, down, left, or right")
             }
         case "store-expect":

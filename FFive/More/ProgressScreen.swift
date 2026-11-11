@@ -20,6 +20,7 @@ struct ProgressScreen: View {
     @State private var demoSeries: StrengthSeries?
     @State private var selectedMeso: PersistentIdentifier?
     @State private var selectedWeek: Int?
+    @State private var deleting: Workout?
 
     var body: some View {
         VStack(spacing: 0) {
@@ -39,6 +40,16 @@ struct ProgressScreen: View {
         .navigationTitle("Progress")
         .navigationDestination(for: StrengthSeries.self) { ExerciseTrendView(series: $0, unit: unit) }
         .navigationDestination(item: $demoSeries) { ExerciseTrendView(series: $0, unit: unit) }
+        .confirmationDialog(
+            "Delete this workout?",
+            isPresented: $deleting.isPresent(),
+            titleVisibility: .visible, presenting: deleting
+        ) { workout in
+            Button("Delete Workout", role: .destructive) { withAnimation(.snappy) { store.delete(workout) } }
+                .a11y(.dialogDeleteWorkout)
+        } message: { workout in
+            Text("\(workout.name) leaves History and Progress.")
+        }
         .task {
             if DemoLaunch.take(.strength) {
                 demoSeries = store.strengthSeries().max { $0.points.count < $1.points.count }
@@ -181,7 +192,7 @@ struct ProgressScreen: View {
             .a11y(.historyRow, key: workout.name)
         }
         .onDelete { offsets in
-            for index in offsets { store.delete(history[index]) }
+            deleting = offsets.first.map { history[$0] }
         }
     }
 }
