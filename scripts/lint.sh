@@ -3,8 +3,8 @@ set -eu
 cd "$(dirname "$0")/.."
 export LC_ALL=C
 baseline=scripts/lint-baseline.txt
-rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention"
-never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention"
+rules="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint"
+never_baselined="view-writes no-stored-builder presentation-at-screen-root no-query-in-child-views no-appstorage-in-app no-userdefaults-in-app no-processinfo-in-app a11y-ids-typed exercise-identity-by-name one-card-modifier theme-tokens one-divider nav-menu-convention info-and-link-tint"
 
 scan() {
     for file in "$@"; do
@@ -57,6 +57,8 @@ scan() {
                     hit("one-divider", i, "Every divider is Hairline() in Theme.swift (#147). Use Hairline(), with .padding for an inset; never a hand-built Theme.hairline rectangle or a private divider.")
                 if (s ~ /placement:[ \t]*\.topBarTrailing/ || line[i] ~ /(\.accessibilityLabel|Menu)\(.*["( ](menu|[Oo]ptions|[Aa]ctions)[",]/)
                     hit("nav-menu-convention", i, "Menus share one placement and one name form (#178). Put a nav-bar menu in ToolbarItem(placement: .primaryAction), never .topBarTrailing, and name every menu \"<Thing> Menu\" (\"Mesocycle Menu\", \"\\(meso.name) Menu\"), never \"menu\", \"Options\" or \"actions\".")
+                if (path !~ /FFive\/Shared\/Theme\.swift$/ && (s ~ /\.(foregroundStyle|foregroundColor|tint)\([ \t]*Theme\.accent[ \t]*\)/ || (line[i] ~ /ActionIcon\(systemName:.*"info\.circle/ && line[i] !~ /tint:[ \t]*Theme\.infoText/)))
+                    hit("info-and-link-tint", i, "Every ⓘ icon and text link is Theme.infoText (#179). Tint a text link with .foregroundStyle(Theme.infoText), never Theme.accent, which is for fills; draw a ⓘ action icon with ActionIcon.info(filled:), never ActionIcon(systemName: \"info.circle\").")
                 for (c = 1; c <= length(s); c++) {
                     ch = substr(s, c, 1)
                     if (ch == "{") {
