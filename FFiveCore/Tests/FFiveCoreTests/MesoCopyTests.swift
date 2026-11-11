@@ -7,8 +7,8 @@ import XCTest
 final class MesoCopyTests: XCTestCase {
     private let day: TimeInterval = 24 * 60 * 60
 
-    func startedStore() throws -> (Store, Mesocycle) {
-        let store = Store(inMemory: true)
+    /// Push on Monday with two chest slots, Pull on Thursday, five weeks with chest emphasized.
+    var pushPull: MesoDraft {
         var draft = MesoDraft(template: nil)
         draft.name = "Push Pull"
         draft.accumulationWeeks = 5
@@ -19,22 +19,11 @@ final class MesoCopyTests: XCTestCase {
                 slots: [.init(exercise: "Bench Press", muscle: .chest), .init(exercise: "Cable Fly", muscle: .chest)]),
             .init(name: "Pull", weekday: .thursday, slots: [.init(exercise: "Barbell Row", muscle: .back)]),
         ]
-        try store.startMesocycle(draft)
-        return (store, try XCTUnwrap(store.context.fetch(Mesocycle.active).first))
-    }
-
-    func finish(_ key: SessionKey, of meso: Mesocycle, in store: Store, weight: Double = 100, reps: Int = 8) {
-        let workout = store.buildSession(meso, at: key)
-        for set in workout.sortedExercises.flatMap(\.sortedSets) {
-            set.weight = weight
-            set.reps = reps
-            store.log(set, done: true)
-        }
-        store.finish(workout)
+        return draft
     }
 
     func testCopyKeepsLengthPrioritiesDaysAndWeekdays() throws {
-        let (store, meso) = try startedStore()
+        let (store, meso) = try startedStore(pushPull)
 
         let draft = withExtendedLifetime(store) { meso.copyDraft(week: 0) }
 
@@ -48,8 +37,8 @@ final class MesoCopyTests: XCTestCase {
     }
 
     func testCopyTakesTheExercisesTheSourceWeekTrained() throws {
-        let (store, meso) = try startedStore()
-        finish(SessionKey(week: 0, dayIndex: 0), of: meso, in: store)
+        let (store, meso) = try startedStore(pushPull)
+        store.finish(SessionKey(week: 0, dayIndex: 0), of: meso)
         let push = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0))
         store.swapExercise(push.sortedExercises[1], to: "Pec Deck", muscle: .chest, scope: .thisSession)
         store.finish(push)
@@ -64,8 +53,8 @@ final class MesoCopyTests: XCTestCase {
     }
 
     func testRecentBlockCarriesTheSourceWeeksLoggedSets() throws {
-        let (store, meso) = try startedStore()
-        finish(SessionKey(week: 0, dayIndex: 0), of: meso, in: store, weight: 135, reps: 9)
+        let (store, meso) = try startedStore(pushPull)
+        store.finish(SessionKey(week: 0, dayIndex: 0), of: meso, weight: 135, reps: 9)
         let pull = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 1))
         let row = pull.sortedExercises[0].sortedSets
         row[0].weight = 155
@@ -86,7 +75,7 @@ final class MesoCopyTests: XCTestCase {
     }
 
     func testAnUntouchedCalibrateSetRepeatsTheSetBeforeIt() throws {
-        let (store, meso) = try startedStore()
+        let (store, meso) = try startedStore(pushPull)
         let push = store.buildSession(meso, at: SessionKey(week: 0, dayIndex: 0))
         let bench = push.sortedExercises[0].sortedSets
         XCTAssertGreaterThan(bench.count, 1)
@@ -103,8 +92,8 @@ final class MesoCopyTests: XCTestCase {
     }
 
     func testOldBlockStartsFresh() throws {
-        let (store, meso) = try startedStore()
-        finish(SessionKey(week: 0, dayIndex: 0), of: meso, in: store)
+        let (store, meso) = try startedStore(pushPull)
+        store.finish(SessionKey(week: 0, dayIndex: 0), of: meso)
 
         XCTAssertTrue(meso.carriesLoads(now: .now + 20 * day))
         XCTAssertFalse(meso.carriesLoads(now: .now + 21 * day), "21 days is no longer recent")
@@ -114,7 +103,7 @@ final class MesoCopyTests: XCTestCase {
     }
 
     func testDeloadSessionsDoNotMakeABlockRecent() throws {
-        let (store, meso) = try startedStore()
+        let (store, meso) = try startedStore(pushPull)
         XCTAssertNil(meso.lastAccumulationDate)
         let deload = store.buildSession(meso, at: SessionKey(week: 5, dayIndex: 0))
         store.logEntered(deload.sortedExercises[0].sortedSets[0])
@@ -125,8 +114,8 @@ final class MesoCopyTests: XCTestCase {
     }
 
     func testSwappingACopiedExerciseDropsItsLoads() throws {
-        let (store, meso) = try startedStore()
-        finish(SessionKey(week: 0, dayIndex: 0), of: meso, in: store)
+        let (store, meso) = try startedStore(pushPull)
+        store.finish(SessionKey(week: 0, dayIndex: 0), of: meso)
         var draft = meso.copyDraft(week: 0)
         XCTAssertNotNil(draft.days[0].slots[0].startingTargets)
 
@@ -136,8 +125,8 @@ final class MesoCopyTests: XCTestCase {
     }
 
     func testCopiedBlockStartsItsFirstWeekFromTheCarriedSets() throws {
-        let (store, meso) = try startedStore()
-        finish(SessionKey(week: 0, dayIndex: 0), of: meso, in: store, weight: 135, reps: 9)
+        let (store, meso) = try startedStore(pushPull)
+        store.finish(SessionKey(week: 0, dayIndex: 0), of: meso, weight: 135, reps: 9)
         let benchSets = meso.workout(at: SessionKey(week: 0, dayIndex: 0))!.sortedExercises[0].sets.count
         let draft = meso.copyDraft(week: 0)
         store.endMesocycle(meso)

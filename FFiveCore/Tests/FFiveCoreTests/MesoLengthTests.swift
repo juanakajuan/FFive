@@ -5,23 +5,6 @@ import XCTest
 
 @MainActor
 final class MesoLengthTests: XCTestCase {
-    func startedStore() throws -> (Store, Mesocycle) {
-        let store = Store(inMemory: true)
-        var draft = MesoDraft(template: nil)
-        draft.days = [
-            .init(name: "A", slots: [.init(exercise: "Bench Press", muscle: .chest)]),
-            .init(name: "B", slots: [.init(exercise: "Barbell Row", muscle: .back)]),
-        ]
-        try store.startMesocycle(draft)
-        return (store, try XCTUnwrap(store.context.fetch(Mesocycle.active).first))
-    }
-
-    func finish(_ key: SessionKey, of meso: Mesocycle, in store: Store) {
-        let workout = store.buildSession(meso, at: key)
-        for set in workout.sortedExercises.flatMap(\.sortedSets) { store.logEntered(set) }
-        store.finish(workout)
-    }
-
     func testAddingAWeekMovesTheDeloadAndEveryWeeksRIR() throws {
         let (store, meso) = try startedStore()
         XCTAssertEqual((0..<meso.totalWeeks).map { meso.phase(week: $0).rir }, [3, 2, 1, 0, nil])
@@ -57,7 +40,7 @@ final class MesoLengthTests: XCTestCase {
     func testRemovingAWeekWithLoggedSetsIsRefused() throws {
         let (store, meso) = try startedStore()
         for week in 0..<3 {
-            for day in 0..<2 { finish(SessionKey(week: week, dayIndex: day), of: meso, in: store) }
+            for day in 0..<2 { store.finish(SessionKey(week: week, dayIndex: day), of: meso) }
         }
         let lastWeek = store.buildSession(meso, at: SessionKey(week: 3, dayIndex: 0))
         XCTAssertTrue(meso.canRemoveWeek, "a built but unlogged last week can still go")
@@ -83,8 +66,8 @@ final class MesoLengthTests: XCTestCase {
 
     func testLoggedSessionsKeepTheRIRTheyWereTrainedAt() throws {
         let (store, meso) = try startedStore()
-        finish(SessionKey(week: 0, dayIndex: 0), of: meso, in: store)
-        finish(SessionKey(week: 1, dayIndex: 0), of: meso, in: store)
+        store.finish(SessionKey(week: 0, dayIndex: 0), of: meso)
+        store.finish(SessionKey(week: 1, dayIndex: 0), of: meso)
         let trained = try XCTUnwrap(meso.workout(at: SessionKey(week: 1, dayIndex: 0)))
         let targets = trained.sortedExercises[0].sortedSets.map {
             SetTarget(weight: $0.targetWeight, reps: $0.targetReps)
@@ -102,7 +85,7 @@ final class MesoLengthTests: XCTestCase {
 
     func testUnloggedSessionsOfChangedWeeksAreRebuilt() throws {
         let (store, meso) = try startedStore()
-        finish(SessionKey(week: 0, dayIndex: 0), of: meso, in: store)
+        store.finish(SessionKey(week: 0, dayIndex: 0), of: meso)
         let week2 = SessionKey(week: 1, dayIndex: 0)
         let built = store.buildSession(meso, at: week2)
         let oldReps = built.sortedExercises[0].sortedSets.map(\.targetReps)
