@@ -58,7 +58,7 @@ struct CustomExerciseEditor: View {
                             .a11y(.editorEquipment)
                         }
                     }
-                    Text("Muscle drives volume. Equipment sets how load steps up and whether body weight counts.")
+                    Text("Muscle drives volume. Equipment sets how load steps up and whether bodyweight counts.")
                         .footnote()
 
                     SectionHeading(text: "Rep Range")

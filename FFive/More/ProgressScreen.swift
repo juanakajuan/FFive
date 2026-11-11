@@ -281,7 +281,7 @@ struct ExerciseTrendView: View {
                 Text("Date")
                 Spacer()
                 Text("Best Set")
-                Text("e1RM").frame(width: 60, alignment: .trailing)
+                Text("Estimated 1RM").frame(width: 130, alignment: .trailing)
             }
             .font(Theme.columnHeader)
             .textCase(.uppercase)
@@ -297,7 +297,7 @@ struct ExerciseTrendView: View {
                     Text(point.bestSet).foregroundStyle(Theme.text)
                     Text("\(formatWeight(point.value.rounded()))")
                         .foregroundStyle(Theme.secondary)
-                        .frame(width: 60, alignment: .trailing)
+                        .frame(width: 130, alignment: .trailing)
                 }
                 .font(Theme.body.monospacedDigit())
                 .frame(minHeight: 44)
