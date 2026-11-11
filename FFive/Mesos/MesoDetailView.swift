@@ -9,10 +9,10 @@ struct MesoDetailView: View {
     @Environment(AppRouter.self) private var router
     @Environment(\.dismiss) private var dismiss
     @State private var ending: Mesocycle?
-    @State private var confirmDelete = false
+    @State private var deleting: Mesocycle?
     @State private var trainAfterAll: SessionKey?
     @State private var templateName: String?
-    @State private var renameDraft: String?
+    @State private var renaming: MesoRename?
     @State private var showingNotes = false
 
     var body: some View {
@@ -41,14 +41,7 @@ struct MesoDetailView: View {
         .toolbar {
             ToolbarItem(placement: .topBarTrailing) {
                 Menu {
-                    NavigationLink(value: MesoSummaryRoute(meso: meso)) {
-                        Label("Summary", systemImage: "chart.bar")
-                    }
-                    .a11y(.menuSummary)
-                    Button("Rename", systemImage: "pencil") { renameDraft = meso.name }
-                        .a11y(.menuRename)
-                    Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
-                        .a11y(.menuDeleteMesocycle)
+                    MesoMenuItems(meso: meso, renaming: $renaming, ending: $ending, deleting: $deleting)
                 } label: {
                     Image(systemName: "ellipsis.circle")
                 }
@@ -56,20 +49,11 @@ struct MesoDetailView: View {
                 .a11y(.mesoMenu)
             }
         }
-        .alert(
-            "Rename Mesocycle",
-            isPresented: $renameDraft.isPresent()
-        ) {
-            TextField("Mesocycle name", text: Binding(get: { renameDraft ?? "" }, set: { renameDraft = $0 }))
-            Button("Save") {
-                if let name = renameDraft { store.rename(meso, to: name) }
-            }
-            Button("Cancel", role: .cancel) {}
-        }
+        .mesoRenameAlert($renaming, store: store)
         .sheet(isPresented: $showingNotes) { MesoNotesScreen(meso: meso) }
         .trainAfterAllDialog($trainAfterAll, of: meso, store: store, onOpen: open)
         .endMesocycleDialog($ending) { router.end($0, store: store) }
-        .confirmationDialog("Delete this mesocycle?", isPresented: $confirmDelete, titleVisibility: .visible) {
+        .confirmationDialog("Delete this mesocycle?", isPresented: $deleting.isPresent(), titleVisibility: .visible) {
             Button("Delete Mesocycle", role: .destructive) {
                 dismiss()
                 router.delete(meso, store: store)

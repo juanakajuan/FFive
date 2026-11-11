@@ -5,9 +5,9 @@ A lifter reviews how a block went and renames it. The summary shows done sets pe
 ## Sub-features
 
 - `summary-detail` pushes the summary from the block's detail page: `#meso.menu`, then `#menu.summary`. Its title is `<name> Summary`.
-- `summary-list` pushes it from a finished block's Mesos row: `#mesos.menu.<slug>`, then `#menu.summary`.
+- `summary-list` pushes it from any block's Mesos row: `#mesos.menu.<slug>`, then `#menu.summary`.
 - `summary-on-end` presents it as a sheet right after any end (see [End a mesocycle](./end-mesocycle.md)). `#sheet.done` closes it.
-- `rename` renames the block from the detail page: `#meso.menu`, `#menu.rename`, alert `Rename Mesocycle` with field `Mesocycle name`, then `button "Save"`. Surrounding spaces are trimmed and an empty name is ignored.
+- `rename` renames the block from the detail page or its Mesos row: `#meso.menu` or `#mesos.menu.<slug>`, then `#menu.rename`, alert `Rename Mesocycle` with field `Mesocycle name`, then `button "Save"`. Surrounding spaces are trimmed and an empty name is ignored.
 
 ## Driving it with ffive-verify
 

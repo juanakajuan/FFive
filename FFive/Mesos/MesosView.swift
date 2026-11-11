@@ -11,6 +11,7 @@ struct MesosView: View {
     @State private var showingBuilder = false
     @State private var ending: Mesocycle?
     @State private var deleting: Mesocycle?
+    @State private var renaming: MesoRename?
 
     private var current: Mesocycle? { mesos.first(where: \.isActive) }
 
@@ -37,6 +38,7 @@ struct MesosView: View {
             .navigationDestination(for: Workout.self) { WorkoutDetailView(workout: $0) }
             .navigationDestination(for: MesoSummaryRoute.self) { MesoSummaryView(meso: $0.meso) }
             .sheet(isPresented: $showingBuilder) { MesoBuilderView() }
+            .mesoRenameAlert($renaming, store: store)
             .endMesocycleDialog($ending) { router.end($0, store: store) }
             .confirmationDialog(
                 "Delete this mesocycle?",
@@ -87,17 +89,7 @@ struct MesosView: View {
             .a11y(.mesosRow, key: meso.name)
 
             Menu {
-                if isCurrent {
-                    Button("End Mesocycle", systemImage: "flag.checkered", role: .destructive) { ending = meso }
-                        .a11y(.menuEndMesocycle)
-                } else {
-                    Button("View", systemImage: "eye") { path.append(meso) }
-                        .a11y(.menuView)
-                    Button("Summary", systemImage: "chart.bar") { path.append(MesoSummaryRoute(meso: meso)) }
-                        .a11y(.menuSummary)
-                }
-                Button("Delete", systemImage: "trash", role: .destructive) { deleting = meso }
-                    .a11y(.menuDeleteMesocycle)
+                MesoMenuItems(meso: meso, renaming: $renaming, ending: $ending, deleting: $deleting)
             } label: {
                 Image(systemName: "ellipsis")
                     .rotationEffect(.degrees(90))
