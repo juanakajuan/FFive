@@ -18,6 +18,11 @@ public final class SetEntry {
         set { typeRaw = newValue.rawValue }
     }
 
+    /// The largest weight a lifter can mean, either way from zero, since a bodyweight lift logs assistance as negative.
+    public static let weightLimit: Double = 9999
+    /// The most reps a set can log.
+    public static let repsLimit = 999
+
     public init(reps: Int, weight: Double, order: Int) {
         self.reps = reps
         self.weight = weight

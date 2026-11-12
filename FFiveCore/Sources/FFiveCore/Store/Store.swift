@@ -237,14 +237,17 @@ public final class Store {
         return exercise.laterSets(matchingWeightOf: set)
     }
 
+    /// A typed weight past `SetEntry.weightLimit` stops at it, so one stuck key can't log a load no lifter means.
     public func setWeight(_ weight: Double, of set: SetEntry, carryingTo followers: [SetEntry]) {
+        let weight = min(max(weight, -SetEntry.weightLimit), SetEntry.weightLimit)
         set.weight = weight
         for follower in followers where follower.status != .done { follower.weight = weight }
         commit()
     }
 
+    /// Typed reps stop at 0 and `SetEntry.repsLimit`.
     public func setReps(_ reps: Int, of set: SetEntry) {
-        set.reps = reps
+        set.reps = min(max(reps, 0), SetEntry.repsLimit)
         commit()
     }
 

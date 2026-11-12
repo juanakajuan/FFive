@@ -43,7 +43,7 @@ public final class Workout {
     }
 
     func setBodyweight(_ weight: Double?) {
-        bodyweight = weight.flatMap { $0 > 0 ? $0 : nil }
+        bodyweight = weight.flatMap { $0 > 0 ? min($0, SetEntry.weightLimit) : nil }
     }
 
     /// The block day this session trains. A quick workout has none.

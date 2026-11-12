@@ -73,7 +73,7 @@ struct WorkoutDetailView: View {
                 StatTile(title: "Sets", value: "\(workout.completedSets)", icon: "checkmark.circle")
                 StatTile(
                     title: "Volume (\(unit.rawValue))",
-                    value: Int(workout.totalVolume).formatted(),
+                    value: workout.totalVolume.formatted(.number.precision(.fractionLength(0))),
                     icon: "scalemass")
             }
             .fixedSize(horizontal: false, vertical: true)
