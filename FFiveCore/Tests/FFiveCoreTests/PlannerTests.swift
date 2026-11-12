@@ -19,6 +19,23 @@ final class PlannerTests: XCTestCase {
         PlanningContext(unit: .lb, snapshot: snapshot(context))
     }
 
+    func testStartTrimsNamesAndNamesBlankDaysByPosition() {
+        let context = ModelContext(AppStore.makeContainer(inMemory: true))
+        var draft = MesoDraft(days: [
+            .init(name: "   ", slots: [.init(exercise: "Bench Press", muscle: .chest)]),
+            .init(name: " Pull ", slots: [.init(exercise: "Barbell Row", muscle: .back)]),
+        ])
+        draft.name = "  Spaced  "
+
+        let meso = MesoPlanner.start(draft, in: context)
+        let first = MesoPlanner.workout(
+            for: meso, at: SessionKey(week: 0, dayIndex: 0), planning: planning(context), in: context)
+
+        XCTAssertEqual(meso.name, "Spaced")
+        XCTAssertEqual(meso.sortedDays.map(\.name), ["Day 1", "Pull"])
+        XCTAssertEqual(first.name, "Day 1", "the session takes the day's fallback name")
+    }
+
     func testMesocycleLifecycle() {
         let context = ModelContext(AppStore.makeContainer(inMemory: true))
 

@@ -156,12 +156,12 @@ enum MesoPlanner {
     @discardableResult
     static func start(_ draft: MesoDraft, in context: ModelContext) -> Mesocycle {
         let meso = Mesocycle(
-            name: draft.name.trimmingCharacters(in: .whitespaces).isEmpty ? "My Mesocycle" : draft.name,
-            accumulationWeeks: draft.accumulationWeeks)
+            name: draft.name.trimmed(or: "My Mesocycle"), accumulationWeeks: draft.accumulationWeeks)
         context.insert(meso)
         for muscle in draft.muscles { meso.setPriority(draft.priorities[muscle] ?? .normal, of: muscle) }
         for (order, draftDay) in draft.days.filter({ !$0.slots.isEmpty }).enumerated() {
-            let day = MesoDay(name: draftDay.name, order: order, weekday: draftDay.weekday)
+            let day = MesoDay(
+                name: draftDay.name.trimmed(or: "Day \(order + 1)"), order: order, weekday: draftDay.weekday)
             meso.days.append(day)
             for (slotOrder, slot) in draftDay.slots.enumerated() {
                 guard let exercise = slot.exercise else { continue }
@@ -525,5 +525,13 @@ enum MesoPlanner {
         return Muscle.allCases
             .filter { planned[$0] != nil || done[$0] != nil }
             .map { MuscleVolume(muscle: $0, done: done[$0] ?? 0, planned: planned[$0] ?? 0) }
+    }
+}
+
+extension String {
+    /// The text without surrounding whitespace, or `fallback` when nothing is left.
+    fileprivate func trimmed(or fallback: String) -> String {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? fallback : trimmed
     }
 }
