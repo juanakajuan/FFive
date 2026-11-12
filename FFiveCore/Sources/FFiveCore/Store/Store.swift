@@ -239,15 +239,18 @@ public final class Store {
 
     /// A keystroke that leaves the number unchanged, such as a trailing decimal point, commits nothing. A commit
     /// re-renders the weight field, which rebuilds its text from the number and drops the point being typed.
+    /// A typed weight past `SetEntry.weightLimit` stops at it, so one stuck key can't log a load no lifter means.
     public func setWeight(_ weight: Double, of set: SetEntry, carryingTo followers: [SetEntry]) {
+        let weight = min(max(weight, -SetEntry.weightLimit), SetEntry.weightLimit)
         let targets = [set] + followers.filter { $0.status != .done }
         guard targets.contains(where: { $0.weight != weight }) else { return }
         for target in targets { target.weight = weight }
         commit()
     }
 
+    /// Typed reps stop at 0 and `SetEntry.repsLimit`.
     public func setReps(_ reps: Int, of set: SetEntry) {
-        set.reps = reps
+        set.reps = min(max(reps, 0), SetEntry.repsLimit)
         commit()
     }
 

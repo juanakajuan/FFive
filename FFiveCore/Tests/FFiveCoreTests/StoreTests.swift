@@ -685,6 +685,35 @@ final class StoreTests: XCTestCase {
         return redrew
     }
 
+    func testTypedWeightAndRepsStopAtTheLimits() {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
+        let sets = workout.exercises[0].sortedSets
+        store.setWeight(12_345_678_901_234_567_890, of: sets[0], carryingTo: Array(sets.dropFirst()))
+        XCTAssertEqual(sets.map(\.weight), sets.map { _ in SetEntry.weightLimit }, "followers get the bounded weight")
+        store.setWeight(-1e20, of: sets[0], carryingTo: [])
+        XCTAssertEqual(sets[0].weight, -SetEntry.weightLimit)
+        store.setReps(.max, of: sets[0])
+        XCTAssertEqual(sets[0].reps, SetEntry.repsLimit)
+        store.setReps(-5, of: sets[0])
+        XCTAssertEqual(sets[0].reps, 0)
+        store.setBodyweight(1e20, of: workout)
+        XCTAssertEqual(workout.bodyweight, SetEntry.weightLimit)
+    }
+
+    func testAHugeTypedWeightLogsAVolumeThatFitsAnInt() {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
+        let set = workout.exercises[0].sortedSets[0]
+        store.setWeight(12_345_678_901_234_567_890, of: set, carryingTo: [])
+        store.setReps(10, of: set)
+        store.log(set, done: true)
+        XCTAssertEqual(workout.totalVolume, SetEntry.weightLimit * 10)
+        XCTAssertNotNil(Int(exactly: workout.totalVolume))
+    }
+
     func testAddAndDeleteSet() {
         let store = Store(inMemory: true)
         let workout = store.startQuickWorkout()
