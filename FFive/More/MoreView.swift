@@ -3,12 +3,13 @@ import SwiftUI
 
 struct MoreView: View {
     private enum Destination: Hashable {
-        case progress, learn, settings, changelog
+        case progress, learn, plateCalculator, settings, changelog
 
         var a11y: A11y {
             switch self {
             case .progress: .moreProgress
             case .learn: .moreLearn
+            case .plateCalculator: .morePlateCalculator
             case .settings: .moreSettings
             case .changelog: .moreChangelog
             }
@@ -27,6 +28,8 @@ struct MoreView: View {
                         row("Progress", systemImage: Symbol.progress, to: .progress)
                         Hairline()
                         row("Learn", systemImage: "book", to: .learn)
+                        Hairline()
+                        row("Plate Calculator", systemImage: "scalemass", to: .plateCalculator)
                     }
                     GroupedSection("App") {
                         row("Settings", systemImage: "gearshape", to: .settings)
@@ -43,6 +46,7 @@ struct MoreView: View {
                 switch destination {
                 case .progress: ProgressScreen()
                 case .learn: LearnView()
+                case .plateCalculator: PlateCalculatorScreen()
                 case .settings: SettingsView()
                 case .changelog: ChangelogScreen()
                 }

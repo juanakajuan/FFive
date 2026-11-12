@@ -25,6 +25,7 @@ struct ActiveWorkoutView: View {
     @State private var article: Learn.Article?
     @State private var noteEdit: NoteEdit?
     @State private var historyFor: Exercise?
+    @State private var plateTarget: PlateTarget?
     @State private var feedbackFor: Muscle?
     @State private var feedbackRequired: FeedbackBlock?
     @State private var sorenessAsk: SorenessAsk?
@@ -192,6 +193,7 @@ struct ActiveWorkoutView: View {
             }
             .sheet(item: $notesFor) { MesoNotesScreen(meso: $0) }
             .sheet(item: $historyFor) { ExerciseHistorySheet(name: $0.name) }
+            .sheet(item: $plateTarget) { PlateCalculatorSheet(startingWeight: $0.weight) }
             .sheet(item: $article) { Learn.ArticleSheet(article: $0) }
             .sheet(item: $sorenessAsk) { ask in
                 SorenessSheet(muscle: ask.muscle, record: ask.record) { soreness in
@@ -368,6 +370,7 @@ struct ActiveWorkoutView: View {
             onSwap: workout.mesocycle == nil ? nil : { picker = .swap(exercise) },
             jointPain: jointPain(for: muscle),
             onShowHistory: { historyFor = exercise },
+            onPlateCalculator: { plateTarget = PlateTarget(weight: $0) },
             onEditNote: { noteEdit = NoteEdit(target: .exercise(exercise), draft: $0) },
             onRemove: { withAnimation(.snappy) { store.removeExercise(exercise, from: workout) } },
             onOpenArticle: { article = $0 }
@@ -566,6 +569,7 @@ struct ExerciseCard: View {
     var onSwap: (() -> Void)?
     var jointPain: Binding<JointPain?>?
     var onShowHistory: () -> Void
+    var onPlateCalculator: (Double?) -> Void
     var onEditNote: (String) -> Void
     var onRemove: () -> Void
     var onOpenArticle: (Learn.Article) -> Void
@@ -645,7 +649,8 @@ struct ExerciseCard: View {
                     SetRow(
                         set: set, number: index + 1, unit: unit, rir: phase?.rir, focus: focus,
                         comparison: comparisons[ObjectIdentifier(set)], onCompleted: onSetCompleted,
-                        onLogBlocked: onLogBlocked, onAdd: { withAnimation(.snappy) { store.addSet(to: exercise) } }
+                        onLogBlocked: onLogBlocked, onAdd: { withAnimation(.snappy) { store.addSet(to: exercise) } },
+                        onPlateCalculator: onPlateCalculator
                     ) { withAnimation(.snappy) { store.deleteSet(set, from: exercise) } }
                     .id(set.persistentModelID)
                 }
@@ -765,6 +770,7 @@ struct SetRow: View {
     var onCompleted: () -> Void
     var onLogBlocked: ((SetEntry) -> Void)?
     var onAdd: () -> Void
+    var onPlateCalculator: (Double?) -> Void
     var onDelete: () -> Void
 
     @Environment(Store.self) private var store
@@ -850,6 +856,12 @@ struct SetRow: View {
                         .a11y(.menuSkipSet)
                 case .done:
                     EmptyView()
+                }
+                if set.exercise?.info?.equipment == .barbell {
+                    Button("Plate Calculator", systemImage: "scalemass") {
+                        onPlateCalculator(set.weight > 0 ? set.weight : set.targetWeight)
+                    }
+                    .a11y(.menuPlateCalculator)
                 }
                 Picker("Set Type", selection: setType) {
                     ForEach(SetType.allCases) { Text($0.title).tag($0) }

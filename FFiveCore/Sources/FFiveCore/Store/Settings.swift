@@ -42,6 +42,20 @@ public final class Settings {
         didSet { defaults.set(dismissedTips.map(\.rawValue).sorted(), forKey: Self.dismissedTipsKey) }
     }
 
+    /// The bar weight of each unit, so a 35 lb bar never shows up as 35 kg.
+    public private(set) var barWeights: [WeightUnit: Double]
+
+    public func barWeight(for unit: WeightUnit) -> Double { barWeights[unit] ?? unit.defaultBarWeight }
+
+    /// Zero is a machine with no bar. A negative weight clamps to zero.
+    public func setBarWeight(_ weight: Double, for unit: WeightUnit) {
+        let weight = max(0, weight)
+        barWeights[unit] = weight
+        defaults.set(weight, forKey: Self.barWeightKey(unit))
+    }
+
+    private static func barWeightKey(_ unit: WeightUnit) -> String { "barWeight.\(unit.rawValue)" }
+
     public func dismiss(_ tip: CoachingTip) { dismissedTips.insert(tip) }
 
     /// The version whose What's New the lifter last saw. Nil until this build first runs.
@@ -62,10 +76,11 @@ public final class Settings {
 
     @ObservationIgnored private let defaults: UserDefaults
 
-    private static let keys = [
-        weightUnitKey, autoMatchWeightsKey, hiddenExercisesKey, equipmentKey, appearanceKey, dismissedTipsKey,
-        changelogSeenKey,
-    ]
+    private static let keys =
+        [
+            weightUnitKey, autoMatchWeightsKey, hiddenExercisesKey, equipmentKey, appearanceKey, dismissedTipsKey,
+            changelogSeenKey,
+        ] + WeightUnit.allCases.map(barWeightKey)
 
     /// Clears every stored setting, so each one reads back as a fresh install's.
     func reset() {
@@ -78,6 +93,7 @@ public final class Settings {
         appearance = fresh.appearance
         dismissedTips = fresh.dismissedTips
         changelogSeenVersion = fresh.changelogSeenVersion
+        barWeights = fresh.barWeights
         for key in Self.keys { defaults.removeObject(forKey: key) }
     }
 
@@ -93,5 +109,9 @@ public final class Settings {
         dismissedTips = Set(
             (defaults.stringArray(forKey: Self.dismissedTipsKey) ?? []).compactMap(CoachingTip.init(rawValue:)))
         changelogSeenVersion = defaults.string(forKey: Self.changelogSeenKey)
+        barWeights = Dictionary(
+            uniqueKeysWithValues: WeightUnit.allCases.map {
+                ($0, defaults.object(forKey: Self.barWeightKey($0)) as? Double ?? $0.defaultBarWeight)
+            })
     }
 }
