@@ -79,7 +79,11 @@ public final class Workout {
         let sets = exercises.flatMap(\.sets)
         return sets.isEmpty ? 0 : Double(sets.filter { $0.status != .pending }.count) / Double(sets.count)
     }
-    public var isFullyLogged: Bool { !exercises.isEmpty && exercises.allSatisfy(\.isLogged) }
+    /// Every set is logged or skipped. A quick workout also needs a done set, since finishing drops what was never done
+    /// and would save an empty workout. A block session keeps its prescription, so an all-skipped day can finish.
+    public var canFinish: Bool {
+        !exercises.isEmpty && exercises.allSatisfy(\.isLogged) && (mesocycle != nil || completedSets > 0)
+    }
     /// Reps times moved load. A bodyweight lift without a body weight adds nothing, because its load is unknown.
     public var totalVolume: Double {
         exercises.reduce(0) { total, exercise in

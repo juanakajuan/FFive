@@ -316,7 +316,7 @@ struct ActiveWorkoutView: View {
         .scrollDismissesKeyboard(.interactively)
         .safeAreaInset(edge: .top, spacing: 0) { header }
         .safeAreaInset(edge: .bottom, spacing: 0) {
-            if workout.isFullyLogged {
+            if workout.canFinish {
                 Button("Finish Workout", action: finish)
                     .buttonStyle(.floating)
                     .a11y(.workoutFinish)
