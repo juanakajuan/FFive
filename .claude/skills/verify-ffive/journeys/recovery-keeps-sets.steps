@@ -1,0 +1,80 @@
+# recovery-keeps-sets: answering the Recovery sheet keeps the lifter's edits on the muscle's other sets (#279). On-disk.
+# Before: ffive-verify reset-data (no active mesocycle).
+launch
+tap #tab.mesos timeout=20
+tap #mesos.plan
+scrollto #builder.blank
+tap #builder.blank
+wait nav "Customize"
+scrollto #builder.add-muscle
+tap #builder.add-muscle
+tap button "Chest"
+tap text "Choose an exercise"
+wait nav "Choose Chest"
+tap #picker.row.bench-press
+absent nav "Choose Chest"
+tap #builder.start
+absent nav "Customize" timeout=10
+tap #tab.workout
+wait text "WEEK 1 DAY 1" timeout=10
+# Week 1: two Bench sets at 100 x 9, with chest feedback saved.
+tap #set.menu.3
+tap #menu.delete-set
+tap #set.menu.3
+tap #menu.delete-set
+tap #set.menu.3
+tap #menu.delete-set
+tap #set.menu.3
+tap #menu.delete-set
+tap #set.menu.3
+tap #menu.delete-set
+tap #set.menu.3
+tap #menu.delete-set
+tap #set.menu.3
+tap #menu.delete-set
+tap #set.menu.3
+tap #menu.delete-set
+absent #set.weight.3
+replace #set.weight.1 "100"
+replace #set.reps.1 "9"
+replace #set.reps.2 "9"
+value #set.weight.2 "100"
+tap #keyboard.done
+tap #set.log.1
+tap #set.log.2
+wait #feedback.save
+tap #chip.great
+tap #chip.pretty-good
+tap #chip.none
+tap #feedback.save
+absent #feedback.save
+tap #workout.finish
+wait text "WEEK 2 DAY 1" timeout=10
+# Week 2: edit set 1, let Auto-Match carry the weight, mark set 2 Myorep, then log set 1.
+replace #set.weight.1 "110"
+replace #set.reps.1 "7"
+tap #keyboard.done
+value #set.weight.2 "110"
+tap #set.menu.2
+tap button "Myorep"
+wait any "Set 2 Menu, Myorep"
+shot 01-before-recovery
+tap #set.log.1
+wait #soreness.save
+tap #chip.healed-just-in-time
+shot 02-recovery-sheet
+tap #soreness.save
+absent #soreness.save
+selected #set.log.1
+value #set.weight.1 "110"
+value #set.reps.1 "7"
+value #set.weight.2 "110"
+wait any "Set 2 Menu, Myorep"
+absent #set.weight.3
+store-expect SetEntry typeRaw myorep
+shot 03-after-recovery
+launch
+wait text "WEEK 2 DAY 1" timeout=20
+value #set.weight.2 "110"
+wait any "Set 2 Menu, Myorep"
+shot 04-after-relaunch

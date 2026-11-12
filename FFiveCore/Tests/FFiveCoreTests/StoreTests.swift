@@ -784,6 +784,84 @@ final class StoreTests: XCTestCase {
         XCTAssertFalse(store.context.hasChanges)
     }
 
+    /// A next chest day whose sets the lifter has edited before the first log tap asks for soreness. Last week's
+    /// chest day was answered with `workload`.
+    private func editedChestDay(workload: Workload) throws -> (Store, Workout, MuscleFeedbackRecord, Exercise) {
+        let (store, meso) = try startedStore()
+        let first = store.buildSession(meso, at: day1)
+        for set in first.sortedExercises.flatMap(\.sortedSets) { store.logEntered(set) }
+        first.updateFeedback(for: .chest) {
+            $0 = MuscleFeedback(pump: .moderate, workload: workload, jointPain: JointPain.none)
+        }
+        store.finish(first)
+        let next = store.buildSession(meso, at: SessionKey(week: 1, dayIndex: 0))
+        next.startDate = first.startDate + 86_400
+        let record = try XCTUnwrap(store.pendingSoreness(in: next)[.chest])
+        let exercise = try XCTUnwrap(next.sortedExercises.first { $0.muscle == .chest })
+        store.addSet(to: exercise)
+        let sets = exercise.sortedSets
+        XCTAssertGreaterThanOrEqual(sets.count, 3)
+        sets[0].weight = 110
+        sets[0].reps = 7
+        store.setWeight(110, of: sets[0], carryingTo: Array(sets.dropFirst()))
+        sets[1].type = .myorep
+        sets[2].status = .skipped
+        return (store, next, record, exercise)
+    }
+
+    private func chestSetCount(_ workout: Workout) -> Int {
+        workout.exercises(for: .chest).reduce(0) { $0 + $1.sets.count }
+    }
+
+    func testRecordSorenessKeepsTheLiftersEditsWhenTheCountHolds() throws {
+        let (store, next, record, exercise) = try editedChestDay(workload: .good)
+        let before = exercise.sortedSets.map { [$0.weight, Double($0.reps)] }
+        let types = exercise.sortedSets.map(\.type)
+        let statuses = exercise.sortedSets.dropFirst().map(\.status)
+        let tapped = exercise.sortedSets[0]
+
+        store.recordSoreness(.healedOnTime, on: record, during: next, logging: tapped)
+
+        XCTAssertEqual(
+            exercise.sortedSets.map { [$0.weight, Double($0.reps)] }, before,
+            "every set keeps the weight and reps the lifter typed")
+        XCTAssertEqual(exercise.sortedSets.map(\.type), types, "a chosen Myorep type survives the answer")
+        XCTAssertEqual(
+            exercise.sortedSets.dropFirst().map(\.status), statuses, "an added set and a skipped set survive")
+        XCTAssertTrue(tapped.isDone, "the tapped set is logged")
+        XCTAssertFalse(store.context.hasChanges)
+    }
+
+    func testRecordSorenessAddsSetsWithoutTouchingTheEditedOnes() throws {
+        let (store, next, record, exercise) = try editedChestDay(workload: .good)
+        let total = chestSetCount(next)
+        let edited = Array(exercise.sortedSets.prefix(3))
+
+        store.recordSoreness(.healedEarly, on: record, during: next, logging: edited[0])
+
+        XCTAssertEqual(chestSetCount(next), total + 1, "healed early after a good workload adds one chest set")
+        XCTAssertTrue(edited.allSatisfy { $0.exercise === exercise }, "the edited sets are kept, not rebuilt")
+        XCTAssertEqual(edited.map(\.weight), [110, 110, 110])
+        XCTAssertEqual(edited.map(\.type), [.regular, .myorep, .regular])
+        XCTAssertEqual(edited.map(\.status), [.done, .pending, .skipped])
+    }
+
+    func testRecordSorenessRemovesSetsFromTheEndButNeverTheTappedOne() throws {
+        let (store, next, record, exercise) = try editedChestDay(workload: .hard)
+        let total = chestSetCount(next)
+        let tapped = exercise.sortedSets[0]
+        let myorep = exercise.sortedSets[1]
+
+        store.recordSoreness(.stillSore, on: record, during: next, logging: tapped)
+
+        XCTAssertEqual(chestSetCount(next), total - 1, "still sore after a hard workload drops one chest set")
+        XCTAssertTrue(tapped.isDone)
+        XCTAssertEqual([tapped.weight, Double(tapped.reps)], [110, 7])
+        XCTAssertTrue(myorep.exercise === exercise, "sets leave from the end, so the edited Myorep set stays")
+        XCTAssertEqual(myorep.type, .myorep)
+        XCTAssertFalse(store.context.hasChanges)
+    }
+
     func testDeleteUnfinishedSessionDetachesItFromItsBlock() throws {
         let (store, meso) = try startedStore()
         let workout = store.buildSession(meso, at: day1)
