@@ -1,6 +1,47 @@
 {
   "releases" : [
     {
+      "date" : "2026-11-12",
+      "entries" : [
+        {
+          "date" : "2026-11-12",
+          "kind" : "fix",
+          "text" : "Bound typed weight and reps so a huge volume can't crash the workout page"
+        },
+        {
+          "date" : "2026-11-12",
+          "kind" : "fix",
+          "text" : "Trim builder names and give a blank day name its Day <n> fallback"
+        },
+        {
+          "date" : "2026-11-12",
+          "kind" : "fix",
+          "text" : "Hide Finish Workout on a quick workout with every set skipped"
+        },
+        {
+          "date" : "2026-11-12",
+          "kind" : "fix",
+          "text" : "Keep a typed decimal point in a quick workout's weight field"
+        },
+        {
+          "date" : "2026-11-12",
+          "kind" : "fix",
+          "text" : "Keep the mesocycle on its day when a finished session is deleted from History"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "fix",
+          "text" : "Keep the lifter's sets when the Recovery answer re-plans a muscle"
+        },
+        {
+          "date" : "2026-11-11",
+          "kind" : "feature",
+          "text" : "Add a plate calculator for barbell loads"
+        }
+      ],
+      "version" : "1.8"
+    },
+    {
       "date" : "2026-11-11",
       "entries" : [
         {
