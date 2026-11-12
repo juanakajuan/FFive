@@ -2,7 +2,7 @@
 
 ## Commands
 
-- `scripts/check` is the one gate. It prints `CHECK PASS` or `CHECK FAIL <step>` in about 15 seconds. There is no CI. The `pre-push` hook runs it on each commit you push, as committed, and refuses the push on a fail.
+- `scripts/check` is the one gate. It prints `CHECK PASS` or `CHECK FAIL <step>` in about 15 seconds. There is no CI. The `pre-push` hook runs it on each commit you push, as committed, and refuses the push on a fail. It skips pushes to the orphan `pr-assets` branch, which holds only screenshots.
 - `scripts/format.sh` reformats every Swift file in place with swift-format, which ships with the Swift toolchain. Its settings live in `.swift-format`. `scripts/format.sh --lint` fails on any file it would change and on any swift-format lint rule hit. Run `scripts/format.sh` before you commit.
 - `scripts/lint.sh` holds the lint rules. Its baseline, `scripts/lint-baseline.txt`, lists the hits that already exist. A new hit fails, and so does a baseline line whose hit is gone. Fix a hit and delete its line. Add a line only with the operator's approval.
 - Use the `verify-ffive` skill to prove a change on the simulator. `scripts/check` does not drive the app.
