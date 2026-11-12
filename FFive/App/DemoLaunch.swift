@@ -1,14 +1,11 @@
 import FFiveCore
 
 enum DemoLaunch {
-    private(set) static var route: DemoRoute?
-    private(set) static var isDemo = false
+    static let mode = LaunchMode()
     private static var taken = false
 
-    static func configure(_ mode: LaunchMode) {
-        route = mode.demoRoute
-        isDemo = mode.isDemo
-    }
+    static var route: DemoRoute? { mode.demoRoute }
+    static var isDemo: Bool { mode.isDemo }
 
     static func take(_ candidate: DemoRoute) -> Bool {
         guard isPending(candidate) else { return false }
