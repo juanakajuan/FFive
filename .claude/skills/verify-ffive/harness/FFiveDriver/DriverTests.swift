@@ -103,6 +103,10 @@ final class DriverTests: XCTestCase {
             let field = try onScreen(args, timeout)
             field.tap()
             field.typeText(text)
+        case "keys":
+            let text = try Self.pop(&args, "text")
+            guard app.keyboards.firstMatch.exists else { throw StepError("keys: no keyboard on screen") }
+            app.typeText(text)
         case "replace":
             let text = try Self.pop(&args, "text")
             let field = try onScreen(args, timeout)

@@ -237,9 +237,12 @@ public final class Store {
         return exercise.laterSets(matchingWeightOf: set)
     }
 
+    /// A keystroke that leaves the number unchanged, such as a trailing decimal point, commits nothing. A commit
+    /// re-renders the weight field, which rebuilds its text from the number and drops the point being typed.
     public func setWeight(_ weight: Double, of set: SetEntry, carryingTo followers: [SetEntry]) {
-        set.weight = weight
-        for follower in followers where follower.status != .done { follower.weight = weight }
+        let targets = [set] + followers.filter { $0.status != .done }
+        guard targets.contains(where: { $0.weight != weight }) else { return }
+        for target in targets { target.weight = weight }
         commit()
     }
 
