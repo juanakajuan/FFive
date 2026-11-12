@@ -1,0 +1,24 @@
+# decimal-weight: a weight typed with a decimal point keeps the point in a quick workout, on-disk (#278).
+# Before: ffive-verify reset-data.
+# The pauses let each keystroke's save redraw the screen before the next key, as a lifter's typing does.
+launch
+wait #workout.quick timeout=20
+tap #workout.quick
+wait text "QUICK WORKOUT"
+tap #workout.menu
+tap #menu.add-exercise
+wait nav "Add Exercise"
+type #picker.search "Bench Press"
+key return
+tap #picker.row.bench-press
+wait text "Bench Press"
+replace #set.weight.1 "61"
+sleep 2
+keys "."
+sleep 2
+value #set.weight.1 "61."
+keys "25"
+sleep 1
+value #set.weight.1 "61.25"
+shot 01-decimal-weight
+store-expect SetEntry weight 61.25

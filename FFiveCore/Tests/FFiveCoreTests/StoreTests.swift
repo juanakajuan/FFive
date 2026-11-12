@@ -1,3 +1,4 @@
+import Observation
 import SwiftData
 import XCTest
 
@@ -654,6 +655,36 @@ final class StoreTests: XCTestCase {
         XCTAssertFalse(set.isDone)
     }
 
+    func testAWeightKeystrokeThatKeepsTheNumberDoesNotRedrawTheWorkout() {
+        let store = Store(inMemory: true)
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
+        let sets = workout.exercises[0].sortedSets
+        let followers = store.weightFollowers(of: sets[0])
+        store.setWeight(61, of: sets[0], carryingTo: followers)
+
+        XCTAssertFalse(
+            commitRedraws(store) { store.setWeight(61, of: sets[0], carryingTo: followers) },
+            "typing the point after 61 leaves the screen alone, so the field keeps the point")
+        XCTAssertTrue(
+            commitRedraws(store) { store.setWeight(61.25, of: sets[0], carryingTo: followers) },
+            "a new number is saved and shown")
+        XCTAssertEqual(sets.map(\.weight), Array(repeating: 61.25, count: sets.count))
+        XCTAssertFalse(store.context.hasChanges)
+    }
+
+    /// Whether `write` invalidates what a workout screen reads from the store.
+    private func commitRedraws(_ store: Store, _ write: () -> Void) -> Bool {
+        nonisolated(unsafe) var redrew = false
+        withObservationTracking {
+            _ = store.lastFinishedExercise(ExerciseID(folding: "Bench Press"))
+        } onChange: {
+            redrew = true
+        }
+        write()
+        return redrew
+    }
+
     func testTypedWeightAndRepsStopAtTheLimits() {
         let store = Store(inMemory: true)
         let workout = store.startQuickWorkout()
@@ -713,11 +744,11 @@ final class StoreTests: XCTestCase {
         store.logEntered(sets[0])
         store.skip(sets[1], skipped: true)
         XCTAssertEqual(sets[1].status, .skipped)
-        XCTAssertFalse(workout.isFullyLogged, "a pending set still blocks finishing")
+        XCTAssertFalse(workout.canFinish, "a pending set still blocks finishing")
 
         store.skipRemainingSets(of: exercise)
         XCTAssertEqual(sets.map(\.status), [.done] + Array(repeating: .skipped, count: sets.count - 1))
-        XCTAssertTrue(workout.isFullyLogged, "skipped sets do not block finishing")
+        XCTAssertTrue(workout.canFinish, "skipped sets do not block finishing")
         XCTAssertEqual(workout.setProgress, 1)
         XCTAssertEqual(workout.completedSets, 1, "a skipped set is not a completed one")
         XCTAssertFalse(store.context.hasChanges, "the skip is saved")
@@ -731,6 +762,28 @@ final class StoreTests: XCTestCase {
         store.skip(sets[2], skipped: false)
         XCTAssertEqual(sets[2].status, .pending, "a skip can be undone")
         XCTAssertNil(store.failure)
+    }
+
+    func testAQuickWorkoutWithEverySetSkippedCannotFinish() throws {
+        let (store, _) = try startedStore()
+        let workout = store.startQuickWorkout()
+        store.addExercise(named: "Bench Press", muscle: .chest, to: workout)
+        let exercise = workout.sortedExercises[0]
+
+        store.skipRemainingSets(of: exercise)
+        XCTAssertTrue(exercise.isLogged)
+        XCTAssertFalse(workout.canFinish, "finishing would save a workout with no exercises")
+
+        store.skip(exercise.sortedSets[0], skipped: false)
+        store.logEntered(exercise.sortedSets[0])
+        XCTAssertTrue(workout.canFinish, "one done set makes it a workout")
+    }
+
+    func testABlockSessionWithEverySetSkippedCanFinish() throws {
+        let (store, meso) = try startedStore()
+        let workout = store.buildSession(meso, at: day1)
+        for exercise in workout.exercises { store.skipRemainingSets(of: exercise) }
+        XCTAssertTrue(workout.canFinish, "a block session keeps its prescription, so the day can still finish")
     }
 
     func testSkippedSetsRepeatTheirTargetNextWeek() throws {

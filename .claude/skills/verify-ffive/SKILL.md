@@ -106,6 +106,7 @@ Optional `timeout=<seconds>` changes the default 5 s wait for either target form
 | `value <target> "<v>"` | Fails unless the on-screen element's value equals `v`. |
 | `selected <target>` / `unselected <target>` | Waits for the element on screen, then checks the accessibility selected trait. |
 | `count <target> "<n>"` | Fails unless exactly n elements match. |
+| `keys "<text>"` | Types into the focused field without tapping it first, so the cursor stays where the last step left it. Use it to type in pieces with `sleep` between them, as in `journeys/decimal-weight.steps`. |
 | `key return` | Presses the keyboard's return key and waits for the keyboard to go. Use it after `type #picker.search` when the row you want sits under the keyboard: a short result list can't scroll it clear, so `scrollto` fails. |
 | `scrollto <target>` | Drags the list a third of a screen at a time, with no fling, until the element sits in the middle half of the screen or the list stops moving (36 drags at most). Drags down if the element is above that band. A lazy list drops rows scrolled past, so when the element is not in the tree it searches down the list first, then back up once the list stops moving. |
 | `store-expect <Model> <field> <value> [timeout=<s>]` | Polls the on-disk store until some `<Model>` row has `<field>` equal to `<value>`. |

@@ -8,6 +8,7 @@ A lifter logs a free-form session outside any block. They add exercises from the
 - `quick-add` adds a catalog exercise through the searchable picker, opened with `Workout Menu`, then `Add Exercise`. The new exercise gets one empty set, or last time's sets when it has history.
 - `quick-custom` creates a custom exercise with `Create “<query>”` and a muscle. Not yet driven.
 - `quick-log` edits `Set n weight` and `Set n reps` and ticks `Log set n`, which carries the Selected trait while logged.
+- `quick-decimal` keeps a decimal point typed into `Set n weight`: `61`, then `.`, then `25` reads `61.25` and saves 61.25. Journey: `journeys/decimal-weight.steps`, on-disk after `reset-data`.
 - `quick-finish` finishes the workout with `Finish Workout`, pinned above the tab bar and shown only once the workout has an exercise, every exercise has a set, and every set is logged or skipped. Finishing updates the stats row (This Week, Time, All Time) and History.
 - `quick-resume` returns to an open quick workout with `Workout Menu`, then `Resume Quick Workout`, while a block day picked from `Schedule` is showing. Driven on the demo seed, which proves the UI only. Steps: `tap #workout.menu`, `tap #menu.quick-workout`, `wait text "QUICK WORKOUT"`, `tap #workout.schedule`, `tap button "circle.lefthalf.filled"`, `wait text "WEEK 2 DAY 1"`, `tap #workout.menu`, `tap #menu.quick-workout`, `absent text "WEEK 2 DAY 1"`.
 - `quick-rename` renames the workout with `Workout Menu`, then `Rename`. Not yet driven.
