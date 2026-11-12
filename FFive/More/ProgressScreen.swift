@@ -48,7 +48,10 @@ struct ProgressScreen: View {
             Button("Delete Workout", role: .destructive) { withAnimation(.snappy) { store.delete(workout) } }
                 .a11y(.dialogDeleteWorkout)
         } message: { workout in
-            Text("\(workout.name) leaves History and Progress.")
+            Text(
+                workout.mesocycle == nil
+                    ? "\(workout.name) leaves History and Progress."
+                    : "\(workout.name) leaves History and Progress, and its mesocycle day shows as skipped.")
         }
         .task {
             if DemoLaunch.take(.strength) {

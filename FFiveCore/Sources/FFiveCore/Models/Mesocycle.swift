@@ -198,6 +198,13 @@ public final class Mesocycle {
         finishedDate = .now
     }
 
+    /// Deletes a finished session from History. Its day counts as skipped, so the block stays where it was
+    /// instead of going back to train that day again.
+    func deleteFinished(_ workout: Workout, in context: ModelContext) {
+        if let key = workout.key, !skippedSessions.contains(key) { skippedSessions.append(key) }
+        remove(workout, in: context)
+    }
+
     /// Deletes a session built for this block.
     func remove(_ workout: Workout, in context: ModelContext) {
         workouts.removeAll { $0 === workout }

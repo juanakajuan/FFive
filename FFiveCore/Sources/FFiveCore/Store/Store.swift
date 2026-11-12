@@ -404,7 +404,11 @@ public final class Store {
 
     public func delete(_ workout: Workout) {
         if let meso = workout.mesocycle {
-            meso.remove(workout, in: context)
+            if workout.isFinished {
+                meso.deleteFinished(workout, in: context)
+            } else {
+                meso.remove(workout, in: context)
+            }
         } else {
             context.delete(workout)
         }
