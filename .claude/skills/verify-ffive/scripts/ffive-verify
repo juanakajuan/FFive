@@ -263,28 +263,48 @@ cmd_journeys() {
         for j in "$@"; do [[ -f "$dir/$j.steps" ]] || die "no journey $j ($dir/$j.steps)"; order+=("$j"); done
     fi
     for j in "${order[@]}"; do
-        local chain=("$j") parent="$j" out step ok=1
-        while parent="$(journey_parent "$dir/$parent.steps")"; [[ -n "$parent" ]]; do
-            [[ "$parent" == "$last" ]] && break
-            chain=("$parent" "${chain[@]}")
+        local attempt reason=""
+        for attempt in 1 2; do
+            [[ $attempt == 2 ]] && { echo "RETRY $j: $reason"; last=""; }
+            run_journey "$j" && break
+            reason="$(flaky_failure <<<"$journey_out")"
+            [[ -n "$reason" && $attempt == 1 ]] || break
         done
-        if [[ "$parent" != "$last" || -z "$last" ]]; then
-            if ! grep -m1 '^launch' "$dir/${chain[0]}.steps" | grep -q -- '-seedDemo'; then "$0" reset-data >/dev/null; fi
-        fi
-        last=""
-        for step in "${chain[@]}"; do
-            if out="$("$0" drive "$dir/$step.steps" --name "$step" 2>&1)"; then
-                last="$step"
-            else
-                [[ "$step" == "$j" ]] && echo "FAIL $j: $(grep -m1 '^FAIL' <<<"$out")" || echo "FAIL $j: setup journey $step failed: $(grep -m1 '^FAIL' <<<"$out")"
-                echo "     $(tail -1 <<<"$out")"
-                ok=0; break
-            fi
-        done
-        if [[ $ok == 1 ]]; then echo "PASS $j"; passed=$((passed + 1)); else failed+=("$j"); fi
+        if [[ -z "$journey_out" ]]; then echo "PASS $j"; passed=$((passed + 1)); else echo "$journey_out"; failed+=("$j"); fi
     done
     if [[ ${#failed[@]} -eq 0 ]]; then echo "JOURNEYS PASS $passed/${#order[@]}"
     else echo "JOURNEYS FAIL ${#failed[@]}/${#order[@]}: ${failed[*]}"; return 1; fi
+}
+
+flaky_failure() {
+    # The failure reason when XCUITest failed for load, not for the app: a synthesized event that timed out or a
+    # field that never took focus. Such a run gets one retry from a fresh store. Reads `FAIL <n>: <step> -> <why>`.
+    sed -n 's/^.*FAIL [0-9][0-9]*: .* -> \(.*\)$/\1/p' | grep -m1 -E 'Timed out while synthesizing event|no keyboard focus' || true
+}
+
+run_journey() {
+    # Drives journey $1 and its setup chain, sets `last` to the last step file that passed, and leaves the failure
+    # report in `journey_out`, empty on a pass.
+    local j="$1" chain=("$1") parent="$1" out step
+    journey_out=""
+    while parent="$(journey_parent "$dir/$parent.steps")"; [[ -n "$parent" ]]; do
+        [[ "$parent" == "$last" ]] && break
+        chain=("$parent" "${chain[@]}")
+    done
+    if [[ "$parent" != "$last" || -z "$last" ]]; then
+        if ! grep -m1 '^launch' "$dir/${chain[0]}.steps" | grep -q -- '-seedDemo'; then "$0" reset-data >/dev/null; fi
+    fi
+    last=""
+    for step in "${chain[@]}"; do
+        if out="$("$0" drive "$dir/$step.steps" --name "$step" 2>&1)"; then
+            last="$step"
+        else
+            local first; first="$(grep -m1 '^FAIL' <<<"$out")"
+            [[ "$step" == "$j" ]] && journey_out="FAIL $j: $first" || journey_out="FAIL $j: setup journey $step failed: $first"
+            journey_out+=$'\n'"     $(tail -1 <<<"$out")"
+            return 1
+        fi
+    done
 }
 
 cmd_cleanup() {
