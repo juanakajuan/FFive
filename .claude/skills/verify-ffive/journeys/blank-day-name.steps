@@ -1,0 +1,25 @@
+# blank-day-name: the builder trims the block's name and gives a blank day name its "Day <n>" fallback (#283).
+# Before: ffive-verify reset-data. After: ffive-verify store "select ZNAME from ZMESOCYCLE union all select ZNAME from ZMESODAY"
+launch
+wait #workout.plan timeout=20
+tap #workout.plan
+tap #builder.template.full-body-2-days
+wait nav "Customize"
+replace #builder.name "  Spaced  "
+tap #builder.menu
+tap #menu.manage-days
+wait nav "Manage Days"
+replace #manage-days.name.1 "   "
+shot 01-blank-day
+tap #manage-days.done
+wait nav "Customize"
+tap #builder.start
+wait text "WEEK 1 DAY 1" timeout=10
+store-expect Mesocycle name "Spaced"
+store-expect MesoDay name "Day 1"
+store-expect Workout name "Day 1"
+wait text "Day 1*Spaced*"
+shot 02-session
+tap #workout.schedule
+wait any "Day 1, Day 1"
+shot 03-schedule
