@@ -284,20 +284,15 @@ public final class Store {
         commit()
     }
 
-    /// Answers soreness from the muscle's first log tap: re-plans the muscle's sets, then logs the set at the tapped
-    /// position with the weight and reps that were entered on it.
+    /// Answers soreness from the muscle's first log tap: re-plans how many sets the muscle has, keeping the sets the
+    /// lifter already has as they are, then logs the tapped set.
     public func recordSoreness(
         _ soreness: Soreness, on record: MuscleFeedbackRecord, during workout: Workout, logging set: SetEntry
     ) {
-        let exercise = set.exercise
-        let order = set.order
-        let (weight, reps) = (set.weight, set.reps)
-        MesoPlanner.recordSoreness(soreness, on: record, during: workout, planning: planning, in: context)
-        let replanned = exercise?.sortedSets.first { $0.order == order }
-        replanned?.weight = weight
-        replanned?.reps = reps
+        MesoPlanner.recordSoreness(
+            soreness, on: record, during: workout, planning: planning, keeping: set, in: context)
         commit()
-        if let replanned { log(replanned, done: true) }
+        log(set, done: true)
     }
 
     public func updateFeedback(for muscle: Muscle, in workout: Workout, _ change: (inout MuscleFeedback) -> Void) {

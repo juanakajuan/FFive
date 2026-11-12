@@ -459,20 +459,45 @@ enum MesoPlanner {
     }
 
     /// Writes soreness back to the session it describes. When that session is the one this session was planned
-    /// from and the muscle is still untouched, its set count is re-planned with the now-complete feedback.
+    /// from and the muscle is still untouched, the answer changes only how many sets each of its exercises has:
+    /// the sets the lifter already has keep their weight, reps and type. `kept` is never removed.
     static func recordSoreness(
         _ soreness: Soreness, on record: MuscleFeedbackRecord, during workout: Workout,
-        planning: PlanningContext, in context: ModelContext
+        planning: PlanningContext, keeping kept: SetEntry? = nil, in context: ModelContext
     ) {
-        record.value.soreness = soreness
         guard let muscle = record.muscle, let meso = workout.mesocycle, let key = workout.key,
             let base = meso.latestWorkout(dayIndex: key.dayIndex, before: key.week), base === record.workout,
             !workout.exercises(for: muscle).contains(where: { $0.sets.contains(where: \.isDone) })
-        else { return }
-        let planned = plan(meso, at: key, planning: planning)
+        else {
+            record.value.soreness = soreness
+            return
+        }
+        let before = plan(meso, at: key, planning: planning)
+        record.value.soreness = soreness
+        let after = plan(meso, at: key, planning: planning)
+        let targets = { (plan: [PlannedExercise], exercise: Exercise) in
+            plan.first { $0.key == exercise.key && $0.muscle == muscle }?.targets
+        }
         for exercise in workout.exercises(for: muscle) {
-            guard let match = planned.first(where: { $0.key == exercise.key && $0.muscle == muscle }) else { continue }
-            replaceSets(of: exercise, with: match.targets, in: context)
+            guard let old = targets(before, exercise), let new = targets(after, exercise) else { continue }
+            resize(exercise, by: new.count - old.count, toward: new, keeping: kept, in: context)
+        }
+    }
+
+    /// Adds `delta` sets from the end of `targets`, or removes `-delta` sets from the end, never the last one left.
+    private static func resize(
+        _ exercise: Exercise, by delta: Int, toward targets: [SetTarget], keeping kept: SetEntry?,
+        in context: ModelContext
+    ) {
+        if delta > 0 {
+            let next = (exercise.sortedSets.last?.order ?? -1) + 1
+            for offset in 0..<delta {
+                let index = min(exercise.sets.count, targets.count - 1)
+                exercise.sets.append(SetEntry(target: targets[max(0, index)], order: next + offset))
+            }
+        } else if delta < 0 {
+            let removable = exercise.sortedSets.reversed().filter { $0 !== kept }
+            for set in removable.prefix(min(-delta, exercise.sets.count - 1)) { exercise.remove(set, in: context) }
         }
     }
 
