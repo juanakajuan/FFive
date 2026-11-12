@@ -5,13 +5,16 @@
 # Enable once per clone: git config core.hooksPath scripts/git-hooks
 # The tree is checked in a cache dir per worktree that keeps .build between
 # pushes, so only the first push from a worktree pays for a cold build.
+# The orphan pr-assets branch holds only PR and issue screenshots, with no
+# scripts/check to run, so pushes to it skip the gate.
 zero=0000000000000000000000000000000000000000
 dir="$(git rev-parse --absolute-git-dir)/pre-push-check"
 tmp="$(mktemp -d)"
 trap 'rm -rf "$tmp"' EXIT
 
-while read -r _ local_sha _ _; do
+while read -r _ local_sha remote_ref _; do
     [ "$local_sha" = "$zero" ] && continue
+    [ "$remote_ref" = "refs/heads/pr-assets" ] && continue
     rm -rf "$tmp/tree" && mkdir -p "$tmp/tree" "$dir"
     git archive "$local_sha" | tar -x -C "$tmp/tree" || exit 1
     rsync -a --delete --exclude .build "$tmp/tree/" "$dir/" || exit 1
