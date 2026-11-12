@@ -215,7 +215,33 @@ final class StoreTests: XCTestCase {
 
         XCTAssertTrue(try store.context.fetch(Workout.history).isEmpty, "the workout leaves history")
         XCTAssertNil(meso.workout(at: day1), "the block no longer lists it")
-        XCTAssertEqual(meso.status(at: day1), .upcoming, "its day is open to train again")
+        XCTAssertEqual(meso.status(at: day1), .skipped, "its day shows as skipped, not open to train again")
+        XCTAssertNotEqual(meso.nextUp, day1, "the block stays where it was")
+    }
+
+    func testDeletingAnEarlierFinishedSessionKeepsTheBlockOnItsCurrentDay() throws {
+        let (store, meso) = try startedStore()
+        let first = store.buildSession(meso, at: day1)
+        store.log(first.sortedExercises[0].sortedSets[0], done: true)
+        store.finish(first)
+        let current = try XCTUnwrap(meso.nextUp)
+        let inProgress = store.buildSession(meso, at: current)
+        store.log(inProgress.sortedExercises[0].sortedSets[0], done: true)
+
+        store.delete(first)
+
+        XCTAssertEqual(meso.nextUp, current, "the block stays on the day in progress")
+        XCTAssertEqual(meso.status(at: current), .inProgress(inProgress))
+        XCTAssertEqual(meso.status(at: day1), .skipped)
+    }
+
+    func testDiscardingAnUnfinishedSessionReopensItsDay() throws {
+        let (store, meso) = try startedStore()
+        let workout = store.buildSession(meso, at: day1)
+
+        store.delete(workout)
+
+        XCTAssertEqual(meso.status(at: day1), .upcoming, "a discarded session was never trained, so its day stays open")
         XCTAssertEqual(meso.nextUp, day1)
     }
 
