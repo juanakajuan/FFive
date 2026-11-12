@@ -171,6 +171,12 @@ public enum A11y: String, CaseIterable {
     case settingsAppearance = "settings.appearance"
     case settingsSync = "settings.sync"
     case equipmentFilter = "equipment-filter"
+    case menuPlateCalculator = "menu.plate-calculator"
+    case morePlateCalculator = "more.plate-calculator"
+    case plateTarget = "plate.target"
+    case plateBar = "plate.bar"
+    case plateResult = "plate.result"
+    case plateOffBy = "plate.off-by"
 
     static let indexed: Set<A11y> = [
         .setWeight, .setReps, .setMenu, .setLog, .setRecommendation, .setVsLast, .exerciseMenu, .exerciseCue,
