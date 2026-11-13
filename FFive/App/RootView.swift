@@ -39,7 +39,7 @@ enum AppTab: CaseIterable, Hashable {
     func icon(selected: Bool) -> String { selected ? symbol + ".fill" : symbol }
 }
 
-struct SessionFocus: Equatable {
+struct SessionFocus {
     let meso: PersistentIdentifier
     let key: SessionKey
 }
@@ -107,7 +107,7 @@ struct RootView: View {
 
     var body: some View {
         // The system TabView draws a floating glass bar on recent iOS; the design calls for a flat,
-        // full-width bar. Like the design's pages, a tab starts fresh each time it is opened.
+        // full-width bar, and for a tab to start fresh each time it is opened.
         // Stacked, not a bottom safe-area inset: the inset's height never reached views inside each tab's
         // NavigationStack, so anything they pinned to their bottom edge sat under the bar.
         VStack(spacing: 0) {
@@ -151,11 +151,9 @@ struct RootView: View {
             Text(store.failure?.localizedDescription ?? "")
         }
     }
-}
 
-extension RootView {
     /// Opens What's New on the first launch of a newer version. A fresh install only records the version.
-    fileprivate func showWhatsNewAfterUpdate() {
+    private func showWhatsNewAfterUpdate() {
         guard !DemoLaunch.isDemo else { return }
         let current = Changelog.runningVersion
         let settings = store.settings

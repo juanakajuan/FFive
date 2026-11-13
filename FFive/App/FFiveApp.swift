@@ -6,12 +6,9 @@ import SwiftUI
 struct FFiveApp: App {
     let store: Store
     let sync: SyncMonitor
-    let animationsDisabled: Bool
 
     init() {
-        let mode = LaunchMode()
-        DemoLaunch.configure(mode)
-        animationsDisabled = mode.animationsDisabled
+        let mode = DemoLaunch.mode
         if mode.animationsDisabled { UIView.setAnimationsEnabled(false) }
         store = Store(inMemory: mode.isDemo)
         if mode.isDemo { DemoSeed.seed(into: store) }
@@ -23,7 +20,7 @@ struct FFiveApp: App {
         WindowGroup {
             RootView()
                 .transaction {
-                    if animationsDisabled {
+                    if DemoLaunch.mode.animationsDisabled {
                         $0.disablesAnimations = true
                         $0.animation = nil
                     }
